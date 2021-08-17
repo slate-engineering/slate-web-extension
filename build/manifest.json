@@ -22,7 +22,6 @@
     "all_frames": true,
     "js": [
       "./content.js",
-      "./search.js",
       "./jquery.js"
     ],
     "run_at": "document_idle"
@@ -43,7 +42,14 @@
         "default": "Alt+S",
         "mac": "Alt+S"
       },
-      "description": "Open the slate app"
+      "description": "Open the slate extension"
+    },
+    "open-slate": {
+      "suggested_key": {
+        "default": "Alt+O",
+        "mac": "Alt+O"
+      },
+      "description": "Open the slate web app"
     }
   },
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'; img-src chrome://favicon; ",

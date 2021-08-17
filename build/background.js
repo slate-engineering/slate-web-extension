@@ -14,8 +14,12 @@ const handleSaveLink = async (props) => {
     }),
   });
 
-  console.log('done', response);
-  chrome.tabs.sendMessage(parseInt(props.tab), { run: 'UPLOAD_DONE', data: response });
+  const json = await response.json();
+  console.log('upload', json);
+  chrome.tabs.sendMessage(parseInt(props.tab), { 
+    run: 'UPLOAD_DONE', 
+    data: json.data[0] 
+  });
   return response;
 }
 
@@ -43,6 +47,9 @@ chrome.commands.onCommand.addListener((command, tab) => {
   console.log(`Command: ${tab}`);
   if(command == 'open-app') {
     chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+  }
+  if(command == 'open-slate') {
+    chrome.tabs.create({ 'url': 'https://slate.host/' });
   }
 });
 

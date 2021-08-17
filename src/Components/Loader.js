@@ -29,27 +29,23 @@ const Loader = (props) => {
     console.log('this is the key press event from loader', e)
   }
 
-  useEffect(() => {
-    console.log(upload.status)
-    if(!upload.status) {
-      console.log('starting timer')
+  window.addEventListener("message", function(event) {
+    if(event.data.type === "UPLOAD_DONE") {
+      console.log('this is the data from the upload', event)
+      setUpload({ status: false, data: event.data.data.cid }) 
+
       const timer = setTimeout(() => {
         console.log('This will run after 3 second!')
         handleCloseModal()
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, []);
-
-  window.addEventListener("message", function(event) {
-    if(event.data.type === "UPLOAD_DONE") {
-      console.log('this is the data from the upload', event)
-      setUpload({ status: false })
-    }
   });
 
   let count = 25;
   let title = document.title.slice(0, count) + (document.title.length > count ? "..." : "");
+
+  console.log('upload: ', upload)
 
   const loaderClose = () => {
     setVisable(false)
@@ -64,11 +60,13 @@ const Loader = (props) => {
   }
 
   function FooterDone(props) {
+    //let url = `https://slate.host/_/data?cid=${upload.data}`;
+    let url = `https://slate-dev.onrender.com/_/data?cid=${upload.data}`;
     return (
       <>
         <div className={classes.loaderFooterLeft}>Saved</div>
         <div className={classes.loaderFooterRight}>
-          <a href="#" style={{ color: '#0084FF', fontWeight: '600', textDecoration: 'none' }} target="_blank">
+          <a href={url} style={{ color: '#0084FF', fontWeight: '600', textDecoration: 'none' }} target="_blank">
             View
           </a>
         </div>

@@ -53,9 +53,10 @@ function App() {
     if(document.querySelector("meta[property='og:image']")){
       image = document.querySelector("meta[property='og:image']").getAttribute('content');
     } else {
-      let first = document.getElementsByTagName("img")[1];
-      console.log('first', first)
-      image = first.src;
+      //let first = document.getElementsByTagName("img")[1];
+      //console.log('first', first)
+      //image = first.src;
+      image = "https://tonsmb.org/wp-content/uploads/2014/03/default-placeholder.png"
     }
     return image;
   }

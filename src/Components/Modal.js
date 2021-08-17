@@ -11,7 +11,6 @@ import Hotkeys from 'react-hot-keys';
 import classes from '../App.module.css';
 
 const fetch = require('node-fetch');
-const og = require('open-graph');
 
 function onKeyUp(keyName, e, handle) {
   console.log("test:onKeyUp", e, handle)
@@ -24,6 +23,33 @@ const Modal = (props) => {
   const [search, setSearch] = useState({ query: null });
   const [loading, setLoading] = useState(false);
   const [og, setOg] = useState({ image: null, title: null });
+
+  const [documentData, setDocumentData] = useState({ 
+    title: document.title,
+    description: document.description,
+    url: window.location.href
+  });
+
+  /*
+  useEffect(() => {
+    setDocumentData({
+      title: document.title,
+      description: document.description,
+      url: window.location.href
+    })
+  });
+  
+
+  function getLocalData() {
+    setDocumentData({ 
+      title: document.title,
+      description: document.description,
+      url: window.location.href
+    });
+  }
+
+  getLocalData();
+  */
 
   const handleSearchChange = async (e) => {
     let checkType = e.target.value.includes("†")
@@ -109,8 +135,8 @@ const Modal = (props) => {
                 </div>
 
                 <Metadata 
-                  url={pageData.url} 
-                  title={pageData.title} 
+                  url={documentData.url} 
+                  title={documentData.title} 
                   image={props.image} 
                 />
 
