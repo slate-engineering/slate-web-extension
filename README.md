@@ -22,6 +22,9 @@ To load as a developer extension inside of Chrome:
 ### Shortcuts
 
 `option + S` opens the main app modal <br><br>
+`option + O` opens your Slate data page <br><br>
+
+
 When the app modal is open:
 - `option + B` bookmark the current page
 - The search should be focused onload, so you can begin typing right away
