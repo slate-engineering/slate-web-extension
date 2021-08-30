@@ -1,5 +1,5 @@
 ## slate-web-extension
-<img width="1440" alt="Screen Shot 2021-08-16 at 11 20 45 AM" src="https://user-images.githubusercontent.com/60402678/129603939-0d6825a7-bc44-40c7-ab53-f05ae28d14d8.png">
+<img width="1430" alt="Screen Shot 2021-08-30 at 11 43 16 AM" src="https://user-images.githubusercontent.com/60402678/131381707-1ff37208-7776-4c98-9770-ecafee18ee1b.png">
 
 <br><br>
 
@@ -27,6 +27,4 @@ To load as a developer extension inside of Chrome:
 
 When the app modal is open:
 - `option + B` bookmark the current page
-- The search should be focused onload, so you can begin typing right away
-     - `enter` to open slate with search query
-     - `esc` to navigate back to previous page 
+- `option + C` save bookmark to a collection
