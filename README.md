@@ -30,5 +30,5 @@ When the app modal is open:
 - `option + B` bookmark the current page
 
 ### Archiving
-1) When you bookmark a website in Chrome (cmd+D) or download a file to your desktop, the Slate extension will automatically archive the file.
+1) When you bookmark a website in Chrome (cmd+D) or download a file to your desktop, the Slate extension will automatically archive the file/link.
      - Images are uploaded as a file and every other type is saved from it's raw link (e.g. pdf and mp4) 
