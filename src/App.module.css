@@ -1,11 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-
 #modal-window {
   position: fixed;
   width: 100%;
   top: 0;
   z-index: 99999;
-  font-family: Inter;
+  font-family: Inter-Regular;
 }
 
 .modalWindow {
@@ -16,15 +14,24 @@
   margin-top: 2em;
   position: fixed;
   background: #E5E8EA;
+  backdrop-filter: blur(50px);
   opacity: 0.95;
-  backdrop-filter: blur(10px);
   width: 400px;  
-  height: 332px;
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+  height: 260px;
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
   z-index: 9999;
   border-radius: 10px;
   border: 0;
   color: #00050A;
+  font-family: Inter-Regular;
+}
+
+.modalBackground {
+  background-color: transparent;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  cursor: pointer;
 }
 
 .modal-window-inner-border {
@@ -102,8 +109,8 @@
   outline: 0;
   border: 0;
   height: 48px;
+  min-height: 48px;
   font-size: 14px;
-  transition: 200ms ease all;
   overflow-wrap: break-word;
   user-select: none;
   cursor: pointer;
@@ -113,6 +120,7 @@
   text-align: left;
   padding-left: 40px;
   font-size: 16px;
+  font-family: 'Inter'
 }
 
 .modalButton:hover {
@@ -123,30 +131,50 @@
 .modalButtonMain {
   outline: 0;
   border: 0;
-  height: 48px;
-  line-height: 48px;
-  font-size: 14px;
-  transition: 200ms ease all;
+  height: 40px;
+  line-height: 40px;
+  font-size: 16px;
   overflow-wrap: break-word;
   user-select: none;
   cursor: pointer;
   background-color: #fff;
-  color: #8E8E93;
+  color: #00050A;
   bottom: 0;
   text-align: left;
-  font-size: 16px;
+  font-family: Inter-Regular;
+  border-bottom: 1px solid #E5E8EA;
+  display: table; 
+  width: 100%; 
 }
 
 .modalButtonMain:hover {
-  background-color: #EAEAEE;
-  color: #8E8E93;
+  color: #3DA1FF;
+  fill: #3DA1FF;
 }
 
 .modalButtonSVG {
-   
+   display: table-cell; 
+   padding-left: 14px;
+   padding-top: 6px; 
+   text-align: left;
+}
+
+.modalButtonSVGItem {
+
+}
+
+.modalButtonSVGItem:hover {
+  color: #3DA1FF;
 }
 
 .modalButtonText {
+  display: table-cell; 
+  width: 86%; 
+  left: 0px;
+  line-height: 40px;
+  margin-bottom: 12px;
+  text-align: left; 
+  font-family: Inter-Regular;
 }
 
 .modalButtonShortcut {
@@ -177,7 +205,7 @@
   font-size: 14px;
   height: 50px;
   color: #48494A;
-  font-family: Inter;
+  font-family: Inter-Regular;
 }
 
 .modalCloseButton {
@@ -189,46 +217,45 @@
 
 .metadata {
   color: #48484A;
-  background-color: #E5E8EA;
+  background-color: transparent;
   display: flex;
   height: 86px;
   justify-content: center;
   align-items: center;
-  margin: 0 0 6px 0;
+  margin-top: 8px;
 }
 
 .metadataBox {
   flex: 1;
-  font-size: 16px;
 }
 
 .metadataImage {
   border-radius: 12px;
   object-fit: cover;
+  min-height: 48px;
+  min-width: 48px;
 }
 
 .metadataBox2 {
   flex: 1;
-  font-size: 16px;
   flex-grow: 4;
-  padding-left: 8px;
-}
-
-.metadata-text {
-  font-weight:  bold;
-  font-size: 16px;
-  color: #48484A;
+  margin-top: -14px;
+  margin-left: -8px;
 }
 
 .metaDataTitle {
   color: '#000';
   font-family: 'Inter';
   font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
 }
 
 .metaDataUrl {
   color: '#000';
-  font-family: 'Inter'
+  font-family: 'Inter';
+  font-size: 12px;
+  display: inline;
 }
 
 
@@ -243,13 +270,14 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
 .loaderWindow {
   top: 0%;
   right: 0%;
-  will-change: transform;
   margin-top: 2em;
   margin-right: 2em;
   position: fixed;
   background: #fff;
   width: 320px;  
   height: 88px;
+  max-width: 320px;  
+  max-height: 88px;
   box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
   z-index: 9999;
   border-radius: 10px;
@@ -294,12 +322,10 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
 }
 
 .loaderFooter {
-  position: absolute;
   bottom: 0px;
-  width: 306px;  
+  width: 100%;  
   height: 40px;
   line-height: 40px;
-  padding-left: 14px;
   background-color: #F2F2F7;
   color: #8E8E93;
   border-radius: 0 0 10px 10px; 
@@ -315,6 +341,7 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
 .loaderFooterLeft {
   text-align: 'left';
   left: 0px;
+  padding-left: 14px;
   display: inline;
 }
 
@@ -340,5 +367,57 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
 .loaderFadeIn {
    opacity:1;
    transition: width 0.5s, height 0.5s, opacity 0.5s 0.5s;
+}
+
+.hiddenModal {
+  display: none;
+}
+
+.visableModal {
+  display: inline;
+}
+
+.modalSearchItem {
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  padding-left: 16px;
+  cursor: pointer;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 16px;
+  background-color: #E5E8EA;
+  color: #8E8E93;
+}
+
+.modalSearchItem:hover {
+  background-color: #EAEAEE;
+}
+
+.modalSearchLoading {
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  padding-left: 16px;
+  font-family: 'Inter';
+  font-weight: 400;
+  font-size: 16px;
+  background-color: #E5E8EA;
+  color: #8E8E93;
+}
+
+.modalSearchDropdown {
+  z-index: 99999;
+  margin-left: -24px;
+  width: 400px;
+  height: auto;
+  max-height: 200px;
+  background-color: #E5E8EA;
+  position: absolute;
+  border-radius: 0 0 10px 10px;
+  border-top-style: none;
+  box-shadow: 0 1rem 1rem rgba(0,0,0,.15);
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 

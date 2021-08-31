@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Modal from './Components/Modal';
 import Loader from './Components/Loader';
+import Screenshot from './Components/Screenshot';
 import ModalProvider from './Contexts/ModalProvider';
 import Hotkeys from 'react-hot-keys';
+require('typeface-inter');
+
 
 function App() {
   const [isOpened, setIsOpened] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isScreenshot, setIsScreenshot] = useState(false);
   const [og, setOg] = useState({ image: null, title: null });
 
   function onKeyUp(keyName, e, handle) {
@@ -23,6 +27,13 @@ function App() {
 
     if(keyName == 'alt+b') {
       console.log('save a bookmark')
+      window.postMessage({ run: 'OPEN_LOADING', url: window.location.href }, "*");
+      /*
+      window.postMessage({
+          type: "SAVE_LINK",
+          url: window.location.href
+      }, "*");
+      */
     }
   }
 
@@ -41,27 +52,36 @@ function App() {
       setIsOpened(false)
       setIsUploading(true)
     }
+    if(event.data.type === "OPEN_SCREENSHOT_SHORTCUT") {
+      setIsOpened(false)
+      //window.postMessage({ type: "TAKE_SCREENSHOT" }, "*");
+      setIsScreenshot(true)
+    }
   });
 
   useEffect(() => {
-    let imageMeta = getMeta();
-    setOg({ image: imageMeta })
+    let meta = getMeta();
+    setOg({ image: meta.image, favicon: meta.favicon })
   }, []);
 
-  function getMeta() {
-    let image;
-    if(document.querySelector("meta[property='og:image']")){
-      image = document.querySelector("meta[property='og:image']").getAttribute('content');
-    } else {
-      //let first = document.getElementsByTagName("img")[1];
-      //console.log('first', first)
-      //image = first.src;
-      image = "https://tonsmb.org/wp-content/uploads/2014/03/default-placeholder.png"
+  const getMeta = () => {
+    let meta = {
+      image: null,
+      favicon: null
     }
-    return image;
-  }
 
-  console.log('isOpened: ', isOpened)
+    if(document.querySelector("meta[property='og:image']")){
+      meta.image = document.querySelector("meta[property='og:image']").getAttribute('content');
+    } else {
+      meta.image = "https://slate.textile.io/ipfs/bafkreidwm3g5q4vm32j42yofeccacjqhpbm2u3j4gq4rnsihg54zsmz6pi"
+    }
+
+    if(document.querySelector("link[rel~='icon']")){
+      meta.favicon = document.querySelector("link[rel~='icon']").getAttribute('href');
+    }
+
+    return meta;
+  }
 
   return (
     <>
@@ -75,6 +95,7 @@ function App() {
             >
               <Modal
                 image={og.image}
+                favicon={og.favicon}
               />
             </Hotkeys>
           </div>
@@ -83,8 +104,13 @@ function App() {
       {isUploading &&
         <Loader 
           image={og.image}
+          title={document.title}
         />
       }
+      {/*
+        isScreenshot &&
+        <Screenshot />
+      */}
     </>
   );
 }

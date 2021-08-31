@@ -21,6 +21,7 @@ const ModalProvider = ({ children }) => {
   useEffect(() => { 
     // Set up event listeners from Content script
     window.addEventListener("message", function(event) {
+      console.log('this is a messgae from the modal ModalProvider')
       if (event.source !== window) return;
       if (event.data.type && (event.data.type === "EXTENSION_ID_RESULT")) {
         setExtensionId(event.data.extensionId);
