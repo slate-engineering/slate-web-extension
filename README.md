@@ -19,14 +19,16 @@ To load as a developer extension inside of Chrome:
 8. Select the `build` folder inside of this project folder <br>
 
 
+### Adding an API key
+1. For now, you'll have to add your Slate API key in the temporary settings page
+
 ### Shortcuts
 `option + S` opens the main app modal <br>
 `option + O` opens your Slate data page <br><br>
 
 When the app modal is open:
 - `option + B` bookmark the current page
-- `option + C` save bookmark to a collection
 
-### Auto saving
+### Archiving
 1) When you bookmark a page through Chrome, the Slate extension will automatically archive the link.
 2) When you download a file to your desktop, the Slate extension will automatically upload the file.
