@@ -19,7 +19,7 @@
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "all_frames": true,
+    "all_frames": false,
     "js": [
       "./content.js",
       "./jquery.js"
@@ -31,7 +31,7 @@
     "tabs",
     "bookmarks",
     "history",
-    "chrome://favicon/",
+    "chrome://favicon/*",
     "storage",
     "downloads",
     "contextMenus"
@@ -52,9 +52,12 @@
       "description": "Open the slate web app"
     }
   },
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'; img-src chrome://favicon; ",
+  "content_security_policy": "script-src 'self' https://fonts.googleapis.com; object-src 'self';",
   "web_accessible_resources": [
     "index.html",
-    "/static/*"
+    "/static/*",
+    "/fonts/*",
+    "Inter-Regular.ttf",
+    "../fonts/*"
   ]
 }
