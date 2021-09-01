@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
 import Modal from './Components/Modal';
 import Loader from './Components/Loader';
 import Screenshot from './Components/Screenshot';
@@ -14,31 +13,17 @@ function App() {
   const [isScreenshot, setIsScreenshot] = useState(false);
   const [og, setOg] = useState({ image: null, title: null });
 
-  function onKeyUp(keyName, e, handle) {
-    console.log("test:onKeyUp", e, handle)
-  }
-
   function onKeyDown(keyName, e, handle) {
-    console.log("test:onKeyDown", keyName)
-
-    if(keyName == 'esc') {
+    if(keyName === 'esc') {
       setIsOpened(false)
     }
 
-    if(keyName == 'alt+b') {
-      console.log('save a bookmark')
+    if(keyName === 'alt+b') {
       window.postMessage({ run: 'OPEN_LOADING', url: window.location.href }, "*");
-      /*
-      window.postMessage({
-          type: "SAVE_LINK",
-          url: window.location.href
-      }, "*");
-      */
     }
   }
 
   window.addEventListener("message", function(event) {
-    console.log('there is a message in the app')
     if(event.data.type === "UPLOAD_START") {
       setIsOpened(false)
       setIsUploading(true)
@@ -65,10 +50,7 @@ function App() {
   }, []);
 
   const getMeta = () => {
-    let meta = {
-      image: null,
-      favicon: null
-    }
+    let meta = {};
 
     if(document.querySelector("meta[property='og:image']")){
       meta.image = document.querySelector("meta[property='og:image']").getAttribute('content');
@@ -89,9 +71,8 @@ function App() {
         <ModalProvider>
           <div>
             <Hotkeys 
-              keyName="alt+s,esc,alt+b" 
+              keyName="esc,alt+b" 
               onKeyDown={onKeyDown.bind(this)}
-              onKeyUp={onKeyUp.bind(this)}
             >
               <Modal
                 image={og.image}
