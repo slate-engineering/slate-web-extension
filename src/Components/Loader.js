@@ -1,11 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { HotKeys } from "react-hotkeys";
+import React, { useState } from 'react';
 import { ModalContext } from '../Contexts/ModalProvider';
-import Button from '../Components/Button';
-import Metadata from '../Components/Metadata';
-import Image from '../Components/Image';
 import * as Icons from '../Components/Icons';
-import Hotkeys from 'react-hot-keys';
 import classes from '../App.module.css';
 
 const Loader = (props) => {
@@ -82,7 +77,7 @@ const Loader = (props) => {
 
   return (
     <ModalContext.Consumer>
-      {({ windowPosition, hasDraggedWindowPosition, extensionId, getExtensionId, pageData }) => (
+      {({ pageData }) => (
         <>
         {visable &&
           <div id="modal" className={classes.loaderWindow }>
