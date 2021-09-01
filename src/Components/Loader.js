@@ -4,11 +4,9 @@ import { ModalContext } from '../Contexts/ModalProvider';
 import Button from '../Components/Button';
 import Metadata from '../Components/Metadata';
 import Image from '../Components/Image';
+import * as Icons from '../Components/Icons';
 import Hotkeys from 'react-hot-keys';
 import classes from '../App.module.css';
-
-const fetch = require('node-fetch');
-const og = require('open-graph');
 
 const Loader = (props) => {
   const [visable, setVisable] = useState(true);
@@ -18,17 +16,12 @@ const Loader = (props) => {
     setVisable(false)
   }
 
-  const onLoadHover = () => {
-    console.log('hovering now')
-  }
-
-  const handleKeydown = (e) => {
-    console.log('this is the key press event from loader', e)
-  }
-
   window.addEventListener("message", function(event) {
     if(event.data.type === "UPLOAD_DONE") {
-      setUpload({ status: 'complete', data: event.data.data.cid }) 
+      setUpload({ 
+        status: 'complete', 
+        data: event.data.data.cid 
+      }) 
       const timer = setTimeout(() => {
         handleCloseModal()
       }, 10000);
@@ -40,22 +33,18 @@ const Loader = (props) => {
     }
 
     if(event.data.type === "UPLOAD_DUPLICATE") {
-      setUpload({ status: 'duplicate', data: event.data.data.cid }) 
+      setUpload({ 
+        status: 'duplicate', 
+        data: event.data.data.cid 
+      }) 
     }
   });
 
   let count = 28;
   let title = props.title.slice(0, count) + (props.title.length > count ? "..." : "");
 
-  const loaderClose = () => {
-    setVisable(false)
-  }
-
   const Footer = (props) => {
-    let url;
-    if(props.upload.data) {
-      url = `https://slate.host/_/data?cid=${props.upload.data}`;
-    }
+    let url = ((props.upload.data) ? `https://slate.host/_/data?cid=${props.upload.data}` : null);
     return (
         <>
           {props.upload.status === 'uploading' &&
@@ -87,7 +76,6 @@ const Loader = (props) => {
           {props.upload.status === 'error' &&
             <div className={classes.loaderFooterLeft} style={{ color: '#FF4530' }}>Failed to save</div>
           }
-
         </>
       )
   }
@@ -97,16 +85,13 @@ const Loader = (props) => {
       {({ windowPosition, hasDraggedWindowPosition, extensionId, getExtensionId, pageData }) => (
         <>
         {visable &&
-          <div id="modal" className={classes.loaderWindow } onMouseEnter={onLoadHover}>
+          <div id="modal" className={classes.loaderWindow }>
             <div className={classes.loaderContent}>
               <div className={classes.loaderText}>
                 <img className={classes.loaderImage} src={props.image} />
                 {title}
-                <div onClick={loaderClose} className={classes.loaderClose}>
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 5L5 15" stroke="#48494A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M5 5L15 15" stroke="#48494A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
+                <div onClick={handleCloseModal} className={classes.loaderClose}>
+                  <Icons.Close />
                 </div>
               </div>
               <div className={classes.loaderFooter}>

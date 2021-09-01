@@ -32,6 +32,7 @@
   height: 100vh;
   position: fixed;
   cursor: pointer;
+  z-index: 9998;
 }
 
 .modal-window-inner-border {
@@ -91,13 +92,11 @@
 }
 
 .modalButtonBox {
-  /*
-  margin: 0 auto; 
-  overflow: "scroll";
-  width: '352px';
-  height: "150px";
-  border-radius: '12px';
-  */
+  margin: 0 auto;
+  overflow: auto;
+  width: 352px;
+  height: 142px;
+  border-radius: 12px;
 }
 
 .modalButtonBox::-webkit-scrollbar { 
@@ -208,11 +207,11 @@
   font-family: Inter-Regular;
 }
 
-.modalCloseButton {
+.metadataCloseIcon {
   position: absolute;
-  right: '0px';
-  top: '14px';
-  color: '#48494A';
+  display: inline;
+  right: 24px;
+  cursor: pointer;
 }
 
 .metadata {
@@ -244,6 +243,14 @@
 }
 
 .metaDataTitle {
+  color: '#000';
+  font-family: 'Inter';
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.modalCloseButton {
   color: '#000';
   font-family: 'Inter';
   font-weight: 600;

@@ -1,3 +1,6 @@
+import React, { useState } from 'react';
+import classes from '../App.module.css';
+
 export const Loader = (props) => {
   return (
     <svg
