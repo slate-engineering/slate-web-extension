@@ -6,22 +6,12 @@ import classes from '../App.module.css';
 
 const Modal = (props) => {
   const [search, setSearch] = useState({ query: null });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [tags, setTags] = useState({ show: false });
   const [og, setOg] = useState({ image: null, title: null });
 
-  const [documentData, setDocumentData] = useState({ 
-    title: document.title,
-    description: document.description,
-    url: window.location.href
-  });
-
   const handleCloseModal = () => {
     window.postMessage({ type: "CLOSE_APP" }, "*");
-  }
-
-  const onKeyPressed = (e) => {
-    console.log(e.key);
   }
 
   window.addEventListener("message", function(event) {
@@ -32,7 +22,7 @@ const Modal = (props) => {
 
   return (
     <ModalContext.Consumer>
-      {({ windowPosition, hasDraggedWindowPosition, extensionId, getExtensionId, pageData }) => (
+      {({ pageData }) => (
       <>
         <div id="modal" className={classes.modalWindow}>
           <div className={classes.modalBody}>
@@ -42,9 +32,8 @@ const Modal = (props) => {
                   <Search />
                 </div>
               */}
-              <Metadata 
-                url={documentData.url} 
-                title={documentData.title} 
+              <Metadata
+                data={pageData} 
                 image={props.image} 
                 favicon={props.favicon}
               />
@@ -80,10 +69,7 @@ const Modal = (props) => {
             </div>
           </div>
         </div>
-        <div 
-          className={classes.modalBackground}
-          onClick={handleCloseModal}
-        ></div>
+        <div className={classes.modalBackground} onClick={handleCloseModal}></div>
       </>
       )}
     </ModalContext.Consumer>

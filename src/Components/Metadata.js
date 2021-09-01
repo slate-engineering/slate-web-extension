@@ -6,7 +6,7 @@ import classes from '../App.module.css';
 const Metadata = (props) => {
 
 	let count = 25;
-	let title = props.title.slice(0, count) + (props.title.length > count ? "..." : "");
+	let title = props.data.title.slice(0, count) + (props.data.title.length > count ? "..." : "");
 
 	const getHostname = (url) => {
 	  return new URL(url).hostname;
@@ -15,7 +15,7 @@ const Metadata = (props) => {
     const handleCloseModal = () => {
 		window.postMessage({ type: "CLOSE_APP" }, "*");
     }
-    
+
 	return(
 		<>
 			<div className={classes.metadata}>
@@ -36,7 +36,7 @@ const Metadata = (props) => {
 					<div style={{ display: 'flex', lineHeight: '12px' }}>
 						<img src={props.favicon} width="14px" height="14px" style={{ display: 'inline', marginRight: '8px' }} />
 						<div className={classes.metadataUrl}>
-							{getHostname(props.url)}
+							{getHostname(props.data.url)}
 						</div>
 					</div>
 				</div>

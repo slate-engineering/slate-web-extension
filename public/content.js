@@ -16,8 +16,6 @@ if(window.location.href.startsWith('https://slate.host')) {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
-  console.log('something was found in content.js', request)
-
   if(request.run === "LOAD_APP") {
     main();
     return true;
@@ -27,7 +25,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     window.postMessage({ type: "LOAD_APP_WITH_TAGS" }, "*");
     return true;
   }
-  
 
   if(request.run === "OPEN_LOADING") {
     window.postMessage({ type: "OPEN_LOADING" }, "*");
@@ -38,19 +35,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     window.postMessage({ type: "UPLOAD_DONE", data: request.data }, "*");
     return true;
   }
-  /*
-  if(request.run === "SCREENSHOT_TAKEN") {
-    console.log('we recieved a messge that the screenshot has been taken')
-    window.postMessage({ type: "SCREENSHOT_TAKEN" }, "*");
-    return true;
-  } 
-
-  if(request.run === "SCREENSHOT_DONE") {
-    console.log('we recieved a messge that the screenshot has been uploaded')
-    window.postMessage({ type: "SCREENSHOT_DONE", data: request.data }, "*");
-    return true;
-  }  
-  */
 
   if(request.run === "UPLOAD_FAIL") {
     window.postMessage({ type: "UPLOAD_FAIL" }, "*");
@@ -61,8 +45,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     window.postMessage({ type: "UPLOAD_DUPLICATE", data: request.data }, "*");
     return true;
   } 
-  
-
 });
 
 function main() {
@@ -83,23 +65,12 @@ function main() {
 }
 
 window.addEventListener("message", async function(event) {
-  /*
-  if(event.data.type === "OPEN_SEARCH") {
-    event.preventDefault();
-    chrome.runtime.sendMessage({ type: 'OPEN_SEARCH', query: event.data.query });
-  }
-  */
-
   if(event.data.run === "SAVE_LINK") {
     chrome.runtime.sendMessage({ type: "SAVE_LINK", url: event.data.url });
   }
 
   if(event.data.type === "UPLOAD_START") {
     window.postMessage({ type: "UPLOAD_START" }, "*");
-  }
-  
-  if(event.data.type === "TAKE_SCREENSHOT") {
-    chrome.runtime.sendMessage({ type: "TAKE_SCREENSHOT" });
   }
 
   if(event.data.run === "OPEN_LOADING") {
@@ -114,19 +85,5 @@ window.addEventListener("message", async function(event) {
   }
 
   if (event.source !== window) return;
-  //onDidReceiveMessage(event);
 });
-
-/*
-async function onDidReceiveMessage(event) {
-  if (event.data.type && (event.data.type === "GET_EXTENSION_ID")) {
-    window.postMessage({ type: "EXTENSION_ID_RESULT", extensionId: chrome.runtime.id }, "*");
-  }
-  
-  if(event.data.type && (event.data.type === "SAVE_LINK")) {
-    chrome.runtime.sendMessage({ type: 'SAVE_LINK' });
-  }
-}
-*/
-
 

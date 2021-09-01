@@ -1,17 +1,17 @@
 {
   "manifest_version": 2,
-  "name": "Slate V3",
+  "name": "Slate Web Extension",
   "description": "Manage your history, bookmarks and downloads",
   "version": "1.0.0",
   "homepage_url": "https://slate.host",
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
   },
   "browser_action": {
-    "default_icon": "favicon.png",
-    "default_title": "React Chrome Extension Boilerplate"
+    "default_icon": "favicon-2.png",
+    "default_title": "Slate Web Extension"
   },
   "background": {
     "scripts": ["./jquery.js", "background.js"],

@@ -25,7 +25,6 @@ const handleSaveLink = async (props) => {
   });
 
   const json = await response.json();
-  console.log('upload: ', json);
 
   if(!props.background) {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
@@ -74,7 +73,6 @@ handleSaveImage = async (props) => {
   });
 
   const json = await response.json();
-  console.log('done uploading', json)
   return json;
 }
 
@@ -96,35 +94,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
   }
 });
 
-/*
-function dataURLtoBlob(dataurl) {
-  var arr = dataurl.split(","),
-    bstr = atob(arr[1]),
-    n = bstr.length,
-    u8arr = new Uint8Array(n);
-  var mime = dataurl.split(",")[0].split(":")[1].split(";")[0];
-
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new Blob([u8arr], { mime });
-}
-*/
-
 chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
-  /*
-  let filter = null;
-  if(request.type === "OPEN_SEARCH") {
-    if(request.filter) {
-
-    }
-    //Must pass &extension=true and the return tab id for back button function
-    chrome.tabs.create({ url: 
-      `https://slate.host/?query=${request.query}&filter=${request.filter}&extension=true&id=${sender.tab.id}`
-    });
-  }
-  */
-
   if(request.type === "GO_BACK") {
     let openId = parseInt(request.id)
     let closeId = parseInt(sender.tab.id)
@@ -137,65 +107,12 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
     let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id })
     console.log('data: ', data)
     chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "UPLOAD_DONE", data: data });
-  }
-  /* 
-  if(request.type === "TAKE_SCREENSHOT") {
-    const key = await getApiKey();
-    chrome.tabs.captureVisibleTab(null, null, async function(dataUrl) {
-        console.log('this is the screenshot data: ', dataUrl)
-
-        const final = dataURLtoBlob(dataUrl);
-        const file = new File([final], sender.tab.title, { type: "image/jpg" });
-
-        chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "SCREENSHOT_TAKEN" });
-
-        const url = 'https://uploads.slate.host/api/public';
-        let data = new FormData();
-        data.append("data", file);
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            Authorization: key.apiKey,
-          },
-          body: data
-        });
-
-        const json = await response.json()
-        console.log('done: ', json)
-
-        chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "SCREENSHOT_DONE", data: json });
-        
-    });
-    //chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "OPEN_LOADING" });
-    //await handleSaveLink({ url: sender.url, tab: sender.tab.id })
-  }
-  */
-  
+  }  
 
   if(request.type === "OPEN_SETTINGS") {
     chrome.tabs.create({ url: 'settings.html' });
   }
-  
-  /*
-  if(request.type === "TAKE_SCREENSHOT") {
-    console.log('sending screenshot!!!!')
-    let queryOptions = { active: true, currentWindow: true };
-    let [tab] = await chrome.tabs.query(queryOptions);
-    console.log('this is the tab id: ', tab);
-    //window.postMessage({ type: "UPLOAD_START" }, "*");
-  }
-  */
 });
-
-/*
-chrome.runtime.onMessage.addListener(function(request, sender) {
-    console.log('something was recieved here')
-    if (request.type == "SAVE_LINK") {
-      console.log('we are in the background now')
-    }
-});
-*/
 
 chrome.tabs.onUpdated.addListener(async function(tabId , info , tab) {
   if (info.status == "complete") {
@@ -222,8 +139,7 @@ handleUploadImage = async (info, tabs) => {
   chrome.tabs.sendMessage(tabs.id, { run: 'LOAD_APP', type: 'uploading' });
   chrome.tabs.sendMessage(tabs.id, { run: 'LOAD_APP_WITH_TAGS' });
   const key = await getApiKey();
-  const imageUrl = info.srcUrl;
-  const filename = imageUrl.replace(/^.*[\\\/]/, '')
+  const filename = info.srcUrl.replace(/^.*[\\\/]/, '')
   const url = 'https://uploads.slate.host/api/v2/public/upload-by-url';
 
   const response = await fetch(url, {
@@ -234,14 +150,13 @@ handleUploadImage = async (info, tabs) => {
     },
     body: JSON.stringify({
       data: {
-        url: imageUrl,
+        url: info.srcUrl,
         filename: filename,
       },
     }),
   });
 
   const json = await response.json();
-  console.log('Upload data: ', json)
   return json;
 }
 

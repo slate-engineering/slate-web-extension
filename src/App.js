@@ -39,7 +39,6 @@ function App() {
     }
     if(event.data.type === "OPEN_SCREENSHOT_SHORTCUT") {
       setIsOpened(false)
-      //window.postMessage({ type: "TAKE_SCREENSHOT" }, "*");
       setIsScreenshot(true)
     }
   });
