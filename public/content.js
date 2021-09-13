@@ -18,6 +18,7 @@ if(window.location.href.startsWith('https://slate.host')) {
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   if(request.run === "LOAD_APP") {
     main();
+
     return true;
   }
 

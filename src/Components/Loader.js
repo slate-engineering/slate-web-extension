@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ModalContext } from '../Contexts/ModalProvider';
 import * as Icons from '../Components/Icons';
 import classes from '../App.module.css';
+require('typeface-inter');
 
 const Loader = (props) => {
   const [visable, setVisable] = useState(true);
@@ -50,7 +51,7 @@ const Loader = (props) => {
             <>
               <div className={classes.loaderFooterLeft}>Saved</div>
               <div className={classes.loaderFooterRight}>
-                <a href={url} style={{ color: '#0084FF', fontWeight: '600', textDecoration: 'none' }} target="_blank">
+                <a href={url} className={classes.modalLink} target="_blank">
                   View
                 </a>
               </div>
@@ -61,7 +62,7 @@ const Loader = (props) => {
             <>
               <div className={classes.loaderFooterLeft} style={{ color: '#34D159'}}>Already exists</div>
               <div className={classes.loaderFooterRight}>
-                <a href={url} style={{ color: '#0084FF', fontWeight: '600', textDecoration: 'none' }} target="_blank">
+                <a href={url} className={classes.modalLink} target="_blank">
                   View
                 </a>
               </div>

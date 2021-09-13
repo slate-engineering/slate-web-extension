@@ -4,8 +4,7 @@ import Loader from './Components/Loader';
 import Screenshot from './Components/Screenshot';
 import ModalProvider from './Contexts/ModalProvider';
 import Hotkeys from 'react-hot-keys';
-require('typeface-inter');
-
+import "@fontsource/inter";
 
 function App() {
   const [isOpened, setIsOpened] = useState(true);
@@ -13,13 +12,25 @@ function App() {
   const [isScreenshot, setIsScreenshot] = useState(false);
   const [og, setOg] = useState({ image: null, title: null });
 
+  const [user, setUser] = useState({ signedin: false, data: null });
+
   function onKeyDown(keyName, e, handle) {
+    console.log(keyName)
+
     if(keyName === 'esc') {
       setIsOpened(false)
     }
 
-    if(keyName === 'alt+b') {
+    if(keyName === 'alt+b' || keyName === 'enter') {
       window.postMessage({ run: 'OPEN_LOADING', url: window.location.href }, "*");
+    }
+
+    if(keyName === 'alt+a') {
+      window.postMessage({ run: 'OPEN_ACCOUNT_PAGE' }, "*");
+    }
+
+    if(keyName === 'alt+c') {
+      window.postMessage({ run: 'OPEN_SHORTCUTS_PAGE' }, "*");
     }
   }
 
@@ -70,7 +81,7 @@ function App() {
         <ModalProvider>
           <div>
             <Hotkeys 
-              keyName="esc,alt+b" 
+              keyName="esc,alt+b,alt+a,alt+c,alt+3,enter" 
               onKeyDown={onKeyDown.bind(this)}
             >
               <Modal
@@ -82,7 +93,7 @@ function App() {
         </ModalProvider>
       }
       {isUploading &&
-        <Loader 
+        <Loader
           image={og.image}
           title={document.title}
         />

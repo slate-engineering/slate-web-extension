@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import Image from '../Components/Image';
 import * as Icons from '../Components/Icons';
 import classes from '../App.module.css';
+require('typeface-inter');
 
 const Metadata = (props) => {
 
-	let count = 25;
+	let count = 45;
 	let title = props.data.title.slice(0, count) + (props.data.title.length > count ? "..." : "");
 
 	const getHostname = (url) => {
@@ -20,25 +21,26 @@ const Metadata = (props) => {
 		<>
 			<div className={classes.metadata}>
 				<div className={classes.metadataBox}>
+					<Icons.Link />
+					{/*
 					<Image 
 					  url={props.image}
-					  width="48px"
-					  height="48px" 
+					  width="24px"
+					  height="24px" 
 					/>
+					*/}
 				</div>
 	            <div className={classes.metadataBox2}>
-					<div className={classes.metaDataTitle}>{title}
-						<div className={classes.metadataCloseIcon} onClick={handleCloseModal}>
-							<Icons.Close />
-						</div>
-					</div>
-
-					<div style={{ display: 'flex', lineHeight: '12px' }}>
-						<img src={props.favicon} width="14px" height="14px" style={{ display: 'inline', marginRight: '8px' }} />
+					<div className={classes.metaDataTitle}>{title}</div>
+					<div style={{ lineHeight: '16px' }}>
 						<div className={classes.metadataUrl}>
 							{getHostname(props.data.url)}
 						</div>
 					</div>
+				</div>
+
+				<div className={classes.metadataBox3}>
+					<img height="32px" src={props.image} />
 				</div>
 			</div>
 		</>

@@ -26,7 +26,7 @@ export const Tag = (props) => {
   )
 }
 
-export const Plus = (props) => {
+export const PlusCircle = (props) => {
   return(
     <svg 
         className={classes.modalButtonSVGItem} 
@@ -48,21 +48,68 @@ export const Plus = (props) => {
   )
 }
 
-export const Settings = (props) => {
+export const Account = (props) => {
   return(
+    <svg width="20" height="20" style={{ marginTop: '14px' }} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15.3334 16V14.6667C15.3334 13.9594 15.0524 13.2811 14.5523 12.781C14.0522 12.281 13.3739 12 12.6667 12H7.33335C6.62611 12 5.94783 12.281 5.44774 12.781C4.94764 13.2811 4.66669 13.9594 4.66669 14.6667V16" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.99998 9.33333C11.4727 9.33333 12.6666 8.13943 12.6666 6.66667C12.6666 5.19391 11.4727 4 9.99998 4C8.52722 4 7.33331 5.19391 7.33331 6.66667C7.33331 8.13943 8.52722 9.33333 9.99998 9.33333Z" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
+
+export const Command = (props) => {
+  return( 
+    <svg width="20" height="20" style={{ marginTop: '14px' }} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 4C13.4696 4 12.9609 4.21071 12.5858 4.58579C12.2107 4.96086 12 5.46957 12 6V14C12 14.5304 12.2107 15.0391 12.5858 15.4142C12.9609 15.7893 13.4696 16 14 16C14.5304 16 15.0391 15.7893 15.4142 15.4142C15.7893 15.0391 16 14.5304 16 14C16 13.4696 15.7893 12.9609 15.4142 12.5858C15.0391 12.2107 14.5304 12 14 12H6C5.46957 12 4.96086 12.2107 4.58579 12.5858C4.21071 12.9609 4 13.4696 4 14C4 14.5304 4.21071 15.0391 4.58579 15.4142C4.96086 15.7893 5.46957 16 6 16C6.53043 16 7.03914 15.7893 7.41421 15.4142C7.78929 15.0391 8 14.5304 8 14V6C8 5.46957 7.78929 4.96086 7.41421 4.58579C7.03914 4.21071 6.53043 4 6 4C5.46957 4 4.96086 4.21071 4.58579 4.58579C4.21071 4.96086 4 5.46957 4 6C4 6.53043 4.21071 7.03914 4.58579 7.41421C4.96086 7.78929 5.46957 8 6 8H14C14.5304 8 15.0391 7.78929 15.4142 7.41421C15.7893 7.03914 16 6.53043 16 6C16 5.46957 15.7893 4.96086 15.4142 4.58579C15.0391 4.21071 14.5304 4 14 4Z" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
+
+export const Plus = (props) => {
+  return( 
+    <svg width="20" height="20" style={{ marginTop: '12px' }} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 5.33332V14.6667" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M5.33331 10H14.6666" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
+
+export const ChevronLeft = (props) => {
+  return( 
+    <svg width="16" height="16" style={{ marginTop: '6px' }} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 12L6 8L10 4" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
+
+export const Link = (props) => {
+  return( 
     <svg
-      style={{ marginTop: '4px', marginRight: '-6px' }}
-      width="16" 
-      height="20"
       viewBox="0 0 24 24"
       fill="none"
-      stroke="#00050A"
+      stroke="currentColor"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      width="16px"
+      height="16px"
+      style={{ marginTop: '8px' }}
     >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  )
+}
+
+export const Uploads = (props) => {
+  return( 
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginTop: '14px' }}>
+      <path d="M7.33331 6H16" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7.33331 10H16" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7.33331 14H16" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 6H4.00667" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 10H4.00667" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 14H4.00667" stroke="#00050A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   )
 }

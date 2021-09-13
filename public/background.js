@@ -82,15 +82,27 @@ const checkMatch = (list, url) => {
 }
 
 chrome.browserAction.onClicked.addListener(function(tab) {
+  /*
+  chrome.cookies.get({"url": "https://slate.host", "name": "WEB_SERVICE_SESSION_KEY"}, function(cookie) {
+    console.log('cookie', cookie)
+
+    if(cookie === null){
+      console.log('okay dont do anything');
+    }else{
+      console.log('okay do something');
+    }
+  });
+  */
   chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
-  if(command == 'open-app') {
+  if(command == 'open-app') {    
     chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
   }
   if(command == 'open-slate') {
-    chrome.tabs.create({ 'url': 'https://slate.host/_/data' });
+    console.log('tab', tab)
+    chrome.tabs.create({ 'url': 'https://slate.host/_/data&extension=true' });
   }
 });
 
@@ -118,7 +130,8 @@ chrome.tabs.onUpdated.addListener(async function(tabId , info , tab) {
   if (info.status == "complete") {
     const blacklist = [
       'chrome://',
-      'localhost:'
+      'localhost:',
+      'cec.cx'
     ];
 
     const domains = [
@@ -134,6 +147,9 @@ chrome.tabs.onUpdated.addListener(async function(tabId , info , tab) {
     }
   }
 });
+
+/*
+TODO (jason) add back for sprint 2
 
 handleUploadImage = async (info, tabs) => {
   chrome.tabs.sendMessage(tabs.id, { run: 'LOAD_APP', type: 'uploading' });
@@ -195,3 +211,4 @@ chrome.downloads.onCreated.addListener(async function(download) {
     background: true
   })
 });
+*/

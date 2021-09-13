@@ -1,9 +1,11 @@
+@import 'vars.css';
+
 #modal-window {
   position: fixed;
   width: 100%;
   top: 0;
   z-index: 99999;
-  font-family: Inter-Regular;
+  font-family: "Inter";
 }
 
 .modalWindow {
@@ -11,19 +13,17 @@
   left: 50%;
   transform: translate(-50%, -50%);
   will-change: transform;
-  margin-top: 2em;
   position: fixed;
-  background: #E5E8EA;
-  backdrop-filter: blur(50px);
-  opacity: 0.95;
-  width: 400px;  
-  height: 260px;
+  background: var(--white);
+  width: 640px;  
+  height: 400px;
+  border: 1px solid var(--borderGrayLight);
   box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
   z-index: 9999;
-  border-radius: 10px;
-  border: 0;
-  color: #00050A;
-  font-family: Inter-Regular;
+  border-radius: 16px;
+  color: var(--black);
+  font-family: "Inter";
+  padding-bottom: 8px;
 }
 
 .modalBackground {
@@ -35,55 +35,9 @@
   z-index: 9998;
 }
 
-.modal-window-inner-border {
-  min-height: 200px;
-  height: initial;
-  display: flex;
-  box-shadow: 0 0 0 0.4px #222132;
-}
-
-.modal-window-inner-border:before {
-  position: absolute;
-  top: .4px;
-  left: .4px;
-  right: .4px;
-  bottom: .4px;
-  border: .5px solid #57566d;
-}
-
-.modal-handle {
-  cursor: move;
-  height: 15px;
-  border-radius: 3px;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
 .modalContent {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: left;
-  color: #00050A;
-  font-size: 14px;
-  line-height: 24px;
-  margin: 0 auto; 
-  width: '352px';
-}
-
-.modal-content-drawer-handle {
-  height: 100%;
-  width: 20px;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-close-button {
-  cursor: pointer;
+  position: relative;
+  width: 100%;
 }
 
 .modalBody {
@@ -93,10 +47,7 @@
 
 .modalButtonBox {
   margin: 0 auto;
-  overflow: auto;
-  width: 352px;
-  height: 142px;
-  border-radius: 12px;
+  width: 100%;
 }
 
 .modalButtonBox::-webkit-scrollbar { 
@@ -114,48 +65,43 @@
   user-select: none;
   cursor: pointer;
   background-color: #fff;
-  color: #00050A;
+  color: var(--black);
   bottom: 0;
   text-align: left;
   padding-left: 40px;
   font-size: 16px;
-  font-family: 'Inter'
+  font-family: "Inter";
 }
 
 .modalButton:hover {
   background-color: #EAEAEE;
-  color: #00050A;
+  color: var(--black);
 }
 
 .modalButtonMain {
   outline: 0;
   border: 0;
-  height: 40px;
-  line-height: 40px;
+  border-radius: 12px;
+  height: 48px;
+  line-height: 48px;
   font-size: 16px;
-  overflow-wrap: break-word;
   user-select: none;
   cursor: pointer;
   background-color: #fff;
-  color: #00050A;
+  color: var(--black);
   bottom: 0;
-  text-align: left;
-  font-family: Inter-Regular;
-  border-bottom: 1px solid #E5E8EA;
-  display: table; 
-  width: 100%; 
+  font-family: "Inter";
+  margin-left: 16px;
+  margin-right: 16px;
+  display: flex;
 }
 
 .modalButtonMain:hover {
-  color: #3DA1FF;
-  fill: #3DA1FF;
+  background-color: var(--grayLight);
 }
 
 .modalButtonSVG {
-   display: table-cell; 
-   padding-left: 14px;
-   padding-top: 6px; 
-   text-align: left;
+   margin-left: 16px;
 }
 
 .modalButtonSVGItem {
@@ -167,13 +113,8 @@
 }
 
 .modalButtonText {
-  display: table-cell; 
-  width: 86%; 
-  left: 0px;
-  line-height: 40px;
-  margin-bottom: 12px;
-  text-align: left; 
-  font-family: Inter-Regular;
+  margin-left: 16px;
+  font-family: "Inter";
 }
 
 .modalButtonShortcut {
@@ -182,12 +123,12 @@
 }
 
 .slateButtonSelected {
-  background-color: '#4d4' !important;
+  background-color: var(--green);
 }
 
 .modalSearchBar {
   position: relative;
-  background-color: #E5E8EA;
+  background-color: var(--borderGrayLight);
   top: 0;
   left: 0;
   width: 100%;
@@ -195,7 +136,7 @@
 }
 
 .modalSearchInput {
-  background-color: #E5E8EA;
+  background-color: var(--borderGrayLight);
   top: 0;
   left: 0;
   width: 300px;
@@ -203,66 +144,66 @@
   outline: none;
   font-size: 14px;
   height: 50px;
-  color: #48494A;
-  font-family: Inter-Regular;
+  color: var(--grayDark);
+  font-family: "Inter";
 }
 
 .metadataCloseIcon {
   position: absolute;
-  display: inline;
-  right: 24px;
+  right: 32px;
   cursor: pointer;
+  top: 4px;
 }
 
 .metadata {
-  color: #48484A;
+  position: relative;
   background-color: transparent;
   display: flex;
-  height: 86px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 8px;
+  margin-top: 16px;
+  padding-left: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px #E5E8EA solid;
 }
 
 .metadataBox {
-  flex: 1;
 }
 
 .metadataImage {
-  border-radius: 12px;
+  border-radius: 8px;
+  margin-top: 8px;
   object-fit: cover;
-  min-height: 48px;
-  min-width: 48px;
+  min-height: 20px;
+  min-width: 20px;
 }
 
 .metadataBox2 {
-  flex: 1;
-  flex-grow: 4;
-  margin-top: -14px;
-  margin-left: -8px;
+  margin-left: 16px;
+}
+
+.metadataBox3 {
+  position: absolute;
+  right: 32px;
 }
 
 .metaDataTitle {
-  color: '#000';
-  font-family: 'Inter';
+  color: var(--black);
+  font-family: "Inter";
   font-weight: 600;
   font-size: 16px;
   margin-bottom: 4px;
 }
 
 .modalCloseButton {
-  color: '#000';
-  font-family: 'Inter';
+  color: var(--black);
+  font-family: "Inter";
   font-weight: 600;
   font-size: 16px;
-  margin-bottom: 4px;
 }
 
 .metaDataUrl {
-  color: '#000';
-  font-family: 'Inter';
-  font-size: 12px;
-  display: inline;
+  color: var(--black);
+  font-family: "Inter";
+  font-size: 16px;
 }
 
 
@@ -280,7 +221,7 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   margin-top: 2em;
   margin-right: 2em;
   position: fixed;
-  background: #fff;
+  background: var(--white);
   width: 320px;  
   height: 88px;
   max-width: 320px;  
@@ -289,7 +230,7 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   z-index: 9999;
   border-radius: 10px;
   border: 0;
-  color: #000;
+  color: var(--black);
 }
 
 .loaderBody {
@@ -297,12 +238,12 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
 }
 
 .loaderContent {
-  color: white;
+  color: var(--white);
   font-size: 14px;
 }
 
 .loaderText {
-  color: #000002;
+  color: var(--black);
   padding-left: 48px;
   line-height: 48px;
   font-weight: 600;
@@ -313,7 +254,7 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   width: 32px;
   height: 32px;
   background-color: #F2F2F7;
-  color: #8E8E93;
+  color: var(--gray);
   
 }
 
@@ -334,19 +275,23 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   height: 40px;
   line-height: 40px;
   background-color: #F2F2F7;
-  color: #8E8E93;
+  color: var(--gray);
   border-radius: 0 0 10px 10px; 
 }
 
 .loaderFooterRight {
-  text-align: 'right';
+  text-align: right;
   right: 14px;
+  font-weight: 400;
+  font-family: 'Inter';
   display: inline;
   position: absolute;
 }
 
 .loaderFooterLeft {
-  text-align: 'left';
+  text-align: left;
+  font-weight: 400;
+  font-family: 'Inter';
   left: 0px;
   padding-left: 14px;
   display: inline;
@@ -358,31 +303,13 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   right: 14px;
   display: inline;
   position: absolute;
-  color: #8E8E93;
+  color: var(--gray);
   line-height: 48px;
 }
 
 .loaderClose:hover {
   transition: 0.3s;
-  color: #000;
-}
-
-.loaderFadeOut {
-   opacity:0;
-   transition: width 0.5s 0.5s, height 0.5s 0.5s, opacity 0.5s;
-}
-
-.loaderFadeIn {
-   opacity:1;
-   transition: width 0.5s, height 0.5s, opacity 0.5s 0.5s;
-}
-
-.hiddenModal {
-  display: none;
-}
-
-.visableModal {
-  display: inline;
+  color: var(--black);
 }
 
 .modalSearchItem {
@@ -394,8 +321,8 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   font-family: 'Inter';
   font-weight: 400;
   font-size: 16px;
-  background-color: #E5E8EA;
-  color: #8E8E93;
+  background-color: var(--borderGrayLight);
+  color: var(--gray);
 }
 
 .modalSearchItem:hover {
@@ -410,8 +337,8 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   font-family: 'Inter';
   font-weight: 400;
   font-size: 16px;
-  background-color: #E5E8EA;
-  color: #8E8E93;
+  background-color: var(--borderGrayLight);
+  color: var(--gray);
 }
 
 .modalSearchDropdown {
@@ -420,7 +347,7 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   width: 400px;
   height: auto;
   max-height: 200px;
-  background-color: #E5E8EA;
+  background-color: var(--borderGrayLight);
   position: absolute;
   border-radius: 0 0 10px 10px;
   border-top-style: none;
@@ -428,4 +355,169 @@ input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
   overflow-x: hidden;
   overflow-y: scroll;
 }
+
+.modalShortcut {
+  width: auto;
+  background-color: var(--grayLight);
+  border-radius: 6px;
+  padding: 1px 3px 1px 3px;
+  margin-right: 4px;
+}
+
+.modalGoBack {
+  width: 20px;
+  height: 20px;
+  margin-right: 14px;
+  background-color: var(--grayLight);
+  border-radius: 6px;
+  padding: 6px 4px 6px 4px;
+  cursor: pointer;
+  display: inline;
+}
+
+.modalTable {
+  text-align: left;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.modalTr {
+  border-bottom: 1px solid var(--borderGrayLight);
+  color: var(--gray);
+  margin-top: 8px;
+  font-size: 12px;
+  margin-left: 32px;
+}
+
+.modalAccount {
+  vertical-align: middle;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.modalAccountContent {
+  margin: 0 auto;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-top: 150px;
+  transform: translate(-50%, -50%);
+}
+
+.modalLink {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.modalHeader {
+  height: 52px;
+  border-bottom: 1px solid var(--borderGreyLight);
+  line-height: 52px;
+  padding-left: 32px;
+  width: 100%;
+}
+
+.modalHeaderTitle {
+  font-weight: 600;
+  font-family: 'Inter';
+  font-size: 16px;
+  display: inline;
+}
+
+.modalProgressContainer {
+  margin: 8px 0 8px 0;
+  width: 240px;
+  background-color: var(--white);
+  border-radius: 2px;
+  border: 2px solid #D1D4D6;
+}
+
+.modalProgressBar {
+  height: 8px;
+  background-color: var(--blue);
+  border-radius: 2px;
+}
+
+.modalSystemText {
+  margin-left: 32px;
+  color: var(--gray);
+  padding-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.modalCommandIcon {
+  background-color: var(--grayLight);
+  border-radius: 6px;
+  padding: 1px;
+  margin-right: 4px;
+}
+
+.modalKeyIcon {
+  background-color: var(--grayLight);
+  border-radius: 6px;
+  padding: 1px 3px 1px 3px;
+}
+
+.modalTableHeader {
+  display: flex;
+  justify-content: left;
+  border-bottom: 1px solid var(--borderGreyLight); 
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 12px;
+  color: var(--gray);
+}
+
+.modalTableContent {
+  display: flex;
+  justify-content: left;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.modalAccountUsername {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  padding-top: 16px;
+  display: flex;
+  margin: auto 0;
+  justify-content: center;
+  clear: both;
+  align-items: center;
+}
+
+.modalAccountStorage {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  padding-top: 4px;
+  display: flex;
+  margin: auto 0;
+  justify-content: center;
+  clear: both;
+  align-items: center;
+}
+
+.modalSmallButton {
+  width: auto;
+  margin-top: 32px;
+  text-align: center;
+  clear: both;
+  background-color: var(--borderGreyLight);
+  color: var(--black);
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 0;
+  cursor: pointer;
+}
+
 
