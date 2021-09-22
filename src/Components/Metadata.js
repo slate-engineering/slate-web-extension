@@ -1,45 +1,39 @@
-import React, { useState } from 'react';
-import Image from '../Components/Image';
-import * as Icons from '../Components/Icons';
-import classes from '../App.module.css';
-require('typeface-inter');
+import React, { useState } from "react";
+
+import * as SVG from "../Common/SVG";
+import * as Strings from "../Common/strings";
 
 const Metadata = (props) => {
-
 	let count = 45;
-	let title = props.data.title.slice(0, count) + (props.data.title.length > count ? "..." : "");
-
-	const getHostname = (url) => {
-	  return new URL(url).hostname;
-	}
-
-    const handleCloseModal = () => {
-		window.postMessage({ type: "CLOSE_APP" }, "*");
-    }
-
-	return(
+	let title = Strings.truncateString(count, props.data.title);
+	return (
 		<>
-			<div className={classes.metadata}>
-				<div className={classes.metadataBox}>
-					<Icons.Link />
-					{/*
-					<Image 
-					  url={props.image}
-					  width="24px"
-					  height="24px" 
-					/>
-					*/}
+			<div className="metadata">
+				<div className="metadataBox">
+					{!props.status ? (
+						<SVG.Link
+							width="16px"
+							height="16px"
+							style={{ marginTop: "8px" }}
+						/>
+					) : (
+						<SVG.CheckCircle
+							width="16px"
+							height="17px"
+							style={{ marginTop: "8px" }}
+						/>
+					)}
 				</div>
-	            <div className={classes.metadataBox2}>
-					<div className={classes.metaDataTitle}>{title}</div>
-					<div style={{ lineHeight: '16px' }}>
-						<div className={classes.metadataUrl}>
-							{getHostname(props.data.url)}
+				<div className="metadataBox2">
+					<div className="metaDataTitle">{title}</div>
+					<div style={{ lineHeight: "16px" }}>
+						<div className="metadataUrl">
+							{Strings.getUrlHost(props.data.url)}
 						</div>
 					</div>
 				</div>
 
-				<div className={classes.metadataBox3}>
+				<div className="metadataBox3">
 					<img height="32px" src={props.image} />
 				</div>
 			</div>

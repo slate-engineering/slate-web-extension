@@ -18,7 +18,6 @@ if(window.location.href.startsWith('https://slate.host')) {
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   if(request.run === "LOAD_APP") {
     main();
-
     return true;
   }
 
@@ -33,7 +32,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   }
 
   if(request.run === "UPLOAD_DONE") {
-    window.postMessage({ type: "UPLOAD_DONE", data: request.data }, "*");
+    console.log('tab forom content', request.tab)
+    window.postMessage({ type: "UPLOAD_DONE", data: request.data, tab: request.tab }, "*");
     return true;
   }
 
@@ -46,23 +46,28 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
     window.postMessage({ type: "UPLOAD_DUPLICATE", data: request.data }, "*");
     return true;
   } 
-});
+
+  if(request.run === "CHECK_LINK") {
+      window.postMessage({ type: "CHECK_LINK", data: request.data, user: request.user }, "*");
+      return true;
+    }   
+  });
 
 function main() {
   const extensionOrigin = 'chrome-extension://' + chrome.runtime.id;
+
   if (!location.ancestorOrigins.contains(extensionOrigin)) {
     // Fetch the local React index.html page
-    fetch(chrome.runtime.getURL('index.html') /*, options */)
+    fetch(chrome.runtime.getURL('index.html'))
       .then((response) => response.text())
       .then((html) => {
         const styleStashHTML = html.replace(/\/static\//g, `${extensionOrigin}/static/`);
-        $(styleStashHTML).prependTo('body');
+           $(styleStashHTML).prependTo('body');
       })
       .catch((error) => {
         console.warn(error);
       });
   }  
-
 }
 
 window.addEventListener("message", async function(event) {
@@ -75,7 +80,6 @@ window.addEventListener("message", async function(event) {
   }
 
   if(event.data.run === "OPEN_LOADING") {
-    console.log('opening loader')
     chrome.runtime.sendMessage({ type: "SAVE_LINK", url: event.data.url });
     return true;
   }

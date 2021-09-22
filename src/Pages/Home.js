@@ -1,67 +1,67 @@
-import React, { useState } from 'react';
-import Image from '../Components/Image';
-import * as Icons from '../Components/Icons';
-import Button from '../Components/Button';
-import Metadata from '../Components/Metadata';
-import Header from '../Components/Header';
-import classes from '../App.module.css';
-require('typeface-inter');
+import React from "react";
+
+import Button from "../Components/Button";
+import Metadata from "../Components/Metadata";
+import Header from "../Components/Header";
 
 const HomePage = (props) => {
-
-	const handleCloseModal = () => {
-		window.postMessage({ type: "CLOSE_APP" }, "*");
-	}
-
-	return(
+	return (
 		<>
-			<Header
-				title="Slate Web Extension"
-			/>
+			<Header title="Slate Web Extension" />
 
 			<Metadata
-				data={props.pageData} 
-				image={props.image} 
+				data={props.pageData}
+				image={props.image}
 				favicon={props.favicon}
+				status={props.status}
 			/>
 
-			<div style={{ paddingTop: '8px' }}>
-				<Button 
-				  text="Add to my library"
-				  shortcut="enter"
-				  icon="plus"
-				  run="SAVE_LINK"
-				  data={props.pageData}
+			<div style={{ paddingTop: "8px" }}>
+
+				{!props.status.uploaded ?
+					<Button
+						text="Add to my library"
+						shortcut="enter"
+						icon="plus"
+						run="SAVE_LINK"
+						data={props.pageData}
+					/>
+				:
+					<Button
+						text="View on Slate"
+						shortcut="enter"
+						icon="eye"
+						run="OPEN_LINK"
+						data={props.status}
+					/>
+				}
+
+				<p className="modalSystemText">System</p>
+
+				<Button
+					text="Shortcuts"
+					shortcut="C"
+					command="option"
+					icon="command"
+					run="OPEN_SHORTCUTS_PAGE"
 				/>
 
-				<p className={classes.modalSystemText}>
-					System
-				</p>
-
-				<Button 
-				  text="Shortcuts"
-				  shortcut="C"
-				  command="option"
-				  icon="command"
-				  run="OPEN_SHORTCUTS_PAGE"
+				<Button
+					text="Account"
+					shortcut="A"
+					command="option"
+					icon="account"
+					run="OPEN_ACCOUNT_PAGE"
+					data={props.pageData}
 				/>
 
-				<Button 
-				  text="Account"
-				  shortcut="A"
-				  command="option"
-				  icon="account"
-				  run="OPEN_ACCOUNT_PAGE"
-				  data={props.pageData}
-				/> 
-
-				<Button 
-				  text="Uploads"
-				  shortcut="3"
-				  command="option"
-				  icon="uploads"
-				/> 
-			</div> 
+				<Button
+					text="Uploads"
+					shortcut="3"
+					command="option"
+					icon="uploads"
+				/>
+			</div>
 		</>
 	);
 };

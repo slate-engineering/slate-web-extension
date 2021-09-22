@@ -1,11 +1,12 @@
-import React from 'react';
-import classes from '../App.module.css';
+import React from "react";
 
 const ProgressBar = (props) => {
-
-	return(
-		<div className={classes.modalProgressContainer}>
-			<div className={classes.modalProgressBar} style={{ width: props.progress }}></div>
+	return (
+		<div className="modalProgressContainer">
+			<div
+				className="modalProgressBar"
+				style={{ width: props.progress }}
+			></div>
 		</div>
 	);
 };

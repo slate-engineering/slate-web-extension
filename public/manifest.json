@@ -14,15 +14,15 @@
     "default_title": "Slate Web Extension"
   },
   "background": {
-    "scripts": ["./jquery.js", "background.js"],
+    "scripts": ["./jquery.js", "./background.js"],
     "persistent": true
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
     "all_frames": false,
     "js": [
-      "./content.js",
-      "./jquery.js"
+      "./jquery.js",
+      "./content.js"
     ],
     "run_at": "document_idle"
   }],

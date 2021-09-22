@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
-import Image from '../Components/Image';
-import * as Icons from '../Components/Icons';
-import classes from '../App.module.css';
-require('typeface-inter');
+import React from "react";
+import * as SVG from "../Common/SVG";
 
 const Header = (props) => {
-
 	const handleGoBack = () => {
-		window.postMessage({ run: 'OPEN_HOME_PAGE' }, "*");
-	}
+		window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
+	};
 
-	return(
-		<div className={classes.modalHeader}>
-			{props.goBack &&
-				<span className={classes.modalGoBack} onClick={handleGoBack}>
-					<Icons.ChevronLeft />
-				</span>
-			}
-			<p className={classes.modalHeaderTitle}>{props.title}</p>
+	return (
+		<div className="modalHeader">
+			{props.goBack && (
+				<div className="modalGoBack" onClick={handleGoBack}>
+					<SVG.ChevronLeft width="16px" height="16px" style={{ maginTop: '8px' }} />
+				</div>
+			)}
+
+			<p className="modalHeaderTitle">{props.title}</p>
 		</div>
 	);
 };

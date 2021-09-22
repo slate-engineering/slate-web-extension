@@ -1,21 +1,88 @@
-const apiUrl = ``;
-
-const getApiKey = async () => {
-  var storage = new Promise(function (resolve, reject) {
-    chrome.storage.local.get(["apiKey"], function (result) {
-      resolve(result);
-    });
+const getSessionID = async () => {
+  return new Promise((resolve, reject) => {
+      chrome.cookies.get({"url": "https://slate.host", "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
+          if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError));
+          } else {
+              resolve(cookie);
+          }
+      });
   });
-  return storage;
 };
 
+const getApiKey = async () => {
+
+  let session = await getSessionID();
+  const url = 'https://slate.host/api/extension/get-api-keys';
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': "application/json",
+    },
+    body: JSON.stringify({
+      data: {
+        token: session.value,
+      },
+    }),
+  });
+
+  const json = await response.json();
+  let apiKey = json.data[0].key;
+  return apiKey;
+};
+
+const getUser = async (props) => {
+  const response = await fetch('https://slate.host/api/v2/get', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: props.key,
+    }
+  });
+
+  if (!response) {
+    console.log("No response");
+    return;
+  }
+
+  const json = await response.json();
+  if (json.error) {
+    console.log(json);
+  } else {
+    const collections = json.collections;
+    const user = json.user;
+  }
+
+  return json.user;
+}
+
+const checkLink = async (props) => {
+    const response = await fetch('https://slate.host/api/extension/check-link', {
+    method: 'POST',
+    headers: {
+      'Content-Type': "application/json",
+      Authorization: props.apiKey,
+    },
+    body: JSON.stringify({
+      data: {
+        url: props.tab,
+      },
+    }),
+  });
+
+  const json = await response.json();
+  return json;
+}
+
 const handleSaveLink = async (props) => {
-  const key = await getApiKey();
-  const response = await fetch("https://slate-dev.onrender.com/api/v2/create-link", {
+
+  const apiKey = await getApiKey();
+  const response = await fetch("https://slate.host/api/v2/create-link", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: key.apiKey,
+      Authorization: apiKey,
     },
     body: JSON.stringify({
       data: {
@@ -29,7 +96,8 @@ const handleSaveLink = async (props) => {
   if(!props.background) {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
       run: 'UPLOAD_DONE', 
-      data: json.data[0] 
+      data: json.data[0], 
+      tab: props.tab
     });
   }else{
     //If background upload, dont send a message to a tab
@@ -55,19 +123,19 @@ const handleSaveLink = async (props) => {
 }
 
 handleSaveImage = async (props) => {
-  console.log(props)
-  const key = await getApiKey();
+  const apiKey = await getApiKey();
   const url = 'https://uploads.slate.host/api/v2/public/upload-by-url';
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': "application/json",
-      Authorization: key.apiKey,
+      Authorization: apiKey,
     },
     body: JSON.stringify({
       data: {
         url: props.url,
-        filename: 'filename',
+        filename: props.url,
       },
     }),
   });
@@ -81,19 +149,13 @@ const checkMatch = (list, url) => {
   return matches;
 }
 
-chrome.browserAction.onClicked.addListener(function(tab) {
-  /*
-  chrome.cookies.get({"url": "https://slate.host", "name": "WEB_SERVICE_SESSION_KEY"}, function(cookie) {
-    console.log('cookie', cookie)
-
-    if(cookie === null){
-      console.log('okay dont do anything');
-    }else{
-      console.log('okay do something');
-    }
-  });
-  */
+chrome.browserAction.onClicked.addListener(async function(tab) {
   chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+
+  let api = await getApiKey();
+  let user = await getUser({ key: api });
+  let check = await checkLink({ apiKey: api, tab: tab.url });
+  chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
@@ -101,8 +163,7 @@ chrome.commands.onCommand.addListener((command, tab) => {
     chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
   }
   if(command == 'open-slate') {
-    console.log('tab', tab)
-    chrome.tabs.create({ 'url': 'https://slate.host/_/data&extension=true' });
+    chrome.tabs.create({ 'url': `https://slate.host/_/data&extension=true&id=${tab.id}` });
   }
 });
 
@@ -117,8 +178,6 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
   if(request.type === "SAVE_LINK") {
     chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "OPEN_LOADING" });
     let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id })
-    console.log('data: ', data)
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "UPLOAD_DONE", data: data });
   }  
 
   if(request.type === "OPEN_SETTINGS") {
