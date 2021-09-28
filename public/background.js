@@ -159,26 +159,32 @@ const checkMatch = (list, url) => {
   return matches;
 }
 
-chrome.browserAction.onClicked.addListener(async function(tab) {
-  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
-
+const checkLoginData = async (tab) => {
   let session = await getSessionID();
 
   if(session === null) {
     setTimeout(function(){ 
-      chrome.tabs.sendMessage(tab.id, { run: 'AUTH_REQ' });
+      chrome.tabs.sendMessage(tab, { run: 'AUTH_REQ' });
     }, 1000);    
+    return;
   }else{
     let api = await getApiKey();
     let user = await getUser({ key: api });
     let check = await checkLink({ apiKey: api, tab: tab.url });
-    chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
+    chrome.tabs.sendMessage(tab, { run: 'CHECK_LINK', data: check, user: user });
+    return;
   }
+}
+
+chrome.browserAction.onClicked.addListener(async function(tab) {
+  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+  await checkLoginData(tab.id);
 });
 
-chrome.commands.onCommand.addListener((command, tab) => {
+chrome.commands.onCommand.addListener(async (command, tab) => {
   if(command == 'open-app') {    
     chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+    await checkLoginData(tab.id);
   }
   if(command == 'open-slate') {
     chrome.tabs.create({ 'url': `https://slate.host/_/data&extension=true&id=${tab.id}` });
