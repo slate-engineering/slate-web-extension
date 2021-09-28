@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./Components/Modal";
-import Loader from "./Components/Loader";
+import Toast from "./Components/Toast";
 import Screenshot from "./Components/Screenshot";
 import ModalProvider from "./Contexts/ModalProvider";
 import Hotkeys from "react-hot-keys";
@@ -15,7 +15,6 @@ function App() {
   const [user, setUser] = useState({ signedin: false, data: null });
 
   function onKeyDown(keyName, e, handle) {
-    console.log(keyName);
 
     if (keyName === "esc") {
       setIsOpened(false);
@@ -100,7 +99,7 @@ function App() {
         </ModalProvider>
       )}
 
-      {isUploading && <Loader image={og.image} title={document.title} />}
+      {isUploading && <Toast image={og.image} title={document.title} />}
     </>
   );
 }

@@ -5,9 +5,9 @@ const Button = (props) => {
 
 	const icons = {
 		command: <SVG.MacCommand width="16px" height="16px" style={{ marginTop: '16px', display: 'flex' }} />,
-		plus: <SVG.Plus width="20px" height="20px" style={{ marginTop: '12px' }} />,
-		account: <SVG.Account width="20px" height="20px" style={{ marginTop: '14px' }} />,
-		uploads: <SVG.Upload width="16px" height="16px" />,
+		plus: <SVG.Plus width="20px" height="20px" style={{ marginTop: '15px', display: 'flex' }} />,
+		account: <SVG.Account width="22px" height="22px" style={{ marginTop: '12px', marginLeft: '-3px', display: 'flex' }} />,
+		uploads: <SVG.Upload width="16px" height="16px" style={{ marginTop: '14px', display: 'flex' }} />,
 		eye: <SVG.Eye width="16px" height="16px" />,
 	}
 	let svg = icons[props.icon];

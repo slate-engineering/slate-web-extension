@@ -10,7 +10,7 @@ const Metadata = (props) => {
 		<>
 			<div className="metadata">
 				<div className="metadataBox">
-					{!props.status ? (
+					{!props.status.uploaded ? (
 						<SVG.Link
 							width="16px"
 							height="16px"

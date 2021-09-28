@@ -23,6 +23,7 @@ export const main = `
 	.modalContent {
 	  position: relative;
 	  width: 100%;
+	  height: 100%;
 	}
 
 	.modalBackground {
@@ -43,7 +44,7 @@ export const main = `
 	  font-size: 16px;
 	  user-select: none;
 	  cursor: pointer;
-	  background-color: #fff;
+	  background-color: ${Constants.system.white};
 	  color: ${Constants.semantic.textBlack};
 	  bottom: 0;
 	  font-family: "Inter";
@@ -197,6 +198,17 @@ export const main = `
 	  position: relative;
 	}
 
+	.modalAccountAvatar {
+		object-fit: cover;
+		border-radius: 20px;
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		justify-content: center;
+		align-items: center;
+		clear: both;
+	}
+
 	.modalAccountContent {
 	  margin: 0 auto;
 	  position: absolute;
@@ -259,6 +271,189 @@ export const main = `
 	  border-radius: 2px;
 	}
 
+	.primaryButton {
+		font-size: 14px;
+		font-weight: 400;
+		font-family: 'Inter';
+		background-color: ${Constants.system.blue};
+		color: ${Constants.system.white};
+		border: 0;
+		border-radius: 8px;
+		padding: 6px 24px;
+		cursor: pointer;
+	}
+
+	.loginHeader {
+		font-size: 24px; 
+		font-family: 'Inter';
+		margin-left: 16px;
+		margin-top: 114px;
+		font-weight: 400;
+		margin-bottom: 0px;
+	}
+
+	.loginSubtitle {
+		font-size: 14px;
+		margin-left: 16px;
+		margin-top: 12px;
+	}
+
+	.loaderSpinner {
+		margin: 0 auto;
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		display: inline-block;
+		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
+	}
+
+	.loaderSpinnerSVG {
+		display: block;
+		color: ${Constants.system.blue};
+		height: 16px;
+		width: 16px;
+	}
+	
+	@keyframes slate-client-animation-spin {
+		from {
+		  -webkit-transform: rotate(0deg);
+		  transform: rotate(0deg);
+		}
+		to {
+		  -webkit-transform: rotate(360deg);
+		  transform: rotate(360deg);
+		}
+	}
+`;
+
+export const toast = `
+	.loaderWindow {
+		top: 0%;
+		right: 0%;
+		margin-top: 2em;
+		margin-right: 2em;
+		position: fixed;
+		background: ${Constants.system.white};
+		width: 320px;  
+		height: 88px;
+		max-width: 320px;  
+		max-height: 88px;
+		box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+		z-index: 9999;
+		border-radius: 10px;
+		border: 0;
+		color: ${Constants.system.black};
+	}
+
+	.loaderBody {
+		width: 100%;
+	}
+
+	.loaderContent {
+		color: ${Constants.system.white};
+		font-size: 14px;
+	}
+
+	.loaderText {
+		font-family: 'Inter';
+		color: ${Constants.system.black};
+		padding-left: 48px;
+		line-height: 48px;
+		font-weight: 600;
+		cursor: default;
+	}
+
+	.loaderBox {
+		width: 32px;
+		height: 32px;
+		background-color: #F2F2F7;
+		color: ${Constants.system.gray};
+	}
+
+	.loaderImage {
+		position: absolute;
+		line-height: 40px;
+		top: 14px;
+		left: 14px;
+		object-fit: cover;
+		border-radius: 10px;
+		width: 24px;
+		height: 24px;
+	}
+
+	.loaderFooter {
+		bottom: 0px;
+		width: 100%;  
+		height: 40px;
+		line-height: 40px;
+		background-color: ;
+		color: ${Constants.system.gray};
+		border-radius: 0 0 10px 10px; 
+	}
+
+	.loaderFooterRight {
+		text-align: right;
+		right: 14px;
+		font-weight: 400;
+		font-family: 'Inter';
+		display: inline;
+		position: absolute;
+	}
+
+	.loaderFooterLeft {
+		text-align: left;
+		font-weight: 400;
+		font-family: 'Inter';
+		left: 0px;
+		padding-left: 14px;
+		display: inline;
+	}
+
+	.loaderClose {
+		cursor: pointer;
+		text-align: 'right';
+		right: 14px;
+		display: inline;
+		position: absolute;
+		color: ${Constants.system.gray};
+		line-height: 48px;
+	}
+
+	.loaderClose:hover {
+	  	transition: 0.3s;
+	  	color: ${Constants.system.black};
+	}
+
+	.loaderSpinner {
+		margin-right: 8px;
+		display: inline-block;
+		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
+	}
+
+	.loaderSpinnerSVG {
+		display: block;
+		color: ${Constants.system.blue};
+		height: 16px;
+		width: 16px;
+	}
+
+	.modalLink {
+		color: ${Constants.system.blue};
+		font-weight: 600;
+		text-decoration: none;
+	}
+	
+	@keyframes slate-client-animation-spin {
+		from {
+		  -webkit-transform: rotate(0deg);
+		  transform: rotate(0deg);
+		}
+		to {
+		  -webkit-transform: rotate(360deg);
+		  transform: rotate(360deg);
+		}
+	}
 
 `;
 

@@ -10,8 +10,19 @@ const getSessionID = async () => {
   });
 };
 
-const getApiKey = async () => {
+const deleteSessionID = async () => {
+  return new Promise((resolve, reject) => {
+      chrome.cookies.remove({"url": "https://slate.host", "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
+          if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError));
+          } else {
+              resolve(cookie);
+          }
+      });
+  });
+};
 
+const getApiKey = async () => {
   let session = await getSessionID();
   const url = 'https://slate.host/api/extension/get-api-keys';
 
@@ -42,7 +53,6 @@ const getUser = async (props) => {
   });
 
   if (!response) {
-    console.log("No response");
     return;
   }
 
@@ -152,10 +162,18 @@ const checkMatch = (list, url) => {
 chrome.browserAction.onClicked.addListener(async function(tab) {
   chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
 
-  let api = await getApiKey();
-  let user = await getUser({ key: api });
-  let check = await checkLink({ apiKey: api, tab: tab.url });
-  chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
+  let session = await getSessionID();
+
+  if(session === null) {
+    setTimeout(function(){ 
+      chrome.tabs.sendMessage(tab.id, { run: 'AUTH_REQ' });
+    }, 1000);    
+  }else{
+    let api = await getApiKey();
+    let user = await getUser({ key: api });
+    let check = await checkLink({ apiKey: api, tab: tab.url });
+    chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
+  }
 });
 
 chrome.commands.onCommand.addListener((command, tab) => {
@@ -180,8 +198,9 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
     let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id })
   }  
 
-  if(request.type === "OPEN_SETTINGS") {
-    chrome.tabs.create({ url: 'settings.html' });
+  if(request.type === "SIGN_OUT") {
+    await deleteSessionID();
+    return;
   }
 });
 

@@ -4,6 +4,12 @@ import Header from "../Components/Header";
 import ProgressBar from "../Components/ProgressBar";
 
 const AccountPage = (props) => {
+
+	const handleSignOut = (e) => {
+		e.preventDefault();
+		window.postMessage({ run: 'SIGN_OUT', type: "CLOSE_APP" }, "*");
+	}
+
 	return (
 		<>
 			<Header title="Account" goBack={true} />
@@ -11,20 +17,12 @@ const AccountPage = (props) => {
 			<div className="modalAccount">
 				<div className="modalAccountContent">
 					<img
+						className="modalAccountAvatar"
 						width="64px"
 						height="64px"
-						src="https://slate.textile.io/ipfs/bafkreidtaj27vkxi2jgfhlshjobcnw2ixv7gl3qkulymaqg4vwcmtpb6me"
-						style={{
-							borderRadius: "20px",
-							display: "block",
-							marginLeft: "auto",
-							marginRight: "auto",
-							justifyContent: "center",
-							alignItems: "center",
-							clear: "both",
-						}}
+						src={props.user.data.data.photo}
 					/>
-					<div className="modalAccountUsername">Username</div>
+					<div className="modalAccountUsername">{props.user.data.data.name}</div>
 					<div className="modalAccountStorage">
 						0 Objects{" "}
 						<span style={{ marginLeft: "16px" }}>
@@ -37,7 +35,7 @@ const AccountPage = (props) => {
 					{
 						//TODO (JASON): create small button comonent
 					}
-					<div className="modalSmallButton">Sign out</div>
+					<div onClick={handleSignOut} className="modalSmallButton">Sign out</div>
 				</div>
 			</div>
 		</>

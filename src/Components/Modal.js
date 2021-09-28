@@ -7,6 +7,8 @@ import * as Styles from "../Common/styles";
 import HomePage from "../Pages/Home";
 import ShortcutsPage from "../Pages/Shortcuts";
 import AccountPage from "../Pages/Account";
+import LoginPage from "../Pages/Login";
+
 
 const Modal = (props) => {
   //const [search, setSearch] = useState({ query: null });
@@ -15,7 +17,7 @@ const Modal = (props) => {
   const [og, setOg] = useState({ image: null, title: null });
   const [page, setPage] = useState({ active: "home" });
   const [checkLink, setCheckLink] = useState({ uploaded: false, data: null });
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({ loaded: false, data: null });
 
   const handleCloseModal = () => {
     window.postMessage({ type: "CLOSE_APP" }, "*");
@@ -27,6 +29,10 @@ const Modal = (props) => {
       setTags({ show: true })
     }
     */
+
+    if (event.data.type === "AUTH_REQ") {
+      setUser({ loaded: true, data: null });
+    }
 
     if (event.data.run === "OPEN_HOME_PAGE") {
       setPage({ active: "home" });
@@ -41,15 +47,13 @@ const Modal = (props) => {
     }
 
     if (event.data.type === "CHECK_LINK") {
+      setUser({ loaded: true, data: event.data.user});
       if (event.data.data.decorator === "LINK_FOUND") {
         setCheckLink({ uploaded: true, data: event.data.data });
-        setUser(event.data.user);
       }
-    }
+    }   
+    
   });
-
-  console.log("checkLink", checkLink);
-  console.log("user", user);
 
   return (
     <ModalContext.Consumer>
@@ -59,6 +63,13 @@ const Modal = (props) => {
             <style>{Styles.main}</style>
             <div id="modal" className="modalWindow">
               <div className="modalContent">
+
+                {/*user ?
+                  <div>you are logged in</div>
+                :
+                  <div>you are not logged in</div>
+                */}
+
                 {page.active === "home" && (
                   <HomePage
                     pageData={pageData}
@@ -71,7 +82,11 @@ const Modal = (props) => {
 
                 {page.active === "shortcuts" && <ShortcutsPage />}
 
-                {page.active === "account" && <AccountPage />}
+                {page.active === "account" && 
+                  <AccountPage 
+                    user={user}
+                  />
+                }
               </div>
             </div>
 

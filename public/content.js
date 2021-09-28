@@ -16,10 +16,16 @@ if(window.location.href.startsWith('https://slate.host')) {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
+
   if(request.run === "LOAD_APP") {
     main();
     return true;
   }
+
+  if(request.run === "AUTH_REQ") {
+    window.postMessage({ type: "AUTH_REQ" }, "*");
+    return true;
+  }  
 
   if(request.run === "LOAD_APP_WITH_TAGS") {
     window.postMessage({ type: "LOAD_APP_WITH_TAGS" }, "*");
@@ -32,7 +38,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   }
 
   if(request.run === "UPLOAD_DONE") {
-    console.log('tab forom content', request.tab)
     window.postMessage({ type: "UPLOAD_DONE", data: request.data, tab: request.tab }, "*");
     return true;
   }
@@ -50,8 +55,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   if(request.run === "CHECK_LINK") {
       window.postMessage({ type: "CHECK_LINK", data: request.data, user: request.user }, "*");
       return true;
-    }   
-  });
+  }   
+
+  if(request.run === "OPEN_LINK") {
+      window.postMessage({ type: "OPEN_LINK", data: request.data }, "*");
+      return true;
+  }
+
+});
+
+
+
 
 function main() {
   const extensionOrigin = 'chrome-extension://' + chrome.runtime.id;
@@ -87,6 +101,10 @@ window.addEventListener("message", async function(event) {
   if(event.data.run === "OPEN_SETTINGS") {
     chrome.runtime.sendMessage({ type: "OPEN_SETTINGS" });
     return true;
+  }
+
+  if(event.data.run === "SIGN_OUT") {
+    chrome.runtime.sendMessage({ type: "SIGN_OUT" });
   }
 
   if (event.source !== window) return;
