@@ -4,7 +4,7 @@ import * as SVG from "../Common/SVG";
 const LoaderSpinner = (props) => (
 	<>
 		<span className="loaderSpinner">
-			<SVG.Loader className="loaderSpinnerSVG" style={{ width: '16px', height: '16px', color: '#0084FF' }} />
+			<SVG.Loader width="16px" height="16px" style={{ color: '#0084FF', display: 'block', margin: 'auto' }} />
 		</span>
 	</>
 );

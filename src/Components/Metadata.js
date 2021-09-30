@@ -26,10 +26,8 @@ const Metadata = (props) => {
 				</div>
 				<div className="metadataBox2">
 					<div className="metaDataTitle">{title}</div>
-					<div style={{ lineHeight: "16px" }}>
-						<div className="metadataUrl">
-							{Strings.getUrlHost(props.data.url)}
-						</div>
+					<div style={{ lineHeight: "16px" }} className="metaDataUrl">
+						{Strings.getUrlHost(props.data.url)}
 					</div>
 				</div>
 

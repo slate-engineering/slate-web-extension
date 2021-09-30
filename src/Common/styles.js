@@ -161,6 +161,7 @@ export const main = `
 	.metaDataUrl {
 	  color: ${Constants.semantic.textBlack};
 	  font-family: "Inter";
+	  font-weight: 400;
 	  font-size: 16px;
 	}
 
@@ -304,8 +305,8 @@ export const main = `
 		left: 50%;
 		top: 50%;
 		transform: translate(-50%, -50%);
-		display: inline-block;
-		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
+		display: block;
+  		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
 	}
 
 	.loaderSpinnerSVG {
@@ -433,6 +434,7 @@ export const toast = `
 
 	.loaderSpinnerSVG {
 		display: block;
+		margin: auto;
 		color: ${Constants.system.blue};
 		height: 16px;
 		width: 16px;

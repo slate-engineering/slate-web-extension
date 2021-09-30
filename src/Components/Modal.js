@@ -7,8 +7,6 @@ import * as Styles from "../Common/styles";
 import HomePage from "../Pages/Home";
 import ShortcutsPage from "../Pages/Shortcuts";
 import AccountPage from "../Pages/Account";
-import LoginPage from "../Pages/Login";
-
 
 const Modal = (props) => {
   //const [search, setSearch] = useState({ query: null });
