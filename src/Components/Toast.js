@@ -10,6 +10,7 @@ import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
 
 const Toast = (props) => {
+  const [favicon, setFavicon] = useState(null);
   const [visable, setVisable] = useState(true);
   const [upload, setUpload] = useState({
     status: "uploading",
@@ -27,7 +28,7 @@ const Toast = (props) => {
       setUpload({
         status: "complete",
         data: event.data.data.cid,
-        tab: event.data.tab
+        tab: event.data.tab,
       });
       const timer = setTimeout(() => {
         handleCloseModal();
@@ -48,8 +49,8 @@ const Toast = (props) => {
   });
 
   let count = 28;
-  let title = Strings.truncateString(count, props.title)
- 
+  let title = Strings.truncateString(count, props.title);
+
   const Footer = (props) => {
     let url = props.upload.data
       ? Strings.getSlateFileLink(props.upload.data, props.upload.tab)
@@ -75,10 +76,7 @@ const Toast = (props) => {
 
         {props.upload.status === "duplicate" && (
           <>
-            <div
-              className="loaderFooterLeft"
-              style={{ color: "#34D159" }}
-            >
+            <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
               Already exists
             </div>
             <div className="loaderFooterRight">
@@ -90,16 +88,25 @@ const Toast = (props) => {
         )}
 
         {props.upload.status === "error" && (
-          <div
-            className="loaderFooterLeft"
-            style={{ color: "#FF4530" }}
-          >
+          <div className="loaderFooterLeft" style={{ color: "#FF4530" }}>
             Failed to save
           </div>
         )}
       </>
     );
   };
+
+  const checkImage = (url) => {
+    let favicon = new Image();
+    favicon.addEventListener("load", () => {
+      setFavicon(url);
+    });
+    favicon.src = url;
+  };
+
+  if (props.image) {
+    checkImage(props.image);
+  }
 
   return (
     <ModalContext.Consumer>
@@ -111,12 +118,13 @@ const Toast = (props) => {
               <div id="modal" className="loaderWindow">
                 <div className="loaderContent">
                   <div className="loaderText">
-                    <img className="loaderImage" src={props.image} />
+                    {favicon ? (
+                      <img className="loaderImage" src={favicon} />
+                    ) : (
+                      <div className="loaderImageBlank"></div>
+                    )}
                     {title}
-                    <div
-                      onClick={handleCloseModal}
-                      className="loaderClose"
-                    >
+                    <div onClick={handleCloseModal} className="loaderClose">
                       <SVG.Dismiss width="20px" height="20px" />
                     </div>
                   </div>

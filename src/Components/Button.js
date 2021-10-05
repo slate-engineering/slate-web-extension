@@ -61,7 +61,7 @@ const Button = (props) => {
 				<div
 					style={{
 						position: "absolute",
-						right: "32px",
+						right: "20px",
 						color: "#8E9093",
 						fontSize: "14px",
 					}}

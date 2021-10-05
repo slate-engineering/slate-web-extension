@@ -48,8 +48,8 @@ export const main = `
 	  color: ${Constants.semantic.textBlack};
 	  bottom: 0;
 	  font-family: "Inter";
-	  margin-left: 16px;
-	  margin-right: 16px;
+	  margin-left: 8px;
+	  margin-right: 8px;
 	  display: flex;
 	}
 
@@ -58,11 +58,11 @@ export const main = `
 	}
 
 	.modalButtonSVG {
-	   margin-left: 16px;
+	   margin-left: 12px;
 	}
 
 	.modalButtonText {
-	  margin-left: 16px;
+	  margin-left: 20px;
 	  font-family: "Inter";
 	}
 
@@ -78,13 +78,13 @@ export const main = `
 	  background-color: ${Constants.system.grayLight6};
 	  color: ${Constants.semantic.textGray};
 	  border-radius: 6px;
-	  padding: 1px 3px 1px 3px;
+	  padding: 2px 4px 2px 4px;
 	}
 
 	.modalSystemText {
-	  margin-left: 32px;
+	  margin-left: 20px;
 	  color: ${Constants.system.gray};
-	  padding-top: 8px;
+	  padding-top: 4px;
 	  font-size: 14px;
 	  font-weight: 600;
 	  margin-bottom: 8px;
@@ -93,24 +93,28 @@ export const main = `
 	.modalHeader {
 	  height: 52px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
-	  line-height: 52px;
-	  padding-left: 32px;
+	  padding-left: 16px;
 	}
 
 	.modalGoBack {
-	  margin-right: 14px;
+	  margin-right: 28px;
+	  margin-top: 14px;
 	  background-color: ${Constants.system.grayLight5};
-	  border-radius: 6px;
-	  padding: 4px 4px;
+	  border-radius: 8px;
 	  cursor: pointer;
-	  display: inline;
+	  width: 24px;
+	  height: 24px;
+	  display: inline-block;
+	  position: absolute;
 	}
 
 	.modalHeaderTitle {
-	  font-weight: 600;
+	  font-weight: 500;
+	  line-height: 52px;
 	  font-family: 'Inter';
 	  font-size: 16px;
 	  display: inline;
+	  margin-left: 40px;
 	}
 
 	.metadata {
@@ -118,7 +122,7 @@ export const main = `
 	  background-color: transparent;
 	  display: flex;
 	  margin-top: 16px;
-	  padding-left: 32px;
+	  padding-left: 20px;
 	  padding-bottom: 16px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
 	}
@@ -135,12 +139,12 @@ export const main = `
 	}
 
 	.metadataBox2 {
-	  margin-left: 16px;
+	  margin-left: 20px;
 	}
 
 	.metadataBox3 {
 	  position: absolute;
-	  right: 32px;
+	  right: 20px;
 	}
 
 	.metaDataTitle {
@@ -177,8 +181,9 @@ export const main = `
 	.modalShortcut {
 	  width: auto;
 	  background-color: ${Constants.system.grayLight6};
+	  color: ${Constants.semantic.textGray};
 	  border-radius: 6px;
-	  padding: 1px 3px 1px 3px;
+	  padding: 2px 3px 2px 3px;
 	  margin-right: 4px;
 	}
 
@@ -201,6 +206,17 @@ export const main = `
 
 	.modalAccountAvatar {
 		object-fit: cover;
+		border-radius: 20px;
+		display: block;
+		margin-left: auto;
+		margin-right: auto;
+		justify-content: center;
+		align-items: center;
+		clear: both;
+	}
+
+	.modalAccountAvatarBlank {
+		background-color: ${Constants.system.grayLight5};
 		border-radius: 20px;
 		display: block;
 		margin-left: auto;
@@ -274,7 +290,7 @@ export const main = `
 
 	.primaryButton {
 		font-size: 14px;
-		font-weight: 400;
+		font-weight: 500;
 		font-family: 'Inter';
 		background-color: ${Constants.system.blue};
 		color: ${Constants.system.white};
@@ -287,16 +303,16 @@ export const main = `
 	.loginHeader {
 		font-size: 24px; 
 		font-family: 'Inter';
-		margin-left: 16px;
+		margin-left: 20px;
 		margin-top: 114px;
-		font-weight: 400;
 		margin-bottom: 0px;
+		font-weight: 500;
 	}
 
 	.loginSubtitle {
 		font-size: 14px;
-		margin-left: 16px;
-		margin-top: 12px;
+		margin-left: 20px;
+		margin-top: 8px;
 	}
 
 	.loaderSpinner {
@@ -383,6 +399,17 @@ export const toast = `
 		height: 24px;
 	}
 
+	.loaderImageBlank {
+		position: absolute;
+		line-height: 40px;
+		top: 14px;
+		left: 14px;
+		border-radius: 10px;
+		width: 24px;
+		height: 24px;
+		background-color: ${Constants.system.grayLight5};
+	}
+
 	.loaderFooter {
 		bottom: 0px;
 		width: 100%;  
@@ -429,6 +456,9 @@ export const toast = `
 	.loaderSpinner {
 		margin-right: 8px;
 		display: inline-block;
+		margin-left: 4px;
+	  	justify-content: center;
+	  	align-items: center;
 		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
 	}
 

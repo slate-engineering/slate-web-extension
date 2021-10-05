@@ -8,10 +8,10 @@ import * as Strings from "../Common/strings";
 const ShortcutsPage = (props) => {
 	return (
 		<>
-			<Header title="Shortcuts" goBack={true} />
+			<Header title="Shortcuts" goBack={true} user={props.user} />
 
 			<div className="modalTableHeader">
-				<div style={{ marginLeft: "72px" }}>Name</div>
+				<div style={{ marginLeft: "56px" }}>Name</div>
 				<div style={{ marginLeft: "400px", position: "absolute" }}>
 					Shortcut
 				</div>
@@ -20,7 +20,7 @@ const ShortcutsPage = (props) => {
 			{Strings.shortcuts.map((shortcut) => {
 				return (
 					<div className="modalTableContent">
-						<div style={{ marginLeft: "72px" }}>
+						<div style={{ marginLeft: "56px" }}>
 							{shortcut.name}
 						</div>
 						<div

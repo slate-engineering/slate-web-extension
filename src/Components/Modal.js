@@ -11,10 +11,9 @@ import AccountPage from "../Pages/Account";
 const Modal = (props) => {
   //const [search, setSearch] = useState({ query: null });
   //const [tags, setTags] = useState({ show: false });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [og, setOg] = useState({ image: null, title: null });
   const [page, setPage] = useState({ active: "home" });
-  const [checkLink, setCheckLink] = useState({ uploaded: false, data: null });
   const [user, setUser] = useState({ loaded: false, data: null });
 
   const handleCloseModal = () => {
@@ -45,12 +44,13 @@ const Modal = (props) => {
     }
 
     if (event.data.type === "CHECK_LINK") {
-      setUser({ loaded: true, data: event.data.user});
+      setUser({ loaded: true, data: event.data.user });
+      /*
       if (event.data.data.decorator === "LINK_FOUND") {
         setCheckLink({ uploaded: true, data: event.data.data });
       }
-    }   
-    
+      */
+    }
   });
 
   return (
@@ -61,30 +61,19 @@ const Modal = (props) => {
             <style>{Styles.main}</style>
             <div id="modal" className="modalWindow">
               <div className="modalContent">
-
-                {/*user ?
-                  <div>you are logged in</div>
-                :
-                  <div>you are not logged in</div>
-                */}
-
                 {page.active === "home" && (
                   <HomePage
                     pageData={pageData}
                     image={props.image}
                     favicon={props.favicon}
-                    status={checkLink}
+                    status={props.link}
                     user={user}
                   />
                 )}
 
-                {page.active === "shortcuts" && <ShortcutsPage />}
+                {page.active === "shortcuts" && <ShortcutsPage user={user} />}
 
-                {page.active === "account" && 
-                  <AccountPage 
-                    user={user}
-                  />
-                }
+                {page.active === "account" && <AccountPage user={user} />}
               </div>
             </div>
 
