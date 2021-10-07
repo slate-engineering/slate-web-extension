@@ -13,7 +13,7 @@ export const main = `
 	  height: 400px;
 	  border: 1px solid ${Constants.system.grayLight5};
 	  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-	  z-index: 9999;
+	  z-index: 99999;
 	  border-radius: 16px;
 	  color: ${Constants.semantic.textBlack};
 	  font-family: "Inter";
@@ -295,8 +295,8 @@ export const main = `
 		background-color: ${Constants.system.blue};
 		color: ${Constants.system.white};
 		border: 0;
-		border-radius: 8px;
-		padding: 6px 24px;
+		border-radius: 12px;
+		padding: 4px 24px;
 		cursor: pointer;
 	}
 
@@ -312,7 +312,7 @@ export const main = `
 	.loginSubtitle {
 		font-size: 14px;
 		margin-left: 20px;
-		margin-top: 8px;
+		margin-top: 6px;
 	}
 
 	.loaderSpinner {
@@ -357,7 +357,7 @@ export const toast = `
 		max-width: 320px;  
 		max-height: 88px;
 		box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-		z-index: 9999;
+		z-index: 99999;
 		border-radius: 10px;
 		border: 0;
 		color: ${Constants.system.black};

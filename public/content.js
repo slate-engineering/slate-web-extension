@@ -65,8 +65,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
 });
 
 
-
-
 function main() {
   const extensionOrigin = 'chrome-extension://' + chrome.runtime.id;
 
@@ -100,6 +98,11 @@ window.addEventListener("message", async function(event) {
 
   if(event.data.run === "OPEN_SETTINGS") {
     chrome.runtime.sendMessage({ type: "OPEN_SETTINGS" });
+    return true;
+  }
+
+  if(event.data.run === "CHECK_LOGIN") {
+    chrome.runtime.sendMessage({ type: "CHECK_LOGIN" });
     return true;
   }
 

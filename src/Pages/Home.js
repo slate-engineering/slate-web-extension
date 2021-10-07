@@ -8,6 +8,7 @@ import Loaders from "../Components/Loaders";
 const HomePage = (props) => {
 	const handleOpenAuth = () => {
 		window.open("https://slate.host/_/auth", "_blank").focus();
+		window.postMessage({ run: 'CHECK_LOGIN' }, "*");
 	};
 
 	let notLoggedIn = { loaded: false }
