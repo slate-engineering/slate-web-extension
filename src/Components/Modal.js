@@ -11,10 +11,19 @@ import AccountPage from "../Pages/Account";
 const Modal = (props) => {
   //const [search, setSearch] = useState({ query: null });
   //const [tags, setTags] = useState({ show: false });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({ mini: false });
   const [og, setOg] = useState({ image: null, title: null });
   const [page, setPage] = useState({ active: "home" });
   const [user, setUser] = useState({ loaded: false, data: null });
+
+  useEffect(() => {
+    let loaderType = document.getElementById("slate-loader-type")
+    if(loaderType) {
+      loaderType.getAttribute('data-type');
+      console.log('loaderType from modal: ', loaderType);
+      setLoading({ mini: true })
+    }
+  }, []);
 
   const handleCloseModal = () => {
     window.postMessage({ type: "CLOSE_APP" }, "*");
@@ -29,6 +38,7 @@ const Modal = (props) => {
 
     if (event.data.type === "AUTH_REQ") {
       setUser({ loaded: true, data: null });
+      setLoading({ mini: false })
     }
 
     if (event.data.run === "OPEN_HOME_PAGE") {
@@ -45,6 +55,7 @@ const Modal = (props) => {
 
     if (event.data.type === "CHECK_LINK") {
       setUser({ loaded: true, data: event.data.user });
+      setLoading({ mini: false })
       /*
       if (event.data.data.decorator === "LINK_FOUND") {
         setCheckLink({ uploaded: true, data: event.data.data });
@@ -59,7 +70,7 @@ const Modal = (props) => {
         <>
           <ReactShadowRoot>
             <style>{Styles.main}</style>
-            <div id="modal" className="modalWindow">
+            <div id="modal" className="modalWindow" style={loading.mini ? { width:'50px', height: '50px' } : {}}>
               <div className="modalContent">
                 {page.active === "home" && (
                   <HomePage
@@ -67,6 +78,7 @@ const Modal = (props) => {
                     image={props.image}
                     favicon={props.favicon}
                     status={props.link}
+                    loader={loading.mini}
                     user={user}
                   />
                 )}

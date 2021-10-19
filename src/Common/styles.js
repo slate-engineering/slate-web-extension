@@ -10,14 +10,13 @@ export const main = `
 	  position: fixed;
 	  background: ${Constants.system.white};
 	  width: 640px;  
-	  height: 400px;
+	  height: 350px;
 	  border: 1px solid ${Constants.system.grayLight5};
 	  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
-	  z-index: 99999;
+	  z-index: 2100000000;
 	  border-radius: 16px;
 	  color: ${Constants.semantic.textBlack};
 	  font-family: "Inter";
-	  padding-bottom: 8px;
 	}
 
 	.modalContent {
@@ -32,7 +31,7 @@ export const main = `
 	  height: 100vh;
 	  position: fixed;
 	  cursor: pointer;
-	  z-index: 9998;
+	  z-index: 210000000;
 	}
 
 	.modalButtonMain {
@@ -50,7 +49,10 @@ export const main = `
 	  font-family: "Inter";
 	  margin-left: 8px;
 	  margin-right: 8px;
-	  display: flex;
+	  display: grid;
+	  grid-template-columns: 50px 1fr auto; 
+	  align-items: center;
+	  justify-content: center;
 	}
 
 	.modalButtonMain:hover {
@@ -62,16 +64,22 @@ export const main = `
 	}
 
 	.modalButtonText {
-	  margin-left: 20px;
 	  font-family: "Inter";
+	}
+
+	.svgcontainer {
+	  width: 50px;
+	  height: 50px;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
 	}
 
 	.modalCommandIcon {
 	  background-color:  ${Constants.system.grayLight6};
 	  color: ${Constants.semantic.textGray};
 	  border-radius: 6px;
-	  padding: 1px;
-	  margin-right: 4px;
+	  padding: 2px 4px 2px 4px;
 	}
 
 	.modalKeyIcon {
@@ -79,6 +87,7 @@ export const main = `
 	  color: ${Constants.semantic.textGray};
 	  border-radius: 6px;
 	  padding: 2px 4px 2px 4px;
+	  margin-right: 4px;
 	}
 
 	.modalSystemText {
@@ -93,11 +102,11 @@ export const main = `
 	.modalHeader {
 	  height: 52px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
-	  padding-left: 16px;
+	  padding-left: 20px;
 	}
 
 	.modalGoBack {
-	  margin-right: 28px;
+	  margin-right: 20px;
 	  margin-top: 14px;
 	  background-color: ${Constants.system.grayLight5};
 	  border-radius: 8px;
@@ -118,13 +127,12 @@ export const main = `
 	}
 
 	.metadata {
-	  position: relative;
 	  background-color: transparent;
-	  display: flex;
-	  margin-top: 16px;
-	  padding-left: 20px;
+	  margin: 16px 8px 0 8px;
 	  padding-bottom: 16px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
+	  display: grid;
+	  grid-template-columns: 50px 1fr auto; 
 	}
 
 	.metadataBox {
@@ -139,7 +147,7 @@ export const main = `
 	}
 
 	.metadataBox2 {
-	  margin-left: 20px;
+
 	}
 
 	.metadataBox3 {
@@ -261,15 +269,17 @@ export const main = `
 
 	.modalSmallButton {
 	  width: auto;
+	  line-height: 32px;
+	  height: 32px;
 	  margin-top: 32px;
 	  text-align: center;
 	  clear: both;
 	  background-color: ${Constants.system.grayLight5};
 	  color: ${Constants.semantic.textBlack};
 	  border-radius: 8px;
-	  padding: 8px 24px;
+	  padding: 0 24px;
 	  font-size: 14px;
-	  font-weight: 600;
+	  font-weight: 500;
 	  border: 0;
 	  cursor: pointer;
 	}
@@ -296,7 +306,9 @@ export const main = `
 		color: ${Constants.system.white};
 		border: 0;
 		border-radius: 12px;
-		padding: 4px 24px;
+		padding: 0 24px;
+		height: 32px;
+		line-height: 32px;
 		cursor: pointer;
 	}
 
@@ -304,7 +316,7 @@ export const main = `
 		font-size: 24px; 
 		font-family: 'Inter';
 		margin-left: 20px;
-		margin-top: 114px;
+		margin-top: 100px;
 		margin-bottom: 0px;
 		font-weight: 500;
 	}
@@ -315,7 +327,7 @@ export const main = `
 		margin-top: 6px;
 	}
 
-	.loaderSpinner {
+	.loaderSpinnerLarge {
 		margin: 0 auto;
 		position: absolute;
 		left: 50%;
@@ -325,11 +337,24 @@ export const main = `
   		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
 	}
 
+	.loaderSpinnerSmall {
+		margin: 0 auto;
+		position: absolute;
+		display: block;
+  		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
+	}
+
 	.loaderSpinnerSVG {
 		display: block;
 		color: ${Constants.system.blue};
 		height: 16px;
 		width: 16px;
+	}
+
+	.modalLink {
+		color: ${Constants.system.blue};
+		font-weight: 600;
+		text-decoration: none;
 	}
 	
 	@keyframes slate-client-animation-spin {
@@ -357,7 +382,7 @@ export const toast = `
 		max-width: 320px;  
 		max-height: 88px;
 		box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-		z-index: 99999;
+		z-index: 2100000000;
 		border-radius: 10px;
 		border: 0;
 		color: ${Constants.system.black};

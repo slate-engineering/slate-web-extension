@@ -64,7 +64,6 @@ export const truncateString = (count, string) => {
 export const shortcuts = [
   { short: "⌥", key: "S", name: "Open extension" },
   { short: "⌥", key: "B", name: "Bookmark current page" },
-  { short: "⌥", key: "A", name: "Open account options" },
   { short: "", key: "esc", name: "Close extension" },
   { short: "⌥", key: "O", name: "Open web app" },
 ];

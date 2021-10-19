@@ -4,7 +4,7 @@ import { ModalContext } from "../Contexts/ModalProvider";
 import ReactShadowRoot from "react-shadow-root";
 import * as Styles from "../Common/styles";
 
-import Loaders from "../Components/Loaders";
+import { ToastSpinner } from "../Components/Loaders";
 
 import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
@@ -59,7 +59,7 @@ const Toast = (props) => {
       <>
         {props.upload.status === "uploading" && (
           <div className="loaderFooterLeft">
-            <Loaders /> Saving...
+            <ToastSpinner /> Saving...
           </div>
         )}
 

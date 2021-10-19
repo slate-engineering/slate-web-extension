@@ -43,6 +43,16 @@ const AccountPage = (props) => {
 					<div className="modalAccountUsername">
 						{props.user.data.data.name}
 					</div>
+
+					<div className="modalAccountStorage">
+						<a className="modalLink" href="https://slate.host/_/data" target="_blank">View profile</a>
+					</div>
+
+					<div onClick={handleSignOut} className="modalSmallButton">
+						Sign out {props.user.data.data.name}
+					</div>
+
+					{/*
 					<div className="modalAccountStorage">
 						0 Objects{" "}
 						<span style={{ marginLeft: "16px" }}>
@@ -52,12 +62,8 @@ const AccountPage = (props) => {
 
 					<ProgressBar progress="70%" />
 
-					{
-						//TODO (JASON): create small button comonent
-					}
-					<div onClick={handleSignOut} className="modalSmallButton">
-						Sign out
-					</div>
+					*/}
+					
 				</div>
 			</div>
 		</>

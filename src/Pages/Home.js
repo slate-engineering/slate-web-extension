@@ -3,7 +3,7 @@ import React from "react";
 import Button from "../Components/Button";
 import Metadata from "../Components/Metadata";
 import Header from "../Components/Header";
-import Loaders from "../Components/Loaders";
+import { LoadingSpinner } from "../Components/Loaders";
 
 const HomePage = (props) => {
 	const handleOpenAuth = () => {
@@ -16,7 +16,7 @@ const HomePage = (props) => {
 	return (
 		<>
 			{!props.user.loaded ? (
-				<Loaders />
+				<LoadingSpinner loader={props.loader} />
 			) : (
 				<>
 					{props.user.data ? (
@@ -35,6 +35,7 @@ const HomePage = (props) => {
 									<Button
 										text="Add to my library"
 										shortcut="enter"
+										command="⏎"
 										icon="plus"
 										run="SAVE_LINK"
 										data={props.pageData}
@@ -43,6 +44,7 @@ const HomePage = (props) => {
 									<Button
 										text="View on Slate"
 										shortcut="enter"
+										command="⏎"
 										icon="eye"
 										run="OPEN_LINK"
 										data={props.status}
@@ -53,27 +55,24 @@ const HomePage = (props) => {
 
 								<Button
 									text="Shortcuts"
-									shortcut="C"
-									command="option"
 									icon="command"
 									run="OPEN_SHORTCUTS_PAGE"
 								/>
 
 								<Button
 									text="Account"
-									shortcut="A"
-									command="option"
 									icon="account"
 									run="OPEN_ACCOUNT_PAGE"
 									data={props.pageData}
 								/>
-
+								{/*
 								<Button
 									text="Uploads"
 									shortcut="3"
 									command="option"
 									icon="uploads"
 								/>
+								*/}
 							</div>
 						</>
 					) : (
@@ -92,7 +91,7 @@ const HomePage = (props) => {
 									onClick={handleOpenAuth}
 									className="primaryButton"
 									style={{
-										bottom: "8px",
+										bottom: "16px",
 										right: "16px",
 										position: "absolute",
 									}}

@@ -4,17 +4,17 @@ import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
 
 const Metadata = (props) => {
-	const [avatar, setAvatar] = useState(null);
+	const [og, setOg] = useState(null);
 
 	let count = 45;
 	let title = Strings.truncateString(count, props.data.title);
 
 	const checkImage = (url) => {
-		let avatar = new Image();
-		avatar.addEventListener("load", () => {
-			setAvatar(url);
+		let og = new Image();
+		og.addEventListener("load", () => {
+			setOg(url);
 		});
-		avatar.src = url;
+		og.src = url;
 	};
 
 	checkImage(props.image);
@@ -22,18 +22,18 @@ const Metadata = (props) => {
 	return (
 		<>
 			<div className="metadata">
-				<div className="metadataBox">
+				<div className="svgContainer" style={{ height: '50px' }}>
 					{!props.status.uploaded ? (
 						<SVG.Link
 							width="16px"
 							height="16px"
-							style={{ marginTop: "12px" }}
+							style={{ marginTop: '16px', marginLeft: '16px' }}
 						/>
 					) : (
 						<SVG.CheckCircle
 							width="16px"
-							height="17px"
-							style={{ marginTop: "10px" }}
+							height="16px"
+							style={{ marginTop: '16px', marginLeft: '16px' }}
 						/>
 					)}
 				</div>
@@ -45,7 +45,7 @@ const Metadata = (props) => {
 				</div>
 
 				<div className="metadataBox3">
-					<img height="32px" src={avatar} />
+					<img height="32px" src={og} />
 				</div>
 			</div>
 		</>
