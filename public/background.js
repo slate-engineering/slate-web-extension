@@ -174,7 +174,8 @@ const checkLoginData = async (tab) => {
     let user = await getUser({ key: api });
     let check = await checkLink({ apiKey: api, tab: tab.url });
     chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
-    return;
+    let data = { data: check, user: user, tab: tab.id }
+    return data;
   }
 }
 
@@ -194,17 +195,26 @@ const checkLoginSession = async (tab) => {
 }
 
 chrome.browserAction.onClicked.addListener(async (tab) => {
-  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
   await checkLoginData(tab);
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if(command == 'open-app') {    
-    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP' });
+    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
     await checkLoginData(tab);
   }
   if(command == 'open-slate') {
     chrome.tabs.create({ 'url': `${domain}/_/data&extension=true&id=${tab.id}` });
+  }
+  if(command == 'direct-save') {
+    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MINI' });
+    let session = await checkLoginData(tab);
+
+    if(session.user) {
+      chrome.tabs.sendMessage(parseInt(tab.id), { run: 'OPEN_LOADING' });
+      await handleSaveLink({ url: tab.url, tab: tab.id })
+    }
   }
 });
 

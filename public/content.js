@@ -18,7 +18,7 @@ if(window.location.href.startsWith('https://slate.host')) {
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
 
   if(request.run === "LOAD_APP") {
-    main();
+    main({ type: request.type });
     return true;
   }
 
@@ -65,8 +65,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
 });
 
 
-function main() {
+function main(props) {
   const extensionOrigin = 'chrome-extension://' + chrome.runtime.id;
+
+  if(props.type === "LOADER_MINI") {
+    $(`<div id='slate-loader-type' data-type='mini'></div>`).prependTo("body");
+  }
 
   if (!location.ancestorOrigins.contains(extensionOrigin)) {
     // Fetch the local React index.html page
@@ -74,6 +78,8 @@ function main() {
       .then((response) => response.text())
       .then((html) => {
         const styleStashHTML = html.replace(/\/static\//g, `${extensionOrigin}/static/`);
+        console.log('html', html)
+        console.log('styleStashHTML', styleStashHTML)
            $(styleStashHTML).prependTo('body');
       })
       .catch((error) => {

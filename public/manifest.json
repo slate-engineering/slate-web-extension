@@ -53,6 +53,13 @@
         "mac": "Alt+O"
       },
       "description": "Open the slate web app"
+    },
+    "direct-save": {
+      "suggested_key": {
+        "default": "Alt+B",
+        "mac": "Alt+B"
+      },
+      "description": "Direct save"
     }
   },
   "content_security_policy": "script-src 'self' https://fonts.googleapis.com; object-src 'self';",
