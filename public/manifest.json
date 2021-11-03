@@ -5,24 +5,24 @@
   "version": "1.0.0",
   "homepage_url": "https://slate.host",
   "icons": {
-    "16": "icon-16.png",
-    "48": "icon-48.png",
-    "128": "icon-128.png"
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
   },
   "browser_action": {
-    "default_icon": "favicon-2.png",
+    "default_icon": "icon128.png",
     "default_title": "Slate Web Extension"
   },
   "background": {
-    "scripts": ["./jquery.js", "background.js"],
+    "scripts": ["./jquery.js", "./background.js"],
     "persistent": true
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
     "all_frames": false,
     "js": [
-      "./content.js",
-      "./jquery.js"
+      "./jquery.js",
+      "./content.js"
     ],
     "run_at": "document_idle"
   }],
@@ -34,7 +34,10 @@
     "chrome://favicon/*",
     "storage",
     "downloads",
-    "contextMenus"
+    "contextMenus",
+    "commands",
+    "cookies",
+    "https://slate.host/*"
   ],
   "commands": {
     "open-app": {
@@ -50,6 +53,13 @@
         "mac": "Alt+O"
       },
       "description": "Open the slate web app"
+    },
+    "direct-save": {
+      "suggested_key": {
+        "default": "Alt+B",
+        "mac": "Alt+B"
+      },
+      "description": "Direct save"
     }
   },
   "content_security_policy": "script-src 'self' https://fonts.googleapis.com; object-src 'self';",

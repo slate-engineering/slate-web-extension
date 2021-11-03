@@ -1,44 +1,51 @@
-import React, { useState } from 'react';
-import Image from '../Components/Image';
-import * as Icons from '../Components/Icons';
-import classes from '../App.module.css';
+import React, { useState } from "react";
+
+import * as SVG from "../Common/SVG";
+import * as Strings from "../Common/strings";
 
 const Metadata = (props) => {
+	const [og, setOg] = useState(null);
 
-	let count = 25;
-	let title = props.data.title.slice(0, count) + (props.data.title.length > count ? "..." : "");
+	let count = 45;
+	let title = Strings.truncateString(count, props.data.title);
 
-	const getHostname = (url) => {
-	  return new URL(url).hostname;
-	}
+	const checkImage = (url) => {
+		let og = new Image();
+		og.addEventListener("load", () => {
+			setOg(url);
+		});
+		og.src = url;
+	};
 
-    const handleCloseModal = () => {
-		window.postMessage({ type: "CLOSE_APP" }, "*");
-    }
+	checkImage(props.image);
 
-	return(
+	return (
 		<>
-			<div className={classes.metadata}>
-				<div className={classes.metadataBox}>
-					<Image 
-					  url={props.image}
-					  width="48px"
-					  height="48px" 
-					/>
+			<div className="metadata">
+				<div className="svgContainer" style={{ height: '50px' }}>
+					{!props.status.uploaded ? (
+						<SVG.Link
+							width="16px"
+							height="16px"
+							style={{ marginTop: '16px', marginLeft: '16px' }}
+						/>
+					) : (
+						<SVG.CheckCircle
+							width="16px"
+							height="16px"
+							style={{ marginTop: '16px', marginLeft: '16px' }}
+						/>
+					)}
 				</div>
-	            <div className={classes.metadataBox2}>
-					<div className={classes.metaDataTitle}>{title}
-						<div className={classes.metadataCloseIcon} onClick={handleCloseModal}>
-							<Icons.Close />
-						</div>
+				<div className="metadataBox2">
+					<div className="metaDataTitle">{title}</div>
+					<div style={{ lineHeight: "16px" }} className="metaDataUrl">
+						{Strings.getUrlHost(props.data.url)}
 					</div>
+				</div>
 
-					<div style={{ display: 'flex', lineHeight: '12px' }}>
-						<img src={props.favicon} width="14px" height="14px" style={{ display: 'inline', marginRight: '8px' }} />
-						<div className={classes.metadataUrl}>
-							{getHostname(props.data.url)}
-						</div>
-					</div>
+				<div className="metadataBox3">
+					<img height="32px" src={og} />
 				</div>
 			</div>
 		</>

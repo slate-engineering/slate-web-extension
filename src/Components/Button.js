@@ -1,41 +1,73 @@
-import React, { useState } from 'react';
-import * as Icons from '../Components/Icons';
-import classes from '../App.module.css';
+import React from "react";
+import * as SVG from "../Common/SVG";
+import * as Strings from "../Common/strings";
 
 const Button = (props) => {
+	const icons = {
+		command: (
+			<SVG.MacCommand
+				width="16px"
+				height="16px"
+			/>
+		),
+		plus: (
+			<SVG.Plus
+				width="20px"
+				height="20px"
+			/>
+		),
+		account: (
+			<SVG.Account
+				width="22px"
+				height="22px"
+			/>
+		),
+		uploads: (
+			<SVG.Upload
+				width="16px"
+				height="16px"
+			/>
+		),
+		eye: <SVG.Layers width="16px" height="16px" />,
+	};
 
-	let svg;
-	if(props.icon == 'tag') {
-		svg = <Icons.Tag />
-	}else if(props.icon == 'bookmark'){
-		svg = <Icons.Bookmark />
-	}else if(props.icon == 'plus'){
-		svg = <Icons.Plus />
-	}else if(props.icon == 'settings'){
-		svg = <Icons.Settings />
-	}
+	let svg = icons[props.icon];
 
 	const handleClick = (e) => {
 		e.preventDefault();
-		window.postMessage({ run: props.run, url: props.data.url }, "*");
-	}
 
-	return(
+		if (props.run === "OPEN_LINK") {
+			let url = Strings.getSlateFileLink(props.data.data.data.cid, 100);
+			window.open(url, "_blank").focus();
+			return;
+		}
+
+		window.postMessage({ run: props.run }, "*");
+	};
+
+	return (
 		<>
-			<div
-				onClick={handleClick}
-				className={classes.modalButtonMain}
-			>
-				<div className={classes.modalButtonSVG}>
-					{svg}
-				</div>
-				<div className={classes.modalButtonText}>
-					{props.text}
-				</div>
+			<div onClick={handleClick} className="modalButtonMain">
+				<div className="svgcontainer">{svg}</div>
+				<div className="modalButtonText">{props.text}</div>
+				{props.shortcut &&
+					<div
+						style={{
+							position: "absolute",
+							right: "20px",
+							color: "#8E9093",
+							fontSize: "14px",
+						}}
+					>
+						<span className="modalKeyIcon">{props.shortcut}</span>
+						{props.command && (
+							<span className="modalCommandIcon">{props.command}</span>
+						)}
+					</div>
+				}
 			</div>
 		</>
 	);
 };
 
 export default Button;
-

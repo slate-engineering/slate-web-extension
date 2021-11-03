@@ -1391,6 +1391,23 @@ export const Check = (props) => {
   );
 };
 
+export const CheckCircle = (props) => {
+  return (
+    <svg 
+      width="16" 
+      height="17" 
+      viewBox="0 0 16 17" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"  
+      {...props}
+    >
+      <path d="M14.6666 7.88674V8.50007C14.6658 9.93769 14.2003 11.3365 13.3395 12.488C12.4788 13.6394 11.2688 14.4817 9.89022 14.8893C8.5116 15.297 7.03815 15.248 5.68963 14.7498C4.3411 14.2516 3.18975 13.3308 2.40729 12.1248C1.62482 10.9188 1.25317 9.49212 1.34776 8.05762C1.44235 6.62312 1.99812 5.25762 2.93217 4.16479C3.86621 3.07195 5.1285 2.31033 6.53077 1.9935C7.93304 1.67668 9.40016 1.82163 10.7133 2.40674" stroke="#34D159" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M14.6667 3.16675L8 9.84008L6 7.84008" stroke="#34D159" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+
+  );
+};
+
 export const LocationPin = (props) => {
   return (
     <svg
@@ -2053,3 +2070,34 @@ export const Clipboard = (props) => (
     />
   </svg>
 );
+
+export const Bookmark = (props) => {
+  return(
+    <svg 
+      width={14} 
+      height={16}
+      viewBox="0 0 16 20" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M15 19L8 14L1 19V3C1 2.46957 1.21071 1.96086 1.58579 1.58579C1.96086 1.21071 2.46957 1 3 1H13C13.5304 1 14.0391 1.21071 14.4142 1.58579C14.7893 1.96086 15 2.46957 15 3V19Z" stroke="#00050A" stroke-width="1.875" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
+
+export const Account = (props) => {
+  return(
+    <svg 
+      width={20} 
+      height={20} 
+      viewBox="0 0 20 20" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M15.3334 16V14.6667C15.3334 13.9594 15.0524 13.2811 14.5523 12.781C14.0522 12.281 13.3739 12 12.6667 12H7.33335C6.62611 12 5.94783 12.281 5.44774 12.781C4.94764 13.2811 4.66669 13.9594 4.66669 14.6667V16" stroke="#00050A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9.99998 9.33333C11.4727 9.33333 12.6666 8.13943 12.6666 6.66667C12.6666 5.19391 11.4727 4 9.99998 4C8.52722 4 7.33331 5.19391 7.33331 6.66667C7.33331 8.13943 8.52722 9.33333 9.99998 9.33333Z" stroke="#00050A" stroke-width="1.33333" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  )
+}
