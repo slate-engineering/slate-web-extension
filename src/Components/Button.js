@@ -50,19 +50,21 @@ const Button = (props) => {
 			<div onClick={handleClick} className="modalButtonMain">
 				<div className="svgcontainer">{svg}</div>
 				<div className="modalButtonText">{props.text}</div>
-				<div
-					style={{
-						position: "absolute",
-						right: "20px",
-						color: "#8E9093",
-						fontSize: "14px",
-					}}
-				>
-					<span className="modalKeyIcon">{props.shortcut}</span>
-					{props.command && (
-						<span className="modalCommandIcon">{props.command}</span>
-					)}
-				</div>
+				{props.shortcut &&
+					<div
+						style={{
+							position: "absolute",
+							right: "20px",
+							color: "#8E9093",
+							fontSize: "14px",
+						}}
+					>
+						<span className="modalKeyIcon">{props.shortcut}</span>
+						{props.command && (
+							<span className="modalCommandIcon">{props.command}</span>
+						)}
+					</div>
+				}
 			</div>
 		</>
 	);
