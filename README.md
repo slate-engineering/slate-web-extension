@@ -25,10 +25,8 @@ To load as a developer extension inside of Chrome:
 ### Shortcuts
 `option + S` opens the main app modal <br>
 `option + O` opens your Slate data page <br><br>
+`option + B` bookmark the current page
 
-When the app modal is open:
-- `option + B` bookmark the current page
-
-### Archiving
+### Archiving (coming soon)
 1) When you bookmark a website in Chrome (cmd+D) or download a file to your desktop, the Slate extension will automatically archive the file/link.
      - Images are uploaded as a file and every other type is saved from it's raw link (e.g. pdf and mp4) 
