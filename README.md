@@ -1,5 +1,5 @@
 ## slate-web-extension
-<img width="1430" alt="Screen Shot 2021-08-30 at 11 43 16 AM" src="https://user-images.githubusercontent.com/60402678/131381707-1ff37208-7776-4c98-9770-ecafee18ee1b.png">
+<img width="1440" alt="Screen Shot 2021-11-04 at 12 07 26 PM" src="https://user-images.githubusercontent.com/60402678/140395348-5eb0074c-00ce-480a-ad0f-4297b9b9eccb.png">
 
 <br><br>
 
