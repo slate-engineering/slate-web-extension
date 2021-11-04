@@ -23,8 +23,8 @@ To load as a developer extension inside of Chrome:
 1. For now, you'll have to add your Slate API key in the temporary settings page
 
 ### Shortcuts
-`option + S` opens the main app modal <br>
-`option + O` opens your Slate data page <br><br>
+`option + S` opens the main extension modal <br>
+`option + O` opens your Slate data page in the web app <br>
 `option + B` bookmark the current page
 
 ### Archiving (coming soon)
