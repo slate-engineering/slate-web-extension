@@ -10,7 +10,6 @@ if(window.location.href.startsWith('https://slate.host')) {
         id: id 
       });
     });
-
   }
   //TODO: Have the extension change the 'download chrome extension' button
 }
@@ -78,9 +77,7 @@ function main(props) {
       .then((response) => response.text())
       .then((html) => {
         const styleStashHTML = html.replace(/\/static\//g, `${extensionOrigin}/static/`);
-        console.log('html', html)
-        console.log('styleStashHTML', styleStashHTML)
-           $(styleStashHTML).prependTo('body');
+        $(styleStashHTML).prependTo('body');
       })
       .catch((error) => {
         console.warn(error);
