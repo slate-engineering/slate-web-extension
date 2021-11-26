@@ -9,10 +9,7 @@ import ShortcutsPage from "../Pages/Shortcuts";
 import AccountPage from "../Pages/Account";
 
 const Modal = (props) => {
-  //const [search, setSearch] = useState({ query: null });
-  //const [tags, setTags] = useState({ show: false });
   const [loading, setLoading] = useState({ mini: false });
-  const [og, setOg] = useState({ image: null, title: null });
   const [page, setPage] = useState({ active: "home" });
   const [user, setUser] = useState({ loaded: false, data: null });
 
@@ -20,7 +17,6 @@ const Modal = (props) => {
     let loaderType = document.getElementById("slate-loader-type")
     if(loaderType) {
       loaderType.getAttribute('data-type');
-      console.log('loaderType from modal: ', loaderType);
       setLoading({ mini: true })
     }
   }, []);

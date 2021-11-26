@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
 import Header from "../Components/Header";
-import ProgressBar from "../Components/ProgressBar";
 
 const AccountPage = (props) => {
 	const [avatar, setAvatar] = useState(null);
@@ -33,6 +32,7 @@ const AccountPage = (props) => {
 							width="64px"
 							height="64px"
 							src={avatar}
+							alt={`Avatar`}
 						/>
 					) : (
 						<div
@@ -45,24 +45,18 @@ const AccountPage = (props) => {
 					</div>
 
 					<div className="modalAccountStorage">
-						<a className="modalLink" href="https://slate.host/_/data" target="_blank">View profile</a>
+						<a 
+							className="modalLink" 
+							href="https://slate.host/_/data" 
+							target="_blank"
+						>
+							View profile
+						</a>
 					</div>
 
 					<div onClick={handleSignOut} className="modalSmallButton">
 						Sign out {props.user.data.data.name}
 					</div>
-
-					{/*
-					<div className="modalAccountStorage">
-						0 Objects{" "}
-						<span style={{ marginLeft: "16px" }}>
-							0GB of 16GB Stored
-						</span>
-					</div>
-
-					<ProgressBar progress="70%" />
-
-					*/}
 					
 				</div>
 			</div>

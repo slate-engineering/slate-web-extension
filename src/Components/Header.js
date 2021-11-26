@@ -42,6 +42,7 @@ const Header = (props) => {
 							width="24px"
 							height="24px"
 							src={avatar}
+							alt={`Avatar`}
 						/>
 					) : (
 						<div className="modalGoBack"></div>
