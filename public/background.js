@@ -194,7 +194,7 @@ const checkLoginSession = async (tab) => {
   }
 }
 
-chrome.browserAction.onClicked.addListener(async (tab) => {
+chrome.action.onClicked.addListener(async (tab) => {
   chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
   await checkLoginData(tab);
 });
