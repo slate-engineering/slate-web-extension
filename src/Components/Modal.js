@@ -29,40 +29,46 @@ const Modal = (props) => {
     window.postMessage({ type: "CLOSE_APP" }, "*");
   };
 
-  window.addEventListener("message", function (event) {
-    /*
-    if(event.data.type === "LOAD_APP_WITH_TAGS") {
-      setTags({ show: true })
-    }
-    */
-
-    if (event.data.type === "AUTH_REQ") {
-      setUser({ loaded: true, data: null });
-      setLoading({ mini: false })
-    }
-
-    if (event.data.run === "OPEN_HOME_PAGE") {
-      setPage({ active: "home" });
-    }
-
-    if (event.data.run === "OPEN_SHORTCUTS_PAGE") {
-      setPage({ active: "shortcuts" });
-    }
-
-    if (event.data.run === "OPEN_ACCOUNT_PAGE") {
-      setPage({ active: "account" });
-    }
-
-    if (event.data.type === "CHECK_LINK") {
-      setUser({ loaded: true, data: event.data.user });
-      setLoading({ mini: false })
-      /*
-      if (event.data.data.decorator === "LINK_FOUND") {
-        setCheckLink({ uploaded: true, data: event.data.data });
+  const messageListeners = () => {
+    window.addEventListener("message", function (event) {
+      if (event.data.type === "AUTH_REQ") {
+        setUser({ loaded: true, data: null });
+        setLoading({ mini: false })
       }
-      */
+
+      if (event.data.run === "OPEN_HOME_PAGE") {
+        setPage({ active: "home" });
+      }
+
+      if (event.data.run === "OPEN_SHORTCUTS_PAGE") {
+        setPage({ active: "shortcuts" });
+      }
+
+      if (event.data.run === "OPEN_ACCOUNT_PAGE") {
+        setPage({ active: "account" });
+      }
+
+      if (event.data.type === "CHECK_LINK") {
+        setUser({ loaded: true, data: event.data.user });
+        setLoading({ mini: false })
+        /*
+        if (event.data.data.decorator === "LINK_FOUND") {
+          setCheckLink({ uploaded: true, data: event.data.data });
+        }
+        */
+      }
+    });
+  }
+
+
+  useEffect(() => {
+    let loaderType = document.getElementById("slate-loader-type")
+    if(loaderType) {
+      loaderType.getAttribute('data-type');
+      setLoading({ mini: true })
     }
-  });
+    messageListeners();
+  }, []);
 
   return (
     <ModalContext.Consumer>

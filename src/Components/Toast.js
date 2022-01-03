@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ModalContext } from "../Contexts/ModalProvider";
 
 import ReactShadowRoot from "react-shadow-root";
@@ -23,30 +23,46 @@ const Toast = (props) => {
     setVisable(false);
   };
 
-  window.addEventListener("message", function (event) {
-    if (event.data.type === "UPLOAD_DONE") {
-      setUpload({
-        status: "complete",
-        data: event.data.data.cid,
-        tab: event.data.tab,
-      });
-      const timer = setTimeout(() => {
-        handleCloseModal();
-      }, 10000);
-      return () => clearTimeout(timer);
-    }
+  const toastTimer = () => {
+    const timer = setTimeout(() => {
+      handleCloseModal();
+    }, 10000);
+    return () => clearTimeout(timer);
+  }
 
-    if (event.data.type === "UPLOAD_FAIL") {
-      setUpload({ status: "error" });
-    }
+  const messageListeners = () => {
+    window.addEventListener("message", function (event) {
+      if (event.data.type === "UPLOAD_DONE") {
+        setUpload({
+          status: "complete",
+          data: event.data.data.cid,
+          tab: event.data.tab,
+        });
+        toastTimer();
+        return;
+      }
 
-    if (event.data.type === "UPLOAD_DUPLICATE") {
-      setUpload({
-        status: "duplicate",
-        data: event.data.data.cid,
-      });
-    }
-  });
+      if (event.data.type === "UPLOAD_FAIL") {
+        setUpload({ status: "error" });
+        toastTimer()
+        return;
+      }
+
+      if (event.data.type === "UPLOAD_DUPLICATE") {
+        setUpload({
+          status: "duplicate",
+          data: event.data.data.cid,
+        });
+        toastTimer()
+        return;
+      }
+    });
+  }
+
+   useEffect(() => {
+    messageListeners()
+  }, []);
+
 
   let count = 28;
   let title = Strings.truncateString(count, props.title);

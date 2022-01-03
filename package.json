@@ -1,5 +1,5 @@
 {
-  "name": "react-chrome-extension-boilerplate",
+  "name": "Slate for Web",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -20,6 +20,7 @@
     "react-scripts": "3.1.2",
     "react-shadow": "^19.0.2",
     "react-shadow-root": "^6.1.0",
+    "react-usestateref": "^1.0.8",
     "typeface-inter": "^3.18.1",
     "use-react-screenshot": "^1.0.2"
   },

@@ -64,6 +64,7 @@ export const truncateString = (count, string) => {
 export const shortcuts = [
   { short: "⌥", key: "S", name: "Open extension" },
   { short: "⌥", key: "B", name: "Bookmark current page" },
+  { short: "↑", key: "↓", extra: "←", name: "Navigate extension" },
   { short: "", key: "esc", name: "Close extension" },
   { short: "⌥", key: "O", name: "Open web app" },
 ];
@@ -129,11 +130,7 @@ export const getCIDFromIPFS = (url) => {
     ? // pull cid from a path format gateway
       url.split("/ipfs/")[1]
     : // pull cid from a subdomain format gateway
-      url.match(
-        // regex here performs https://{cid}.ipfs.slate.textile.io => [https://{cid}, {cid}]
-        /(?:http[s]*\:\/\/)*(.*?)\.(?=[^\/]*\..{2,5})/i
-      )[1];
-
+      url.match(/(?:http[s]*\:\/\/)*(.*?)\.(?=[^\/]*\..{2,5})/i)[1];
   return cid;
 };
 
@@ -271,9 +268,9 @@ export const getParamsFromUrl = (url) => {
 
 export const hexToRGBA = (hex, alpha = 1) => {
   hex = hex.replace("#", "");
-  var r = parseInt(hex.length == 3 ? hex.slice(0, 1).repeat(2) : hex.slice(0, 2), 16);
-  var g = parseInt(hex.length == 3 ? hex.slice(1, 2).repeat(2) : hex.slice(2, 4), 16);
-  var b = parseInt(hex.length == 3 ? hex.slice(2, 3).repeat(2) : hex.slice(4, 6), 16);
+  var r = parseInt(hex.length === 3 ? hex.slice(0, 1).repeat(2) : hex.slice(0, 2), 16);
+  var g = parseInt(hex.length === 3 ? hex.slice(1, 2).repeat(2) : hex.slice(2, 4), 16);
+  var b = parseInt(hex.length === 3 ? hex.slice(2, 3).repeat(2) : hex.slice(4, 6), 16);
   if (alpha) {
     return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
   } else {
