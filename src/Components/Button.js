@@ -34,8 +34,6 @@ const Button = (props) => {
 	let svg = icons[props.icon];
 
 	const handleClick = (e) => {
-		e.preventDefault();
-
 		if (props.run === "OPEN_LINK") {
 			let url = Strings.getSlateFileLink(props.data.data.data.cid, 100);
 			window.open(url, "_blank").focus();
@@ -45,12 +43,25 @@ const Button = (props) => {
 		window.postMessage({ run: props.run }, "*");
 	};
 
+	const handleHover = () => {
+		props.onChange(props.id);
+	}
+
+	if(props.onEnter && props.id === props.highlight) {
+		handleClick()
+	}
+
 	return (
 		<>
-			<div onClick={handleClick} className="modalButtonMain">
+			<div 
+				onClick={handleClick} 
+				className="modalButtonMain" 
+				onMouseEnter={handleHover}
+				style={{ backgroundColor: props.id === props.highlight ? '#F7F8F9': '#fff'}}
+			>
 				<div className="svgcontainer">{svg}</div>
 				<div className="modalButtonText">{props.text}</div>
-				{props.shortcut &&
+				{props.id === props.highlight &&
 					<div
 						style={{
 							position: "absolute",
@@ -59,10 +70,10 @@ const Button = (props) => {
 							fontSize: "14px",
 						}}
 					>
-						<span className="modalKeyIcon">{props.shortcut}</span>
-						{props.command && (
-							<span className="modalCommandIcon">{props.command}</span>
-						)}
+						
+						<span className="modalKeyIcon">enter</span>
+						<span className="modalCommandIcon">⏎</span>
+							
 					</div>
 				}
 			</div>

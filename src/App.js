@@ -15,9 +15,22 @@ function App() {
 
   //const [user, setUser] = useState({ signedin: false, data: null });
 
+  //Disable Up Down arrows in the main window to prevent page scrolls
+  const onKeyDownMain = (e) => {
+    if (
+      ["ArrowUp", "ArrowDown"].indexOf(
+        e.code
+      ) > -1
+    ) {
+      e.preventDefault();
+    }
+  };
+
   function onKeyDown(keyName, e, handle) {
     if (keyName === "esc") {
       setIsOpened(false);
+      window.removeEventListener("keydown", onKeyDownMain);
+      window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
     }
 
     if (keyName === "alt+b" || keyName === "enter") {
@@ -42,37 +55,40 @@ function App() {
     }
   }
 
-  window.addEventListener("message", function (event) {
-    if (event.data.type === "UPLOAD_START") {
-      setIsOpened(false);
-      setIsUploading(true);
-    }
-
-    if (event.data.type === "CLOSE_APP") {
-      setIsOpened(false);
-    }
-
-    if (event.data.type === "OPEN_LOADING") {
-      setIsOpened(false);
-      setIsUploading(true);
-    }
-
-    if (event.data.type === "CHECK_LINK") {
-      if (event.data.data.decorator === "LINK_FOUND") {
-        setCheckLink({ uploaded: true, data: event.data.data });
+  const messageListeners = () => {
+    window.addEventListener("message", function (event) {
+      if (event.data.type === "UPLOAD_START") {
+        setIsOpened(false);
+        setIsUploading(true);
       }
-    }
-    /*
-    if (event.data.type === "OPEN_SCREENSHOT_SHORTCUT") {
-      setIsOpened(false);
-      setIsScreenshot(true);
-    }
-    */
-  });
+
+      if (event.data.type === "CLOSE_APP") {
+        window.removeEventListener("keydown", onKeyDownMain);
+        setIsOpened(false);
+        window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
+      }
+
+      if (event.data.type === "OPEN_LOADING") {
+        setIsOpened(false);
+        setIsUploading(true);
+      }
+
+      if (event.data.type === "CHECK_LINK") {
+        if (event.data.data.decorator === "LINK_FOUND") {
+          setCheckLink({ uploaded: true, data: event.data.data });
+        }
+      }
+    });
+  } 
 
   useEffect(() => {
+    messageListeners();
+    
     let meta = getMeta();
     setOg({ image: meta.image, favicon: meta.favicon });
+
+    window.addEventListener("keydown", onKeyDownMain, false);
+
   }, []);
 
   const getMeta = () => {
@@ -99,7 +115,7 @@ function App() {
         <ModalProvider>
           <div>
             <Hotkeys
-              keyName="esc,alt+b,alt+a,alt+c,alt+3,enter"
+              keyName="esc,alt+b,alt+a,alt+c,alt+3"
               onKeyDown={onKeyDown.bind(this)}
             >
               <Modal image={og.image} favicon={og.favicon} link={checkLink} />
