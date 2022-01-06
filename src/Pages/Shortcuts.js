@@ -1,6 +1,5 @@
 import React from "react";
 
-import Metadata from "../Components/Metadata";
 import Header from "../Components/Header";
 import Hotkeys from "react-hot-keys";
 

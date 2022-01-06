@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Modal from "./Components/Modal";
 import Toast from "./Components/Toast";
-import Screenshot from "./Components/Screenshot";
 import ModalProvider from "./Contexts/ModalProvider";
 import Hotkeys from "react-hot-keys";
 

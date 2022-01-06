@@ -9,7 +9,7 @@ This project needs to be built in order to take advantage of the Chrome Extensio
 
 To load as a developer extension inside of Chrome:
 
-1. Clone the repo `git clone https://github.com/jasonleyser/slate-web-extension.git` <br >
+1. Clone the repo `https://github.com/slate-engineering/slate-web-extension` <br >
 2. In terminal, navigate to the new `slate-web-extension` folder <br >
 3. Run `npm install` <br >
 4. Update the build folder `npm run build` <br >
@@ -18,15 +18,7 @@ To load as a developer extension inside of Chrome:
 7. Click the `Load unpacked` button in the top left corner <br>
 8. Select the `build` folder inside of this project folder <br>
 
-
-### Adding an API key
-1. For now, you'll have to add your Slate API key in the temporary settings page
-
 ### Shortcuts
 `option + S` opens the main extension modal <br>
 `option + O` opens your Slate data page in the web app <br>
 `option + B` bookmark the current page
-
-### Archiving (coming soon)
-1) When you bookmark a website in Chrome (cmd+D) or download a file to your desktop, the Slate extension will automatically archive the file/link.
-     - Images are uploaded as a file and every other type is saved from it's raw link (e.g. pdf and mp4) 

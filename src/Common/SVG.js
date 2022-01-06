@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import classes from '../App.module.css';
+import React from 'react';
 
 export const Loader = (props) => {
   return (

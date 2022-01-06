@@ -36,7 +36,6 @@ const AccountPage = (props) => {
 				onKeyDown={onKeyDown.bind(this)}
 			>
 				<Header title="Account" goBack={true} user={props.user} />
-
 				<div className="modalAccount">
 					<div className="modalAccountContent">
 						{avatar ? (

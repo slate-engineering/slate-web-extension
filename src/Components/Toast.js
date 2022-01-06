@@ -135,7 +135,7 @@ const Toast = (props) => {
                 <div className="loaderContent">
                   <div className="loaderText">
                     {favicon ? (
-                      <img className="loaderImage" src={favicon} />
+                      <img className="loaderImage" src={favicon} alt={`Favicon`} />
                     ) : (
                       <div className="loaderImageBlank"></div>
                     )}
