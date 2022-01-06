@@ -1,5 +1,10 @@
 const domain = 'https://slate.host';
 
+const domains = {
+  api: 'https://slate-dev.onrender.com',
+  cookie: 'https://slate.host'
+}
+
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
       chrome.cookies.get({"url": domain, "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
@@ -102,9 +107,8 @@ const handleSaveLink = async (props) => {
   });
 
   const json = await response.json();
-
-  console.log('upload: ', json)
-
+  console.log('upload data: ', json)
+  
   if(json.decorator === "LINK_DUPLICATE") {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
       run: 'UPLOAD_DUPLICATE',
@@ -180,11 +184,9 @@ const checkLoginData = async (tab) => {
 }
 
 const checkLoginSession = async (tab) => {
-  console.log(tab)
   if(tab) {
     chrome.cookies.onChanged.addListener(async (changeInfo) => {
       if(changeInfo.cookie.domain === "slate.host" && changeInfo.removed === false) {
-        console.log('changeInfo', changeInfo)
         await checkLoginData(tab);
         chrome.tabs.update(tab.id, { highlighted: true });
         tab = null;
@@ -195,7 +197,7 @@ const checkLoginSession = async (tab) => {
 }
 
 chrome.action.onClicked.addListener(async (tab) => {
-  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
+  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN', tabId: tab.id });
   await checkLoginData(tab);
 });
 
@@ -261,68 +263,3 @@ chrome.tabs.onUpdated.addListener(async (tabId , info , tab) => {
     }
   }
 });
-
-/*
-TODO (jason) add back for sprint 2
-
-handleUploadImage = async (info, tabs) => {
-  chrome.tabs.sendMessage(tabs.id, { run: 'LOAD_APP', type: 'uploading' });
-  chrome.tabs.sendMessage(tabs.id, { run: 'LOAD_APP_WITH_TAGS' });
-  const key = await getApiKey();
-  const filename = info.srcUrl.replace(/^.*[\\\/]/, '')
-  const url = 'https://uploads.slate.host/api/v2/public/upload-by-url';
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': "application/json",
-      Authorization: key.apiKey,
-    },
-    body: JSON.stringify({
-      data: {
-        url: info.srcUrl,
-        filename: filename,
-      },
-    }),
-  });
-
-  const json = await response.json();
-  return json;
-}
-
-chrome.contextMenus.create({
-  title: "Slate",
-  id: "parent",
-  contexts: ["all"],
-});
-
-chrome.contextMenus.create({
-  title: "Save to data",
-  contexts: ["image"],
-  parentId: "parent",
-  id: "image_slate",
-  onclick: handleUploadImage,
-});
-
-chrome.bookmarks.onCreated.addListener(async function(id, bookmark) {
-  await handleSaveLink({ 
-    url: bookmark.url, 
-    background: true 
-  })
-});
-
-chrome.downloads.onCreated.addListener(async function(download) {
-  if(download.mime.startsWith('image/')) {
-    await handleSaveImage({ 
-      url: download.finalUrl, 
-      background: true 
-    })
-    return;
-  }
-
-  await handleSaveLink({ 
-    url: download.finalUrl, 
-    background: true
-  })
-});
-*/

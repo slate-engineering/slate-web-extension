@@ -14,11 +14,17 @@ if(window.location.href.startsWith('https://slate.host')) {
   //TODO: Have the extension change the 'download chrome extension' button
 }
 
+let isJumperOpen = false;
+
 chrome.runtime.onMessage.addListener(function(request, sender, callback) {
 
   if(request.run === "LOAD_APP") {
-    main({ type: request.type });
-    return true;
+    if(!isJumperOpen) {
+      main({ type: request.type });
+      isJumperOpen = true;
+      return;
+    }
+    return;
   }
 
   if(request.run === "AUTH_REQ") {
@@ -113,6 +119,9 @@ window.addEventListener("message", async function(event) {
     chrome.runtime.sendMessage({ type: "SIGN_OUT" });
   }
 
+  if(event.data.run === "SET_OPEN_FALSE") {
+    isJumperOpen = false;
+  }
+
   if (event.source !== window) return;
 });
-
