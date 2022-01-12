@@ -22,8 +22,12 @@ const AccountPage = (props) => {
 
 	async function onKeyDown(keyName, e, handle) {
 		e.preventDefault();
+		console.log(keyName)
 		if(keyName === 'left') {
 			window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
+		}
+		if(keyName === 'enter') {
+			window.open('https://slate.host/_/data', '_blank').focus();
 		}
 	}
 
@@ -32,7 +36,7 @@ const AccountPage = (props) => {
 	return (
 		<>
 			<Hotkeys
-				keyName="left"
+				keyName="left,enter"
 				onKeyDown={onKeyDown.bind(this)}
 			>
 				<Header title="Account" goBack={true} user={props.user} />

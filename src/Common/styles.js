@@ -388,6 +388,30 @@ export const toast = `
 		color: ${Constants.system.black};
 	}
 
+	.loaderWindowTwo {
+		top: 0%;
+		right: 0%;
+		margin-top: 2em;
+		margin-right: 2em;
+		position: fixed;
+		z-index: 2100000000;
+	}
+
+	.loaderWindowMain {		
+		margin-bottom: 1em;
+		position: relative;
+		background: ${Constants.system.white};
+		width: 320px;  
+		height: 88px;
+		max-width: 320px;  
+		max-height: 88px;
+		box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+		z-index: 2100000000;
+		border-radius: 10px;
+		border: 0;
+		color: ${Constants.system.black};
+	}
+
 	.loaderBody {
 		width: 100%;
 	}

@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import useState from "react-usestateref";
+
 import { ModalContext } from "../Contexts/ModalProvider";
 
 import ReactShadowRoot from "react-shadow-root";
@@ -11,65 +13,14 @@ import * as Strings from "../Common/strings";
 
 const Toast = (props) => {
   const [favicon, setFavicon] = useState(null);
-  const [visable, setVisable] = useState(true);
-  const [upload, setUpload] = useState({
-    status: "uploading",
-    data: null,
-    error: false,
-    tab: null,
-  });
-
-  const handleCloseModal = () => {
-    setVisable(false);
-  };
-
-  const toastTimer = () => {
-    const timer = setTimeout(() => {
-      handleCloseModal();
-    }, 10000);
-    return () => clearTimeout(timer);
-  }
-
-  const messageListeners = () => {
-    window.addEventListener("message", function (event) {
-      if (event.data.type === "UPLOAD_DONE") {
-        setUpload({
-          status: "complete",
-          data: event.data.data.cid,
-          tab: event.data.tab,
-        });
-        toastTimer();
-        return;
-      }
-
-      if (event.data.type === "UPLOAD_FAIL") {
-        setUpload({ status: "error" });
-        toastTimer()
-        return;
-      }
-
-      if (event.data.type === "UPLOAD_DUPLICATE") {
-        setUpload({
-          status: "duplicate",
-          data: event.data.data.cid,
-        });
-        toastTimer()
-        return;
-      }
-    });
-  }
-
-   useEffect(() => {
-    messageListeners()
-  }, []);
-
+  const [uploads, setUploads, uploadsRef] = useState({ all: [] });
 
   let count = 28;
   let title = Strings.truncateString(count, props.title);
 
   const Footer = (props) => {
-    let url = props.upload.data
-      ? Strings.getSlateFileLink(props.upload.data, props.upload.tab)
+    let url = props.upload.cid
+      ? Strings.getSlateFileLink(props.upload.cid, 100)
       : null;
     return (
       <>
@@ -124,32 +75,48 @@ const Toast = (props) => {
     checkImage(props.image);
   }
 
+  const _handleCloseToast = (file) => {
+    props.callback(file);            
+  }
+
   return (
     <ModalContext.Consumer>
       {({ pageData }) => (
         <>
           <ReactShadowRoot>
             <style>{Styles.toast}</style>
-            {visable && (
-              <div id="modal" className="loaderWindow">
-                <div className="loaderContent">
-                  <div className="loaderText">
-                    {favicon ? (
-                      <img className="loaderImage" src={favicon} alt={`Favicon`} />
-                    ) : (
-                      <div className="loaderImageBlank"></div>
-                    )}
-                    {title}
-                    <div onClick={handleCloseModal} className="loaderClose">
-                      <SVG.Dismiss width="20px" height="20px" />
+            
+            {props.show &&
+            
+              <div className="loaderWindowTwo">
+                {props.files.all.map((file) => {
+                  return(
+                    <div id="modal" className="loaderWindowMain">
+                      <div className="loaderContent">
+                        <div className="loaderText">
+                          {favicon ? (
+                            <img className="loaderImage" src={file.image} />
+                          ) : (
+                            <div className="loaderImageBlank"></div>
+                          )}
+                          {file.title ? 
+                            Strings.truncateString(25, file.title)
+                          :
+                            Strings.truncateString(25, props.title)
+                          }
+                          <div onClick={() => _handleCloseToast(file)} className="loaderClose">
+                            <SVG.Dismiss width="20px" height="20px" />
+                          </div>
+                        </div>
+                        <div className="loaderFooter">
+                          <Footer upload={file} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="loaderFooter">
-                    <Footer upload={upload} />
-                  </div>
-                </div>
-              </div>
-            )}
+                  )
+                })}
+            </div>
+          }
           </ReactShadowRoot>
         </>
       )}

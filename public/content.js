@@ -16,7 +16,7 @@ if(window.location.href.startsWith('https://slate.host')) {
 
 let isJumperOpen = false;
 
-chrome.runtime.onMessage.addListener(function(request, sender, callback) {
+chrome.runtime.onMessage.addListener(async function(request, sender, callback) {
 
   if(request.run === "LOAD_APP") {
     if(!isJumperOpen) {
@@ -24,7 +24,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
       isJumperOpen = true;
       return;
     }
+    window.postMessage({ type: "SHOW_APP" }, "*");
     return;
+  }
+
+  if(request.run === "LOAD_APP_RIGHT_CLICK") {
+    if(!isJumperOpen) {
+      main({ type: request.type });
+      isJumperOpen = true;
+      return;
+    }
   }
 
   if(request.run === "AUTH_REQ") {
@@ -38,22 +47,42 @@ chrome.runtime.onMessage.addListener(function(request, sender, callback) {
   }
 
   if(request.run === "OPEN_LOADING") {
-    window.postMessage({ type: "OPEN_LOADING" }, "*");
+    window.postMessage({ 
+      type: "OPEN_LOADING", 
+      id: request.id,
+      image: request.image,
+      title: request.title,
+    }, "*");
     return true;
   }
 
   if(request.run === "UPLOAD_DONE") {
-    window.postMessage({ type: "UPLOAD_DONE", data: request.data, tab: request.tab }, "*");
+    window.postMessage({ 
+      type: "UPLOAD_DONE",
+      id: request.id, 
+      data: request.data, 
+      tab: request.tab 
+    }, "*");
     return true;
   }
 
   if(request.run === "UPLOAD_FAIL") {
-    window.postMessage({ type: "UPLOAD_FAIL" }, "*");
+    window.postMessage({ 
+      type: "UPLOAD_FAIL",
+      id: request.id,
+      data: request.data, 
+      tab: request.tab
+    }, "*");
     return true;
   } 
 
   if(request.run === "UPLOAD_DUPLICATE") {
-    window.postMessage({ type: "UPLOAD_DUPLICATE", data: request.data }, "*");
+    window.postMessage({ 
+      type: "UPLOAD_DUPLICATE",
+      id: request.id,
+      data: request.data, 
+      tab: request.tab
+    }, "*");
     return true;
   } 
 
@@ -101,7 +130,11 @@ window.addEventListener("message", async function(event) {
   }
 
   if(event.data.run === "OPEN_LOADING") {
-    chrome.runtime.sendMessage({ type: "SAVE_LINK", url: event.data.url });
+    chrome.runtime.sendMessage({ 
+      type: "SAVE_LINK", 
+      url: event.data.url, 
+      image: event.data.image,
+    });
     return true;
   }
 
@@ -117,10 +150,6 @@ window.addEventListener("message", async function(event) {
 
   if(event.data.run === "SIGN_OUT") {
     chrome.runtime.sendMessage({ type: "SIGN_OUT" });
-  }
-
-  if(event.data.run === "SET_OPEN_FALSE") {
-    isJumperOpen = false;
   }
 
   if (event.source !== window) return;

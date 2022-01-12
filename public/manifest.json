@@ -20,8 +20,8 @@
     "matches": ["<all_urls>"],
     "all_frames": false,
     "js": [
-      "./jquery.js",
-      "./content.js"
+      "./content.js",
+      "./jquery.js"
     ],
     "run_at": "document_idle"
   }],
@@ -31,7 +31,7 @@
     "cookies",
     "commands"
   ],
-  "host_permissions": ["https://slate.host/"],
+  "host_permissions": ["https://slate.host/", "http://*/*", "https://*/*"],
   "commands": {
     "open-app": {
       "suggested_key": {
@@ -65,9 +65,10 @@
         "/static/*",
         "/fonts/*",
         "Inter-Regular.ttf",
-        "../fonts/*" 
+        "../fonts/*",
+        "icon128.png"
       ],
-      "matches": ["<all_urls>"]
+      "matches": ["<all_urls>", "http://*/*", "https://*/*"]
     }
   ]
 }
