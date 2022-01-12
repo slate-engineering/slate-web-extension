@@ -72,26 +72,31 @@ const Modal = (props) => {
         <>
           <ReactShadowRoot>
             <style>{Styles.main}</style>
-            <div id="modal" className="modalWindow" style={loading.mini ? { width:'50px', height: '50px' } : {}}>
-              <div className="modalContent">
-                {page.active === "home" && (
-                  <HomePage
-                    pageData={pageData}
-                    image={props.image}
-                    favicon={props.favicon}
-                    status={props.link}
-                    loader={loading.mini}
-                    user={user}
-                  />
-                )}
+            {props.show &&
+                <>
+                  <div id="modal" className="modalWindow" style={loading.mini ? { width:'50px', height: '50px' } : {}}>
+                    <div className="modalContent">
+                      {page.active === "home" && (
+                        <HomePage
+                          pageData={pageData}
+                          image={props.image}
+                          favicon={props.favicon}
+                          status={props.link}
+                          loader={loading.mini}
+                          user={user}
+                        />
+                      )}
 
-                {page.active === "shortcuts" && <ShortcutsPage user={user} />}
+                      {page.active === "shortcuts" && <ShortcutsPage user={user} />}
 
-                {page.active === "account" && <AccountPage user={user} />}
-              </div>
-            </div>
+                      {page.active === "account" && <AccountPage user={user} />}
+                    </div>
+                  </div>
 
-            <div className="modalBackground" onClick={handleCloseModal}></div>
+                  <div className="modalBackground" onClick={handleCloseModal}></div>
+                </>
+              
+            }
           </ReactShadowRoot>
         </>
       )}

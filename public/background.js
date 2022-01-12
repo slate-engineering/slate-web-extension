@@ -5,6 +5,10 @@ const domains = {
   cookie: 'https://slate.host'
 }
 
+function randomID() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
       chrome.cookies.get({"url": domain, "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
@@ -63,7 +67,7 @@ const getUser = async (props) => {
 
   const json = await response.json();
   if (json.error) {
-    console.log(json);
+    console.log("User data: ", json);
   } else {
     const collections = json.collections;
     const user = json.user;
@@ -91,7 +95,6 @@ const checkLink = async (props) => {
 }
 
 const handleSaveLink = async (props) => {
-
   const apiKey = await getApiKey();
   const response = await fetch(`${domain}/api/v2/create-link`, {
     method: "POST",
@@ -107,12 +110,14 @@ const handleSaveLink = async (props) => {
   });
 
   const json = await response.json();
-  console.log('upload data: ', json)
-  
+
+  console.log('Link upload: ', json)
+
   if(json.decorator === "LINK_DUPLICATE") {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
       run: 'UPLOAD_DUPLICATE',
-      data: json.data[0] 
+      data: json.data[0],
+      id: props.id
     });
     return;
   }
@@ -120,6 +125,7 @@ const handleSaveLink = async (props) => {
   if(json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
       run: 'UPLOAD_FAIL', 
+      id: props.id
     });
     return;
   }
@@ -127,10 +133,11 @@ const handleSaveLink = async (props) => {
   if(!props.background) {
     chrome.tabs.sendMessage(parseInt(props.tab), { 
       run: 'UPLOAD_DONE', 
-      data: json.data[0], 
+      data: json.data[0],
+      id: props.id,
       tab: props.tab
     });
-  }else{
+  } else {
     //If background upload, dont send a message to a tab
     return;
   }
@@ -151,7 +158,7 @@ handleSaveImage = async (props) => {
     body: JSON.stringify({
       data: {
         url: props.url,
-        filename: props.url,
+        filename: props.url
       },
     }),
   });
@@ -196,16 +203,16 @@ const checkLoginSession = async (tab) => {
   }
 }
 
-chrome.action.onClicked.addListener(async (tab) => {
-  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN', tabId: tab.id });
+const openApp = async (tab) => {
+  chrome.tabs.sendMessage(parseInt(tab.id), { run: 'LOAD_APP', type: 'LOADER_MAIN' });
   await checkLoginData(tab);
-});
+}
+
+chrome.action.onClicked.addListener(async (tab) => { openApp(tab) });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if(command == 'open-app') {    
-    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
-    await checkLoginData(tab);
-  }
+  if(command == 'open-app') openApp(tab);
+
   if(command == 'open-slate') {
     chrome.tabs.create({ 'url': `${domain}/_/data&extension=true&id=${tab.id}` });
   }
@@ -227,9 +234,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
 
   if(request.type === "SAVE_LINK") {
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "OPEN_LOADING" });
-    let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id })
-  }  
+    let uploadId = randomID();
+    chrome.tabs.sendMessage(parseInt(sender.tab.id), { 
+      run: "OPEN_LOADING", 
+      id: uploadId, 
+      image: sender.tab.favIconUrl,
+      title: sender.tab.title
+    });
+    let data = await handleSaveLink({ id: uploadId, url: sender.url, tab: sender.tab.id })
+  }   
 
   if(request.type === "CHECK_LOGIN") {
     await checkLoginSession(sender.tab);
@@ -263,3 +276,91 @@ chrome.tabs.onUpdated.addListener(async (tabId , info , tab) => {
     }
   }
 });
+
+handleUploadImage = async (info, tab) => {
+  chrome.tabs.sendMessage(parseInt(tab.id), { run: 'LOAD_APP_RIGHT_CLICK', type: 'LOADER_MINI' });
+  let session = await checkLoginData(tab);
+
+  if(session.user) {
+
+    let uploadId = randomID();
+
+    const filename = info.srcUrl.replace(/^.*[\\\/]/, '')
+    const finalTitle = filename.split("?")[0];
+
+    chrome.tabs.sendMessage(parseInt(tab.id), { 
+      run: 'OPEN_LOADING', 
+      image: info.srcUrl,
+      id: uploadId,
+      title: finalTitle,
+    });
+
+    const apiKey = await getApiKey();
+    const url = 'https://uploads.slate.host/api/v2/public/upload-by-url';
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': "application/json",
+        Authorization: apiKey,
+      },
+      body: JSON.stringify({
+        data: {
+          url: info.srcUrl,
+          filename: finalTitle,
+        },
+      }),
+    });
+
+    const json = await response.json();
+    console.log('Image upload: ', json)
+
+    if(json.decorator === "LINK_DUPLICATE") {
+      chrome.tabs.sendMessage(parseInt(tab.id), { 
+        run: 'UPLOAD_DONE',
+        id: uploadId, 
+        data: json.data, 
+        tab: tab
+      });
+      return;
+    }
+
+    if(json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
+      chrome.tabs.sendMessage(parseInt(tab.id), { 
+        run: 'UPLOAD_FAIL',
+        id: uploadId,
+        data: json,
+        tab: tab
+      });
+      return;
+    }
+    
+    chrome.tabs.sendMessage(parseInt(tab.id), { 
+      run: 'UPLOAD_DONE',
+      id: uploadId, 
+      data: json.data, 
+      tab: tab
+    });
+  }
+
+  return;
+}
+
+handleMenuOpen = async (info, tab) => { await openApp(tab) }
+
+chrome.contextMenus.create({
+  id: "image_slate",
+  title: "Save image",
+  contexts: ["image"],
+}, () => chrome.runtime.lastError);
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+    if (info.menuItemId == "parent") {
+      await handleMenuOpen(info, tab);
+    }
+
+    if (info.menuItemId == "image_slate") {
+      await handleUploadImage(info, tab)
+    }
+});
+
