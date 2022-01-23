@@ -115,6 +115,8 @@ export const main = `
 	  height: 24px;
 	  display: inline-block;
 	  position: absolute;
+	  background-size: cover;
+  	  background-position: 50% 50%;
 	}
 
 	.modalHeaderTitle {
@@ -513,5 +515,3 @@ export const toast = `
 	}
 
 `;
-
-

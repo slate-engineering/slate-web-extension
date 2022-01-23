@@ -1,44 +1,37 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Slate Web Extension",
-  "description": "Manage your history, bookmarks and downloads",
-  "version": "1.0.0",
+  "description": "Easily save any link to your Slate account.",
+  "version": "3",
   "homepage_url": "https://slate.host",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "icon128.png",
     "default_title": "Slate Web Extension"
   },
   "background": {
-    "scripts": ["./jquery.js", "background.js"],
-    "persistent": true
+    "service_worker": "background-wrapper.js"
   },
   "content_scripts": [{
     "matches": ["<all_urls>"],
     "all_frames": false,
     "js": [
-      "./content.js",
-      "./jquery.js"
+      "./jquery.js",
+      "./content.js"
     ],
     "run_at": "document_idle"
   }],
   "permissions": [
-    "activeTab", 
     "tabs",
-    "bookmarks",
-    "history",
-    "chrome://favicon/*",
-    "storage",
-    "downloads",
     "contextMenus",
-    "commands",
     "cookies",
-    "https://slate.host/*"
+    "commands"
   ],
+  "host_permissions": ["https://slate.host/"],
   "commands": {
     "open-app": {
       "suggested_key": {
@@ -53,14 +46,28 @@
         "mac": "Alt+O"
       },
       "description": "Open the slate web app"
+    },
+    "direct-save": {
+      "suggested_key": {
+        "default": "Alt+B",
+        "mac": "Alt+B"
+      },
+      "description": "Direct save"
     }
   },
-  "content_security_policy": "script-src 'self' https://fonts.googleapis.com; object-src 'self';",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
   "web_accessible_resources": [
-    "index.html",
-    "/static/*",
-    "/fonts/*",
-    "Inter-Regular.ttf",
-    "../fonts/*"
+    {
+      "resources": [ 
+        "index.html",
+        "/static/*",
+        "/fonts/*",
+        "Inter-Regular.ttf",
+        "../fonts/*" 
+      ],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
