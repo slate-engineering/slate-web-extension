@@ -9,27 +9,19 @@ import ShortcutsPage from "../Pages/Shortcuts";
 import AccountPage from "../Pages/Account";
 
 const Modal = (props) => {
-  const [loading, setLoading] = useState({ mini: false });
+  const [loaded, setLoaded] = useState(false);
   const [page, setPage] = useState({ active: "home" });
-  const [user, setUser] = useState({ loaded: false, data: null });
-
-  useEffect(() => {
-    let loaderType = document.getElementById("slate-loader-type")
-    if(loaderType) {
-      loaderType.getAttribute('data-type');
-      setLoading({ mini: true })
-    }
-  }, []);
+  const [user, setUser] = useState(null);
 
   const handleCloseModal = () => {
     window.postMessage({ type: "CLOSE_APP" }, "*");
   };
 
-  const messageListeners = () => {
-    window.addEventListener("message", function (event) {
+  useEffect(() => {
+    let handleMessage = (event) => {
       if (event.data.type === "AUTH_REQ") {
-        setUser({ loaded: true, data: null });
-        setLoading({ mini: false })
+        setUser(null);
+        setLoaded(true);
       }
 
       if (event.data.run === "OPEN_HOME_PAGE") {
@@ -45,25 +37,20 @@ const Modal = (props) => {
       }
 
       if (event.data.type === "CHECK_LINK") {
-        setUser({ loaded: true, data: event.data.user });
-        setLoading({ mini: false })
+        setUser(event.data.user);
+        setLoaded(true);
         /*
         if (event.data.data.decorator === "LINK_FOUND") {
           setCheckLink({ uploaded: true, data: event.data.data });
         }
         */
       }
-    });
-  }
+    };
 
-
-  useEffect(() => {
-    let loaderType = document.getElementById("slate-loader-type")
-    if(loaderType) {
-      loaderType.getAttribute('data-type');
-      setLoading({ mini: true })
-    }
-    messageListeners();
+    window.addEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, []);
 
   return (
@@ -72,7 +59,7 @@ const Modal = (props) => {
         <>
           <ReactShadowRoot>
             <style>{Styles.main}</style>
-            <div id="modal" className="modalWindow" style={loading.mini ? { width:'50px', height: '50px' } : {}}>
+            <div id="modal" className="modalWindow">
               <div className="modalContent">
                 {page.active === "home" && (
                   <HomePage
@@ -80,14 +67,18 @@ const Modal = (props) => {
                     image={props.image}
                     favicon={props.favicon}
                     status={props.link}
-                    loader={loading.mini}
                     user={user}
+                    loaded={loaded}
                   />
                 )}
 
-                {page.active === "shortcuts" && <ShortcutsPage user={user} />}
+                {page.active === "shortcuts" && (
+                  <ShortcutsPage user={user} loaded={loaded} />
+                )}
 
-                {page.active === "account" && <AccountPage user={user} />}
+                {page.active === "account" && (
+                  <AccountPage user={user} loaded={loaded} />
+                )}
               </div>
             </div>
 

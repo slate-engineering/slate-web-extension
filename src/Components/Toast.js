@@ -28,7 +28,7 @@ const Toast = (props) => {
       handleCloseModal();
     }, 10000);
     return () => clearTimeout(timer);
-  }
+  };
 
   const messageListeners = () => {
     window.addEventListener("message", function (event) {
@@ -44,7 +44,7 @@ const Toast = (props) => {
 
       if (event.data.type === "UPLOAD_FAIL") {
         setUpload({ status: "error" });
-        toastTimer()
+        toastTimer();
         return;
       }
 
@@ -53,16 +53,15 @@ const Toast = (props) => {
           status: "duplicate",
           data: event.data.data.cid,
         });
-        toastTimer()
+        toastTimer();
         return;
       }
     });
-  }
+  };
 
-   useEffect(() => {
-    messageListeners()
+  useEffect(() => {
+    messageListeners();
   }, []);
-
 
   let count = 28;
   let title = Strings.truncateString(count, props.title);
@@ -135,7 +134,11 @@ const Toast = (props) => {
                 <div className="loaderContent">
                   <div className="loaderText">
                     {favicon ? (
-                      <img className="loaderImage" src={favicon} alt={`Favicon`} />
+                      <img
+                        className="loaderImage"
+                        src={favicon}
+                        alt={`Favicon`}
+                      />
                     ) : (
                       <div className="loaderImageBlank"></div>
                     )}

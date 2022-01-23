@@ -7,6 +7,7 @@ import Hotkeys from "react-hot-keys";
 import * as Strings from "./Common/strings";
 
 function App() {
+  const [mini, setMini] = useState(true);
   const [isOpened, setIsOpened] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   //const [isScreenshot, setIsScreenshot] = useState(false);
@@ -17,11 +18,7 @@ function App() {
 
   //Disable Up Down arrows in the main window to prevent page scrolls
   const onKeyDownMain = (e) => {
-    if (
-      ["ArrowUp", "ArrowDown"].indexOf(
-        e.code
-      ) > -1
-    ) {
+    if (["ArrowUp", "ArrowDown"].indexOf(e.code) > -1) {
       e.preventDefault();
     }
   };
@@ -55,8 +52,43 @@ function App() {
     }
   }
 
-  const messageListeners = () => {
-    window.addEventListener("message", function (event) {
+  const getMeta = () => {
+    let meta = {};
+
+    if (document.querySelector("meta[property='og:image']")) {
+      meta.image = document
+        .querySelector("meta[property='og:image']")
+        .getAttribute("content");
+    }
+
+    if (document.querySelector("link[rel~='icon']")) {
+      meta.favicon = document
+        .querySelector("link[rel~='icon']")
+        .getAttribute("href");
+    }
+
+    return meta;
+  };
+
+  useEffect(() => {
+    let loaderType = document.getElementById("slate-loader-type");
+    if (!loaderType) {
+      setMini(false);
+    }
+    let meta = getMeta();
+    setOg({ image: meta.image, favicon: meta.favicon });
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDownMain);
+
+    return () => {
+      window.addEventremoveEventListenerListener("keydown", onKeyDownMain);
+    };
+  }, []);
+
+  useEffect(() => {
+    let handleMessage = (event) => {
       if (event.data.type === "UPLOAD_START") {
         setIsOpened(false);
         setIsUploading(true);
@@ -78,40 +110,18 @@ function App() {
           setCheckLink({ uploaded: true, data: event.data.data });
         }
       }
-    });
-  } 
+    };
 
-  useEffect(() => {
-    messageListeners();
-    
-    let meta = getMeta();
-    setOg({ image: meta.image, favicon: meta.favicon });
+    window.addEventListener("message", handleMessage);
 
-    window.addEventListener("keydown", onKeyDownMain, false);
-
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, []);
-
-  const getMeta = () => {
-    let meta = {};
-
-    if (document.querySelector("meta[property='og:image']")) {
-      meta.image = document
-        .querySelector("meta[property='og:image']")
-        .getAttribute("content");
-    }
-
-    if (document.querySelector("link[rel~='icon']")) {
-      meta.favicon = document
-        .querySelector("link[rel~='icon']")
-        .getAttribute("href");
-    }
-
-    return meta;
-  };
 
   return (
     <>
-      {isOpened && (
+      {isOpened && !mini && (
         <ModalProvider>
           <div>
             <Hotkeys
