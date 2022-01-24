@@ -3,6 +3,7 @@ import Modal from "./Components/Modal";
 import Toast from "./Components/Toast";
 import ModalProvider from "./Contexts/ModalProvider";
 import Hotkeys from "react-hot-keys";
+import ReactShadowRoot from "react-shadow-root";
 
 import * as Strings from "./Common/strings";
 
@@ -120,22 +121,24 @@ function App() {
   }, []);
 
   return (
-    <>
-      {isOpened && !mini && (
-        <ModalProvider>
-          <div>
-            <Hotkeys
-              keyName="esc,alt+b,alt+a,alt+c,alt+3"
-              onKeyDown={onKeyDown.bind(this)}
-            >
-              <Modal image={og.image} favicon={og.favicon} link={checkLink} />
-            </Hotkeys>
-          </div>
-        </ModalProvider>
-      )}
+    <div style={{ all: "initial" }}>
+      <ReactShadowRoot>
+        {isOpened && !mini && (
+          <ModalProvider>
+            <div>
+              <Hotkeys
+                keyName="esc,alt+b,alt+a,alt+c,alt+3"
+                onKeyDown={onKeyDown.bind(this)}
+              >
+                <Modal image={og.image} favicon={og.favicon} link={checkLink} />
+              </Hotkeys>
+            </div>
+          </ModalProvider>
+        )}
 
-      {isUploading && <Toast image={og.image} title={document.title} />}
-    </>
+        {isUploading && <Toast image={og.image} title={document.title} />}
+      </ReactShadowRoot>
+    </div>
   );
 }
 

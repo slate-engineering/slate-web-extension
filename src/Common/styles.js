@@ -17,9 +17,6 @@ export const main = `
 	  border-radius: 16px;
 	  color: ${Constants.semantic.textBlack};
 	  font-family: "Inter";
-
-	  -webkit-font-smoothing: auto;
-	  pointer-events: auto;
 	}
 
 	.modalContent {

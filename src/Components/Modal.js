@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ModalContext } from "../Contexts/ModalProvider";
 
-import ReactShadowRoot from "react-shadow-root";
 import * as Styles from "../Common/styles";
 
 import HomePage from "../Pages/Home";
@@ -57,33 +56,31 @@ const Modal = (props) => {
     <ModalContext.Consumer>
       {({ pageData }) => (
         <>
-          <ReactShadowRoot>
-            <style>{Styles.main}</style>
-            <div id="modal" className="modalWindow">
-              <div className="modalContent">
-                {page.active === "home" && (
-                  <HomePage
-                    pageData={pageData}
-                    image={props.image}
-                    favicon={props.favicon}
-                    status={props.link}
-                    user={user}
-                    loaded={loaded}
-                  />
-                )}
+          <style>{Styles.main}</style>
+          <div id="modal" className="modalWindow">
+            <div className="modalContent">
+              {page.active === "home" && (
+                <HomePage
+                  pageData={pageData}
+                  image={props.image}
+                  favicon={props.favicon}
+                  status={props.link}
+                  user={user}
+                  loaded={loaded}
+                />
+              )}
 
-                {page.active === "shortcuts" && (
-                  <ShortcutsPage user={user} loaded={loaded} />
-                )}
+              {page.active === "shortcuts" && (
+                <ShortcutsPage user={user} loaded={loaded} />
+              )}
 
-                {page.active === "account" && (
-                  <AccountPage user={user} loaded={loaded} />
-                )}
-              </div>
+              {page.active === "account" && (
+                <AccountPage user={user} loaded={loaded} />
+              )}
             </div>
+          </div>
 
-            <div className="modalBackground" onClick={handleCloseModal}></div>
-          </ReactShadowRoot>
+          <div className="modalBackground" onClick={handleCloseModal}></div>
         </>
       )}
     </ModalContext.Consumer>
