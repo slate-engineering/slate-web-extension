@@ -18,7 +18,8 @@ const Toast = (props) => {
   });
 
   const handleCloseModal = () => {
-    setVisable(false);
+    props.setIsUploading(false);
+    window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
   };
 
   const toastTimer = () => {

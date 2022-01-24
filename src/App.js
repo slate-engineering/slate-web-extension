@@ -136,7 +136,13 @@ function App() {
           </ModalProvider>
         )}
 
-        {isUploading && <Toast image={og.image} title={document.title} />}
+        {isUploading && (
+          <Toast
+            image={og.image}
+            title={document.title}
+            setIsUploading={setIsUploading}
+          />
+        )}
       </ReactShadowRoot>
     </div>
   );
