@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ModalContext } from "../Contexts/ModalProvider";
 
-import ReactShadowRoot from "react-shadow-root";
 import * as Styles from "../Common/styles";
 
 import { ToastSpinner } from "../Components/Loaders";
@@ -11,7 +10,6 @@ import * as Strings from "../Common/strings";
 
 const Toast = (props) => {
   const [favicon, setFavicon] = useState(null);
-  const [visable, setVisable] = useState(true);
   const [upload, setUpload] = useState({
     status: "uploading",
     data: null,
@@ -79,18 +77,18 @@ const Toast = (props) => {
         )}
 
         {props.upload.status === "complete" && (
-          <>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <div className="loaderFooterLeft">Saved</div>
             <div className="loaderFooterRight">
               <a href={url} className="modalLink" target="_blank">
                 View
               </a>
             </div>
-          </>
+          </div>
         )}
 
         {props.upload.status === "duplicate" && (
-          <>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
               Already exists
             </div>
@@ -99,7 +97,7 @@ const Toast = (props) => {
                 View
               </a>
             </div>
-          </>
+          </div>
         )}
 
         {props.upload.status === "error" && (
@@ -127,33 +125,31 @@ const Toast = (props) => {
     <ModalContext.Consumer>
       {({ pageData }) => (
         <>
-          <ReactShadowRoot>
-            <style>{Styles.toast}</style>
-            {visable && (
-              <div id="modal" className="loaderWindow">
-                <div className="loaderContent">
-                  <div className="loaderText">
-                    {favicon ? (
-                      <img
-                        className="loaderImage"
-                        src={favicon}
-                        alt={`Favicon`}
-                      />
-                    ) : (
-                      <div className="loaderImageBlank"></div>
-                    )}
-                    {title}
-                    <div onClick={handleCloseModal} className="loaderClose">
-                      <SVG.Dismiss width="20px" height="20px" />
-                    </div>
-                  </div>
-                  <div className="loaderFooter">
-                    <Footer upload={upload} />
+          <style>{Styles.toast}</style>
+          {true && (
+            <div id="modal" className="loaderWindow">
+              <div className="loaderContent">
+                <div className="loaderText">
+                  {favicon ? (
+                    <img
+                      className="loaderImage"
+                      src={favicon}
+                      alt={`Favicon`}
+                    />
+                  ) : (
+                    <div className="loaderImageBlank"></div>
+                  )}
+                  {title}
+                  <div onClick={handleCloseModal} className="loaderClose">
+                    <SVG.Dismiss width="20px" height="20px" />
                   </div>
                 </div>
+                <div className="loaderFooter">
+                  <Footer upload={upload} />
+                </div>
               </div>
-            )}
-          </ReactShadowRoot>
+            </div>
+          )}
         </>
       )}
     </ModalContext.Consumer>

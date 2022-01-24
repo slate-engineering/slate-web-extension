@@ -458,12 +458,14 @@ export const toast = `
 	}
 
 	.loaderFooterLeft {
+		display: inline-flex;
+		flex-direction: row;
+		align-items: center;
 		text-align: left;
 		font-weight: 400;
 		font-family: 'Inter';
 		left: 0px;
 		padding-left: 14px;
-		display: inline;
 	}
 
 	.loaderClose {
@@ -482,12 +484,12 @@ export const toast = `
 	}
 
 	.loaderSpinner {
-		margin-right: 8px;
-		display: inline-block;
-		margin-left: 4px;
+		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
+		display: flex;
+		width: 16px;
+		height: 16px;
 	  	justify-content: center;
 	  	align-items: center;
-		animation: slate-client-animation-spin 1.5s cubic-bezier(0.5, 0.1, 0.4, 0.7) infinite;
 	}
 
 	.loaderSpinnerSVG {
