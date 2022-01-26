@@ -1,40 +1,46 @@
-const domain = 'https://slate.host';
+const domain = "https://slate.host";
 
 const domains = {
-  api: 'https://slate-dev.onrender.com',
-  cookie: 'https://slate.host'
-}
+  api: "https://slate-dev.onrender.com",
+  cookie: "https://slate.host",
+};
 
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
-      chrome.cookies.get({"url": domain, "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
-          if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError));
-          } else {
-              resolve(cookie);
-          }
-      });
+    chrome.cookies.get(
+      { url: domain, name: "WEB_SERVICE_SESSION_KEY" },
+      (cookie) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError));
+        } else {
+          resolve(cookie);
+        }
+      }
+    );
   });
 };
 
 const deleteSessionID = async () => {
   return new Promise((resolve, reject) => {
-      chrome.cookies.remove({"url": domain, "name": "WEB_SERVICE_SESSION_KEY"}, cookie => {
-          if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError));
-          } else {
-              resolve(cookie);
-          }
-      });
+    chrome.cookies.remove(
+      { url: domain, name: "WEB_SERVICE_SESSION_KEY" },
+      (cookie) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError));
+        } else {
+          resolve(cookie);
+        }
+      }
+    );
   });
 };
 
 const getApiKey = async () => {
   let session = await getSessionID();
   const response = await fetch(`${domain}/api/extension/get-api-keys`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': "application/json",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       data: {
@@ -50,11 +56,11 @@ const getApiKey = async () => {
 
 const getUser = async (props) => {
   const response = await fetch(`${domain}/api/v2/get`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: props.key,
-    }
+    },
   });
 
   if (!response) {
@@ -70,13 +76,13 @@ const getUser = async (props) => {
   }
 
   return json.user;
-}
+};
 
 const checkLink = async (props) => {
-    const response = await fetch(`${domain}/api/extension/check-link`, {
-    method: 'POST',
+  const response = await fetch(`${domain}/api/extension/check-link`, {
+    method: "POST",
     headers: {
-      'Content-Type': "application/json",
+      "Content-Type": "application/json",
       Authorization: props.apiKey,
     },
     body: JSON.stringify({
@@ -88,10 +94,9 @@ const checkLink = async (props) => {
 
   const json = await response.json();
   return json;
-}
+};
 
 const handleSaveLink = async (props) => {
-
   const apiKey = await getApiKey();
   const response = await fetch(`${domain}/api/v2/create-link`, {
     method: "POST",
@@ -101,51 +106,51 @@ const handleSaveLink = async (props) => {
     },
     body: JSON.stringify({
       data: {
-        url: props.url
+        url: props.url,
       },
     }),
   });
 
   const json = await response.json();
-  console.log('upload data: ', json)
-  
-  if(json.decorator === "LINK_DUPLICATE") {
-    chrome.tabs.sendMessage(parseInt(props.tab), { 
-      run: 'UPLOAD_DUPLICATE',
-      data: json.data[0] 
+  console.log("upload data: ", json);
+
+  if (json.decorator === "LINK_DUPLICATE") {
+    chrome.tabs.sendMessage(parseInt(props.tab), {
+      run: "UPLOAD_DUPLICATE",
+      data: json.data[0],
     });
     return;
   }
 
-  if(json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
-    chrome.tabs.sendMessage(parseInt(props.tab), { 
-      run: 'UPLOAD_FAIL', 
+  if (json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
+    chrome.tabs.sendMessage(parseInt(props.tab), {
+      run: "UPLOAD_FAIL",
     });
     return;
   }
 
-  if(!props.background) {
-    chrome.tabs.sendMessage(parseInt(props.tab), { 
-      run: 'UPLOAD_DONE', 
-      data: json.data[0], 
-      tab: props.tab
+  if (!props.background) {
+    chrome.tabs.sendMessage(parseInt(props.tab), {
+      run: "UPLOAD_DONE",
+      data: json.data[0],
+      tab: props.tab,
     });
-  }else{
+  } else {
     //If background upload, dont send a message to a tab
     return;
   }
 
   return json.data[0];
-}
+};
 
 handleSaveImage = async (props) => {
   const apiKey = await getApiKey();
-  const url = 'https://uploads.slate.host/api/v2/public/upload-by-url';
+  const url = "https://uploads.slate.host/api/v2/public/upload-by-url";
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': "application/json",
+      "Content-Type": "application/json",
       Authorization: apiKey,
     },
     body: JSON.stringify({
@@ -158,35 +163,43 @@ handleSaveImage = async (props) => {
 
   const json = await response.json();
   return json;
-}
+};
 
 const checkMatch = (list, url) => {
-  const matches = RegExp(list.join('|')).exec(url);
+  const matches = RegExp(list.join("|")).exec(url);
   return matches;
-}
+};
 
 const checkLoginData = async (tab) => {
   let session = await getSessionID();
-
-  if(session === null) {
-    setTimeout(() => { 
-      chrome.tabs.sendMessage(tab.id, { run: 'AUTH_REQ' });
-    }, 1000);    
+  if (session === null) {
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tab.id, { run: "AUTH_REQ" });
+    }, 1000);
     return;
-  }else{
+  } else {
     let api = await getApiKey();
     let user = await getUser({ key: api });
     let check = await checkLink({ apiKey: api, tab: tab.url });
-    chrome.tabs.sendMessage(tab.id, { run: 'CHECK_LINK', data: check, user: user });
-    let data = { data: check, user: user, tab: tab.id }
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tab.id, {
+        run: "CHECK_LINK",
+        data: check,
+        user: user,
+      });
+    }, 1000);
+    let data = { data: check, user: user, tab: tab.id };
     return data;
   }
-}
+};
 
 const checkLoginSession = async (tab) => {
-  if(tab) {
+  if (tab) {
     chrome.cookies.onChanged.addListener(async (changeInfo) => {
-      if(changeInfo.cookie.domain === "slate.host" && changeInfo.removed === false) {
+      if (
+        changeInfo.cookie.domain === "slate.host" &&
+        changeInfo.removed === false
+      ) {
         await checkLoginData(tab);
         chrome.tabs.update(tab.id, { highlighted: true });
         tab = null;
@@ -194,66 +207,65 @@ const checkLoginSession = async (tab) => {
       }
     });
   }
-}
+};
 
 chrome.action.onClicked.addListener(async (tab) => {
-  chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN', tabId: tab.id });
+  chrome.tabs.sendMessage(tab.id, {
+    run: "LOAD_APP",
+    type: "LOADER_MAIN",
+    tabId: tab.id,
+  });
   await checkLoginData(tab);
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if(command == 'open-app') {    
-    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MAIN' });
+  if (command == "open-app") {
+    chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MAIN" });
     await checkLoginData(tab);
   }
-  if(command == 'open-slate') {
-    chrome.tabs.create({ 'url': `${domain}/_/data&extension=true&id=${tab.id}` });
+  if (command == "open-slate") {
+    chrome.tabs.create({ url: `${domain}/_/data&extension=true&id=${tab.id}` });
   }
-  if(command == 'direct-save') {
-    chrome.tabs.sendMessage(tab.id, { run: 'LOAD_APP', type: 'LOADER_MINI' });
+  if (command == "direct-save") {
     let session = await checkLoginData(tab);
 
-    if(session.user) {
-      chrome.tabs.sendMessage(parseInt(tab.id), { run: 'OPEN_LOADING' });
-      await handleSaveLink({ url: tab.url, tab: tab.id })
+    if (session && session.user) {
+      chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MINI" });
+      chrome.tabs.sendMessage(parseInt(tab.id), { run: "OPEN_LOADING" });
+      await handleSaveLink({ url: tab.url, tab: tab.id });
+    } else {
+      chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MAIN" });
     }
   }
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  if(request.type === "GO_BACK") {
+  if (request.type === "GO_BACK") {
     chrome.tabs.update(parseInt(request.id), { highlighted: true });
     chrome.tabs.remove(parseInt(sender.tab.id));
   }
 
-  if(request.type === "SAVE_LINK") {
+  if (request.type === "SAVE_LINK") {
     chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "OPEN_LOADING" });
-    let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id })
-  }  
+    let data = await handleSaveLink({ url: sender.url, tab: sender.tab.id });
+  }
 
-  if(request.type === "CHECK_LOGIN") {
+  if (request.type === "CHECK_LOGIN") {
     await checkLoginSession(sender.tab);
     return;
   }
 
-  if(request.type === "SIGN_OUT") {
+  if (request.type === "SIGN_OUT") {
     await deleteSessionID();
     return;
   }
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId , info , tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   if (info.status == "complete") {
-    const blacklist = [
-      'chrome://',
-      'localhost:',
-      'cec.cx'
-    ];
+    const blacklist = ["chrome://", "localhost:", "cec.cx"];
 
-    const domains = [
-      "slate.host",
-      "slate-dev.onrender.com"
-    ];
+    const domains = ["slate.host", "slate-dev.onrender.com"];
 
     const isBlacklisted = checkMatch(blacklist, tab.url);
     const isSlate = checkMatch(domains, tab.url);

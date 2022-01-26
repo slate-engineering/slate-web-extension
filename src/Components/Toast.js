@@ -19,7 +19,7 @@ const Toast = (props) => {
 
   const handleCloseModal = () => {
     props.setIsUploading(false);
-    window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
+    window.postMessage({ type: "CLOSE_APP" }, "*");
   };
 
   const toastTimer = () => {
@@ -29,8 +29,8 @@ const Toast = (props) => {
     return () => clearTimeout(timer);
   };
 
-  const messageListeners = () => {
-    window.addEventListener("message", function (event) {
+  useEffect(() => {
+    let handleMessage = (event) => {
       if (event.data.type === "UPLOAD_DONE") {
         setUpload({
           status: "complete",
@@ -55,11 +55,9 @@ const Toast = (props) => {
         toastTimer();
         return;
       }
-    });
-  };
-
-  useEffect(() => {
-    messageListeners();
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   let count = 28;
@@ -127,30 +125,24 @@ const Toast = (props) => {
       {({ pageData }) => (
         <>
           <style>{Styles.toast}</style>
-          {true && (
-            <div id="modal" className="loaderWindow">
-              <div className="loaderContent">
-                <div className="loaderText">
-                  {favicon ? (
-                    <img
-                      className="loaderImage"
-                      src={favicon}
-                      alt={`Favicon`}
-                    />
-                  ) : (
-                    <div className="loaderImageBlank"></div>
-                  )}
-                  {title}
-                  <div onClick={handleCloseModal} className="loaderClose">
-                    <SVG.Dismiss width="20px" height="20px" />
-                  </div>
-                </div>
-                <div className="loaderFooter">
-                  <Footer upload={upload} />
+          <div id="modal" className="loaderWindow">
+            <div className="loaderContent">
+              <div className="loaderText">
+                {favicon ? (
+                  <img className="loaderImage" src={favicon} alt={`Favicon`} />
+                ) : (
+                  <div className="loaderImageBlank"></div>
+                )}
+                {title}
+                <div onClick={handleCloseModal} className="loaderClose">
+                  <SVG.Dismiss width="20px" height="20px" />
                 </div>
               </div>
+              <div className="loaderFooter">
+                <Footer upload={upload} />
+              </div>
             </div>
-          )}
+          </div>
         </>
       )}
     </ModalContext.Consumer>

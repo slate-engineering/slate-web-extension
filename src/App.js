@@ -8,7 +8,7 @@ import ReactShadowRoot from "react-shadow-root";
 import * as Strings from "./Common/strings";
 
 function App() {
-  const [mini, setMini] = useState(true);
+  // const [mini, setMini] = useState(true);
   const [isOpened, setIsOpened] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   //const [isScreenshot, setIsScreenshot] = useState(false);
@@ -73,8 +73,10 @@ function App() {
 
   useEffect(() => {
     let loaderType = document.getElementById("slate-loader-type");
-    if (!loaderType) {
-      setMini(false);
+    if (loaderType) {
+      // setMini(false);
+      setIsOpened(false);
+      setIsUploading(true);
     }
     let meta = getMeta();
     setOg({ image: meta.image, favicon: meta.favicon });
@@ -84,12 +86,18 @@ function App() {
     window.addEventListener("keydown", onKeyDownMain);
 
     return () => {
-      window.addEventremoveEventListenerListener("keydown", onKeyDownMain);
+      window.removeEventListener("keydown", onKeyDownMain);
     };
   }, []);
 
   useEffect(() => {
     let handleMessage = (event) => {
+      if (event.data.type === "REOPEN_APP") {
+        setIsOpened(true);
+        setIsUploading(false);
+        // setMini(false);
+      }
+
       if (event.data.type === "UPLOAD_START") {
         setIsOpened(false);
         setIsUploading(true);
@@ -98,6 +106,7 @@ function App() {
       if (event.data.type === "CLOSE_APP") {
         window.removeEventListener("keydown", onKeyDownMain);
         setIsOpened(false);
+        setIsUploading(false);
         window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
       }
 
@@ -123,7 +132,7 @@ function App() {
   return (
     <div style={{ all: "initial" }}>
       <ReactShadowRoot>
-        {isOpened && !mini && (
+        {isOpened && (
           <ModalProvider>
             <div>
               <Hotkeys
