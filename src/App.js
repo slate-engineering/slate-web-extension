@@ -3,10 +3,12 @@ import Modal from "./Components/Modal";
 import Toast from "./Components/Toast";
 import ModalProvider from "./Contexts/ModalProvider";
 import Hotkeys from "react-hot-keys";
+import ReactShadowRoot from "react-shadow-root";
 
 import * as Strings from "./Common/strings";
 
 function App() {
+  // const [mini, setMini] = useState(true);
   const [isOpened, setIsOpened] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   //const [isScreenshot, setIsScreenshot] = useState(false);
@@ -17,11 +19,7 @@ function App() {
 
   //Disable Up Down arrows in the main window to prevent page scrolls
   const onKeyDownMain = (e) => {
-    if (
-      ["ArrowUp", "ArrowDown"].indexOf(
-        e.code
-      ) > -1
-    ) {
+    if (["ArrowUp", "ArrowDown"].indexOf(e.code) > -1) {
       e.preventDefault();
     }
   };
@@ -55,42 +53,6 @@ function App() {
     }
   }
 
-  const messageListeners = () => {
-    window.addEventListener("message", function (event) {
-      if (event.data.type === "UPLOAD_START") {
-        setIsOpened(false);
-        setIsUploading(true);
-      }
-
-      if (event.data.type === "CLOSE_APP") {
-        window.removeEventListener("keydown", onKeyDownMain);
-        setIsOpened(false);
-        window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
-      }
-
-      if (event.data.type === "OPEN_LOADING") {
-        setIsOpened(false);
-        setIsUploading(true);
-      }
-
-      if (event.data.type === "CHECK_LINK") {
-        if (event.data.data.decorator === "LINK_FOUND") {
-          setCheckLink({ uploaded: true, data: event.data.data });
-        }
-      }
-    });
-  } 
-
-  useEffect(() => {
-    messageListeners();
-    
-    let meta = getMeta();
-    setOg({ image: meta.image, favicon: meta.favicon });
-
-    window.addEventListener("keydown", onKeyDownMain, false);
-
-  }, []);
-
   const getMeta = () => {
     let meta = {};
 
@@ -109,23 +71,89 @@ function App() {
     return meta;
   };
 
-  return (
-    <>
-      {isOpened && (
-        <ModalProvider>
-          <div>
-            <Hotkeys
-              keyName="esc,alt+b,alt+a,alt+c,alt+3"
-              onKeyDown={onKeyDown.bind(this)}
-            >
-              <Modal image={og.image} favicon={og.favicon} link={checkLink} />
-            </Hotkeys>
-          </div>
-        </ModalProvider>
-      )}
+  useEffect(() => {
+    let loaderType = document.getElementById("slate-loader-type");
+    if (loaderType) {
+      // setMini(false);
+      setIsOpened(false);
+      setIsUploading(true);
+    }
+    let meta = getMeta();
+    setOg({ image: meta.image, favicon: meta.favicon });
+  }, []);
 
-      {isUploading && <Toast image={og.image} title={document.title} />}
-    </>
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDownMain);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDownMain);
+    };
+  }, []);
+
+  useEffect(() => {
+    let handleMessage = (event) => {
+      if (event.data.type === "REOPEN_APP") {
+        setIsOpened(true);
+        setIsUploading(false);
+        // setMini(false);
+      }
+
+      if (event.data.type === "UPLOAD_START") {
+        setIsOpened(false);
+        setIsUploading(true);
+      }
+
+      if (event.data.type === "CLOSE_APP") {
+        window.removeEventListener("keydown", onKeyDownMain);
+        setIsOpened(false);
+        setIsUploading(false);
+        window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
+      }
+
+      if (event.data.type === "OPEN_LOADING") {
+        setIsOpened(false);
+        setIsUploading(true);
+      }
+
+      if (event.data.type === "CHECK_LINK") {
+        if (event.data.data.decorator === "LINK_FOUND") {
+          setCheckLink({ uploaded: true, data: event.data.data });
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
+  return (
+    <div style={{ all: "initial" }}>
+      <ReactShadowRoot>
+        {isOpened && (
+          <ModalProvider>
+            <div>
+              <Hotkeys
+                keyName="esc,alt+b,alt+a,alt+c,alt+3"
+                onKeyDown={onKeyDown.bind(this)}
+              >
+                <Modal image={og.image} favicon={og.favicon} link={checkLink} />
+              </Hotkeys>
+            </div>
+          </ModalProvider>
+        )}
+
+        {isUploading && (
+          <Toast
+            image={og.image}
+            title={document.title}
+            setIsUploading={setIsUploading}
+          />
+        )}
+      </ReactShadowRoot>
+    </div>
   );
 }
 

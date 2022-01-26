@@ -1,58 +1,39 @@
 import React, { useState } from "react";
-import * as SVG from "../Common/SVG";
+
+import * as SVG from "Common/SVG";
+import * as Utilities from "Common/utilities";
 
 const Header = (props) => {
-	const [avatar, setAvatar] = useState(null);
+  let avatar = Utilities.getAvatarUrl(props.user);
 
-	const handleGoBack = () => {
-		window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
-	};
+  const handleGoBack = () => {
+    window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
+  };
 
-	const checkImage = (url) => {
-		let avatar = new Image();
-		avatar.addEventListener("load", () => {
-			setAvatar(url);
-		});
-		avatar.src = url;
-	};
+  return (
+    <div className="modalHeader">
+      {props.goBack ? (
+        <div className="modalGoBack" onClick={handleGoBack}>
+          <SVG.ChevronLeft
+            width="16px"
+            height="16px"
+            style={{
+              margin: "auto",
+              marginTop: "3px",
+              display: "block",
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          className="modalGoBack"
+          style={{ backgroundImage: `url('${avatar}')` }}
+        />
+      )}
 
-	if (props.user.loaded) {
-		checkImage(props.user.data.data.photo);
-	}
-
-	return (
-		<div className="modalHeader">
-			{props.goBack ? (
-				<div className="modalGoBack" onClick={handleGoBack}>
-					<SVG.ChevronLeft
-						width="16px"
-						height="16px"
-						style={{
-							margin: "auto",
-							marginTop: "3px",
-							display: "block",
-						}}
-					/>
-				</div>
-			) : (
-				<>
-					{avatar ? (
-						<img
-							className="modalGoBack"
-							width="24px"
-							height="24px"
-							src={avatar}
-							alt={`Avatar`}
-						/>
-					) : (
-						<div className="modalGoBack"></div>
-					)}
-				</>
-			)}
-
-			<p className="modalHeaderTitle">{props.title}</p>
-		</div>
-	);
+      <p className="modalHeaderTitle">{props.title}</p>
+    </div>
+  );
 };
 
 export default Header;

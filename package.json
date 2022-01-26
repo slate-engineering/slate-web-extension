@@ -11,6 +11,7 @@
     "http2": "^3.3.7",
     "jquery": "3.4.1",
     "node-fetch": "^2.6.1",
+    "npm-watch": "^0.11.0",
     "open-graph": "^0.2.6",
     "prettier": "^2.4.0",
     "react": "16.9.0",
@@ -24,11 +25,21 @@
     "typeface-inter": "^3.18.1",
     "use-react-screenshot": "^1.0.2"
   },
+  "watch": {
+    "build": {
+      "patterns": [
+        "src",
+        "public"
+      ],
+      "extensions": "js,jsx"
+    }
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "cross-env INLINE_RUNTIME_CHUNK=false react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "watch": "npm-watch"
   },
   "eslintConfig": {
     "extends": "react-app",
