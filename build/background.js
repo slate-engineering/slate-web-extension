@@ -133,7 +133,6 @@ const handleSaveLink = async (props) => {
     chrome.tabs.sendMessage(parseInt(props.tab), {
       run: "UPLOAD_DONE",
       data: json.data[0],
-      tab: props.tab,
     });
   } else {
     //If background upload, dont send a message to a tab

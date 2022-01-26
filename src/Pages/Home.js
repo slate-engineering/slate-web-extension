@@ -45,7 +45,6 @@ const HomePage = (props) => {
     }
 
     if (keyName === "enter") {
-      console.log("enter on : ", highlightButtonRef.current);
       setOnEnter(true);
     }
   }

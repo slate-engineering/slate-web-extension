@@ -41,10 +41,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
   }
 
   if (request.run === "UPLOAD_DONE") {
-    window.postMessage(
-      { type: "UPLOAD_DONE", data: request.data, tab: request.tab },
-      "*"
-    );
+    window.postMessage({ type: "UPLOAD_DONE", data: request.data }, "*");
     return true;
   }
 
