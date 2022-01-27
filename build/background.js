@@ -1,17 +1,25 @@
-const domain = "https://slate.host";
-
-const domains = {
-  api: "https://slate-dev.onrender.com",
-  cookie: "https://slate.host",
+//NOTE(martina): dev server uri's
+export const uri = {
+  hostname: "https://slate-dev.onrender.com",
+  domain: "slate-dev.onrender.com",
+  upload: "https://shovelstaging.onrender.com",
 };
 
+//NOTE(martina): production server uri's
+// export const uri = {
+//   hostname: "https://slate.host",
+//   domain: "slate.host",
+//   upload: "https://uploads.slate.host",
+// };
+
 const getSessionID = async () => {
+  console.log("get session ID");
   return new Promise((resolve, reject) => {
     chrome.cookies.get(
-      { url: domain, name: "WEB_SERVICE_SESSION_KEY" },
+      { url: Constants.uri.hostname, name: "WEB_SERVICE_SESSION_KEY" },
       (cookie) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError));
+          reject(chrome.runtime.lastError);
         } else {
           resolve(cookie);
         }
@@ -23,10 +31,10 @@ const getSessionID = async () => {
 const deleteSessionID = async () => {
   return new Promise((resolve, reject) => {
     chrome.cookies.remove(
-      { url: domain, name: "WEB_SERVICE_SESSION_KEY" },
+      { url: Constants.uri.hostname, name: "WEB_SERVICE_SESSION_KEY" },
       (cookie) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError));
+          reject(chrome.runtime.lastError);
         } else {
           resolve(cookie);
         }
@@ -36,80 +44,117 @@ const deleteSessionID = async () => {
 };
 
 const getApiKey = async () => {
-  let session = await getSessionID();
-  const response = await fetch(`${domain}/api/extension/get-api-keys`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      data: {
-        token: session.value,
-      },
-    }),
-  });
-
+  console.log("spot 0");
+  let session;
+  let response;
+  try {
+    session = await getSessionID();
+    if (!session) {
+      return;
+    }
+    response = await fetch(
+      `${Constants.uri.hostname}/api/extension/get-api-keys`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            token: session.value,
+          },
+        }),
+      }
+    );
+    console.log(response);
+    console.log("spot 1");
+  } catch (e) {
+    console.log("caught an error in getapikey");
+    console.log(e);
+    return;
+  }
+  console.log("spot 2");
   const json = await response.json();
+  console.log(json);
+  console.log("spot 3");
   let apiKey = json.data[0].key;
   return apiKey;
 };
 
 const getUser = async (props) => {
-  const response = await fetch(`${domain}/api/v2/get`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: props.key,
-    },
-  });
+  let response;
+  try {
+    response = await fetch(`${Constants.uri.hostname}/api/v3/get`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: props.key,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+  }
 
   if (!response) {
     return;
   }
-
+  console.log(response);
+  console.log("before get user convert to json");
   const json = await response.json();
+  console.log("after get user convert to json");
+  console.log(json);
   if (json.error) {
     console.log(json);
-  } else {
-    const collections = json.collections;
-    const user = json.user;
   }
-
   return json.user;
 };
 
 const checkLink = async (props) => {
-  const response = await fetch(`${domain}/api/extension/check-link`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: props.apiKey,
-    },
-    body: JSON.stringify({
-      data: {
-        url: props.tab,
-      },
-    }),
-  });
-
+  let response;
+  try {
+    console.log("before check link call");
+    response = await fetch(
+      `${Constants.uri.hostname}/api/extension/check-link`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: props.apiKey,
+        },
+        body: JSON.stringify({
+          data: {
+            url: props.tab,
+          },
+        }),
+      }
+    );
+  } catch (e) {
+    console.log(e);
+  }
+  console.log("after check link call");
   const json = await response.json();
   return json;
 };
 
 const handleSaveLink = async (props) => {
   const apiKey = await getApiKey();
-  const response = await fetch(`${domain}/api/v2/create-link`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: apiKey,
-    },
-    body: JSON.stringify({
-      data: {
-        url: props.url,
+  let response;
+  try {
+    response = await fetch(`${Constants.uri.hostname}/api/v3/create-link`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: apiKey,
       },
-    }),
-  });
+      body: JSON.stringify({
+        data: {
+          url: props.url,
+        },
+      }),
+    });
+  } catch (e) {
+    console.log(e);
+  }
 
   const json = await response.json();
   console.log("upload data: ", json);
@@ -144,21 +189,26 @@ const handleSaveLink = async (props) => {
 
 handleSaveImage = async (props) => {
   const apiKey = await getApiKey();
-  const url = "https://uploads.slate.host/api/v2/public/upload-by-url";
+  const url = `${Constants.uri.upload}/api/v3/public/upload-by-url`;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: apiKey,
-    },
-    body: JSON.stringify({
-      data: {
-        url: props.url,
-        filename: props.url,
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: apiKey,
       },
-    }),
-  });
+      body: JSON.stringify({
+        data: {
+          url: props.url,
+          filename: props.url,
+        },
+      }),
+    });
+  } catch (e) {
+    console.log(e);
+  }
 
   const json = await response.json();
   return json;
@@ -170,7 +220,19 @@ const checkMatch = (list, url) => {
 };
 
 const checkLoginData = async (tab) => {
-  let session = await getSessionID();
+  console.log("check login data");
+  let session;
+  try {
+    session = await getSessionID();
+  } catch (e) {
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tab.id, { run: "AUTH_REQ" });
+    }, 1000);
+    console.log("returned nothing from checklogindata");
+    return;
+  }
+  console.log("passed session id");
+  console.log(session);
   if (session === null) {
     setTimeout(() => {
       chrome.tabs.sendMessage(tab.id, { run: "AUTH_REQ" });
@@ -178,8 +240,11 @@ const checkLoginData = async (tab) => {
     return;
   } else {
     let api = await getApiKey();
+    console.log("before get user");
     let user = await getUser({ key: api });
+    console.log("before check link");
     let check = await checkLink({ apiKey: api, tab: tab.url });
+    console.log("after check link");
     setTimeout(() => {
       chrome.tabs.sendMessage(tab.id, {
         run: "CHECK_LINK",
@@ -193,10 +258,11 @@ const checkLoginData = async (tab) => {
 };
 
 const checkLoginSession = async (tab) => {
+  console.log("check login session");
   if (tab) {
     chrome.cookies.onChanged.addListener(async (changeInfo) => {
       if (
-        changeInfo.cookie.domain === "slate.host" &&
+        changeInfo.cookie.domain === Constants.uri.domain &&
         changeInfo.removed === false
       ) {
         await checkLoginData(tab);
@@ -209,6 +275,7 @@ const checkLoginSession = async (tab) => {
 };
 
 chrome.action.onClicked.addListener(async (tab) => {
+  console.log("on clicked");
   chrome.tabs.sendMessage(tab.id, {
     run: "LOAD_APP",
     type: "LOADER_MAIN",
@@ -219,13 +286,17 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == "open-app") {
+    console.log("open app");
     chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MAIN" });
     await checkLoginData(tab);
   }
   if (command == "open-slate") {
-    chrome.tabs.create({ url: `${domain}/_/data&extension=true&id=${tab.id}` });
+    chrome.tabs.create({
+      url: `${Constants.uri.hostname}/_/data&extension=true&id=${tab.id}`,
+    });
   }
   if (command == "direct-save") {
+    console.log("direct save");
     let session = await checkLoginData(tab);
 
     if (session && session.user) {

@@ -7,6 +7,8 @@ import Search from "../Components/Search";
 import classes from "../App.module.css";
 import { useScreenshot } from "use-react-screenshot";
 
+import * as Constants from "Common/constants";
+
 const fetch = require("node-fetch");
 
 const Screenshot = (props) => {
@@ -121,8 +123,7 @@ const Screenshot = (props) => {
   }
 
   function FooterDone(props) {
-    //let url = `https://slate.host/_/data?cid=${upload.data}`;
-    let url = `https://slate-dev.onrender.com/_/data?cid=${props.cid}`;
+    let url = `${Constants.uri.upload}/_/data?cid=${props.cid}`;
     return (
       <>
         <div className={classes.loaderFooterLeft}>Saved</div>

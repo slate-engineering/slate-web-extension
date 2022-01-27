@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import classes from "../App.module.css";
 
+import * as Constants from "Common/constants";
+
 const Tag = () => {
   return (
     <svg
@@ -28,7 +30,7 @@ const Search = (props) => {
   const [searchResults, setSearchResults] = useState({ data: null });
 
   const handleGetCollections = async () => {
-    const response = await fetch("https://slate.host/api/v2/get", {
+    const response = await fetch(`${Constants.uri.hostname}/api/v3/get`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

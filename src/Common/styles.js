@@ -102,28 +102,26 @@ export const main = `
 	  height: 52px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
 	  padding-left: 20px;
+	  display: flex;
+	  align-items: center;
+	  gap: 20px;
 	}
 
 	.modalGoBack {
-	  margin-right: 20px;
-	  margin-top: 14px;
 	  background-color: ${Constants.system.grayLight5};
 	  border-radius: 8px;
 	  cursor: pointer;
 	  width: 24px;
 	  height: 24px;
 	  display: inline-block;
-	  position: absolute;
 	  background-size: cover;
   	  background-position: 50% 50%;
 	}
 
 	.modalHeaderTitle {
 	  font-weight: 500;
-	  line-height: 52px;
 	  font-size: 16px;
 	  display: inline;
-	  margin-left: 40px;
 	}
 
 	.metadata {

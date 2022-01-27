@@ -182,7 +182,19 @@ export const gateways = {
   ipfs: "https://slate.textile.io/ipfs",
 };
 
-export const hostname = "https://slate.host";
+//NOTE(martina): dev server uri's
+export const uri = {
+  hostname: "https://slate-dev.onrender.com",
+  domain: "slate-dev.onrender.com",
+  upload: "https://shovelstaging.onrender.com",
+};
+
+//NOTE(martina): production server uri's
+// export const uri = {
+//   hostname: "https://slate.host",
+//   domain: "slate.host",
+//   upload: "https://uploads.slate.host",
+// };
 
 export const NFTDomains = ["foundation.app", "zora.co", "opensea.io"];
 
@@ -196,7 +208,11 @@ export const filetypes = {
   audio: ["audio/mpeg", "audio/aac", "audio/flac", "audio/wav", "audio/webm"],
   assets: ["font/ttf", "font/otf", "image/svg+xml"],
   videos: ["video/mpeg", "video/webm", "video/quicktime"],
-  books: ["application/pdf", "application/epub+zip", "application/vnd.amazon.ebook"],
+  books: [
+    "application/pdf",
+    "application/epub+zip",
+    "application/vnd.amazon.ebook",
+  ],
 };
 
 export const linkPreviewSizeLimit = 5000000; //NOTE(martina): 5mb limit for twitter preview images
@@ -224,4 +240,3 @@ export const grids = {
 
 export const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
- 

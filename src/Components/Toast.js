@@ -77,7 +77,7 @@ const Toast = (props) => {
         {status === "duplicate" && (
           <div className="loaderFooter">
             <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
-              Already exists
+              Already saved
             </div>
             <a href={url} className="modalLink" target="_blank">
               View

@@ -1,5 +1,19 @@
+//NOTE(martina): dev server uri's
+export const uri = {
+  hostname: "https://slate-dev.onrender.com",
+  domain: "slate-dev.onrender.com",
+  upload: "https://shovelstaging.onrender.com",
+};
+
+//NOTE(martina): production server uri's
+// export const uri = {
+//   hostname: "https://slate.host",
+//   domain: "slate.host",
+//   upload: "https://uploads.slate.host",
+// };
+
 /* global chrome */
-if (window.location.href.startsWith("https://slate.host")) {
+if (window.location.href.startsWith(Constants.uri.hostname)) {
   if (window.location.href.includes("extension=true")) {
     document.addEventListener("keydown", function (e) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -72,6 +86,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
 let loadedMain = false;
 
 function main(props) {
+  console.log("inside main");
   if (loadedMain) {
     if (props.type === "LOADER_MINI") {
       window.postMessage({ type: "OPEN_LOADING" }, "*");

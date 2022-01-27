@@ -45,12 +45,12 @@ export const getURLfromCID = (cid) => {
 };
 
 export const getApiUrl = {
-  link: `${Constants.hostname}/api/v2/create-link`,
-  image: `${Constants.hostname}/api/v2/public/upload-by-url`,
+  link: `${Constants.uri.hostname}/api/v3/create-link`,
+  image: `${Constants.uri.hostname}/api/v3/public/upload-by-url`,
 };
 
 export const getSlateFileLink = (id) => {
-  return `${Constants.hostname}/_/data?id=${id}&extension=true`;
+  return `${Constants.uri.hostname}/_/data?id=${id}&extension=true`;
 };
 
 export const getUrlHost = (url) => {

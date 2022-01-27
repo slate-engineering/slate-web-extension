@@ -5,15 +5,17 @@ import Button from "../Components/Button";
 import Metadata from "../Components/Metadata";
 import Header from "../Components/Header";
 import { LoadingSpinner } from "../Components/Loaders";
-
 import Hotkeys from "react-hot-keys";
 
+import * as Constants from "Common/constants";
+
 const HomePage = (props) => {
+  console.log("home page props", { props });
   const [highlightButton, setHighlightButton, highlightButtonRef] = useState(1);
   const [onEnter, setOnEnter, onEnterRef] = useState(false);
 
   const handleOpenAuth = () => {
-    window.open("https://slate.host/_/auth", "_blank").focus();
+    window.open(`${Constants.uri.hostname}/_/auth`, "_blank").focus();
     window.postMessage({ run: "CHECK_LOGIN" }, "*");
   };
 
