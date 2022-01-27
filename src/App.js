@@ -25,7 +25,6 @@ function App() {
   };
 
   function onKeyDown(keyName, e, handle) {
-    console.log("app.js on key down");
     if (keyName === "esc") {
       setIsOpened(false);
       window.removeEventListener("keydown", onKeyDownMain);

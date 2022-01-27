@@ -10,7 +10,6 @@ import Hotkeys from "react-hot-keys";
 import * as Constants from "Common/constants";
 
 const HomePage = (props) => {
-  console.log("home page props", { props });
   const [highlightButton, setHighlightButton, highlightButtonRef] = useState(1);
   const [onEnter, setOnEnter, onEnterRef] = useState(false);
 
@@ -50,8 +49,6 @@ const HomePage = (props) => {
       setOnEnter(true);
     }
   }
-
-  //console.log(highlightButtonRef.current)
 
   return (
     <>
