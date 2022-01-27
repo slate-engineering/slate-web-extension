@@ -4,8 +4,10 @@ import Header from "../Components/Header";
 import ProgressBar from "../Components/ProgressBar";
 import Hotkeys from "react-hot-keys";
 
+import * as Constants from "Common/constants";
+
 const AccountPage = (props) => {
-  let avatar = props.user.data.photo;
+  let avatar = props.user.photo;
   // const [avatar, setAvatar] = useState(null);
 
   const handleSignOut = (e) => {
@@ -53,12 +55,12 @@ const AccountPage = (props) => {
                 style={{ width: "64px", height: "64px" }}
               ></div>
             )}
-            <div className="modalAccountUsername">{props.user.data.name}</div>
+            <div className="modalAccountUsername">{props.user.name}</div>
 
             <div className="modalAccountStorage">
               <a
                 className="modalLink"
-                href="https://slate.host/_/data"
+                href={`${Constants.uri.hostname}/_/data`}
                 target="_blank"
               >
                 View profile

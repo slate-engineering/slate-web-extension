@@ -4,7 +4,7 @@ import * as SVG from "Common/SVG";
 import * as Utilities from "Common/utilities";
 
 const Header = (props) => {
-  let avatar = Utilities.getAvatarUrl(props.user);
+  let avatar = props.user ? Utilities.getAvatarUrl(props.user) : null;
 
   const handleGoBack = () => {
     window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
@@ -24,12 +24,12 @@ const Header = (props) => {
             }}
           />
         </div>
-      ) : (
+      ) : avatar ? (
         <div
           className="modalGoBack"
           style={{ backgroundImage: `url('${avatar}')` }}
         />
-      )}
+      ) : null}
 
       <p className="modalHeaderTitle">{props.title}</p>
     </div>

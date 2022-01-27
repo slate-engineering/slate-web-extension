@@ -25,24 +25,25 @@ function App() {
   };
 
   function onKeyDown(keyName, e, handle) {
+    console.log("app.js on key down");
     if (keyName === "esc") {
       setIsOpened(false);
       window.removeEventListener("keydown", onKeyDownMain);
       window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
     }
 
-    if (keyName === "alt+b" || keyName === "enter") {
-      if (checkLink.uploaded === false) {
-        window.postMessage(
-          { run: "OPEN_LOADING", url: window.location.href },
-          "*"
-        );
-      } else {
-        let url = Strings.getSlateFileLink(checkLink.data.data.cid);
-        window.open(url, "_blank").focus();
-        return;
-      }
-    }
+    // if (keyName === "alt+b" || keyName === "enter") {
+    //   if (checkLink.uploaded === false) {
+    //     window.postMessage(
+    //       { run: "OPEN_LOADING", url: window.location.href },
+    //       "*"
+    //     );
+    //   } else {
+    //     let url = Strings.getSlateFileLink(checkLink.data.data.id);
+    //     window.open(url, "_blank").focus();
+    //     return;
+    //   }
+    // }
 
     if (keyName === "alt+a") {
       window.postMessage({ run: "OPEN_ACCOUNT_PAGE" }, "*");

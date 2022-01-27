@@ -45,21 +45,21 @@ export const getURLfromCID = (cid) => {
 };
 
 export const getApiUrl = {
-  link: `${Constants.hostname}/api/v2/create-link`,
-  image: `${Constants.hostname}/api/v2/public/upload-by-url`,
-}
+  link: `${Constants.uri.hostname}/api/v3/create-link`,
+  image: `${Constants.uri.hostname}/api/v3/public/upload-by-url`,
+};
 
-export const getSlateFileLink = (cid, tab) => {
-  return `${Constants.hostname}/_/data?cid=${cid}&extension=true&id=${tab}`;
-}
+export const getSlateFileLink = (id) => {
+  return `${Constants.uri.hostname}/_/data?id=${id}&extension=true`;
+};
 
 export const getUrlHost = (url) => {
   return new URL(url).hostname;
-}
+};
 
 export const truncateString = (count, string) => {
   return string.slice(0, count) + (string.length > count ? "..." : "");
-}
+};
 
 export const shortcuts = [
   { short: "⌥", key: "S", name: "Open extension" },
@@ -268,9 +268,18 @@ export const getParamsFromUrl = (url) => {
 
 export const hexToRGBA = (hex, alpha = 1) => {
   hex = hex.replace("#", "");
-  var r = parseInt(hex.length === 3 ? hex.slice(0, 1).repeat(2) : hex.slice(0, 2), 16);
-  var g = parseInt(hex.length === 3 ? hex.slice(1, 2).repeat(2) : hex.slice(2, 4), 16);
-  var b = parseInt(hex.length === 3 ? hex.slice(2, 3).repeat(2) : hex.slice(4, 6), 16);
+  var r = parseInt(
+    hex.length === 3 ? hex.slice(0, 1).repeat(2) : hex.slice(0, 2),
+    16
+  );
+  var g = parseInt(
+    hex.length === 3 ? hex.slice(1, 2).repeat(2) : hex.slice(2, 4),
+    16
+  );
+  var b = parseInt(
+    hex.length === 3 ? hex.slice(2, 3).repeat(2) : hex.slice(4, 6),
+    16
+  );
   if (alpha) {
     return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
   } else {

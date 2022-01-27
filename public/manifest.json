@@ -16,22 +16,19 @@
   "background": {
     "service_worker": "background-wrapper.js"
   },
-  "content_scripts": [{
-    "matches": ["<all_urls>"],
-    "all_frames": false,
-    "js": [
-      "./jquery.js",
-      "./content.js"
-    ],
-    "run_at": "document_idle"
-  }],
-  "permissions": [
-    "tabs",
-    "contextMenus",
-    "cookies",
-    "commands"
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "all_frames": false,
+      "js": ["./jquery.js", "./content.js"],
+      "run_at": "document_idle"
+    }
   ],
-  "host_permissions": ["https://slate.host/"],
+  "permissions": ["tabs", "contextMenus", "cookies", "commands"],
+  "host_permissions": [
+    "https://slate.host/",
+    "https://slate-dev.onrender.com/"
+  ],
   "commands": {
     "open-app": {
       "suggested_key": {
@@ -60,12 +57,12 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [ 
+      "resources": [
         "index.html",
         "/static/*",
         "/fonts/*",
         "Inter-Regular.ttf",
-        "../fonts/*" 
+        "../fonts/*"
       ],
       "matches": ["<all_urls>"]
     }

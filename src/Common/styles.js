@@ -16,7 +16,7 @@ export const main = `
 	  z-index: 2100000000;
 	  border-radius: 16px;
 	  color: ${Constants.semantic.textBlack};
-	  font-family: "Inter";
+	  font-family: 'inter', -apple-system, BlinkMacSystemFont, arial, sans-serif;
 	}
 
 	.modalContent {
@@ -46,7 +46,6 @@ export const main = `
 	  background-color: ${Constants.system.white};
 	  color: ${Constants.semantic.textBlack};
 	  bottom: 0;
-	  font-family: "Inter";
 	  margin-left: 8px;
 	  margin-right: 8px;
 	  display: grid;
@@ -64,7 +63,6 @@ export const main = `
 	}
 
 	.modalButtonText {
-	  font-family: "Inter";
 	  font-weight: 400;
 	}
 
@@ -104,29 +102,26 @@ export const main = `
 	  height: 52px;
 	  border-bottom: 1px solid ${Constants.system.grayLight5};
 	  padding-left: 20px;
+	  display: flex;
+	  align-items: center;
+	  gap: 20px;
 	}
 
 	.modalGoBack {
-	  margin-right: 20px;
-	  margin-top: 14px;
 	  background-color: ${Constants.system.grayLight5};
 	  border-radius: 8px;
 	  cursor: pointer;
 	  width: 24px;
 	  height: 24px;
 	  display: inline-block;
-	  position: absolute;
 	  background-size: cover;
   	  background-position: 50% 50%;
 	}
 
 	.modalHeaderTitle {
 	  font-weight: 500;
-	  line-height: 52px;
-	  font-family: 'Inter';
 	  font-size: 16px;
 	  display: inline;
-	  margin-left: 40px;
 	}
 
 	.metadata {
@@ -160,7 +155,6 @@ export const main = `
 
 	.metaDataTitle {
 	  color: ${Constants.semantic.textBlack};
-	  font-family: "Inter";
 	  font-weight: 600;
 	  font-size: 16px;
 	  margin-bottom: 4px;
@@ -168,14 +162,12 @@ export const main = `
 
 	.modalCloseButton {
 	  color: ${Constants.semantic.textBlack};
-	  font-family: "Inter";
 	  font-weight: 600;
 	  font-size: 16px;
 	}
 
 	.metaDataUrl {
 	  color: ${Constants.semantic.textBlack};
-	  font-family: "Inter";
 	  font-weight: 400;
 	  font-size: 16px;
 	}
@@ -304,7 +296,6 @@ export const main = `
 	.primaryButton {
 		font-size: 14px;
 		font-weight: 500;
-		font-family: 'Inter';
 		background-color: ${Constants.system.blue};
 		color: ${Constants.system.white};
 		border: 0;
@@ -317,7 +308,6 @@ export const main = `
 
 	.loginHeader {
 		font-size: 24px; 
-		font-family: 'Inter';
 		margin-left: 20px;
 		margin-top: 100px;
 		margin-bottom: 0px;
@@ -374,11 +364,11 @@ export const main = `
 
 export const toast = `
 	.loaderWindow {
-		top: 0%;
-		right: 0%;
-		margin-top: 2em;
-		margin-right: 2em;
+		font-family: 'inter', -apple-system, BlinkMacSystemFont, arial, sans-serif;
+		font-size: 14px;
 		position: fixed;
+		top: 16px;
+		right: 16px;
 		background: ${Constants.system.white};
 		width: 320px;  
 		height: 88px;
@@ -389,93 +379,62 @@ export const toast = `
 		border-radius: 10px;
 		border: 0;
 		color: ${Constants.system.black};
-	}
-
-	.loaderBody {
-		width: 100%;
-	}
-
-	.loaderContent {
-		color: ${Constants.system.white};
-		font-size: 14px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: 14px;
+		box-sizing: border-box;
 	}
 
 	.loaderText {
-		font-family: 'Inter';
 		color: ${Constants.system.black};
-		padding-left: 48px;
-		line-height: 48px;
 		font-weight: 600;
 		cursor: default;
+		overflow: hidden;
+		word-break: break-all;
+		text-overflow: ellipsis;
+		-webkit-line-clamp: 1;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
 	}
 
 	.loaderBox {
-		width: 32px;
-		height: 32px;
-		background-color: #F2F2F7;
-		color: ${Constants.system.gray};
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 14px;
 	}
 
 	.loaderImage {
-		position: absolute;
 		line-height: 40px;
-		top: 14px;
-		left: 14px;
 		object-fit: cover;
 		border-radius: 10px;
 		width: 24px;
 		height: 24px;
-	}
-
-	.loaderImageBlank {
-		position: absolute;
-		line-height: 40px;
-		top: 14px;
-		left: 14px;
-		border-radius: 10px;
-		width: 24px;
-		height: 24px;
 		background-color: ${Constants.system.grayLight5};
+		background-size: cover;
+  	  	background-position: 50% 50%;
 	}
 
 	.loaderFooter {
-		bottom: 0px;
-		width: 100%;  
-		height: 40px;
-		line-height: 40px;
-		background-color: ;
-		color: ${Constants.system.gray};
-		border-radius: 0 0 10px 10px; 
-	}
-
-	.loaderFooterRight {
-		text-align: right;
-		right: 14px;
 		font-weight: 400;
-		font-family: 'Inter';
-		display: inline;
-		position: absolute;
+		width: 100%;  
+		color: ${Constants.system.gray};
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
 	}
 
 	.loaderFooterLeft {
 		display: inline-flex;
 		flex-direction: row;
 		align-items: center;
-		text-align: left;
-		font-weight: 400;
-		font-family: 'Inter';
-		left: 0px;
-		padding-left: 14px;
 	}
 
 	.loaderClose {
 		cursor: pointer;
-		text-align: 'right';
-		right: 14px;
-		display: inline;
-		position: absolute;
 		color: ${Constants.system.gray};
-		line-height: 48px;
 	}
 
 	.loaderClose:hover {

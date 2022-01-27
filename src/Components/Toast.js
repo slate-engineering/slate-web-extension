@@ -13,9 +13,9 @@ const Toast = (props) => {
   const [upload, setUpload] = useState({
     status: "uploading",
     data: null,
-    error: false,
-    tab: null,
   });
+
+  const { title } = props;
 
   const handleCloseModal = () => {
     props.setIsUploading(false);
@@ -31,75 +31,61 @@ const Toast = (props) => {
 
   useEffect(() => {
     let handleMessage = (event) => {
-      if (event.data.type === "UPLOAD_DONE") {
+      let { data, type } = event.data;
+      if (type === "UPLOAD_DONE") {
         setUpload({
           status: "complete",
-          data: event.data.data.cid,
-          tab: event.data.tab,
+          data,
         });
-        toastTimer();
-        return;
-      }
-
-      if (event.data.type === "UPLOAD_FAIL") {
-        setUpload({ status: "error" });
-        toastTimer();
-        return;
-      }
-
-      if (event.data.type === "UPLOAD_DUPLICATE") {
+      } else if (type === "UPLOAD_DUPLICATE") {
         setUpload({
           status: "duplicate",
-          data: event.data.data.cid,
+          data,
         });
-        toastTimer();
+      } else if (type === "UPLOAD_FAIL") {
+        setUpload({ status: "error" });
+      } else {
         return;
       }
+      toastTimer();
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  let count = 28;
-  let title = Strings.truncateString(count, props.title);
-
   const Footer = (props) => {
-    let url = props.upload.data
-      ? Strings.getSlateFileLink(props.upload.data, props.upload.tab)
-      : null;
+    let { status, data } = props.upload;
+    let url = data ? Strings.getSlateFileLink(data.id) : null;
+
     return (
       <>
-        {props.upload.status === "uploading" && (
+        {status === "uploading" && (
           <div className="loaderFooterLeft">
-            <ToastSpinner /> Saving...
+            <ToastSpinner style={{ marginRight: "8px" }} /> Saving...
           </div>
         )}
 
-        {props.upload.status === "complete" && (
-          <div style={{ display: "flex", alignItems: "center" }}>
+        {status === "complete" && (
+          <div className="loaderFooter">
             <div className="loaderFooterLeft">Saved</div>
-            <div className="loaderFooterRight">
-              <a href={url} className="modalLink" target="_blank">
-                View
-              </a>
-            </div>
+            <a href={url} className="modalLink" target="_blank">
+              View
+            </a>
           </div>
         )}
 
-        {props.upload.status === "duplicate" && (
-          <div style={{ display: "flex", alignItems: "center" }}>
+        {status === "duplicate" && (
+          <div className="loaderFooter">
             <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
-              Already exists
+              Already saved
             </div>
-            <div className="loaderFooterRight">
-              <a href={url} className="modalLink" target="_blank">
-                View
-              </a>
-            </div>
+            <a href={url} className="modalLink" target="_blank">
+              View
+            </a>
           </div>
         )}
 
-        {props.upload.status === "error" && (
+        {status === "error" && (
           <div className="loaderFooterLeft" style={{ color: "#FF4530" }}>
             Failed to save
           </div>
@@ -126,21 +112,22 @@ const Toast = (props) => {
         <>
           <style>{Styles.toast}</style>
           <div id="modal" className="loaderWindow">
-            <div className="loaderContent">
-              <div className="loaderText">
-                {favicon ? (
-                  <img className="loaderImage" src={favicon} alt={`Favicon`} />
-                ) : (
-                  <div className="loaderImageBlank"></div>
-                )}
-                {title}
-                <div onClick={handleCloseModal} className="loaderClose">
-                  <SVG.Dismiss width="20px" height="20px" />
-                </div>
+            <div className="loaderBox">
+              <div
+                className="loaderImage"
+                style={{ backgroundImage: `url('${favicon}')` }}
+              />
+              <div className="loaderText">{title}</div>
+              <div onClick={handleCloseModal} className="loaderClose">
+                <SVG.Dismiss
+                  width="20px"
+                  height="20px"
+                  style={{ display: "block" }}
+                />
               </div>
-              <div className="loaderFooter">
-                <Footer upload={upload} />
-              </div>
+            </div>
+            <div className="loaderFooter">
+              <Footer upload={upload} />
             </div>
           </div>
         </>

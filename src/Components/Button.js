@@ -15,7 +15,7 @@ const Button = (props) => {
 
   const handleClick = (e) => {
     if (props.run === "OPEN_LINK") {
-      let url = Strings.getSlateFileLink(props.data.data.data.cid, 100);
+      let url = Strings.getSlateFileLink(props.data.data.data.id);
       window.open(url, "_blank").focus();
       return;
     }

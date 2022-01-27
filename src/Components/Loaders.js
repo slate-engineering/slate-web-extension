@@ -14,9 +14,7 @@ export const LoadingSpinner = (props) => (
 );
 
 export const ToastSpinner = (props) => (
-  <div style={{ padding: "0px 4px", marginRight: 4 }}>
-    <span className="loaderSpinner">
-      <SVG.Loader style={{ color: "#0084FF", width: 16, height: 16 }} />
-    </span>
+  <div className="loaderSpinner" style={props.style}>
+    <SVG.Loader style={{ color: "#0084FF", width: 16, height: 16 }} />
   </div>
 );
