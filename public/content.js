@@ -1,16 +1,16 @@
 //NOTE(martina): dev server uri's
-const uri = {
-  hostname: "https://slate-dev.onrender.com",
-  domain: "slate-dev.onrender.com",
-  upload: "https://shovelstaging.onrender.com",
-};
+// const uri = {
+//   hostname: "https://slate-dev.onrender.com",
+//   domain: "slate-dev.onrender.com",
+//   upload: "https://shovelstaging.onrender.com",
+// };
 
 //NOTE(martina): production server uri's
-// const uri = {
-//   hostname: "https://slate.host",
-//   domain: "slate.host",
-//   upload: "https://uploads.slate.host",
-// };
+const uri = {
+  hostname: "https://slate.host",
+  domain: "slate.host",
+  upload: "https://uploads.slate.host",
+};
 
 /* global chrome */
 if (window.location.href.startsWith(uri.hostname)) {
