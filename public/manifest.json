@@ -14,7 +14,7 @@
     "default_title": "Slate Web Extension"
   },
   "background": {
-    "service_worker": "background-wrapper.js"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
