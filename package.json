@@ -109,7 +109,8 @@
   },
   "devDependencies": {
     "cross-env": "7.0.2",
-    "eslint-config-prettier": "^8.3.0"
+    "eslint-config-prettier": "^8.3.0",
+    "webpack-extension-reloader": "^1.1.4"
   },
   "jest": {
     "roots": [
