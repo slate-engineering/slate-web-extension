@@ -1,99 +1,36 @@
-import React, { useState, useEffect } from "react";
-import { ModalContext } from "../Contexts/ModalProvider";
-
+import * as React from "react";
 import * as Styles from "../Common/styles";
-
-import { ToastSpinner } from "../Components/Loaders";
-
 import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
 
-const Toast = (props) => {
-  const [favicon, setFavicon] = useState(null);
-  const [upload, setUpload] = useState({
-    status: "uploading",
-    data: null,
-  });
+import { ToastSpinner } from "../Components/Loaders";
 
-  const { title } = props;
-
-  const handleCloseModal = () => {
-    props.setIsUploading(false);
-    window.postMessage({ type: "CLOSE_APP" }, "*");
-  };
-
-  const toastTimer = () => {
-    const timer = setTimeout(() => {
-      handleCloseModal();
-    }, 10000);
-    return () => clearTimeout(timer);
-  };
-
-  useEffect(() => {
+const useUploadMessaging = ({ onDone, onSuccess, onDuplicate, onError }) => {
+  React.useEffect(() => {
+    let timer;
     let handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === "UPLOAD_DONE") {
-        setUpload({
-          status: "complete",
-          data,
-        });
+        onSuccess(data);
       } else if (type === "UPLOAD_DUPLICATE") {
-        setUpload({
-          status: "duplicate",
-          data,
-        });
+        onDuplicate(data);
       } else if (type === "UPLOAD_FAIL") {
-        setUpload({ status: "error" });
+        onError();
       } else {
         return;
       }
-      toastTimer();
+      timer = setTimeout(() => onDone(), 10000);
     };
+
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
-  const Footer = (props) => {
-    let { status, data } = props.upload;
-    let url = data ? Strings.getSlateFileLink(data.id) : null;
-
-    return (
-      <>
-        {status === "uploading" && (
-          <div className="loaderFooterLeft">
-            <ToastSpinner style={{ marginRight: "8px" }} /> Saving...
-          </div>
-        )}
-
-        {status === "complete" && (
-          <div className="loaderFooter">
-            <div className="loaderFooterLeft">Saved</div>
-            <a href={url} className="modalLink" target="_blank">
-              View
-            </a>
-          </div>
-        )}
-
-        {status === "duplicate" && (
-          <div className="loaderFooter">
-            <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
-              Already saved
-            </div>
-            <a href={url} className="modalLink" target="_blank">
-              View
-            </a>
-          </div>
-        )}
-
-        {status === "error" && (
-          <div className="loaderFooterLeft" style={{ color: "#FF4530" }}>
-            Failed to save
-          </div>
-        )}
-      </>
+    return () => (
+      window.removeEventListener("message", handleMessage), clearTimeout(timer)
     );
-  };
+  }, []);
+};
 
+const useGetFavicon = ({ image }) => {
+  const [favicon, setFavicon] = React.useState(null);
   const checkImage = (url) => {
     let favicon = new Image();
     favicon.addEventListener("load", () => {
@@ -102,38 +39,94 @@ const Toast = (props) => {
     favicon.src = url;
   };
 
-  if (props.image) {
-    checkImage(props.image);
+  if (image) {
+    checkImage(image);
   }
-
-  return (
-    <ModalContext.Consumer>
-      {({ pageData }) => (
-        <>
-          <style>{Styles.toast}</style>
-          <div id="modal" className="loaderWindow">
-            <div className="loaderBox">
-              <div
-                className="loaderImage"
-                style={{ backgroundImage: `url('${favicon}')` }}
-              />
-              <div className="loaderText">{title}</div>
-              <div onClick={handleCloseModal} className="loaderClose">
-                <SVG.Dismiss
-                  width="20px"
-                  height="20px"
-                  style={{ display: "block" }}
-                />
-              </div>
-            </div>
-            <div className="loaderFooter">
-              <Footer upload={upload} />
-            </div>
-          </div>
-        </>
-      )}
-    </ModalContext.Consumer>
-  );
+  return favicon;
 };
 
-export default Toast;
+export default function ({ title, image, onDismiss }) {
+  const [upload, setUpload] = React.useState({
+    status: "uploading",
+    data: null,
+  });
+
+  useUploadMessaging({
+    onSuccess: (data) => setUpload({ status: "complete", data }),
+    onDuplicate: (data) => setUpload({ status: "duplicate", data }),
+    onError: () => setUpload({ status: "error" }),
+    onDone: onDismiss,
+  });
+
+  const favicon = useGetFavicon({ image });
+  let url = upload.data ? Strings.getSlateFileLink(upload.data.id) : null;
+
+  return (
+    <>
+      <style>{Styles.toast}</style>
+      <div id="modal" className="loaderWindow">
+        <div className="loaderBox">
+          <div
+            className="loaderImage"
+            style={{ backgroundImage: `url('${favicon}')` }}
+          />
+          <div className="loaderText">{title}</div>
+          <button
+            onClick={onDismiss}
+            style={{ padding: 2 }}
+            className="loaderClose"
+          >
+            <SVG.Dismiss
+              width="16px"
+              height="16px"
+              style={{ display: "block" }}
+            />
+          </button>
+        </div>
+        <div className="loaderFooter">
+          {upload.status === "uploading" && (
+            <div className="loaderFooterLeft">
+              <ToastSpinner style={{ marginRight: "8px" }} /> Saving...
+            </div>
+          )}
+
+          {upload.status === "complete" && (
+            <div className="loaderFooter">
+              <div className="loaderFooterLeft">Saved</div>
+              <a
+                href={url}
+                className="modalLink"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View
+              </a>
+            </div>
+          )}
+
+          {upload.status === "duplicate" && (
+            <div className="loaderFooter">
+              <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
+                Already saved
+              </div>
+              <a
+                href={url}
+                className="modalLink"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View
+              </a>
+            </div>
+          )}
+
+          {upload.status === "error" && (
+            <div className="loaderFooterLeft" style={{ color: "#FF4530" }}>
+              Failed to save
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
