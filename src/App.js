@@ -100,11 +100,6 @@ function App() {
         // setMini(false);
       }
 
-      if (event.data.type === "UPLOAD_START") {
-        setIsOpened(false);
-        setIsUploading(true);
-      }
-
       if (event.data.type === "CLOSE_APP") {
         window.removeEventListener("keydown", onKeyDownMain);
         setIsOpened(false);

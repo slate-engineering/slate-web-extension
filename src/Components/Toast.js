@@ -4,30 +4,7 @@ import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
 
 import { ToastSpinner } from "../Components/Loaders";
-
-const useUploadMessaging = ({ onDone, onSuccess, onDuplicate, onError }) => {
-  React.useEffect(() => {
-    let timer;
-    let handleMessage = (event) => {
-      let { data, type } = event.data;
-      if (type === "UPLOAD_DONE") {
-        onSuccess(data);
-      } else if (type === "UPLOAD_DUPLICATE") {
-        onDuplicate(data);
-      } else if (type === "UPLOAD_FAIL") {
-        onError();
-      } else {
-        return;
-      }
-      timer = setTimeout(() => onDone(), 10000);
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => (
-      window.removeEventListener("message", handleMessage), clearTimeout(timer)
-    );
-  }, []);
-};
+import { useUploadStatus } from "../Utilities/upload";
 
 const useGetFavicon = ({ image }) => {
   const [favicon, setFavicon] = React.useState(null);
@@ -51,7 +28,7 @@ export default function ({ title, image, onDismiss }) {
     data: null,
   });
 
-  useUploadMessaging({
+  useUploadStatus({
     onSuccess: (data) => setUpload({ status: "complete", data }),
     onDuplicate: (data) => setUpload({ status: "duplicate", data }),
     onError: () => setUpload({ status: "error" }),

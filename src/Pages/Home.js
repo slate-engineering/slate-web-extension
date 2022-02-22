@@ -1,13 +1,14 @@
-import React from "react";
-import useState from "react-usestateref";
+import * as Constants from "Common/constants";
+import * as React from "react";
+import * as UploadUtilities from "../Utilities/upload";
 
+import useState from "react-usestateref";
 import Button from "../Components/Button";
 import Metadata from "../Components/Metadata";
 import Header from "../Components/Header";
-import { LoadingSpinner } from "../Components/Loaders";
 import Hotkeys from "react-hot-keys";
 
-import * as Constants from "Common/constants";
+import { LoadingSpinner } from "../Components/Loaders";
 
 const HomePage = (props) => {
   const [highlightButton, setHighlightButton, highlightButtonRef] = useState(1);
@@ -79,7 +80,7 @@ const HomePage = (props) => {
                       shortcut="enter"
                       command="⏎"
                       icon="plus"
-                      run="SAVE_LINK"
+                      run={UploadUtilities.messages.saveLink}
                       data={props.pageData}
                       highlight={highlightButton}
                       onChange={handleButtonChange}

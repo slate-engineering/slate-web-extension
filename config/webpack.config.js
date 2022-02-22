@@ -197,6 +197,13 @@ module.exports = function (webpackEnv) {
         publicPath: paths.publicUrlOrPath,
         filename: "background.js",
       },
+      plugins: [
+        // Chrome extension hot reloading.
+        isEnvDevelopment &&
+          new ExtensionReloader({
+            reloadPage: true,
+          }),
+      ].filter(Boolean),
     },
     {
       entry: paths.appContentJs,
@@ -206,6 +213,13 @@ module.exports = function (webpackEnv) {
         publicPath: paths.publicUrlOrPath,
         filename: "content.js",
       },
+      plugins: [
+        // Chrome extension hot reloading.
+        isEnvDevelopment &&
+          new ExtensionReloader({
+            reloadPage: true,
+          }),
+      ].filter(Boolean),
     },
     {
     target: ['browserslist'],
@@ -766,9 +780,9 @@ module.exports = function (webpackEnv) {
             },
           },
         }),
-          // Chrome extension hot reloading.
-          isEnvDevelopment &&
-          new ExtensionReloader({
+        // Chrome extension hot reloading.
+        isEnvDevelopment &&
+        new ExtensionReloader({
             reloadPage: true 
         })
     ].filter(Boolean),
