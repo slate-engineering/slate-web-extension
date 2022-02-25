@@ -434,6 +434,13 @@ export const toast = `
 
 	.loaderClose {
 		cursor: pointer;
+		padding: 0;
+ 		margin: 0;
+  		background-color: unset;
+  		border: none;
+  		cursor: pointer;
+  		outline: 0;
+  		border: 0;
 		color: ${Constants.system.gray};
 	}
 

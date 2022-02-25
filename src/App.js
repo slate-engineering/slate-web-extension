@@ -17,6 +17,8 @@ function App() {
 
   //const [user, setUser] = useState({ signedin: false, data: null });
 
+  const closeApp = () => window.postMessage({ type: "CLOSE_APP" }, "*");
+
   //Disable Up Down arrows in the main window to prevent page scrolls
   const onKeyDownMain = (e) => {
     if (["ArrowUp", "ArrowDown"].indexOf(e.code) > -1) {
@@ -98,11 +100,6 @@ function App() {
         // setMini(false);
       }
 
-      if (event.data.type === "UPLOAD_START") {
-        setIsOpened(false);
-        setIsUploading(true);
-      }
-
       if (event.data.type === "CLOSE_APP") {
         window.removeEventListener("keydown", onKeyDownMain);
         setIsOpened(false);
@@ -149,7 +146,7 @@ function App() {
           <Toast
             image={og.image}
             title={document.title}
-            setIsUploading={setIsUploading}
+            onDismiss={() => (setIsUploading(false), closeApp())}
           />
         )}
       </ReactShadowRoot>

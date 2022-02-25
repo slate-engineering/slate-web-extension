@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 
 #modal-window-slate-extension {
   position: absolute;
@@ -6,7 +6,7 @@
   top: 0;
   z-index: 99999;
   font-family: Inter;
-  background-color: '#000';
+  background-color: "#000";
 }
 
 .modal-window {
@@ -17,9 +17,9 @@
   margin-top: 2em;
   position: fixed;
   background: #fff;
-  width: 500px;  
+  width: 500px;
   height: 300px;
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
   z-index: 9999;
   border-radius: 10px;
   border: 0;
@@ -35,11 +35,11 @@
 
 .modal-window-inner-border:before {
   position: absolute;
-  top: .4px;
-  left: .4px;
-  right: .4px;
-  bottom: .4px;
-  border: .5px solid #57566d;
+  top: 0.4px;
+  left: 0.4px;
+  right: 0.4px;
+  bottom: 0.4px;
+  border: 0.5px solid #57566d;
 }
 
 .modal-handle {
@@ -91,7 +91,7 @@
   user-select: none;
   cursor: pointer;
   background-color: #fff;
-  color: #8E8E93;
+  color: #8e8e93;
   bottom: 0;
   text-align: left;
   padding-left: 40px;
@@ -99,8 +99,8 @@
 }
 
 .modal-button:hover {
-  background-color: #EAEAEE;
-  color: #8E8E93;
+  background-color: #eaeaee;
+  color: #8e8e93;
 }
 
 .modal-button-main {
@@ -114,7 +114,7 @@
   user-select: none;
   cursor: pointer;
   background-color: #fff;
-  color: #8E8E93;
+  color: #8e8e93;
   bottom: 0;
   text-align: left;
   font-size: 16px;
@@ -123,17 +123,17 @@
 }
 
 .modal-button-main:hover {
-  background-color: #EAEAEE;
-  color: #8E8E93;
+  background-color: #eaeaee;
+  color: #8e8e93;
 }
 
 .slate-button-selected {
-  background-color: '#4d4' !important;
+  background-color: "#4d4" !important;
 }
 
 .modal-search-bar {
   position: relative;
-  background-color: #F2F2F7;
+  background-color: #f2f2f7;
   top: 0;
   left: 0;
   width: 100%;
@@ -141,22 +141,22 @@
 }
 
 .modal-search-input {
-  background-color: #F2F2F7;
+  background-color: #f2f2f7;
   top: 0;
   left: 0;
   width: 300px;
   border: 0;
-  outline:none;
+  outline: none;
   font-size: 14px;
   height: 50px;
-  color: #8E8E93;
+  color: #8e8e93;
   border-radius: 10px 10px 0 0;
   margin-left: 40px;
   font-family: Inter;
 }
 
 .metadata {
-  color: #48484A;
+  color: #48484a;
   display: flex;
   height: 86px;
   justify-content: center;
@@ -182,16 +182,16 @@
 }
 
 .metadata-text {
-  font-weight:  bold;
+  font-weight: bold;
   font-size: 16px;
-  color: #48484A;
+  color: #48484a;
 }
 
 input:focus {
-    outline:none;
+  outline: none;
 }
 
-input::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-  color: #C7C7CC;
+input::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: #c7c7cc;
 }
-

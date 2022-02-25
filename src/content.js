@@ -1,19 +1,8 @@
-//NOTE(martina): dev server uri's
-// const uri = {
-//   hostname: "https://slate-dev.onrender.com",
-//   domain: "slate-dev.onrender.com",
-//   upload: "https://shovelstaging.onrender.com",
-// };
-
-//NOTE(martina): production server uri's
-const uri = {
-  hostname: "https://slate.host",
-  domain: "slate.host",
-  upload: "https://uploads.slate.host",
-};
+import * as Constants from "./Common/constants";
+import * as UploadUtilities from "./Utilities/upload";
 
 /* global chrome */
-if (window.location.href.startsWith(uri.hostname)) {
+if (window.location.href.startsWith(Constants.uri.hostname)) {
   if (window.location.href.includes("extension=true")) {
     document.addEventListener("keydown", function (e) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -54,19 +43,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
     return true;
   }
 
-  if (request.run === "UPLOAD_DONE") {
-    window.postMessage({ type: "UPLOAD_DONE", data: request.data }, "*");
-    return true;
-  }
-
-  if (request.run === "UPLOAD_FAIL") {
-    window.postMessage({ type: "UPLOAD_FAIL" }, "*");
-    return true;
-  }
-
-  if (request.run === "UPLOAD_DUPLICATE") {
-    window.postMessage({ type: "UPLOAD_DUPLICATE", data: request.data }, "*");
-    return true;
+  if (request.type === UploadUtilities.messages.uploadStatus) {
+    UploadUtilities.forwardUploadStatusToApp({
+      status: request.status,
+      data: request.data,
+    });
   }
 
   if (request.run === "CHECK_LINK") {
@@ -119,16 +100,16 @@ function main(props) {
 }
 
 window.addEventListener("message", async function (event) {
-  if (event.data.run === "SAVE_LINK") {
-    chrome.runtime.sendMessage({ type: "SAVE_LINK", url: event.data.url });
-  }
-
-  if (event.data.type === "UPLOAD_START") {
-    window.postMessage({ type: "UPLOAD_START" }, "*");
+  if (event.data.run === UploadUtilities.messages.saveLink) {
+    UploadUtilities.forwardSaveLinkRequestsToBackground({
+      url: event.data.url,
+    });
   }
 
   if (event.data.run === "OPEN_LOADING") {
-    chrome.runtime.sendMessage({ type: "SAVE_LINK", url: event.data.url });
+    UploadUtilities.forwardSaveLinkRequestsToBackground({
+      url: event.data.url,
+    });
     return true;
   }
 
