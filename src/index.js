@@ -1,11 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
+import { getInitialUrl } from "./Utilities/navigation";
+
+import { MemoryRouter } from "react-router-dom";
 
 ReactDOM.render(
   <>
     <React.StrictMode>
-      <App />
+      <MemoryRouter initialEntries={[getInitialUrl()]}>
+        <App />
+      </MemoryRouter>
     </React.StrictMode>
   </>,
   document.getElementById("modal-window-slate-extension")

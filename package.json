@@ -54,6 +54,7 @@
     "react-feather": "2.0.3",
     "react-hot-keys": "^2.6.2",
     "react-refresh": "^0.11.0",
+    "react-router-dom": "^6.2.1",
     "react-shadow": "^19.0.2",
     "react-shadow-root": "^6.1.0",
     "react-usestateref": "^1.0.8",
