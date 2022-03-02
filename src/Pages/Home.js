@@ -1,6 +1,7 @@
-import * as Constants from "Common/constants";
 import * as React from "react";
 import * as UploadUtilities from "../Utilities/upload";
+import * as Constants from "Common/constants";
+import * as Strings from "../Common/strings";
 
 import useState from "react-usestateref";
 import Button from "../Components/Button";
@@ -9,10 +10,14 @@ import Header from "../Components/Header";
 import Hotkeys from "react-hot-keys";
 
 import { LoadingSpinner } from "../Components/Loaders";
+import { useModalContext } from "../Contexts/ModalProvider";
 
 const HomePage = (props) => {
   const [highlightButton, setHighlightButton, highlightButtonRef] = useState(1);
   const [onEnter, setOnEnter, onEnterRef] = useState(false);
+
+  const { closeModal, navigateToAccount, navigateToShortcuts } =
+    useModalContext();
 
   const handleOpenAuth = () => {
     window.open(`${Constants.uri.hostname}/_/auth`, "_blank").focus();
@@ -21,6 +26,12 @@ const HomePage = (props) => {
 
   const handleButtonChange = (id) => {
     setHighlightButton(id);
+  };
+
+  const handleOpenLink = () => {
+    let url = Strings.getSlateFileLink(props.status.data.data.id);
+    window.open(url, "_blank");
+    return;
   };
 
   async function onKeyDown(keyName, e, handle) {
@@ -80,7 +91,9 @@ const HomePage = (props) => {
                       shortcut="enter"
                       command="⏎"
                       icon="plus"
-                      run={UploadUtilities.messages.saveLink}
+                      onClick={() => (
+                        UploadUtilities.sendSaveLinkRequest(), closeModal()
+                      )}
                       data={props.pageData}
                       highlight={highlightButton}
                       onChange={handleButtonChange}
@@ -93,8 +106,7 @@ const HomePage = (props) => {
                       shortcut="enter"
                       command="⏎"
                       icon="eye"
-                      run="OPEN_LINK"
-                      data={props.status}
+                      onClick={handleOpenLink}
                       highlight={highlightButton}
                       onChange={handleButtonChange}
                       onEnter={onEnterRef.current}
@@ -107,7 +119,7 @@ const HomePage = (props) => {
                     id={2}
                     text="Shortcuts"
                     icon="command"
-                    run="OPEN_SHORTCUTS_PAGE"
+                    onClick={navigateToShortcuts}
                     highlight={highlightButton}
                     onChange={handleButtonChange}
                     onEnter={onEnterRef.current}
@@ -117,8 +129,8 @@ const HomePage = (props) => {
                     id={3}
                     text="Account"
                     icon="account"
-                    run="OPEN_ACCOUNT_PAGE"
                     data={props.pageData}
+                    onClick={navigateToAccount}
                     highlight={highlightButton}
                     onChange={handleButtonChange}
                     onEnter={onEnterRef.current}

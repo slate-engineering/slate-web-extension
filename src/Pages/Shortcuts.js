@@ -5,11 +5,15 @@ import Hotkeys from "react-hot-keys";
 
 import * as Strings from "../Common/strings";
 
+import { useModalContext } from "../Contexts/ModalProvider";
+
 const ShortcutsPage = (props) => {
+  const { navigateToHome } = useModalContext();
+
   async function onKeyDown(keyName, e, handle) {
     e.preventDefault();
     if (keyName === "left") {
-      window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
+      navigateToHome();
     }
   }
 
