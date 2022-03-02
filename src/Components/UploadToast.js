@@ -3,7 +3,7 @@ import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as Strings from "../Common/strings";
 
-import { ToastSpinner } from "../Components/Loaders";
+import { ToastSpinner } from "./Loaders";
 import { useUploadStatus } from "../Utilities/upload";
 
 const useGetFavicon = ({ image }) => {
@@ -22,21 +22,34 @@ const useGetFavicon = ({ image }) => {
   return favicon;
 };
 
-export default function ({ title, image, onDismiss }) {
-  const [upload, setUpload] = React.useState({
-    status: "uploading",
+const useToast = () => {
+  const [isVisible, setVisibility] = React.useState(false);
+  const showToast = () => setVisibility(true);
+  const hideToast = () => setVisibility(false);
+  return [isVisible, { showToast, hideToast }];
+};
+
+export default function ({ image }) {
+  const [isVisible, { showToast, hideToast }] = useToast();
+
+  const [status, setUploadStatus] = React.useState({
+    current: "uploading",
     data: null,
   });
-
   useUploadStatus({
-    onSuccess: (data) => setUpload({ status: "complete", data }),
-    onDuplicate: (data) => setUpload({ status: "duplicate", data }),
-    onError: () => setUpload({ status: "error" }),
-    onDone: onDismiss,
+    onStart: showToast,
+    onSuccess: (data) => setUploadStatus({ current: "complete", data }),
+    onDuplicate: (data) => setUploadStatus({ current: "duplicate", data }),
+    onError: () => setUploadStatus({ current: "error" }),
+    onDone: hideToast,
   });
 
   const favicon = useGetFavicon({ image });
-  let url = upload.data ? Strings.getSlateFileLink(upload.data.id) : null;
+
+  if (!isVisible) return null;
+
+  let url = status.data ? Strings.getSlateFileLink(status.data.id) : null;
+  const { title } = document;
 
   return (
     <>
@@ -49,7 +62,7 @@ export default function ({ title, image, onDismiss }) {
           />
           <div className="loaderText">{title}</div>
           <button
-            onClick={onDismiss}
+            onClick={hideToast}
             style={{ padding: 2 }}
             className="loaderClose"
           >
@@ -61,13 +74,13 @@ export default function ({ title, image, onDismiss }) {
           </button>
         </div>
         <div className="loaderFooter">
-          {upload.status === "uploading" && (
+          {status.current === "uploading" && (
             <div className="loaderFooterLeft">
               <ToastSpinner style={{ marginRight: "8px" }} /> Saving...
             </div>
           )}
 
-          {upload.status === "complete" && (
+          {status.current === "complete" && (
             <div className="loaderFooter">
               <div className="loaderFooterLeft">Saved</div>
               <a
@@ -81,7 +94,7 @@ export default function ({ title, image, onDismiss }) {
             </div>
           )}
 
-          {upload.status === "duplicate" && (
+          {status.current === "duplicate" && (
             <div className="loaderFooter">
               <div className="loaderFooterLeft" style={{ color: "#34D159" }}>
                 Already saved
@@ -97,7 +110,7 @@ export default function ({ title, image, onDismiss }) {
             </div>
           )}
 
-          {upload.status === "error" && (
+          {status.current === "error" && (
             <div className="loaderFooterLeft" style={{ color: "#FF4530" }}>
               Failed to save
             </div>
