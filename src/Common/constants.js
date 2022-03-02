@@ -240,3 +240,14 @@ export const grids = {
 
 export const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
+
+export const routes = {
+  modal: {
+    key: "modal",
+    values: {
+      home: "home",
+      shortcuts: "shortcuts",
+      account: "account",
+    },
+  },
+};
