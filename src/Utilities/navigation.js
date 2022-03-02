@@ -4,6 +4,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 export const messages = {
   navigate: "NAVIGATE",
+  openApp: "OPEN_APP",
+};
+
+// NOTE(amine): commands are defined in manifest.json
+export const commands = {
+  openApp: "open-app",
+  openSlate: "open-slate",
 };
 
 /* -------------------------------------------------------------------------------------------------
@@ -14,7 +21,7 @@ const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
 const createAddressBarElement = () => {
   const element = document.createElement("div");
   element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
-  $(element).prependTo("body");
+  $(element).appendTo("html");
 };
 const getAddressBarElement = () =>
   document.getElementById(ADDRESS_BAR_ELEMENT_ID);
@@ -44,6 +51,12 @@ export const sendNavigationRequestToContent = ({ tab, pathname, search }) => {
   });
 };
 
+export const sendOpenAppRequestToContent = ({ tab }) => {
+  chrome.tabs.sendMessage(parseInt(tab), {
+    type: messages.openApp,
+  });
+};
+
 /** ------------ Content------------- */
 
 export const handleNavigationRequests = ({ pathname, search }) => {
@@ -58,16 +71,11 @@ export const handleNavigationRequests = ({ pathname, search }) => {
   }
 };
 
-export const navigateToUrl = (url) => {
+export const openApp = (url = "/") => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
-  // const isAppOpen = !location.ancestorOrigins.contains(extensionOrigin);
+
   const isAppOpen = document.getElementById("modal-window-slate-extension");
-
-  if (isAppOpen) {
-    updateAddressBarUrl(url);
-    return;
-  }
-
+  if (isAppOpen) return;
   createAddressBarElement();
   updateAddressBarUrl(url);
   // Fetch the local React index.html page
@@ -78,11 +86,21 @@ export const navigateToUrl = (url) => {
         /\/static\//g,
         `${extensionOrigin}/static/`
       );
-      $(styleStashHTML).prependTo("body");
+      $(styleStashHTML).appendTo("html");
     })
     .catch((error) => {
       console.warn(error);
     });
+};
+
+export const navigateToUrl = (url) => {
+  const isAppOpen = document.getElementById("modal-window-slate-extension");
+
+  if (isAppOpen) {
+    updateAddressBarUrl(url);
+  } else {
+    openApp(url);
+  }
 };
 
 /** ------------ App ------------- */
@@ -95,7 +113,7 @@ export const useHandleExternalNavigation = () => {
 
   const storedLinkRef = React.useRef(null);
   React.useEffect(() => {
-    updateAddressBarUrl(location.pathname);
+    updateAddressBarUrl(location.pathname + location.search);
     storedLinkRef.current = location.pathname + location.search;
   }, [location]);
 
