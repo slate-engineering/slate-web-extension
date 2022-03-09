@@ -1,19 +1,21 @@
 import React, { useState } from "react";
+import * as Constants from "Common/constants";
 
 import Header from "../Components/Header";
 import ProgressBar from "../Components/ProgressBar";
 import Hotkeys from "react-hot-keys";
 
-import * as Constants from "Common/constants";
+import { useModalContext } from "../Contexts/ModalProvider";
 
 const AccountPage = (props) => {
   let avatar = props.user.photo;
   // const [avatar, setAvatar] = useState(null);
+  const { navigateToHome } = useModalContext();
 
-  const handleSignOut = (e) => {
-    e.preventDefault();
-    window.postMessage({ run: "SIGN_OUT", type: "CLOSE_APP" }, "*");
-  };
+  // const handleSignOut = (e) => {
+  //   e.preventDefault();
+  //   window.postMessage({ run: "SIGN_OUT", type: "CLOSE_APP" }, "*");
+  // };
 
   // const checkImage = (url) => {
   // 	let avatar = new Image();
@@ -26,7 +28,7 @@ const AccountPage = (props) => {
   async function onKeyDown(keyName, e, handle) {
     e.preventDefault();
     if (keyName === "left") {
-      window.postMessage({ run: "OPEN_HOME_PAGE" }, "*");
+      navigateToHome();
     }
   }
 

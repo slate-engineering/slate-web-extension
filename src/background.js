@@ -1,5 +1,6 @@
 import * as Constants from "./Common/constants";
 import * as UploadUtilities from "./Utilities/upload";
+import * as Navigation from "./Utilities/navigation";
 
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
@@ -110,10 +111,10 @@ const checkLink = async (props) => {
   return json;
 };
 
-const checkMatch = (list, url) => {
-  const matches = RegExp(list.join("|")).exec(url);
-  return matches;
-};
+// const checkMatch = (list, url) => {
+//   const matches = RegExp(list.join("|")).exec(url);
+//   return matches;
+// };
 
 const checkLoginData = async (tab) => {
   let session;
@@ -163,30 +164,33 @@ const checkLoginSession = async (tab) => {
 };
 
 chrome.action.onClicked.addListener(async (tab) => {
-  chrome.tabs.sendMessage(tab.id, {
-    run: "LOAD_APP",
-    type: "LOADER_MAIN",
-    tabId: tab.id,
+  Navigation.sendNavigationRequestToContent({
+    tab: tab.id,
+    search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
   });
   await checkLoginData(tab);
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == "open-app") {
-    chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MAIN" });
+  if (command == Navigation.commands.openApp) {
+    Navigation.sendNavigationRequestToContent({
+      tab: tab.id,
+      search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
+    });
     await checkLoginData(tab);
   }
-  if (command == "open-slate") {
+
+  if (command == Navigation.commands.openSlate) {
     chrome.tabs.create({
       url: `${Constants.uri.hostname}/_/data&extension=true&id=${tab.id}`,
     });
   }
+
   if (command == UploadUtilities.commands.directSave) {
     let session = await checkLoginData(tab);
 
     if (session && session.user) {
-      chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MINI" });
-      chrome.tabs.sendMessage(parseInt(tab.id), { run: "OPEN_LOADING" });
+      Navigation.sendOpenAppRequestToContent({ tab: tab.id });
       const apiKey = await getApiKey();
       await UploadUtilities.handleSaveLinkRequests({
         url: tab.url,
@@ -194,25 +198,27 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
         apiKey,
       });
     } else {
-      chrome.tabs.sendMessage(tab.id, { run: "LOAD_APP", type: "LOADER_MAIN" });
+      Navigation.sendNavigationRequestToContent({
+        tab: tab.id,
+        search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
+      });
     }
   }
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender) => {
-  if (request.type === "GO_BACK") {
-    chrome.tabs.update(parseInt(request.id), { highlighted: true });
-    chrome.tabs.remove(parseInt(sender.tab.id));
-  }
-
   if (request.type === UploadUtilities.messages.saveLink) {
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), { run: "OPEN_LOADING" });
     const apiKey = await getApiKey();
     await UploadUtilities.handleSaveLinkRequests({
       url: sender.url,
       tab: sender.tab.id,
       apiKey,
     });
+  }
+
+  if (request.type === "GO_BACK") {
+    chrome.tabs.update(parseInt(request.id), { highlighted: true });
+    chrome.tabs.remove(parseInt(sender.tab.id));
   }
 
   if (request.type === "CHECK_LOGIN") {
@@ -226,16 +232,16 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
   }
 });
 
-chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-  if (info.status == "complete") {
-    const blacklist = ["chrome://", "localhost:", "cec.cx"];
-    const isBlacklisted = checkMatch(blacklist, tab.url);
+// chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
+//   if (info.status == "complete") {
+//     const blacklist = ["chrome://", "localhost:", "cec.cx"];
+//     const isBlacklisted = checkMatch(blacklist, tab.url);
 
-    // const domains = ["slate.host", "slate-dev.onrender.com"];
-    // const isSlate = checkMatch(domains, tab.url);
+//     // const domains = ["slate.host", "slate-dev.onrender.com"];
+//     // const isSlate = checkMatch(domains, tab.url);
 
-    if (isBlacklisted) {
-      return;
-    }
-  }
-});
+//     if (isBlacklisted) {
+//       return;
+//     }
+//   }
+// });

@@ -1,38 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { ModalContext } from "../Contexts/ModalProvider";
-
 import * as Styles from "../Common/styles";
 
 import HomePage from "../Pages/Home";
 import ShortcutsPage from "../Pages/Shortcuts";
 import AccountPage from "../Pages/Account";
+import Hotkeys from "react-hot-keys";
+
+import { useModalContext } from "../Contexts/ModalProvider";
 
 const Modal = (props) => {
   const [loaded, setLoaded] = useState(false);
-  const [page, setPage] = useState({ active: "home" });
   const [user, setUser] = useState(null);
 
-  const handleCloseModal = () => {
-    window.postMessage({ type: "CLOSE_APP" }, "*");
+  const {
+    isHomeActive,
+    isAccountActive,
+    isShortcutsActive,
+
+    navigateToAccount,
+    navigateToShortcuts,
+    closeModal,
+
+    pageData,
+  } = useModalContext();
+
+  function onKeyDown(keyName) {
+    if (keyName === "esc") closeModal();
+
+    if (keyName === "alt+a") navigateToAccount();
+
+    if (keyName === "alt+c") navigateToShortcuts();
+  }
+
+  //Disable Up Down arrows in the main window to prevent page scrolls
+  const onKeyDownMain = (e) => {
+    if (["ArrowUp", "ArrowDown"].indexOf(e.code) > -1) {
+      e.preventDefault();
+    }
   };
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDownMain);
+    return () => window.removeEventListener("keydown", onKeyDownMain);
+  }, []);
 
   useEffect(() => {
     let handleMessage = (event) => {
       if (event.data.type === "AUTH_REQ") {
         setUser(null);
         setLoaded(true);
-      }
-
-      if (event.data.run === "OPEN_HOME_PAGE") {
-        setPage({ active: "home" });
-      }
-
-      if (event.data.run === "OPEN_SHORTCUTS_PAGE") {
-        setPage({ active: "shortcuts" });
-      }
-
-      if (event.data.run === "OPEN_ACCOUNT_PAGE") {
-        setPage({ active: "account" });
       }
 
       if (event.data.type === "CHECK_LINK") {
@@ -53,37 +69,34 @@ const Modal = (props) => {
   }, []);
 
   return (
-    <ModalContext.Consumer>
-      {({ pageData }) => (
-        <>
-          <style>{Styles.main}</style>
-          <div id="modal" className="modalWindow">
-            <div className="modalContent">
-              {page.active === "home" && (
-                <HomePage
-                  pageData={pageData}
-                  image={props.image}
-                  favicon={props.favicon}
-                  status={props.link}
-                  user={user}
-                  loaded={loaded}
-                />
-              )}
+    <Hotkeys
+      keyName="esc,alt+b,alt+a,alt+c,alt+3"
+      onKeyDown={onKeyDown.bind(this)}
+    >
+      <>
+        <style>{Styles.main}</style>
+        <div id="modal" className="modalWindow">
+          <div className="modalContent">
+            {isHomeActive && (
+              <HomePage
+                pageData={pageData}
+                image={props.image}
+                favicon={props.favicon}
+                status={props.link}
+                user={user}
+                loaded={loaded}
+              />
+            )}
 
-              {page.active === "shortcuts" && (
-                <ShortcutsPage user={user} loaded={loaded} />
-              )}
+            {isShortcutsActive && <ShortcutsPage user={user} loaded={loaded} />}
 
-              {page.active === "account" && (
-                <AccountPage user={user} loaded={loaded} />
-              )}
-            </div>
+            {isAccountActive && <AccountPage user={user} loaded={loaded} />}
           </div>
+        </div>
 
-          <div className="modalBackground" onClick={handleCloseModal}></div>
-        </>
-      )}
-    </ModalContext.Consumer>
+        <div className="modalBackground" onClick={closeModal}></div>
+      </>
+    </Hotkeys>
   );
 };
 

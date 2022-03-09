@@ -1,153 +1,82 @@
-import React, { useState, useEffect } from "react";
+import * as React from "react";
+import * as Navigation from "Utilities/navigation";
+import * as Constants from "./Common/constants";
+
 import Modal from "./Components/Modal";
-import Toast from "./Components/Toast";
+import UploadToast from "./Components/UploadToast";
 import ModalProvider from "./Contexts/ModalProvider";
-import Hotkeys from "react-hot-keys";
 import ReactShadowRoot from "react-shadow-root";
 
-import * as Strings from "./Common/strings";
+import { useSearchParams } from "react-router-dom";
 
-function App() {
-  // const [mini, setMini] = useState(true);
-  const [isOpened, setIsOpened] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
-  //const [isScreenshot, setIsScreenshot] = useState(false);
-  const [og, setOg] = useState({ image: null, title: null });
-  const [checkLink, setCheckLink] = useState({ uploaded: false, data: null });
+const useOg = () => {
+  const [og, setOg] = React.useState({ image: null, title: null });
+  React.useEffect(() => {
+    const getMeta = () => {
+      let meta = {};
 
-  //const [user, setUser] = useState({ signedin: false, data: null });
+      if (document.querySelector("meta[property='og:image']")) {
+        meta.image = document
+          .querySelector("meta[property='og:image']")
+          .getAttribute("content");
+      }
 
-  const closeApp = () => window.postMessage({ type: "CLOSE_APP" }, "*");
+      if (document.querySelector("link[rel~='icon']")) {
+        meta.favicon = document
+          .querySelector("link[rel~='icon']")
+          .getAttribute("href");
+      }
 
-  //Disable Up Down arrows in the main window to prevent page scrolls
-  const onKeyDownMain = (e) => {
-    if (["ArrowUp", "ArrowDown"].indexOf(e.code) > -1) {
-      e.preventDefault();
-    }
-  };
+      return meta;
+    };
 
-  function onKeyDown(keyName, e, handle) {
-    if (keyName === "esc") {
-      setIsOpened(false);
-      window.removeEventListener("keydown", onKeyDownMain);
-      window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
-    }
-
-    // if (keyName === "alt+b" || keyName === "enter") {
-    //   if (checkLink.uploaded === false) {
-    //     window.postMessage(
-    //       { run: "OPEN_LOADING", url: window.location.href },
-    //       "*"
-    //     );
-    //   } else {
-    //     let url = Strings.getSlateFileLink(checkLink.data.data.id);
-    //     window.open(url, "_blank").focus();
-    //     return;
-    //   }
-    // }
-
-    if (keyName === "alt+a") {
-      window.postMessage({ run: "OPEN_ACCOUNT_PAGE" }, "*");
-    }
-
-    if (keyName === "alt+c") {
-      window.postMessage({ run: "OPEN_SHORTCUTS_PAGE" }, "*");
-    }
-  }
-
-  const getMeta = () => {
-    let meta = {};
-
-    if (document.querySelector("meta[property='og:image']")) {
-      meta.image = document
-        .querySelector("meta[property='og:image']")
-        .getAttribute("content");
-    }
-
-    if (document.querySelector("link[rel~='icon']")) {
-      meta.favicon = document
-        .querySelector("link[rel~='icon']")
-        .getAttribute("href");
-    }
-
-    return meta;
-  };
-
-  useEffect(() => {
-    let loaderType = document.getElementById("slate-loader-type");
-    if (loaderType) {
-      // setMini(false);
-      setIsOpened(false);
-      setIsUploading(true);
-    }
     let meta = getMeta();
     setOg({ image: meta.image, favicon: meta.favicon });
   }, []);
+  return og;
+};
 
-  useEffect(() => {
-    window.addEventListener("keydown", onKeyDownMain);
+function App() {
+  // const [mini, setMini] = useState(true);
+  //const [isScreenshot, setIsScreenshot] = useState(false);
 
-    return () => {
-      window.removeEventListener("keydown", onKeyDownMain);
-    };
-  }, []);
+  //const [user, setUser] = useState({ signedin: false, data: null });
 
-  useEffect(() => {
+  const [checkLink, setCheckLink] = React.useState({
+    uploaded: false,
+    data: null,
+  });
+  React.useEffect(() => {
     let handleMessage = (event) => {
-      if (event.data.type === "REOPEN_APP") {
-        setIsOpened(true);
-        setIsUploading(false);
-        // setMini(false);
-      }
-
-      if (event.data.type === "CLOSE_APP") {
-        window.removeEventListener("keydown", onKeyDownMain);
-        setIsOpened(false);
-        setIsUploading(false);
-        window.postMessage({ run: "SET_OPEN_FALSE" }, "*");
-      }
-
-      if (event.data.type === "OPEN_LOADING") {
-        setIsOpened(false);
-        setIsUploading(true);
-      }
-
-      if (event.data.type === "CHECK_LINK") {
-        if (event.data.data.decorator === "LINK_FOUND") {
-          setCheckLink({ uploaded: true, data: event.data.data });
-        }
+      if (
+        event.data.type === "CHECK_LINK" &&
+        event.data.data.decorator === "LINK_FOUND"
+      ) {
+        setCheckLink({ uploaded: true, data: event.data.data });
       }
     };
 
     window.addEventListener("message", handleMessage);
 
-    return () => {
-      window.removeEventListener("message", handleMessage);
-    };
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
+
+  const og = useOg();
+
+  Navigation.useHandleExternalNavigation();
+
+  const [searchParams] = useSearchParams();
+  const isModalOpen = !!searchParams.get(Constants.routes.modal.key);
 
   return (
     <div style={{ all: "initial" }}>
       <ReactShadowRoot>
-        {isOpened && (
-          <ModalProvider>
-            <div>
-              <Hotkeys
-                keyName="esc,alt+b,alt+a,alt+c,alt+3"
-                onKeyDown={onKeyDown.bind(this)}
-              >
-                <Modal image={og.image} favicon={og.favicon} link={checkLink} />
-              </Hotkeys>
-            </div>
-          </ModalProvider>
-        )}
+        <UploadToast image={og.image} />
 
-        {isUploading && (
-          <Toast
-            image={og.image}
-            title={document.title}
-            onDismiss={() => (setIsUploading(false), closeApp())}
-          />
+        {isModalOpen && (
+          <ModalProvider>
+            <Modal image={og.image} favicon={og.favicon} link={checkLink} />
+          </ModalProvider>
         )}
       </ReactShadowRoot>
     </div>

@@ -204,6 +204,9 @@ module.exports = function (webpackEnv) {
             reloadPage: true,
           }),
       ].filter(Boolean),
+      optimization: {
+        minimize: false,
+      },
     },
     {
       entry: paths.appContentJs,
@@ -220,6 +223,9 @@ module.exports = function (webpackEnv) {
             reloadPage: true,
           }),
       ].filter(Boolean),
+      optimization: {
+        minimize: false,
+      },
     },
     {
     target: ['browserslist'],

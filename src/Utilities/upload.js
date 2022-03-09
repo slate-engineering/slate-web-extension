@@ -12,6 +12,7 @@ export const commands = {
 };
 
 export const uploadStates = {
+  start: "start",
   done: "done",
   duplicate: "duplicate",
   failed: "failed",
@@ -40,6 +41,7 @@ export const forwardUploadStatusToApp = ({ status, data }) => {
 /** ------------ App ------------- */
 
 export const useUploadStatus = ({
+  onStart,
   onDone,
   onSuccess,
   onDuplicate,
@@ -51,7 +53,9 @@ export const useUploadStatus = ({
       let { data, type, status } = event.data;
       if (type !== messages.uploadStatus) return;
 
-      if (status === uploadStates.done) {
+      if (status === uploadStates.start) {
+        onStart();
+      } else if (status === uploadStates.done) {
         onSuccess(data);
       } else if (status === uploadStates.duplicate) {
         onDuplicate(data);
@@ -76,7 +80,9 @@ export const useUploadStatus = ({
 
 /** ------------ App ------------- */
 
-// export const saveLink = ({}) => {};
+export const sendSaveLinkRequest = () => {
+  window.postMessage({ type: messages.saveLink }, "*");
+};
 
 /** ------------ Content------------- */
 
@@ -94,6 +100,11 @@ export const handleSaveLinkRequests = async ({
 }) => {
   let response;
   try {
+    sendUploadStatusToContent({
+      tab: parseInt(tab),
+      status: uploadStates.start,
+    });
+
     response = await fetch(`${Constants.uri.hostname}/api/v3/create-link`, {
       method: "POST",
       headers: {

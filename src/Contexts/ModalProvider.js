@@ -1,26 +1,41 @@
-import React, { useEffect, useState } from "react";
+import * as React from "react";
+import * as Constants from "../Common/constants";
+
+import { useSearchParams } from "react-router-dom";
+
 export const ModalContext = React.createContext({});
 
 const ModalProvider = ({ children }) => {
-  const [pageData, setPageData] = useState({
-    title: document.title,
-    description: document.description,
-    url: window.location.href,
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modalRoutes = Constants.routes.modal;
+  const currentModalPage = searchParams.get(modalRoutes.key);
 
-  useEffect(() => {
-    let handleMessage = (event) => {
-      if (event.source !== window) return;
+  const value = React.useMemo(() => {
+    return {
+      isHomeActive: currentModalPage === modalRoutes.values.home,
+      isAccountActive: currentModalPage === modalRoutes.values.account,
+      isShortcutsActive: currentModalPage === modalRoutes.values.shortcuts,
+
+      navigateToHome: () => setSearchParams({ modal: modalRoutes.values.home }),
+      navigateToAccount: () =>
+        setSearchParams({ modal: modalRoutes.values.account }),
+      navigateToShortcuts: () =>
+        setSearchParams({ modal: modalRoutes.values.shortcuts }),
+      closeModal: () => setSearchParams({}),
+
+      pageData: {
+        title: document.title,
+        description: document.description,
+        url: window.location.href,
+      },
     };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [currentModalPage]);
 
   return (
-    <ModalContext.Provider value={{ pageData }}>
-      {children}
-    </ModalContext.Provider>
+    <ModalContext.Provider value={value}>{children}</ModalContext.Provider>
   );
 };
+
+export const useModalContext = () => React.useContext(ModalContext);
 
 export default ModalProvider;

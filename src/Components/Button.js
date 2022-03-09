@@ -1,8 +1,7 @@
-import React from "react";
+import * as React from "react";
 import * as SVG from "../Common/SVG";
-import * as Strings from "../Common/strings";
 
-const Button = (props) => {
+const Button = ({ onClick, ...props }) => {
   const icons = {
     command: <SVG.MacCommand width="16px" height="16px" />,
     plus: <SVG.Plus width="20px" height="20px" />,
@@ -13,28 +12,18 @@ const Button = (props) => {
 
   let svg = icons[props.icon];
 
-  const handleClick = (e) => {
-    if (props.run === "OPEN_LINK") {
-      let url = Strings.getSlateFileLink(props.data.data.data.id);
-      window.open(url, "_blank").focus();
-      return;
-    }
-
-    window.postMessage({ run: props.run }, "*");
-  };
-
   const handleHover = () => {
     props.onChange(props.id);
   };
 
   if (props.onEnter && props.id === props.highlight) {
-    handleClick();
+    onClick();
   }
 
   return (
     <>
       <div
-        onClick={handleClick}
+        onClick={onClick}
         className="modalButtonMain"
         onMouseEnter={handleHover}
         style={{
