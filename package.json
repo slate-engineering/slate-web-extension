@@ -109,6 +109,7 @@
     ]
   },
   "devDependencies": {
+    "@types/chrome": "0.0.180",
     "cross-env": "7.0.2",
     "eslint-config-prettier": "^8.3.0",
     "webpack-extension-reloader": "^1.1.4"
