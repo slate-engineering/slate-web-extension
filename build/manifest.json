@@ -24,7 +24,7 @@
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["tabs", "contextMenus", "cookies", "commands"],
+  "permissions": ["tabs", "contextMenus", "cookies", "commands", "storage", "history"],
   "host_permissions": [
     "https://slate.host/",
     "https://slate-dev.onrender.com/"

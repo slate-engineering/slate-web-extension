@@ -2,6 +2,8 @@ import * as Constants from "./Common/constants";
 import * as UploadUtilities from "./Utilities/upload";
 import * as Navigation from "./Utilities/navigation";
 
+import * as History from "./Core/history/background";
+
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
     chrome.cookies.get(
