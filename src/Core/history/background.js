@@ -1,10 +1,34 @@
+import { messages } from "./";
+
+const Session = {
+  createVisit: (historyItem, visit) => ({
+    ...visit,
+    title: historyItem.title,
+    url: historyItem.url,
+    favicon:
+      "https://s2.googleusercontent.com/s2/favicons?domain_url=" +
+      historyItem.url,
+  }),
+  create: (visit) => ({
+    id: Math.round(new Date().getTime()),
+    title: visit.title,
+    visitTime: visit.visitTime,
+    visits: [visit],
+  }),
+  addVisitToSession: ({ session, visit }) => {
+    session.visits.unshift(visit);
+    session.visitTime = visit.visitTime;
+  },
+};
+
+/** ----------------------------------------- */
+
 const HISTORY_LOCAL_STORAGE_KEY = "history_backup";
 const historyInLocalStorage = {
   update: () => {
-    if (browserHistory.get())
-      chrome.storage.local.set({
-        [HISTORY_LOCAL_STORAGE_KEY]: browserHistory.get(),
-      });
+    chrome.storage.local.set({
+      [HISTORY_LOCAL_STORAGE_KEY]: browserHistory.getInternalDB(),
+    });
   },
   get: async () => {
     const results = await chrome.storage.local.get([HISTORY_LOCAL_STORAGE_KEY]);
@@ -12,16 +36,52 @@ const historyInLocalStorage = {
   },
 };
 
-/** ------------  ------------- */
+/** ----------------------------------------- */
 
 let BROWSER_HISTORY_INTERNAL_STORAGE;
 const browserHistory = {
-  addVisit: () => {},
+  addVisit: async (visit) => {
+    const history = await browserHistory.get();
+
+    if (visit.referringVisitId === "0") {
+      history.unshift(Session.create(visit));
+    } else {
+      let isFound = false;
+      for (let i = 0; i < history.length; i++) {
+        for (let j = 0; j < history[i].visits.length; j++) {
+          // If there is a visit im the current session with the same referral id
+          // append the current visit to that session's visits
+          if (visit.referringVisitId === history[i].visits[j].visitId) {
+            Session.addVisitToSession({ session: history[i], visit });
+            isFound = true;
+            break;
+          }
+        }
+        if (isFound) break;
+      }
+
+      if (!isFound) history.unshift(Session.create(visit));
+    }
+
+    history.sort((a, b) => b.visitTime - a.visitTime);
+    historyInLocalStorage.update();
+  },
   set: (history) => {
     BROWSER_HISTORY_INTERNAL_STORAGE = history;
     return BROWSER_HISTORY_INTERNAL_STORAGE;
   },
-  get: () => BROWSER_HISTORY_INTERNAL_STORAGE,
+  getInternalDB: () => BROWSER_HISTORY_INTERNAL_STORAGE,
+  get: async () => {
+    if (BROWSER_HISTORY_INTERNAL_STORAGE) {
+      return BROWSER_HISTORY_INTERNAL_STORAGE;
+    }
+    const localHistory = await historyInLocalStorage.get();
+    if (localHistory) {
+      return browserHistory.set(localHistory);
+    }
+    const history = await buildHistoryDBAndSaveItToStorage();
+    return browserHistory.set(history);
+  },
 };
 
 const buildHistoryDBAndSaveItToStorage = async () => {
@@ -43,21 +103,14 @@ const buildHistoryDBAndSaveItToStorage = async () => {
       });
 
       for (const item of urlVisits) {
-        visits.push({
-          ...item,
-          title: historyItem.title,
-          url: historyItem.url,
-          favicon:
-            "https://s2.googleusercontent.com/s2/favicons?domain_url=" +
-            historyItem.url,
-        });
+        visits.push(Session.createVisit(historyItem, item));
       }
     }
 
     return visits.sort((a, b) => a.visitTime - b.visitTime);
   };
 
-  const createSessions = (visits) => {
+  const createSessionsList = (visits) => {
     const sessions = [];
     const microsecondsPerMonth = 1000 * 60 * 60 * 24 * 31;
     const isVisitedInTheCurrentMonth = (visit) =>
@@ -66,16 +119,21 @@ const buildHistoryDBAndSaveItToStorage = async () => {
     for (let currentVisit of visits) {
       if (currentVisit.referringVisitId === "0") {
         if (isVisitedInTheCurrentMonth(currentVisit)) {
-          sessions.push([currentVisit]);
+          sessions.push(Session.create(currentVisit));
         }
       } else {
         let isFound = false;
         for (let i = 0; i < sessions.length; i++) {
-          for (let j = 0; j < sessions[i].length; j++) {
+          for (let j = 0; j < sessions[i].visits.length; j++) {
             // If there is a session with the same referral id
             // append the current visit to that session
-            if (currentVisit.referringVisitId === sessions[i][j].visitId) {
-              sessions[i].push(currentVisit);
+            if (
+              currentVisit.referringVisitId === sessions[i].visits[j].visitId
+            ) {
+              Session.addVisitToSession({
+                session: sessions[i],
+                visit: currentVisit,
+              });
               isFound = true;
               break;
             }
@@ -84,30 +142,44 @@ const buildHistoryDBAndSaveItToStorage = async () => {
         }
 
         if (!isFound && isVisitedInTheCurrentMonth(currentVisit))
-          sessions.push([currentVisit]);
+          sessions.push(Session.create(currentVisit));
       }
     }
 
-    return sessions.reverse();
+    return sessions.sort((a, b) => b.visitTime - a.visitTime);
   };
 
   const historyItems = await getHistoryItems();
   const visits = await getHistoryVisits(historyItems);
-  const sessions = createSessions(visits);
+  const sessions = createSessionsList(visits);
 
   historyInLocalStorage.update();
 
   return sessions;
 };
 
-export const getBrowserHistory = async () => {
-  let historyInMemory = browserHistory.get();
-  if (historyInMemory) return historyInMemory;
+/** ------------ Listen for new visits ------------- */
 
-  const localHistory = await historyInLocalStorage.get();
-  if (localHistory) {
-    return browserHistory.set(localHistory);
+chrome.history.onVisited.addListener(async (historyItem) => {
+  const visits = await chrome.history.getVisits({
+    url: historyItem.url,
+  });
+
+  for (let i = visits.length - 1; i >= 0; i--) {
+    let currentVisit = visits[i];
+    if (currentVisit.visitTime === historyItem.lastVisitTime) {
+      const visit = Session.createVisit(historyItem, currentVisit);
+      await browserHistory.addVisit(visit);
+      break;
+    }
   }
-  const history = await buildHistoryDBAndSaveItToStorage();
-  return browserHistory.set(history);
-};
+});
+
+chrome.runtime.onMessage.addListener(async (request, sender) => {
+  if (request.type === messages.requestHistoryDataByChunk) {
+    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
+      data: { history: await browserHistory.get() },
+      type: messages.historyChunk,
+    });
+  }
+});
