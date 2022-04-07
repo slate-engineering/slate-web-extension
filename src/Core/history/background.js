@@ -158,6 +158,28 @@ const buildHistoryDBAndSaveItToStorage = async () => {
   return sessions;
 };
 
+/** ----------------------------------------- */
+
+const Tabs = {
+  create: (tab) => ({
+    url: tab.url,
+    id: tab.id,
+    title: tab.title,
+    favicon: tab.favIconUrl,
+    windowId: tab.windowId,
+  }),
+};
+
+const Windows = {
+  getAll: async () => {
+    const windows = await chrome.windows.getAll({ populate: true });
+    return windows.map((window) => ({
+      id: window.id,
+      tabs: window.tabs.map(Tabs.create),
+    }));
+  },
+};
+
 /** ------------ Listen for new visits ------------- */
 
 chrome.history.onVisited.addListener(async (historyItem) => {
@@ -177,8 +199,13 @@ chrome.history.onVisited.addListener(async (historyItem) => {
 
 chrome.runtime.onMessage.addListener(async (request, sender) => {
   if (request.type === messages.requestHistoryDataByChunk) {
+    const response = {};
+    response.history = await browserHistory.get();
+    response.activeWindowId = sender.tab.windowId;
+    response.windows = await Windows.getAll();
+
     chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      data: { history: await browserHistory.get() },
+      data: response,
       type: messages.historyChunk,
     });
   }

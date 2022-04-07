@@ -165,8 +165,27 @@ const Wrapper = ({ children, ...props }) => {
   );
 };
 
+const STYLES_SESSION_TITLE = css`
+  padding: 14px 0px;
+`;
+
+const Title = ({ children, ...props }) => {
+  return (
+    <Typography.H4
+      css={STYLES_SESSION_TITLE}
+      color="textGray"
+      as="p"
+      nbrOflines={1}
+      {...props}
+    >
+      {children}
+    </Typography.H4>
+  );
+};
+
 const HistoryList = {
   Wrapper,
+  Title,
   Object,
   Session,
 };
@@ -275,12 +294,9 @@ const STYLES_LINK_PREVIEW = (theme) => css`
   border-left: 1px solid ${theme.semantic.borderGrayLight};
 `;
 
-const STYLES_HISTORY_DATE = css`
-  padding: 14px 0px;
-`;
-
 export default function History() {
-  const [sessionFeed, sessionFeedKeys, loadMoreHistory] = useHistory();
+  const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
+    useHistory();
 
   const [preview, setPreview] = React.useState();
 
@@ -305,14 +321,56 @@ export default function History() {
         style={{ flex: 1, height: "100px" }}
       >
         <HistoryList.Wrapper>
-          {sessionFeedKeys.map((key) => {
+          {windowsFeed.thisWindow.length ? (
+            <>
+              <HistoryList.Title>
+                This Window&nbsp;&nbsp;
+                {windowsFeed.thisWindow.length}
+              </HistoryList.Title>
+              {windowsFeed.thisWindow.map((tab) => (
+                <HistoryList.Object
+                  key={tab.id}
+                  title={tab.title}
+                  favicon={tab.favicon}
+                  onHover={() =>
+                    setPreview({
+                      type: "link",
+                      url: tab.url,
+                    })
+                  }
+                />
+              ))}
+            </>
+          ) : null}
+
+          {windowsFeed.currentlyOpen.length ? (
+            <>
+              <HistoryList.Title>
+                Currently Open&nbsp;&nbsp;
+                {windowsFeed.currentlyOpen.length}
+              </HistoryList.Title>
+              {windowsFeed.currentlyOpen.map((tab) => (
+                <HistoryList.Object
+                  key={tab.id}
+                  title={tab.title}
+                  favicon={tab.favicon}
+                  onHover={() =>
+                    setPreview({
+                      type: "link",
+                      url: tab.url,
+                    })
+                  }
+                />
+              ))}
+            </>
+          ) : null}
+
+          {sessionsFeedKeys.map((key) => {
             return (
               <>
-                <Typography.H4 css={STYLES_HISTORY_DATE} color="textGray">
-                  {key}
-                </Typography.H4>
+                <HistoryList.Title>{key}</HistoryList.Title>
                 <div>
-                  {sessionFeed[key].map((session) =>
+                  {sessionsFeed[key].map((session) =>
                     session.visits.length === 1 ? (
                       <HistoryList.Object
                         title={session.title}

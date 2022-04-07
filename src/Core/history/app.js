@@ -3,14 +3,14 @@ import * as React from "react";
 import { isToday, isYesterday } from "../../Common/utilities";
 import { messages } from "./";
 
-const updateSessionFeed = ({ sessionFeed, history }) => {
+const updateSessionsFeed = ({ sessionsFeed, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
-    key in object ? sessionFeed[key].push(value) : (sessionFeed[key] = [value]);
+    key in object ? object[key].push(value) : (object[key] = [value]);
 
   history.forEach((session) => {
     if (isToday(new Date(session.visitTime))) {
       ifKeyExistAppendValueElseCreate({
-        object: sessionFeed,
+        object: sessionsFeed,
         key: "Today",
         value: session,
       });
@@ -19,7 +19,7 @@ const updateSessionFeed = ({ sessionFeed, history }) => {
 
     if (isYesterday(new Date(session.visitTime))) {
       ifKeyExistAppendValueElseCreate({
-        object: sessionFeed,
+        object: sessionsFeed,
         key: "Yesterday",
         value: session,
       });
@@ -34,40 +34,64 @@ const updateSessionFeed = ({ sessionFeed, history }) => {
     })} ${sessionVisitDate.getDate()} `;
 
     ifKeyExistAppendValueElseCreate({
-      object: sessionFeed,
+      object: sessionsFeed,
       key: formattedDate,
       value: session,
     });
   });
 
-  return sessionFeed;
+  return sessionsFeed;
 };
 
 export const useHistory = () => {
-  const [sessionFeed, setSessionFeed] = React.useState({});
-  const sessionFeedKeys = React.useMemo(
-    () => Object.keys(sessionFeed),
-    [sessionFeed]
+  const initiateWindowsFeed = () => ({
+    thisWindow: [],
+    currentlyOpen: [],
+  });
+  const [windowsFeed, setWindowsFeed] = React.useState(initiateWindowsFeed());
+  const createWindowsFeed = ({ windows, activeWindowId }) => {
+    const windowsFeed = initiateWindowsFeed();
+    windows.forEach((window) => {
+      if (window.id === activeWindowId) {
+        windowsFeed.thisWindow = window.tabs;
+        return;
+      }
+      windowsFeed.currentlyOpen.push(...window.tabs);
+    });
+    return windowsFeed;
+  };
+
+  const [sessionsFeed, setSessionsFeed] = React.useState({});
+  const sessionsFeedKeys = React.useMemo(
+    () => Object.keys(sessionsFeed),
+    [sessionsFeed]
   );
 
   const loadMoreHistory = () => {
-    window.postMessage(
-      { type: messages.requestHistoryDataByChunk, id: history.length },
-      "*"
-    );
+    window.postMessage({ type: messages.requestHistoryDataByChunk }, "*");
   };
 
   React.useEffect(() => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
       if (type !== messages.historyChunk) return;
-      setSessionFeed((prevFeed) => {
-        const newFeed = updateSessionFeed({
-          sessionFeed: { ...prevFeed },
+
+      setSessionsFeed((prevFeed) => {
+        const newFeed = updateSessionsFeed({
+          sessionsFeed: { ...prevFeed },
           history: data.history,
         });
         return newFeed;
       });
+
+      if (data.windows) {
+        setWindowsFeed(
+          createWindowsFeed({
+            windows: data.windows,
+            activeWindowId: data.activeWindowId,
+          })
+        );
+      }
     };
     window.addEventListener("message", handleMessage);
 
@@ -75,5 +99,5 @@ export const useHistory = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  return [sessionFeed, sessionFeedKeys, loadMoreHistory];
+  return { windowsFeed, sessionsFeed, sessionsFeedKeys, loadMoreHistory };
 };

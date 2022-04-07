@@ -2,6 +2,8 @@ import * as Constants from "./Common/constants";
 import * as UploadUtilities from "./Utilities/upload";
 import * as Navigation from "./Utilities/navigation";
 
+import "./Core/history/content";
+
 /* global chrome */
 if (window.location.href.startsWith(Constants.uri.hostname)) {
   if (window.location.href.includes("extension=true")) {
