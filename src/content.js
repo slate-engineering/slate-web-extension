@@ -27,6 +27,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
 
   if (request.type === Navigation.messages.openApp) {
     Navigation.openApp();
+    return;
   }
 
   if (request.type === UploadUtilities.messages.uploadStatus) {
@@ -55,6 +56,14 @@ window.addEventListener("message", async function (event) {
     UploadUtilities.forwardSaveLinkRequestsToBackground({
       url: event.data.url,
     });
+  }
+
+  if (event.data.type === Navigation.messages.openUrls) {
+    Navigation.forwardOpenUrlsRequestToBackground({
+      urls: event.data.urls,
+      query: event.data.query,
+    });
+    return;
   }
 
   if (event.data.run === "CHECK_LOGIN") {

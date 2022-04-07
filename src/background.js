@@ -218,6 +218,15 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
     });
   }
 
+  if (request.type === Navigation.messages.openUrls) {
+    await Navigation.handleOpenUrlsRequests({
+      urls: request.urls,
+      query: request.query,
+      sender,
+    });
+    return true;
+  }
+
   if (request.type === "GO_BACK") {
     chrome.tabs.update(parseInt(request.id), { highlighted: true });
     chrome.tabs.remove(parseInt(sender.tab.id));

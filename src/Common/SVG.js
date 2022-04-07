@@ -2267,3 +2267,23 @@ export const Account = (props) => {
     </svg>
   );
 };
+
+export const Expand = (props) => {
+  return (
+    <svg
+      width={16}
+      height={16}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M4 10l4 4 4-4M12 6L8 2 4 6"
+        stroke="currentColor"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};

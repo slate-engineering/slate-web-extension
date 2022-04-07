@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 export const messages = {
   navigate: "NAVIGATE",
   openApp: "OPEN_APP",
+  openUrls: "OPEN_URLS",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -103,7 +104,39 @@ export const navigateToUrl = (url) => {
   }
 };
 
+export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
+  if (query.newWindow) {
+    await chrome.windows.create({ focused: true, url: urls });
+    return;
+  }
+
+  if (query.tabId) {
+    await chrome.windows.update(query.windowId, { focused: true });
+    await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
+  if (urls.length === 1) {
+    const tabs = await chrome.tabs.query({ url: urls[0] });
+    if (tabs.length) {
+      await chrome.tabs.update(tabs[0].id, { active: true });
+      return;
+    }
+  }
+
+  urls.forEach((url) => {
+    chrome.tabs.create({ windowId: sender.tab.windowId, url });
+  });
+};
+
+export const forwardOpenUrlsRequestToBackground = ({ urls, query }) => {
+  chrome.runtime.sendMessage({ type: messages.openUrls, urls, query });
+};
+
 /** ------------ App ------------- */
+
+export const sendOpenUrlsRequest = ({ urls, query = { newWindow: false } }) =>
+  window.postMessage({ type: messages.openUrls, urls, query }, "*");
 
 export const getInitialUrl = getAddressBarUrl;
 

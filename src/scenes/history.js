@@ -6,13 +6,16 @@ import * as SVG from "../Common/SVG";
 import { css } from "@emotion/react";
 import { useHistory } from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
+import { sendOpenUrlsRequest } from "../Utilities/navigation";
 
 /* -------------------------------------------------------------------------------------------------
  * History List
  * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_OBJECT = (theme) => css`
+  ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  width: 100%;
   padding: 10px 16px;
   border-radius: 12px;
   &:hover {
@@ -20,9 +23,9 @@ const STYLES_OBJECT = (theme) => css`
   }
 `;
 
-const Object = ({ favicon, title, onHover }) => {
+const Object = ({ favicon, title, onHover, ...props }) => {
   return (
-    <div css={STYLES_OBJECT} onMouseEnter={onHover}>
+    <button css={STYLES_OBJECT} onMouseEnter={onHover} {...props}>
       <img
         alt="url favicon"
         height={16}
@@ -37,7 +40,7 @@ const Object = ({ favicon, title, onHover }) => {
       >
         {title}
       </Typography.H4>
-    </div>
+    </button>
   );
 };
 
@@ -68,7 +71,9 @@ const STYLES_SESSION_OBJECTS_WRAPPER = (theme) => css`
 `;
 
 const STYLES_SESSION_OBJECT = (theme) => css`
+  ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  width: 100%;
   border-radius: 12px;
   padding: 10px 10px 10px 16px;
 
@@ -115,10 +120,11 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
       <div css={STYLES_SESSION_OBJECTS_WRAPPER}>
         {(isExpanded ? session.visits : session.visits.slice(0, 4)).map(
           (visit, i) => (
-            <div
+            <button
               css={STYLES_SESSION_OBJECT}
               key={i}
               onMouseEnter={() => onObjectHover(visit.url)}
+              onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
             >
               <img
                 alt="url favicon"
@@ -134,7 +140,7 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
               >
                 {visit.title}
               </Typography.H4>
-            </div>
+            </button>
           )
         )}
       </div>
@@ -332,6 +338,11 @@ export default function History() {
                   key={tab.id}
                   title={tab.title}
                   favicon={tab.favicon}
+                  onClick={() =>
+                    sendOpenUrlsRequest({
+                      query: { tabId: tab.id, windowId: tab.windowId },
+                    })
+                  }
                   onHover={() =>
                     setPreview({
                       type: "link",
@@ -354,6 +365,11 @@ export default function History() {
                   key={tab.id}
                   title={tab.title}
                   favicon={tab.favicon}
+                  onClick={() =>
+                    sendOpenUrlsRequest({
+                      query: { tabId: tab.id, windowId: tab.windowId },
+                    })
+                  }
                   onHover={() =>
                     setPreview({
                       type: "link",
@@ -375,6 +391,11 @@ export default function History() {
                       <HistoryList.Object
                         title={session.title}
                         favicon={session.visits[0].favicon}
+                        onClick={() =>
+                          sendOpenUrlsRequest({
+                            urls: [session.visits[0].url],
+                          })
+                        }
                         onHover={() =>
                           setPreview({
                             type: "link",
