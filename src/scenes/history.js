@@ -3,6 +3,7 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 
+import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
 import { useHistory } from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
@@ -214,24 +215,42 @@ const STYLES_SESSION_PREVIEW_WRAPPER = css`
   padding: 120px 24px;
 `;
 
-const STYLES_SESSION_PREVIEW_HEADER = css``;
+const STYLES_SESSION_PREVIEW_LIST_ICON = (theme) => css`
+  ${Styles.CONTAINER_CENTERED};
+  height: 52px;
+  width: 52px;
+  border-radius: 16px;
+  background-color: ${theme.semantic.bgGrayLight};
+  color: ${theme.semantic.textBlack};
+`;
+
+const STYLES_SESSION_PREVIEW_HEADER = css`
+  ${Styles.HORIZONTAL_CONTAINER};
+`;
 
 // const STYLES_SESSION_PREVIEW_TAGS = css``;
 
-const STYLES_SESSION_PREVIEW_ACTIONS = css``;
+const STYLES_SESSION_PREVIEW_ACTION = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  color: ${theme.semantic.textBlack};
+`;
 
 function SessionPreview({ session }) {
-  const handleOpenAllLinks = () => {
-    session.visits.forEach((visit) => {
-      window.open(visit.url, "_blank");
+  const handleOpenAllLinks = ({ newWindow = false } = { newWindow: false }) => {
+    sendOpenUrlsRequest({
+      urls: session.visits.map((visit) => visit.url),
+      query: { newWindow },
     });
   };
 
   return (
     <div css={STYLES_SESSION_PREVIEW_WRAPPER}>
       <div css={STYLES_SESSION_PREVIEW_HEADER}>
-        <div></div>
-        <div>
+        <div css={STYLES_SESSION_PREVIEW_LIST_ICON}>
+          <SVG.List width={16} height={16} />
+        </div>
+        <div style={{ marginLeft: 16 }}>
           <Typography.H4 color="textBlack" as="p" nbrOflines={1}>
             {session.title}
           </Typography.H4>
@@ -240,14 +259,34 @@ function SessionPreview({ session }) {
           </Typography.H4>
         </div>
       </div>
-      {/* <div css={STYLES_SESSION_PREVIEW_TAGS}>
 
-      </div> */}
-      <div css={STYLES_SESSION_PREVIEW_ACTIONS}>
-        <button onClick={handleOpenAllLinks}>
-          <Typography.H4 color="textGrayDark">Open All Links</Typography.H4>
+      <Divider
+        color="borderGrayLight"
+        style={{ marginTop: 20, marginBottom: 20 }}
+      />
+
+      <div>
+        <button
+          css={STYLES_SESSION_PREVIEW_ACTION}
+          onClick={handleOpenAllLinks}
+        >
+          <SVG.ExternalLink width={16} height={16} />
+          <Typography.H4 color="textGrayDark" style={{ marginLeft: 12 }}>
+            Open All Links
+          </Typography.H4>
+        </button>
+        <button
+          css={STYLES_SESSION_PREVIEW_ACTION}
+          style={{ marginTop: 12 }}
+          onClick={() => handleOpenAllLinks({ newWindow: true })}
+        >
+          <SVG.ExternalLink width={16} height={16} />
+          <Typography.H4 color="textGrayDark" style={{ marginLeft: 12 }}>
+            Open In a New Window
+          </Typography.H4>
         </button>
       </div>
+      <Divider color="borderGrayLight" style={{ marginTop: 20 }} />
     </div>
   );
 }

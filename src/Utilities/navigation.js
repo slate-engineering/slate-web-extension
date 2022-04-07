@@ -116,17 +116,9 @@ export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
     return;
   }
 
-  if (urls.length === 1) {
-    const tabs = await chrome.tabs.query({ url: urls[0] });
-    if (tabs.length) {
-      await chrome.tabs.update(tabs[0].id, { active: true });
-      return;
-    }
+  for (let url of urls) {
+    await chrome.tabs.create({ windowId: sender.tab.windowId, url });
   }
-
-  urls.forEach((url) => {
-    chrome.tabs.create({ windowId: sender.tab.windowId, url });
-  });
 };
 
 export const forwardOpenUrlsRequestToBackground = ({ urls, query }) => {
