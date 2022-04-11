@@ -457,6 +457,9 @@ module.exports = function (webpackEnv) {
                       runtime: hasJsxRuntime ? 'automatic' : 'classic',
                     },
                   ],
+                  [
+                    require.resolve('@emotion/babel-preset-css-prop')
+                  ]
                 ],
                 
                 plugins: [
