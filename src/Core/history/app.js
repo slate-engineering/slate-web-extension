@@ -124,17 +124,28 @@ export const useHistory = () => {
   React.useEffect(() => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
-      if (type !== messages.historyChunk) return;
-
-      setSessionsFeed((prevFeed) => {
-        const newFeed = updateSessionsFeed({
-          sessionsFeed: { ...prevFeed },
-          history: data.history,
+      if (type === messages.historyChunk) {
+        setSessionsFeed((prevFeed) => {
+          const newFeed = updateSessionsFeed({
+            sessionsFeed: { ...prevFeed },
+            history: data.history,
+          });
+          return newFeed;
         });
-        return newFeed;
-      });
 
-      if (data.windows) {
+        if (data.windows) {
+          setWindowsFeed(
+            createWindowsFeed({
+              windows: data.windows,
+              activeWindowId: data.activeWindowId,
+            })
+          );
+        }
+        return;
+      }
+
+      if (type === messages.windowsUpdate) {
+        console.log("new tab");
         setWindowsFeed(
           createWindowsFeed({
             windows: data.windows,

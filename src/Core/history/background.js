@@ -1,5 +1,7 @@
 import { messages } from "./";
 
+/** ----------------------------------------- */
+
 const Session = {
   createVisit: (historyItem, visit) => ({
     ...visit,
@@ -81,6 +83,33 @@ const browserHistory = {
     }
     const history = await buildHistoryDBAndSaveItToStorage();
     return browserHistory.set(history);
+  },
+  removeSessionsOlderThanOneMonth: () => {
+    const history = BROWSER_HISTORY_INTERNAL_STORAGE;
+    if (!history) return;
+
+    const isMonthOld = (date) => {
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+
+      const now = new Date();
+      const timeDiffInMs = now.getTime() - date.getTime();
+
+      if (timeDiffInMs >= thirtyDaysInMs) {
+        return true;
+      } else {
+        return false;
+      }
+    };
+
+    for (let i = history.length - 1; i >= 0; i--) {
+      const currentSession = history[i];
+      if (isMonthOld(currentSession.visitTime)) {
+        history.pop();
+      } else {
+        break;
+      }
+    }
+    historyInLocalStorage.update();
   },
 };
 
@@ -168,6 +197,10 @@ const Tabs = {
     favicon: tab.favIconUrl,
     windowId: tab.windowId,
   }),
+  getActive: async () => {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    return tabs[0];
+  },
 };
 
 const Windows = {
@@ -180,10 +213,39 @@ const Windows = {
   },
 };
 
-/** ------------ Listen for new visits ------------- */
+/** ------------ listeners ------------- */
+
+chrome.runtime.onStartup.addListener(() => {
+  const ADaysInMs = 24 * 60 * 60 * 1000;
+  setInterval(browserHistory.removeSessionsOlderThanOneMonth, ADaysInMs);
+});
+
+chrome.tabs.onRemoved.addListener(async () => {
+  const activeTab = await Tabs.getActive();
+  if (activeTab) {
+    chrome.tabs.sendMessage(parseInt(activeTab.id), {
+      data: {
+        windows: await Windows.getAll(),
+        activeWindowId: activeTab.windowId,
+      },
+      type: messages.windowsUpdate,
+    });
+  }
+});
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete") {
+    const activeTab = await Tabs.getActive();
+    if (activeTab) {
+      chrome.tabs.sendMessage(parseInt(activeTab.id), {
+        data: {
+          windows: await Windows.getAll(),
+          activeWindowId: activeTab.windowId,
+        },
+        type: messages.windowsUpdate,
+      });
+    }
+
     const historyItem = { url: tab.url, title: tab.title };
     const visits = await chrome.history.getVisits({
       url: historyItem.url,

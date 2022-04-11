@@ -9,6 +9,15 @@ chrome.runtime.onMessage.addListener(function (request) {
   }
 });
 
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === messages.windowsUpdate) {
+    window.postMessage(
+      { type: messages.windowsUpdate, data: request.data },
+      "*"
+    );
+  }
+});
+
 window.addEventListener("message", async function (event) {
   if (event.data.type === messages.requestHistoryDataByChunk) {
     chrome.runtime.sendMessage({
