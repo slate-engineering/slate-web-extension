@@ -24,15 +24,18 @@ const STYLES_OBJECT = (theme) => css`
   }
 `;
 
+const STYLES_GLOBE = (theme) => css`
+  color: ${theme.semantic.textGray};
+`;
+
 const Object = ({ favicon, title, onHover, ...props }) => {
   return (
     <button css={STYLES_OBJECT} onMouseEnter={onHover} {...props}>
-      <img
-        alt="url favicon"
+      <SVG.Globe
+        css={STYLES_GLOBE}
         height={16}
         width={16}
         style={{ margin: 2 }}
-        src={favicon}
       />
       <Typography.H4
         style={{ width: 384, marginLeft: 16 }}
@@ -127,12 +130,11 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
               onMouseEnter={() => onObjectHover(visit.url)}
               onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
             >
-              <img
-                alt="url favicon"
+              <SVG.Globe
+                css={STYLES_GLOBE}
                 height={16}
                 width={16}
                 style={{ margin: 2 }}
-                src={visit.favicon}
               />
               <Typography.H4
                 style={{ width: 384, marginLeft: 16 }}
@@ -160,7 +162,7 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
 const STYLES_LINKS_CONTAINER = css`
   height: 100%;
   flex: 1;
-  padding: 0px 24px;
+  padding: 0px 24px 32px;
   overflow-y: auto;
 `;
 
@@ -202,13 +204,7 @@ const HistoryList = {
  * -----------------------------------------------------------------------------------------------*/
 
 function ObjectPreview({ url }) {
-  return (
-    <object
-      data={url}
-      style={{ width: "100%", height: "100%" }}
-      title="preview"
-    />
-  );
+  return null;
 }
 
 const STYLES_SESSION_PREVIEW_WRAPPER = css`
@@ -297,14 +293,14 @@ function SessionPreview({ session }) {
 
 const STYLES_APP_MODAL = (theme) => css`
   ${Styles.VERTICAL_CONTAINER};
-  height: 90vh;
-  width: 80%;
+  height: 600px;
+  width: 720px;
   position: fixed;
   z-index: 23423423432;
   top: 50%;
   left: 50%;
-  margin-left: -40%;
-  margin-top: -45vh;
+  margin-left: -360px;
+  margin-top: -300px;
   box-shadow: ${theme.shadow.darkLarge};
   border-radius: 12px;
   background-color: white;
@@ -334,7 +330,7 @@ const STYLES_VIEWS_MENU = (theme) => css`
 `;
 
 const STYLES_LINK_PREVIEW = (theme) => css`
-  width: 480px;
+  width: 300px;
   height: 100%;
   border-left: 1px solid ${theme.semantic.borderGrayLight};
 `;

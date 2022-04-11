@@ -2,11 +2,12 @@ import * as React from "react";
 import * as Navigation from "Utilities/navigation";
 import * as Constants from "./Common/constants";
 
-import Modal from "./Components/Modal";
 import UploadToast from "./Components/UploadToast";
+import HistoryScene from "./scenes/history";
+import ShadowDom from "./Components/ShadowDom";
 import ModalProvider from "./Contexts/ModalProvider";
-import ReactShadowRoot from "react-shadow-root";
 
+import { useEventListener } from "./Common/hooks";
 import { useSearchParams } from "react-router-dom";
 
 const useOg = () => {
@@ -65,20 +66,45 @@ function App() {
 
   Navigation.useHandleExternalNavigation();
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isModalOpen = !!searchParams.get(Constants.routes.modal.key);
+
+  React.useEffect(() => {
+    var hidden, visibilityChange;
+    if (typeof document.hidden !== "undefined") {
+      // Opera 12.10 and Firefox 18 and later support
+      hidden = "hidden";
+      visibilityChange = "visibilitychange";
+    } else if (typeof document.msHidden !== "undefined") {
+      hidden = "msHidden";
+      visibilityChange = "msvisibilitychange";
+    } else if (typeof document.webkitHidden !== "undefined") {
+      hidden = "webkitHidden";
+      visibilityChange = "webkitvisibilitychange";
+    }
+
+    const handleVisibilityChange = () => {
+      if (document[hidden])
+        setSearchParams({ [Constants.routes.modal.key]: "" });
+    };
+    window.addEventListener(visibilityChange, handleVisibilityChange, false);
+    return () =>
+      window.removeEventListener(visibilityChange, handleVisibilityChange);
+  }, []);
 
   return (
     <div style={{ all: "initial" }}>
-      <ReactShadowRoot>
+      <ShadowDom>
         <UploadToast image={og.image} />
-
         {isModalOpen && (
           <ModalProvider>
-            <Modal image={og.image} favicon={og.favicon} link={checkLink} />
+            <HistoryScene />
           </ModalProvider>
+          // <>
+          //     <Modal image={og.image} favicon={og.favicon} link={checkLink} />
+          // </>
         )}
-      </ReactShadowRoot>
+      </ShadowDom>
     </div>
   );
 }
