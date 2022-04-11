@@ -182,18 +182,16 @@ const Windows = {
 
 /** ------------ Listen for new visits ------------- */
 
-chrome.history.onVisited.addListener(async (historyItem) => {
-  const visits = await chrome.history.getVisits({
-    url: historyItem.url,
-  });
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status == "complete") {
+    const historyItem = { url: tab.url, title: tab.title };
+    const visits = await chrome.history.getVisits({
+      url: historyItem.url,
+    });
+    const latestVisit = visits[visits.length - 1];
 
-  for (let i = visits.length - 1; i >= 0; i--) {
-    let currentVisit = visits[i];
-    if (currentVisit.visitTime === historyItem.lastVisitTime) {
-      const visit = Session.createVisit(historyItem, currentVisit);
-      await browserHistory.addVisit(visit);
-      break;
-    }
+    const sessionVisit = Session.createVisit(historyItem, latestVisit);
+    await browserHistory.addVisit(sessionVisit);
   }
 });
 
