@@ -618,6 +618,7 @@ const handleSaveLinkRequests = async ({
 const navigation_messages = {
   navigate: "NAVIGATE",
   openApp: "OPEN_APP",
+  openUrls: "OPEN_URLS",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -716,7 +717,31 @@ const navigateToUrl = (url) => {
   }
 };
 
+const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
+  if (query.newWindow) {
+    await chrome.windows.create({ focused: true, url: urls });
+    return;
+  }
+
+  if (query.tabId) {
+    await chrome.windows.update(query.windowId, { focused: true });
+    await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
+  for (let url of urls) {
+    await chrome.tabs.create({ windowId: sender.tab.windowId, url });
+  }
+};
+
+const forwardOpenUrlsRequestToBackground = ({ urls, query }) => {
+  chrome.runtime.sendMessage({ type: navigation_messages.openUrls, urls, query });
+};
+
 /** ------------ App ------------- */
+
+const sendOpenUrlsRequest = ({ urls, query = { newWindow: false } }) =>
+  window.postMessage({ type: navigation_messages.openUrls, urls, query }, "*");
 
 const getInitialUrl = (/* unused pure expression or super */ null && (getAddressBarUrl));
 
@@ -750,7 +775,50 @@ const useHandleExternalNavigation = () => {
   }, []);
 };
 
+;// CONCATENATED MODULE: ./src/Core/history/index.js
+const history_messages = {
+  requestHistoryDataByChunk: "REQUEST_HISTORY_DATA_BY_CHUNK",
+  historyChunk: "HISTORY_CHUNK",
+  windowsUpdate: "WINDOWS_UPDATE",
+};
+
+;// CONCATENATED MODULE: ./src/Core/history/content.js
+
+
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === history_messages.historyChunk) {
+    window.postMessage(
+      {
+        type: history_messages.historyChunk,
+        data: request.data,
+        canFetchMore: request.canFetchMore,
+      },
+      "*"
+    );
+  }
+});
+
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === history_messages.windowsUpdate) {
+    window.postMessage(
+      { type: history_messages.windowsUpdate, data: request.data },
+      "*"
+    );
+  }
+});
+
+window.addEventListener("message", async function (event) {
+  if (event.data.type === history_messages.requestHistoryDataByChunk) {
+    chrome.runtime.sendMessage({
+      type: history_messages.requestHistoryDataByChunk,
+      startIndex: event.data.startIndex,
+    });
+  }
+});
+
 ;// CONCATENATED MODULE: ./src/content.js
+
+
 
 
 
@@ -778,6 +846,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, callback) {
 
   if (request.type === navigation_messages.openApp) {
     openApp();
+    return;
   }
 
   if (request.type === messages.uploadStatus) {
@@ -806,6 +875,14 @@ window.addEventListener("message", async function (event) {
     forwardSaveLinkRequestsToBackground({
       url: event.data.url,
     });
+  }
+
+  if (event.data.type === navigation_messages.openUrls) {
+    forwardOpenUrlsRequestToBackground({
+      urls: event.data.urls,
+      query: event.data.query,
+    });
+    return;
   }
 
   if (event.data.run === "CHECK_LOGIN") {
