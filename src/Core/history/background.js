@@ -262,9 +262,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener(async (request, sender) => {
   if (request.type === messages.requestHistoryDataByChunk) {
     const response = {};
-    response.history = await browserHistory.get();
-    response.activeWindowId = sender.tab.windowId;
-    response.windows = await Windows.getAll();
+    const history = await browserHistory.get();
+    response.history = history.slice(
+      request.startIndex,
+      request.startIndex + 1000
+    );
+    response.canFetchMore =
+      request.startIndex + response.history.length !== history.length;
+
+    if (request.startIndex === 0) {
+      response.activeWindowId = sender.tab.windowId;
+      response.windows = await Windows.getAll();
+    }
 
     chrome.tabs.sendMessage(parseInt(sender.tab.id), {
       data: response,

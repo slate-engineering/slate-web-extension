@@ -94,6 +94,8 @@ const updateSessionsFeed = ({ sessionsFeed, history }) => {
 };
 
 export const useHistory = () => {
+  const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
+
   const initiateWindowsFeed = () => ({
     thisWindow: [],
     currentlyOpen: [],
@@ -118,13 +120,26 @@ export const useHistory = () => {
   );
 
   const loadMoreHistory = () => {
-    window.postMessage({ type: messages.requestHistoryDataByChunk }, "*");
+    if (!paramsRef.current.canFetchMore) return;
+
+    window.postMessage(
+      {
+        type: messages.requestHistoryDataByChunk,
+        startIndex: paramsRef.current.startIndex,
+      },
+      "*"
+    );
   };
 
   React.useEffect(() => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === messages.historyChunk) {
+        if (data.canFetchMore) {
+          paramsRef.current.startIndex += data.history.length;
+        } else {
+          paramsRef.current.canFetchMore = false;
+        }
         setSessionsFeed((prevFeed) => {
           const newFeed = updateSessionsFeed({
             sessionsFeed: { ...prevFeed },
@@ -145,7 +160,6 @@ export const useHistory = () => {
       }
 
       if (type === messages.windowsUpdate) {
-        console.log("new tab");
         setWindowsFeed(
           createWindowsFeed({
             windows: data.windows,

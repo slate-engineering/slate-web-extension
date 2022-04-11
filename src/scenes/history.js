@@ -8,6 +8,7 @@ import { css } from "@emotion/react";
 import { useHistory } from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
 import { sendOpenUrlsRequest } from "../Utilities/navigation";
+import { useEventListener } from "Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * History List
@@ -166,13 +167,13 @@ const STYLES_LINKS_CONTAINER = css`
   overflow-y: auto;
 `;
 
-const Wrapper = ({ children, ...props }) => {
+const Wrapper = React.forwardRef(({ children, ...props }, ref) => {
   return (
-    <ul css={STYLES_LINKS_CONTAINER} {...props}>
+    <ul ref={ref} css={STYLES_LINKS_CONTAINER} {...props}>
       {children}
     </ul>
   );
-};
+});
 
 const STYLES_SESSION_TITLE = css`
   padding: 14px 0px;
@@ -351,6 +352,30 @@ export default function History() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  const shouldFetchMore = React.useRef(true);
+  const historyWrapperRef = React.useRef();
+  const handleScroll = (e) => {
+    if (!shouldFetchMore.current) return;
+    const OFFSET = 3000;
+    const element = historyWrapperRef.current;
+
+    if (
+      element.scrollTop + element.offsetHeight + OFFSET >=
+      element.scrollHeight
+    ) {
+      loadMoreHistory();
+      shouldFetchMore.current = false;
+    }
+  };
+  useEventListener({
+    type: "scroll",
+    ref: historyWrapperRef,
+    handler: handleScroll,
+  });
+  React.useEffect(() => {
+    shouldFetchMore.current = true;
+  }, [sessionsFeed]);
+
   return (
     <div css={STYLES_APP_MODAL}>
       <section css={STYLES_SEARCH_WRAPPER} />
@@ -361,7 +386,7 @@ export default function History() {
         css={Styles.HORIZONTAL_CONTAINER}
         style={{ flex: 1, height: "100px" }}
       >
-        <HistoryList.Wrapper>
+        <HistoryList.Wrapper ref={historyWrapperRef}>
           {windowsFeed.thisWindow.length ? (
             <>
               <HistoryList.Title>
