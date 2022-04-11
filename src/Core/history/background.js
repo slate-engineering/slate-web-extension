@@ -188,6 +188,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const visits = await chrome.history.getVisits({
       url: historyItem.url,
     });
+    if (visits.length === 0) return;
+
     const latestVisit = visits[visits.length - 1];
 
     const sessionVisit = Session.createVisit(historyItem, latestVisit);
