@@ -204,7 +204,7 @@ const HistoryList = {
  * Object and Session previews
  * -----------------------------------------------------------------------------------------------*/
 
-function ObjectPreview({ url }) {
+function ObjectPreview() {
   return null;
 }
 
@@ -354,7 +354,7 @@ export default function History() {
 
   const shouldFetchMore = React.useRef(true);
   const historyWrapperRef = React.useRef();
-  const handleScroll = (e) => {
+  const handleScroll = () => {
     if (!shouldFetchMore.current) return;
     const OFFSET = 3000;
     const element = historyWrapperRef.current;
@@ -387,105 +387,12 @@ export default function History() {
         style={{ flex: 1, height: "100px" }}
       >
         <HistoryList.Wrapper ref={historyWrapperRef}>
-          {windowsFeed.thisWindow.length ? (
-            <>
-              <HistoryList.Title>
-                This Window&nbsp;&nbsp;
-                {windowsFeed.thisWindow.length}
-              </HistoryList.Title>
-              {windowsFeed.thisWindow.map((tab) => (
-                <HistoryList.Object
-                  key={tab.id}
-                  title={tab.title}
-                  favicon={tab.favicon}
-                  onClick={() =>
-                    sendOpenUrlsRequest({
-                      query: { tabId: tab.id, windowId: tab.windowId },
-                    })
-                  }
-                  onHover={() =>
-                    setPreview({
-                      type: "link",
-                      url: tab.url,
-                    })
-                  }
-                />
-              ))}
-            </>
-          ) : null}
-
-          {windowsFeed.currentlyOpen.length ? (
-            <>
-              <HistoryList.Title>
-                Currently Open&nbsp;&nbsp;
-                {windowsFeed.currentlyOpen.length}
-              </HistoryList.Title>
-              {windowsFeed.currentlyOpen.map((tab) => (
-                <HistoryList.Object
-                  key={tab.id}
-                  title={tab.title}
-                  favicon={tab.favicon}
-                  onClick={() =>
-                    sendOpenUrlsRequest({
-                      query: { tabId: tab.id, windowId: tab.windowId },
-                    })
-                  }
-                  onHover={() =>
-                    setPreview({
-                      type: "link",
-                      url: tab.url,
-                    })
-                  }
-                />
-              ))}
-            </>
-          ) : null}
-
-          {sessionsFeedKeys.map((key) => {
-            return (
-              <>
-                <HistoryList.Title>{key}</HistoryList.Title>
-                <div>
-                  {sessionsFeed[key].map((session) =>
-                    session.visits.length === 1 ? (
-                      <HistoryList.Object
-                        title={session.title}
-                        favicon={session.visits[0].favicon}
-                        onClick={() =>
-                          sendOpenUrlsRequest({
-                            urls: [session.visits[0].url],
-                          })
-                        }
-                        onHover={() =>
-                          setPreview({
-                            type: "link",
-                            url: session.visits[0].url,
-                          })
-                        }
-                      />
-                    ) : (
-                      <HistoryList.Session
-                        key={session.id}
-                        onObjectHover={(url) =>
-                          setPreview({
-                            type: "link",
-                            url,
-                          })
-                        }
-                        onSessionHover={() =>
-                          setPreview({
-                            type: "session",
-                            session: session,
-                          })
-                        }
-                        session={session}
-                      />
-                    )
-                  )}
-                </div>
-              </>
-            );
-          })}
+          <HistoryFeed
+            windowsFeed={windowsFeed}
+            sessionsFeed={sessionsFeed}
+            sessionsFeedKeys={sessionsFeedKeys}
+            setPreview={setPreview}
+          />
         </HistoryList.Wrapper>
         <div css={STYLES_LINK_PREVIEW}>
           {preview &&
@@ -499,3 +406,130 @@ export default function History() {
     </div>
   );
 }
+
+const HistoryFeed = React.memo(
+  ({ windowsFeed, sessionsFeedKeys, sessionsFeed, setPreview }) => {
+    const isSessionOpenInTheBrowser = (session) => {
+      if (session.visits.length !== 1) return false;
+
+      for (let tab of windowsFeed.thisWindow) {
+        if (tab.url === session.visits[0].url) {
+          return true;
+        }
+      }
+      for (let tab of windowsFeed.currentlyOpen) {
+        if (tab.url === session.visits[0].url) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    return (
+      <>
+        {windowsFeed.thisWindow.length ? (
+          <>
+            <HistoryList.Title>
+              This Window&nbsp;&nbsp;
+              {windowsFeed.thisWindow.length}
+            </HistoryList.Title>
+            {windowsFeed.thisWindow.map((tab) => (
+              <HistoryList.Object
+                key={tab.id}
+                title={tab.title}
+                favicon={tab.favicon}
+                onClick={() =>
+                  sendOpenUrlsRequest({
+                    query: { tabId: tab.id, windowId: tab.windowId },
+                  })
+                }
+                onHover={() =>
+                  setPreview({
+                    type: "link",
+                    url: tab.url,
+                  })
+                }
+              />
+            ))}
+          </>
+        ) : null}
+
+        {windowsFeed.currentlyOpen.length ? (
+          <>
+            <HistoryList.Title>
+              Currently Open&nbsp;&nbsp;
+              {windowsFeed.currentlyOpen.length}
+            </HistoryList.Title>
+            {windowsFeed.currentlyOpen.map((tab) => (
+              <HistoryList.Object
+                key={tab.id}
+                title={tab.title}
+                favicon={tab.favicon}
+                onClick={() =>
+                  sendOpenUrlsRequest({
+                    query: { tabId: tab.id, windowId: tab.windowId },
+                  })
+                }
+                onHover={() =>
+                  setPreview({
+                    type: "link",
+                    url: tab.url,
+                  })
+                }
+              />
+            ))}
+          </>
+        ) : null}
+
+        {sessionsFeedKeys.map((key) => {
+          return (
+            <>
+              <HistoryList.Title>{key}</HistoryList.Title>
+              <div>
+                {sessionsFeed[key].map((session) => {
+                  if (key === "Today" && isSessionOpenInTheBrowser(session))
+                    return null;
+
+                  return session.visits.length === 1 ? (
+                    <HistoryList.Object
+                      title={session.title}
+                      favicon={session.visits[0].favicon}
+                      onClick={() =>
+                        sendOpenUrlsRequest({
+                          urls: [session.visits[0].url],
+                        })
+                      }
+                      onHover={() =>
+                        setPreview({
+                          type: "link",
+                          url: session.visits[0].url,
+                        })
+                      }
+                    />
+                  ) : (
+                    <HistoryList.Session
+                      key={session.id}
+                      onObjectHover={(url) =>
+                        setPreview({
+                          type: "link",
+                          url,
+                        })
+                      }
+                      onSessionHover={() =>
+                        setPreview({
+                          type: "session",
+                          session: session,
+                        })
+                      }
+                      session={session}
+                    />
+                  );
+                })}
+              </div>
+            </>
+          );
+        })}
+      </>
+    );
+  }
+);
