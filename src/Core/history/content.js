@@ -10,13 +10,19 @@ chrome.runtime.onMessage.addListener(function (request) {
       },
       "*"
     );
+    return;
   }
-});
 
-chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === messages.windowsUpdate) {
     window.postMessage(
       { type: messages.windowsUpdate, data: request.data },
+      "*"
+    );
+  }
+
+  if (request.type === messages.searchResults) {
+    window.postMessage(
+      { type: messages.searchResults, data: request.data },
       "*"
     );
   }
@@ -27,6 +33,13 @@ window.addEventListener("message", async function (event) {
     chrome.runtime.sendMessage({
       type: messages.requestHistoryDataByChunk,
       startIndex: event.data.startIndex,
+    });
+  }
+
+  if (event.data.type === messages.requestSearchQuery) {
+    chrome.runtime.sendMessage({
+      type: messages.requestSearchQuery,
+      query: event.data.query,
     });
   }
 });

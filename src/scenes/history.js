@@ -5,10 +5,11 @@ import * as SVG from "../Common/SVG";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
-import { useHistory } from "../Core/history/app";
+import { useHistory, useHistorySearch } from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
 import { sendOpenUrlsRequest } from "../Utilities/navigation";
-import { useEventListener } from "Common/hooks";
+import { useEventListener } from "../Common/hooks";
+import { getFavicon } from "../Common/favicons";
 
 /* -------------------------------------------------------------------------------------------------
  * History List
@@ -25,19 +26,10 @@ const STYLES_OBJECT = (theme) => css`
   }
 `;
 
-const STYLES_GLOBE = (theme) => css`
-  color: ${theme.semantic.textGray};
-`;
-
-const Object = ({ favicon, title, onHover, ...props }) => {
+const Object = ({ Favicon, title, onHover, ...props }) => {
   return (
     <button css={STYLES_OBJECT} onMouseEnter={onHover} {...props}>
-      <SVG.Globe
-        css={STYLES_GLOBE}
-        height={16}
-        width={16}
-        style={{ margin: 2 }}
-      />
+      <Favicon style={{ margin: 2, flexShrink: 0 }} />
       <Typography.H4
         style={{ width: 384, marginLeft: 16 }}
         color="textBlack"
@@ -55,6 +47,7 @@ const STYLES_SESSION_OBJECTS_COUNT = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
   height: 20px;
   width: 20px;
+  flex-shrink: 0;
   text-align: center;
   border-radius: 4px;
 `;
@@ -124,28 +117,26 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
       </div>
       <div css={STYLES_SESSION_OBJECTS_WRAPPER}>
         {(isExpanded ? session.visits : session.visits.slice(0, 4)).map(
-          (visit, i) => (
-            <button
-              css={STYLES_SESSION_OBJECT}
-              key={i}
-              onMouseEnter={() => onObjectHover(visit.url)}
-              onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
-            >
-              <SVG.Globe
-                css={STYLES_GLOBE}
-                height={16}
-                width={16}
-                style={{ margin: 2 }}
-              />
-              <Typography.H4
-                style={{ width: 384, marginLeft: 16 }}
-                color="textBlack"
-                nbrOflines={1}
+          (visit, i) => {
+            const Favicon = getFavicon(visit.rootDomain);
+            return (
+              <button
+                css={STYLES_SESSION_OBJECT}
+                key={i}
+                onMouseEnter={() => onObjectHover(visit.url)}
+                onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
               >
-                {visit.title}
-              </Typography.H4>
-            </button>
-          )
+                <Favicon style={{ margin: 2, flexShrink: 0 }} />
+                <Typography.H4
+                  style={{ width: 384, marginLeft: 16 }}
+                  color="textBlack"
+                  nbrOflines={1}
+                >
+                  {visit.title}
+                </Typography.H4>
+              </button>
+            );
+          }
         )}
       </div>
       {!isExpanded && (
@@ -305,6 +296,7 @@ const STYLES_APP_MODAL = (theme) => css`
   box-shadow: ${theme.shadow.darkLarge};
   border-radius: 12px;
   background-color: white;
+  overflow: hidden;
 
   @keyframes app-modal-fade-in {
     from {
@@ -321,8 +313,42 @@ const STYLES_APP_MODAL = (theme) => css`
 `;
 
 const STYLES_SEARCH_WRAPPER = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  position: relative;
   height: 68px;
   border-bottom: 1px solid ${theme.semantic.borderGrayLight};
+`;
+
+const STYLES_SEARCH_INPUT = (theme) => css`
+  ${Styles.H3};
+
+  font-family: ${theme.font.text};
+  -webkit-appearance: none;
+  width: 100%;
+  height: 100%;
+  padding: 0px 24px;
+  padding-left: ${DISMISS_BUTTON_WIDTH + 24}px
+  background: transparent;
+  border-radius: 12px;
+  outline: 0;
+  border: none;
+  box-sizing: border-box;
+
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.semantic.textGrayLight};
+    opacity: 1; /* Firefox */
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: ${theme.semantic.textGrayLight};
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: ${theme.semantic.textGrayLight};
+  }
 `;
 
 const STYLES_VIEWS_MENU = (theme) => css`
@@ -335,6 +361,58 @@ const STYLES_LINK_PREVIEW = (theme) => css`
   height: 100%;
   border-left: 1px solid ${theme.semantic.borderGrayLight};
 `;
+
+const useHistoryInfiniteScroll = ({
+  historyWrapperRef,
+  onLoadMore,
+  sessionsFeed,
+}) => {
+  const shouldFetchMore = React.useRef(true);
+  const handleScroll = () => {
+    if (!shouldFetchMore.current) return;
+    const OFFSET = 3000;
+    const element = historyWrapperRef.current;
+
+    if (
+      element.scrollTop + element.offsetHeight + OFFSET >=
+      element.scrollHeight
+    ) {
+      onLoadMore();
+      shouldFetchMore.current = false;
+    }
+  };
+  useEventListener({
+    type: "scroll",
+    ref: historyWrapperRef,
+    handler: handleScroll,
+  });
+  React.useEffect(() => {
+    shouldFetchMore.current = true;
+  }, [sessionsFeed]);
+};
+
+const DISMISS_BUTTON_WIDTH = 16;
+const STYLES_DISMISS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 24px;
+  display: block;
+  color: ${theme.semantic.textGray};
+`;
+
+function SearchDismiss({ css, ...props }) {
+  return (
+    <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
+      <SVG.Dismiss
+        style={{ display: "block", marginLeft: 12 }}
+        height={DISMISS_BUTTON_WIDTH}
+        width={DISMISS_BUTTON_WIDTH}
+      />
+    </button>
+  );
+}
 
 export default function History() {
   const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
@@ -352,33 +430,30 @@ export default function History() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  const shouldFetchMore = React.useRef(true);
   const historyWrapperRef = React.useRef();
-  const handleScroll = () => {
-    if (!shouldFetchMore.current) return;
-    const OFFSET = 3000;
-    const element = historyWrapperRef.current;
-
-    if (
-      element.scrollTop + element.offsetHeight + OFFSET >=
-      element.scrollHeight
-    ) {
-      loadMoreHistory();
-      shouldFetchMore.current = false;
-    }
-  };
-  useEventListener({
-    type: "scroll",
-    ref: historyWrapperRef,
-    handler: handleScroll,
+  useHistoryInfiniteScroll({
+    onLoadMore: loadMoreHistory,
+    historyWrapperRef,
+    sessionsFeed,
   });
-  React.useEffect(() => {
-    shouldFetchMore.current = true;
-  }, [sessionsFeed]);
+
+  const inputRef = React.useRef();
+  const [search, { handleInputChange, clearSearch }] = useHistorySearch({
+    inputRef,
+  });
 
   return (
     <div css={STYLES_APP_MODAL}>
-      <section css={STYLES_SEARCH_WRAPPER} />
+      <section css={STYLES_SEARCH_WRAPPER}>
+        <input
+          css={STYLES_SEARCH_INPUT}
+          ref={inputRef}
+          placeholder="Search by keywords, filters, tags"
+          name="search"
+          onChange={handleInputChange}
+        />
+        {search.query.length > 0 && <SearchDismiss onClick={clearSearch} />}
+      </section>
 
       <section css={STYLES_VIEWS_MENU} />
 
@@ -387,12 +462,16 @@ export default function History() {
         style={{ flex: 1, height: "100px" }}
       >
         <HistoryList.Wrapper ref={historyWrapperRef}>
-          <HistoryFeed
-            windowsFeed={windowsFeed}
-            sessionsFeed={sessionsFeed}
-            sessionsFeedKeys={sessionsFeedKeys}
-            setPreview={setPreview}
-          />
+          {search.query.length > 0 && search.result ? (
+            <SearchFeed sessions={search.result} setPreview={setPreview} />
+          ) : (
+            <HistoryFeed
+              windowsFeed={windowsFeed}
+              sessionsFeed={sessionsFeed}
+              sessionsFeedKeys={sessionsFeedKeys}
+              setPreview={setPreview}
+            />
+          )}
         </HistoryList.Wrapper>
         <div css={STYLES_LINK_PREVIEW}>
           {preview &&
@@ -406,6 +485,56 @@ export default function History() {
     </div>
   );
 }
+
+const SearchFeed = React.memo(({ sessions, setPreview }) => {
+  return (
+    <>
+      <HistoryList.Title>
+        Result&nbsp;&nbsp;
+        {sessions.length}
+      </HistoryList.Title>
+      <div key={sessions.length}>
+        {sessions.map(({ item: session }) => {
+          return session.visits.length === 1 ? (
+            <HistoryList.Object
+              key={session.id}
+              title={session.title}
+              Favicon={getFavicon(session.visits[0].rootDomain)}
+              onClick={() =>
+                sendOpenUrlsRequest({
+                  urls: [session.visits[0].url],
+                })
+              }
+              onHover={() =>
+                setPreview({
+                  type: "link",
+                  url: session.visits[0].url,
+                })
+              }
+            />
+          ) : (
+            <HistoryList.Session
+              key={session.id}
+              onObjectHover={(url) =>
+                setPreview({
+                  type: "link",
+                  url,
+                })
+              }
+              onSessionHover={() =>
+                setPreview({
+                  type: "session",
+                  session: session,
+                })
+              }
+              session={session}
+            />
+          );
+        })}
+      </div>
+    </>
+  );
+});
 
 const HistoryFeed = React.memo(
   ({ windowsFeed, sessionsFeedKeys, sessionsFeed, setPreview }) => {
@@ -437,7 +566,7 @@ const HistoryFeed = React.memo(
               <HistoryList.Object
                 key={tab.id}
                 title={tab.title}
-                favicon={tab.favicon}
+                Favicon={getFavicon(tab.rootDomain)}
                 onClick={() =>
                   sendOpenUrlsRequest({
                     query: { tabId: tab.id, windowId: tab.windowId },
@@ -464,7 +593,7 @@ const HistoryFeed = React.memo(
               <HistoryList.Object
                 key={tab.id}
                 title={tab.title}
-                favicon={tab.favicon}
+                Favicon={getFavicon(tab.rootDomain)}
                 onClick={() =>
                   sendOpenUrlsRequest({
                     query: { tabId: tab.id, windowId: tab.windowId },
@@ -493,7 +622,7 @@ const HistoryFeed = React.memo(
                   return session.visits.length === 1 ? (
                     <HistoryList.Object
                       title={session.title}
-                      favicon={session.visits[0].favicon}
+                      Favicon={getFavicon(session.visits[0].rootDomain)}
                       onClick={() =>
                         sendOpenUrlsRequest({
                           urls: [session.visits[0].url],

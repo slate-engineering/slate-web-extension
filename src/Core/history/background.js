@@ -1,12 +1,26 @@
+import Fuse from "fuse.js";
+
 import { messages } from "./";
 
 /** ----------------------------------------- */
+
+const getRootDomain = (url) => {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    hostname = "";
+  }
+  const hostnameParts = hostname.split(".");
+  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
 
 const Session = {
   createVisit: (historyItem, visit) => ({
     ...visit,
     title: historyItem.title,
     url: historyItem.url,
+    rootDomain: getRootDomain(historyItem.url),
     favicon:
       "https://s2.googleusercontent.com/s2/favicons?domain_url=" +
       historyItem.url,
@@ -111,6 +125,19 @@ const browserHistory = {
     }
     historyInLocalStorage.update();
   },
+  search: (query) => {
+    const options = {
+      findAllMatches: true,
+      includeMatches: true,
+      minMatchCharLength: query.length,
+      // Search in `author` and in `tags` array
+      keys: ["visits.url", "visits.title"],
+    };
+
+    const fuse = new Fuse(BROWSER_HISTORY_INTERNAL_STORAGE, options);
+
+    return fuse.search(query);
+  },
 };
 
 const buildHistoryDBAndSaveItToStorage = async () => {
@@ -192,6 +219,7 @@ const buildHistoryDBAndSaveItToStorage = async () => {
 const Tabs = {
   create: (tab) => ({
     url: tab.url,
+    rootDomain: getRootDomain(tab.url),
     id: tab.id,
     title: tab.title,
     favicon: tab.favIconUrl,
@@ -278,6 +306,16 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
     chrome.tabs.sendMessage(parseInt(sender.tab.id), {
       data: response,
       type: messages.historyChunk,
+    });
+  }
+
+  if (request.type === messages.requestSearchQuery) {
+    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
+      type: messages.searchResults,
+      data: {
+        result: browserHistory.search(request.query),
+        query: request.query,
+      },
     });
   }
 });

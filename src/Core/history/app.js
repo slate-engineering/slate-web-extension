@@ -176,3 +176,59 @@ export const useHistory = () => {
 
   return { windowsFeed, sessionsFeed, sessionsFeedKeys, loadMoreHistory };
 };
+
+const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
+  const timeRef = React.useRef();
+  const handleChange = (e) => {
+    clearTimeout(timeRef.current);
+    const { value } = e.target;
+    timeRef.current = setTimeout(
+      () => (setQuery(value), handleSearch(value)),
+      300
+    );
+  };
+  return handleChange;
+};
+
+export const useHistorySearch = ({ inputRef }) => {
+  const SEARCH_DEFAULT_STATE = {
+    query: "",
+    result: null,
+  };
+  const [search, setSearch] = React.useState(SEARCH_DEFAULT_STATE);
+
+  const clearSearch = () => setSearch(SEARCH_DEFAULT_STATE);
+  const searchByQuery = (query) => {
+    if (query.length === 0) return;
+    window.postMessage(
+      { type: messages.requestSearchQuery, query: query },
+      "*"
+    );
+  };
+
+  const handleInputChange = useDebouncedOnChange({
+    setQuery: (query) => setSearch((prev) => ({ ...prev, query })),
+    handleSearch: searchByQuery,
+  });
+
+  React.useEffect(() => {
+    let handleMessage = (event) => {
+      let { data, type } = event.data;
+
+      if (type === messages.searchResults) {
+        if (data.query === inputRef.current.value)
+          setSearch((prev) => ({ ...prev, result: [...data.result] }));
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  React.useEffect(() => {
+    if (search.query.length === 0)
+      setSearch(SEARCH_DEFAULT_STATE), (inputRef.current.value = "");
+  }, [search.query]);
+
+  return [search, { handleInputChange, searchByQuery, clearSearch }];
+};
