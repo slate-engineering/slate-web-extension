@@ -779,7 +779,14 @@ const useHandleExternalNavigation = () => {
 const history_messages = {
   requestHistoryDataByChunk: "REQUEST_HISTORY_DATA_BY_CHUNK",
   historyChunk: "HISTORY_CHUNK",
+
   windowsUpdate: "WINDOWS_UPDATE",
+
+  requestSearchQuery: "REQUEST_SEARCH_QUERY",
+  searchResults: "SEARCH_RESULTS",
+
+  requestRelatedLinks: "REQUEST_RELATED_LINKS",
+  relatedLinks: "RELATED_LINKS",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/history/content.js
@@ -795,13 +802,26 @@ chrome.runtime.onMessage.addListener(function (request) {
       },
       "*"
     );
+    return;
   }
-});
 
-chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === history_messages.windowsUpdate) {
     window.postMessage(
       { type: history_messages.windowsUpdate, data: request.data },
+      "*"
+    );
+  }
+
+  if (request.type === history_messages.searchResults) {
+    window.postMessage(
+      { type: history_messages.searchResults, data: request.data },
+      "*"
+    );
+  }
+
+  if (request.type === history_messages.relatedLinks) {
+    window.postMessage(
+      { type: history_messages.relatedLinks, data: request.data },
       "*"
     );
   }
@@ -812,6 +832,20 @@ window.addEventListener("message", async function (event) {
     chrome.runtime.sendMessage({
       type: history_messages.requestHistoryDataByChunk,
       startIndex: event.data.startIndex,
+    });
+  }
+
+  if (event.data.type === history_messages.requestSearchQuery) {
+    chrome.runtime.sendMessage({
+      type: history_messages.requestSearchQuery,
+      query: event.data.query,
+    });
+  }
+
+  if (event.data.type === history_messages.requestRelatedLinks) {
+    chrome.runtime.sendMessage({
+      type: history_messages.requestRelatedLinks,
+      url: event.data.url,
     });
   }
 });
