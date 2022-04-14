@@ -232,3 +232,35 @@ export const useHistorySearch = ({ inputRef }) => {
 
   return [search, { handleInputChange, searchByQuery, clearSearch }];
 };
+
+export const useGetRelatedLinks = (url) => {
+  const [relatedLinks, setRelatedLinks] = React.useState(null);
+
+  const getRelatedLinks = () => {
+    if (!url) return;
+    setRelatedLinks(null);
+    window.postMessage({ type: messages.requestRelatedLinks, url }, "*");
+  };
+  React.useEffect(() => {
+    getRelatedLinks();
+  }, [url]);
+
+  const urlRef = React.useRef();
+  urlRef.current = url;
+  React.useEffect(() => {
+    let handleMessage = (event) => {
+      let { data, type } = event.data;
+
+      if (type === messages.relatedLinks) {
+        if (data.url === urlRef.current) {
+          setRelatedLinks(data.result);
+        }
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return relatedLinks;
+};

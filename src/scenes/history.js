@@ -5,7 +5,11 @@ import * as SVG from "../Common/SVG";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
-import { useHistory, useHistorySearch } from "../Core/history/app";
+import {
+  useGetRelatedLinks,
+  useHistory,
+  useHistorySearch,
+} from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
 import { sendOpenUrlsRequest } from "../Utilities/navigation";
 import { useEventListener } from "../Common/hooks";
@@ -98,10 +102,7 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
 
   return (
     <div>
-      <div
-        css={STYLES_SESSION_TITLE_WRAPPER}
-        onMouseEnter={() => onSessionHover()}
-      >
+      <div css={STYLES_SESSION_TITLE_WRAPPER} onMouseEnter={onSessionHover}>
         <div css={STYLES_SESSION_OBJECTS_COUNT}>
           <Typography.H6 as="p" style={{ textAlign: "center" }}>
             {session.visits.length}
@@ -123,7 +124,7 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
               <button
                 css={STYLES_SESSION_OBJECT}
                 key={i}
-                onMouseEnter={() => onObjectHover(visit.url)}
+                onMouseEnter={() => onObjectHover && onObjectHover(visit.url)}
                 onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
               >
                 <Favicon style={{ margin: 2, flexShrink: 0 }} />
@@ -195,8 +196,43 @@ const HistoryList = {
  * Object and Session previews
  * -----------------------------------------------------------------------------------------------*/
 
-function ObjectPreview() {
-  return null;
+const STYLES_OBJECT_PREVIEW_WRAPPER = css`
+  padding-bottom: 32px;
+  @keyframes object-preview-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  animation: object-preview-fade-in 250ms ease;
+`;
+
+function ObjectPreview({ url }) {
+  const relatedLinks = useGetRelatedLinks(url);
+  return (
+    relatedLinks && (
+      <div css={STYLES_OBJECT_PREVIEW_WRAPPER}>
+        {relatedLinks.map(({ item: session }) => {
+          return session.visits.length === 1 ? (
+            <HistoryList.Object
+              title={session.title}
+              Favicon={getFavicon(session.visits[0].rootDomain)}
+              onClick={() =>
+                sendOpenUrlsRequest({
+                  urls: [session.visits[0].url],
+                })
+              }
+            />
+          ) : (
+            <HistoryList.Session key={session.id} session={session} />
+          );
+        })}
+      </div>
+    )
+  );
 }
 
 const STYLES_SESSION_PREVIEW_WRAPPER = css`
@@ -205,6 +241,7 @@ const STYLES_SESSION_PREVIEW_WRAPPER = css`
 
 const STYLES_SESSION_PREVIEW_LIST_ICON = (theme) => css`
   ${Styles.CONTAINER_CENTERED};
+  flex-shrink: 0;
   height: 52px;
   width: 52px;
   border-radius: 16px;
@@ -360,6 +397,7 @@ const STYLES_LINK_PREVIEW = (theme) => css`
   width: 300px;
   height: 100%;
   border-left: 1px solid ${theme.semantic.borderGrayLight};
+  overflow-y: auto;
 `;
 
 const useHistoryInfiniteScroll = ({
@@ -451,6 +489,7 @@ export default function History() {
           placeholder="Search by keywords, filters, tags"
           name="search"
           onChange={handleInputChange}
+          autoFocus
         />
         {search.query.length > 0 && <SearchDismiss onClick={clearSearch} />}
       </section>

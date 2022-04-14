@@ -130,13 +130,23 @@ const browserHistory = {
       findAllMatches: true,
       includeMatches: true,
       minMatchCharLength: query.length,
-      // Search in `author` and in `tags` array
       keys: ["visits.url", "visits.title"],
     };
 
     const fuse = new Fuse(BROWSER_HISTORY_INTERNAL_STORAGE, options);
 
     return fuse.search(query);
+  },
+  getRelatedLinks: (url) => {
+    const options = {
+      findAllMatches: true,
+      threshold: 0.0,
+      keys: ["visits.url"],
+    };
+
+    const fuse = new Fuse(BROWSER_HISTORY_INTERNAL_STORAGE, options);
+
+    return fuse.search(url);
   },
 };
 
@@ -310,11 +320,23 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
   }
 
   if (request.type === messages.requestSearchQuery) {
+    console.log(`SEARCH FOR ${request.query}`);
     chrome.tabs.sendMessage(parseInt(sender.tab.id), {
       type: messages.searchResults,
       data: {
         result: browserHistory.search(request.query),
         query: request.query,
+      },
+    });
+  }
+
+  if (request.type === messages.requestRelatedLinks) {
+    console.log(`RELATED LINKS FOR ${request.url}`);
+    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
+      type: messages.relatedLinks,
+      data: {
+        result: browserHistory.getRelatedLinks(request.url),
+        url: request.url,
       },
     });
   }

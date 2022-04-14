@@ -26,6 +26,13 @@ chrome.runtime.onMessage.addListener(function (request) {
       "*"
     );
   }
+
+  if (request.type === messages.relatedLinks) {
+    window.postMessage(
+      { type: messages.relatedLinks, data: request.data },
+      "*"
+    );
+  }
 });
 
 window.addEventListener("message", async function (event) {
@@ -40,6 +47,13 @@ window.addEventListener("message", async function (event) {
     chrome.runtime.sendMessage({
       type: messages.requestSearchQuery,
       query: event.data.query,
+    });
+  }
+
+  if (event.data.type === messages.requestRelatedLinks) {
+    chrome.runtime.sendMessage({
+      type: messages.requestRelatedLinks,
+      url: event.data.url,
     });
   }
 });

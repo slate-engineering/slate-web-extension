@@ -6,4 +6,7 @@ export const messages = {
 
   requestSearchQuery: "REQUEST_SEARCH_QUERY",
   searchResults: "SEARCH_RESULTS",
+
+  requestRelatedLinks: "REQUEST_RELATED_LINKS",
+  relatedLinks: "RELATED_LINKS",
 };
