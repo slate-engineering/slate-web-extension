@@ -23,7 +23,7 @@ const STYLES_OBJECT = (theme) => css`
   ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   width: 100%;
-  padding: 10px 16px;
+  padding: 10px 12px;
   border-radius: 12px;
   &:hover {
     background-color: ${theme.semantic.bgGrayLight};
@@ -34,13 +34,13 @@ const Object = ({ Favicon, title, onHover, ...props }) => {
   return (
     <button css={STYLES_OBJECT} onMouseEnter={onHover} {...props}>
       <Favicon style={{ margin: 2, flexShrink: 0 }} />
-      <Typography.H4
-        style={{ width: 384, marginLeft: 16 }}
+      <Typography.H5
+        style={{ width: 384, marginLeft: 12 }}
         color="textBlack"
         nbrOflines={1}
       >
         {title}
-      </Typography.H4>
+      </Typography.H5>
     </button>
   );
 };
@@ -49,9 +49,10 @@ const Object = ({ Favicon, title, onHover, ...props }) => {
 
 const STYLES_SESSION_OBJECTS_COUNT = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
-  height: 20px;
-  width: 20px;
   flex-shrink: 0;
+  height: 20px;
+  min-width: 20px;
+  padding: 0px 3px;
   text-align: center;
   border-radius: 4px;
 `;
@@ -108,13 +109,13 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
             {session.visits.length}
           </Typography.H6>
         </div>
-        <Typography.H4
+        <Typography.H5
           color="textBlack"
           nbrOflines={1}
-          style={{ marginLeft: 16 }}
+          style={{ marginLeft: 12 }}
         >
           {session.title}
-        </Typography.H4>
+        </Typography.H5>
       </div>
       <div css={STYLES_SESSION_OBJECTS_WRAPPER}>
         {(isExpanded ? session.visits : session.visits.slice(0, 4)).map(
@@ -128,13 +129,13 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
                 onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
               >
                 <Favicon style={{ margin: 2, flexShrink: 0 }} />
-                <Typography.H4
-                  style={{ width: 384, marginLeft: 16 }}
+                <Typography.H5
+                  style={{ width: 384, marginLeft: 12 }}
                   color="textBlack"
                   nbrOflines={1}
                 >
                   {visit.title}
-                </Typography.H4>
+                </Typography.H5>
               </button>
             );
           }
@@ -155,8 +156,11 @@ const Session = ({ session, onObjectHover, onSessionHover }) => {
 const STYLES_LINKS_CONTAINER = css`
   height: 100%;
   flex: 1;
-  padding: 0px 24px 32px;
+  padding: 0px 8px 32px;
   overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const Wrapper = React.forwardRef(({ children, ...props }, ref) => {
@@ -168,20 +172,25 @@ const Wrapper = React.forwardRef(({ children, ...props }, ref) => {
 });
 
 const STYLES_SESSION_TITLE = css`
-  padding: 14px 0px;
+  padding: 9px 8px 11px;
 `;
 
-const Title = ({ children, ...props }) => {
+const Title = ({ children, count, css, ...props }) => {
   return (
-    <Typography.H4
-      css={STYLES_SESSION_TITLE}
+    <Typography.H5
+      css={[STYLES_SESSION_TITLE, css]}
       color="textGray"
       as="p"
       nbrOflines={1}
       {...props}
     >
       {children}
-    </Typography.H4>
+      {count && (
+        <Typography.H5 as="span" color="textGrayLight">
+          &nbsp;&nbsp;{count}
+        </Typography.H5>
+      )}
+    </Typography.H5>
   );
 };
 
@@ -196,8 +205,8 @@ const HistoryList = {
  * Object and Session previews
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_OBJECT_PREVIEW_WRAPPER = css`
-  padding-bottom: 32px;
+const STYLES_OBJECT_PREVIEW_LIST_WRAPPER = css`
+  padding: 0px 8px 24px;
   @keyframes object-preview-fade-in {
     from {
       opacity: 0;
@@ -210,26 +219,35 @@ const STYLES_OBJECT_PREVIEW_WRAPPER = css`
   animation: object-preview-fade-in 250ms ease;
 `;
 
-function ObjectPreview({ url }) {
+function ObjectPreview({ url, ...props }) {
   const relatedLinks = useGetRelatedLinks(url);
   return (
     relatedLinks && (
-      <div css={STYLES_OBJECT_PREVIEW_WRAPPER}>
-        {relatedLinks.map(({ item: session }) => {
-          return session.visits.length === 1 ? (
-            <HistoryList.Object
-              title={session.title}
-              Favicon={getFavicon(session.visits[0].rootDomain)}
-              onClick={() =>
-                sendOpenUrlsRequest({
-                  urls: [session.visits[0].url],
-                })
-              }
-            />
-          ) : (
-            <HistoryList.Session key={session.id} session={session} />
-          );
-        })}
+      <div {...props}>
+        <HistoryList.Title
+          css={STYLES_RELATED_LINKS_POPUP_HEADER}
+          count={relatedLinks.length}
+        >
+          Related
+        </HistoryList.Title>
+
+        <div css={STYLES_OBJECT_PREVIEW_LIST_WRAPPER}>
+          {relatedLinks.map(({ item: session }) => {
+            return session.visits.length === 1 ? (
+              <HistoryList.Object
+                title={session.title}
+                Favicon={getFavicon(session.visits[0].rootDomain)}
+                onClick={() =>
+                  sendOpenUrlsRequest({
+                    urls: [session.visits[0].url],
+                  })
+                }
+              />
+            ) : (
+              <HistoryList.Session key={session.id} session={session} />
+            );
+          })}
+        </div>
       </div>
     )
   );
@@ -320,39 +338,74 @@ function SessionPreview({ session }) {
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_APP_MODAL = (theme) => css`
-  ${Styles.VERTICAL_CONTAINER};
-  height: 600px;
-  width: 720px;
+const MODALS_WIDTH = 696;
+const STYLES_APP_MODAL_POSITION = css`
+  height: 432px;
+  width: ${MODALS_WIDTH}px;
   position: fixed;
   z-index: 23423423432;
   top: 50%;
   left: 50%;
-  margin-left: -360px;
-  margin-top: -300px;
-  box-shadow: ${theme.shadow.darkLarge};
-  border-radius: 12px;
-  background-color: white;
-  overflow: hidden;
+  margin-left: calc(-696px / 2);
+  margin-top: calc(-548px / 2);
 
   @keyframes app-modal-fade-in {
     from {
       transform: translateY(100px) scale(0.9);
-      opacity: 0;
     }
     to {
       transform: translateY(0px) scale(1);
-      opacity: 1;
     }
   }
 
-  animation: app-modal-fade-in 250ms ease;
+  /* animation: app-modal-fade-in 150ms ease; */
+`;
+
+const STYLES_APP_MODAL = (theme) => css`
+  ${Styles.VERTICAL_CONTAINER};
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  box-shadow: ${theme.shadow.darkLarge};
+  //NOTE(amine): when changing border-radius, change it also in STYLES_MARBLE_WRAPPER and STYLES_APP_MODAL_BACKGROUND
+  border-radius: 24px;
+  overflow: hidden;
+`;
+
+const STYLES_MARBLE_WRAPPER = css`
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 24px;
+  z-index: -1;
+`;
+
+const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  background-color: ${theme.semantic.white};
+  border-radius: 24px;
+  @supports (
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+  ) {
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
+    background-color: ${theme.semantic.bgBlurWhite};
+  }
 `;
 
 const STYLES_SEARCH_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: relative;
-  height: 68px;
+  height: 56px;
   border-bottom: 1px solid ${theme.semantic.borderGrayLight};
 `;
 
@@ -364,9 +417,8 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   width: 100%;
   height: 100%;
   padding: 0px 24px;
-  padding-left: ${DISMISS_BUTTON_WIDTH + 24}px
-  background: transparent;
-  border-radius: 12px;
+  padding-left: ${DISMISS_BUTTON_WIDTH + 24}px;
+  background-color: transparent;
   outline: 0;
   border: none;
   box-sizing: border-box;
@@ -389,15 +441,104 @@ const STYLES_SEARCH_INPUT = (theme) => css`
 `;
 
 const STYLES_VIEWS_MENU = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
+  position: absolute;
+  z-index: -1;
+  width: 100%;
   height: 56px;
-  border-bottom: 1px solid ${theme.semantic.borderGrayLight};
+  left: 0%;
+  top: -17px;
+  transform: translateY(-100%);
+  padding: 12px 24px;
+  border-radius: 24px;
+  background-color: white;
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+  box-shadow: ${theme.shadow.darkLarge};
+
+  @supports (
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+  ) {
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
+    background-color: ${theme.semantic.bgBlurWhiteOP};
+  }
 `;
 
-const STYLES_LINK_PREVIEW = (theme) => css`
-  width: 300px;
-  height: 100%;
-  border-left: 1px solid ${theme.semantic.borderGrayLight};
+const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+  color: ${theme.semantic.textBlack};
+`;
+
+const STYLES_VIEWS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  border-radius: 12px;
+  padding: 5px 12px 7px;
+  color: ${theme.semantic.textGray};
+
+  &:hover {
+    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
+  }
+`;
+
+const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  margin-left: auto;
+  border-radius: 8px;
+  padding: 8px;
+  height: 32px;
+  width: 32px;
+
+  &:hover {
+    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
+  }
+`;
+
+const STYLES_RELATED_LINKS_POPUP_HEADER = css`
+  ${Styles.HORIZONTAL_CONTAINER};
+  padding: 13px 16px 11px;
+`;
+
+const STYLES_RELATED_LINKS_POPUP = (theme) => css`
+  position: absolute;
+  height: 376px;
+  width: calc(((100vw - ${MODALS_WIDTH}px) / 2) - 24px * 2);
+  max-width: 348px;
+  bottom: 0%;
+  right: -16px;
+  transform: translateX(100%);
   overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  border-radius: 24px;
+  background-color: ${theme.semantic.bgWhite};
+  box-shadow: ${theme.shadow.darkLarge};
+`;
+
+const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 16px;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  padding: 8px;
+  background-color: ${theme.semantic.bgGrayLight};
+  color: ${theme.system.blue};
+`;
+
+const STYLES_FILTER_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  border-radius: 12px;
+  padding: 5px 12px 7px;
+  width: 78px;
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  color: ${theme.system.blue};
 `;
 
 const useHistoryInfiniteScroll = ({
@@ -481,46 +622,109 @@ export default function History() {
   });
 
   return (
-    <div css={STYLES_APP_MODAL}>
-      <section css={STYLES_SEARCH_WRAPPER}>
-        <input
-          css={STYLES_SEARCH_INPUT}
-          ref={inputRef}
-          placeholder="Search by keywords, filters, tags"
-          name="search"
-          onChange={handleInputChange}
-          autoFocus
-        />
-        {search.query.length > 0 && <SearchDismiss onClick={clearSearch} />}
+    <div css={STYLES_APP_MODAL_POSITION}>
+      <section css={STYLES_VIEWS_MENU}>
+        <Typography.H5
+          css={[STYLES_VIEWS_BUTTON, STYLES_VIEWS_BUTTON_ACTIVE]}
+          as="button"
+        >
+          Recent
+        </Typography.H5>
+
+        <Typography.H5
+          css={STYLES_VIEWS_BUTTON}
+          as="button"
+          style={{ marginLeft: 12 }}
+        >
+          References
+        </Typography.H5>
+
+        <Typography.H5
+          css={STYLES_VIEWS_BUTTON}
+          as="button"
+          style={{ marginLeft: 12 }}
+        >
+          Music
+        </Typography.H5>
+
+        <Typography.H5
+          css={STYLES_VIEWS_BUTTON}
+          as="button"
+          style={{ marginLeft: 12 }}
+        >
+          Watchlist
+        </Typography.H5>
+
+        <Typography.H5
+          css={STYLES_VIEWS_BUTTON}
+          as="button"
+          style={{ marginLeft: 12 }}
+        >
+          Products
+        </Typography.H5>
+
+        <button css={STYLES_VIEWS_ADD_BUTTON}>
+          <SVG.Plus width={16} height={16} />
+        </button>
       </section>
 
-      <section css={STYLES_VIEWS_MENU} />
-
-      <section
-        css={Styles.HORIZONTAL_CONTAINER}
-        style={{ flex: 1, height: "100px" }}
-      >
-        <HistoryList.Wrapper ref={historyWrapperRef}>
-          {search.query.length > 0 && search.result ? (
-            <SearchFeed sessions={search.result} setPreview={setPreview} />
+      {preview && (
+        <div css={STYLES_RELATED_LINKS_POPUP}>
+          {preview.type === "session" ? (
+            <SessionPreview session={preview.session} />
           ) : (
-            <HistoryFeed
-              windowsFeed={windowsFeed}
-              sessionsFeed={sessionsFeed}
-              sessionsFeedKeys={sessionsFeedKeys}
-              setPreview={setPreview}
-            />
+            <ObjectPreview url={preview.url} />
           )}
-        </HistoryList.Wrapper>
-        <div css={STYLES_LINK_PREVIEW}>
-          {preview &&
-            (preview.type === "session" ? (
-              <SessionPreview session={preview.session} />
-            ) : (
-              <ObjectPreview url={preview.url} />
-            ))}
         </div>
-      </section>
+      )}
+
+      <div css={STYLES_APP_MODAL}>
+        <section css={STYLES_SEARCH_WRAPPER}>
+          <input
+            css={STYLES_SEARCH_INPUT}
+            ref={inputRef}
+            placeholder="Search by keywords, filters, tags"
+            name="search"
+            onChange={handleInputChange}
+            autoComplete="off"
+            autoFocus
+          />
+          {search.query.length > 0 ? (
+            <SearchDismiss onClick={clearSearch} />
+          ) : (
+            <button css={STYLES_FILTER_TOGGLE_BUTTON}>
+              <SVG.Filter width={16} height={16} />
+            </button>
+          )}
+        </section>
+        <Divider color="borderGrayLight" />
+        <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
+          <SVG.Plus width={16} height={16} />
+          <Typography.H5 as="span">Filter</Typography.H5>
+        </button>
+        <Divider color="borderGrayLight" />
+        <section
+          css={Styles.HORIZONTAL_CONTAINER}
+          style={{ height: "100%", flex: 1, overflow: "hidden" }}
+        >
+          <HistoryList.Wrapper ref={historyWrapperRef}>
+            {search.query.length > 0 && search.result ? (
+              <SearchFeed sessions={search.result} setPreview={setPreview} />
+            ) : (
+              <HistoryFeed
+                windowsFeed={windowsFeed}
+                sessionsFeed={sessionsFeed}
+                sessionsFeedKeys={sessionsFeedKeys}
+                setPreview={setPreview}
+              />
+            )}
+          </HistoryList.Wrapper>
+        </section>
+      </div>
+      <div css={STYLES_MARBLE_WRAPPER}>
+        <SVG.Marble />
+      </div>
+      <div css={STYLES_APP_MODAL_BACKGROUND} />
     </div>
   );
 }
@@ -528,10 +732,7 @@ export default function History() {
 const SearchFeed = React.memo(({ sessions, setPreview }) => {
   return (
     <>
-      <HistoryList.Title>
-        Result&nbsp;&nbsp;
-        {sessions.length}
-      </HistoryList.Title>
+      <HistoryList.Title count={sessions.length}>Result</HistoryList.Title>
       <div key={sessions.length}>
         {sessions.map(({ item: session }) => {
           return session.visits.length === 1 ? (
@@ -595,61 +796,65 @@ const HistoryFeed = React.memo(
 
     return (
       <>
-        {windowsFeed.thisWindow.length ? (
+        {windowsFeed.thisWindow.length || windowsFeed.currentlyOpen.length ? (
           <>
-            <HistoryList.Title>
-              This Window&nbsp;&nbsp;
-              {windowsFeed.thisWindow.length}
-            </HistoryList.Title>
-            {windowsFeed.thisWindow.map((tab) => (
-              <HistoryList.Object
-                key={tab.id}
-                title={tab.title}
-                Favicon={getFavicon(tab.rootDomain)}
-                onClick={() =>
-                  sendOpenUrlsRequest({
-                    query: { tabId: tab.id, windowId: tab.windowId },
-                  })
-                }
-                onHover={() =>
-                  setPreview({
-                    type: "link",
-                    url: tab.url,
-                  })
-                }
-              />
-            ))}
+            {windowsFeed.thisWindow.length ? (
+              <>
+                <HistoryList.Title count={windowsFeed.thisWindow.length}>
+                  This Window
+                </HistoryList.Title>
+                {windowsFeed.thisWindow.map((tab) => (
+                  <HistoryList.Object
+                    key={tab.id}
+                    title={tab.title}
+                    Favicon={getFavicon(tab.rootDomain)}
+                    onClick={() =>
+                      sendOpenUrlsRequest({
+                        query: { tabId: tab.id, windowId: tab.windowId },
+                      })
+                    }
+                    onHover={() =>
+                      setPreview({
+                        type: "link",
+                        url: tab.url,
+                      })
+                    }
+                  />
+                ))}
+              </>
+            ) : null}
+
+            {windowsFeed.currentlyOpen.length ? (
+              <>
+                <HistoryList.Title count={windowsFeed.currentlyOpen.length}>
+                  Currently Open
+                </HistoryList.Title>
+                {windowsFeed.currentlyOpen.map((tab) => (
+                  <HistoryList.Object
+                    key={tab.id}
+                    title={tab.title}
+                    Favicon={getFavicon(tab.rootDomain)}
+                    onClick={() =>
+                      sendOpenUrlsRequest({
+                        query: { tabId: tab.id, windowId: tab.windowId },
+                      })
+                    }
+                    onHover={() =>
+                      setPreview({
+                        type: "link",
+                        url: tab.url,
+                      })
+                    }
+                  />
+                ))}
+              </>
+            ) : null}
+            <Divider color="borderGrayLight" style={{ margin: "4px 12px" }} />
           </>
         ) : null}
-
-        {windowsFeed.currentlyOpen.length ? (
-          <>
-            <HistoryList.Title>
-              Currently Open&nbsp;&nbsp;
-              {windowsFeed.currentlyOpen.length}
-            </HistoryList.Title>
-            {windowsFeed.currentlyOpen.map((tab) => (
-              <HistoryList.Object
-                key={tab.id}
-                title={tab.title}
-                Favicon={getFavicon(tab.rootDomain)}
-                onClick={() =>
-                  sendOpenUrlsRequest({
-                    query: { tabId: tab.id, windowId: tab.windowId },
-                  })
-                }
-                onHover={() =>
-                  setPreview({
-                    type: "link",
-                    url: tab.url,
-                  })
-                }
-              />
-            ))}
-          </>
-        ) : null}
-
         {sessionsFeedKeys.map((key) => {
+          if (!sessionsFeed[key].length) return null;
+
           return (
             <>
               <HistoryList.Title>{key}</HistoryList.Title>

@@ -3,7 +3,7 @@ import * as React from "react";
 import * as Constants from "../Common/constants";
 
 export const Divider = ({
-  width = "100%",
+  width,
   height = "0.5px",
   color = Constants.system.grayLight4,
   css,
