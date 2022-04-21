@@ -295,6 +295,7 @@ const semantic = {
   bgBlue: system.blueLight6,
   bgGreen: system.greenLight6,
   bgYellow: system.yellowLight6,
+  bgWhite: system.white,
   bgRed: system.redLight6,
 };
 
