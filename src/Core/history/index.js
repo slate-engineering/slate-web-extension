@@ -1,12 +1,20 @@
 export const messages = {
-  requestHistoryDataByChunk: "REQUEST_HISTORY_DATA_BY_CHUNK",
-  historyChunk: "HISTORY_CHUNK",
+  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
+  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
+
+  relatedLinksRequest: "RELATED_LINKS_REQUEST",
+  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
+
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
+  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
 
   windowsUpdate: "WINDOWS_UPDATE",
+};
 
-  requestSearchQuery: "REQUEST_SEARCH_QUERY",
-  searchResults: "SEARCH_RESULTS",
-
-  requestRelatedLinks: "REQUEST_RELATED_LINKS",
-  relatedLinks: "RELATED_LINKS",
+export const viewsType = {
+  recent: "recent",
+  relatedLinks: "relatedLinks",
 };
