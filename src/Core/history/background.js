@@ -47,8 +47,8 @@ const historyInLocalStorage = {
     });
   },
   get: async () => {
-    const results = await chrome.storage.local.get([HISTORY_LOCAL_STORAGE_KEY]);
-    return results[HISTORY_LOCAL_STORAGE_KEY];
+    const result = await chrome.storage.local.get([HISTORY_LOCAL_STORAGE_KEY]);
+    return result[HISTORY_LOCAL_STORAGE_KEY];
   },
 };
 
@@ -297,47 +297,56 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-chrome.runtime.onMessage.addListener(async (request, sender) => {
-  if (request.type === messages.requestHistoryDataByChunk) {
-    const response = {};
-    const history = await browserHistory.get();
-    response.history = history.slice(
-      request.startIndex,
-      request.startIndex + 1000
-    );
-    response.canFetchMore =
-      request.startIndex + response.history.length !== history.length;
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === messages.historyChunkRequest) {
+    const getHistoryResponse = async () => {
+      const response = {};
+      const history = await browserHistory.get();
+      response.history = history.slice(
+        request.startIndex,
+        request.startIndex + 1000
+      );
+      response.canFetchMore =
+        request.startIndex + response.history.length !== history.length;
 
-    if (request.startIndex === 0) {
-      response.activeWindowId = sender.tab.windowId;
-      response.windows = await Windows.getAll();
-    }
+      if (request.startIndex === 0) {
+        response.activeWindowId = sender.tab.windowId;
+        response.windows = await Windows.getAll();
+      }
+      return response;
+    };
 
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      data: response,
-      type: messages.historyChunk,
-    });
+    getHistoryResponse().then(sendResponse);
+
+    return true;
   }
 
-  if (request.type === messages.requestSearchQuery) {
+  if (request.type === messages.viewByTypeRequest) {
+    console.log(`VIEW FOR ${request.query}`);
+    sendResponse({
+      result: browserHistory.getRelatedLinks(request.query),
+      query: request.query,
+    });
+
+    return;
+  }
+
+  if (request.type === messages.searchQueryRequest) {
     console.log(`SEARCH FOR ${request.query}`);
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      type: messages.searchResults,
-      data: {
-        result: browserHistory.search(request.query),
-        query: request.query,
-      },
+    sendResponse({
+      result: browserHistory.search(request.query),
+      query: request.query,
     });
+
+    return;
   }
 
-  if (request.type === messages.requestRelatedLinks) {
+  if (request.type === messages.relatedLinksRequest) {
     console.log(`RELATED LINKS FOR ${request.url}`);
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      type: messages.relatedLinks,
-      data: {
-        result: browserHistory.getRelatedLinks(request.url),
-        url: request.url,
-      },
+    sendResponse({
+      result: browserHistory.getRelatedLinks(request.url),
+      url: request.url,
     });
+    return;
   }
 });

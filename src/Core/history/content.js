@@ -1,59 +1,56 @@
 import { messages } from "./";
 
 chrome.runtime.onMessage.addListener(function (request) {
-  if (request.type === messages.historyChunk) {
-    window.postMessage(
-      {
-        type: messages.historyChunk,
-        data: request.data,
-        canFetchMore: request.canFetchMore,
-      },
-      "*"
-    );
-    return;
-  }
-
   if (request.type === messages.windowsUpdate) {
     window.postMessage(
       { type: messages.windowsUpdate, data: request.data },
       "*"
     );
   }
-
-  if (request.type === messages.searchResults) {
-    window.postMessage(
-      { type: messages.searchResults, data: request.data },
-      "*"
-    );
-  }
-
-  if (request.type === messages.relatedLinks) {
-    window.postMessage(
-      { type: messages.relatedLinks, data: request.data },
-      "*"
-    );
-  }
 });
 
 window.addEventListener("message", async function (event) {
-  if (event.data.type === messages.requestHistoryDataByChunk) {
-    chrome.runtime.sendMessage({
-      type: messages.requestHistoryDataByChunk,
-      startIndex: event.data.startIndex,
-    });
+  if (event.data.type === messages.historyChunkRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.historyChunkRequest, startIndex: event.data.startIndex },
+      (response) =>
+        window.postMessage(
+          { type: messages.historyChunkResponse, data: response },
+          "*"
+        )
+    );
   }
 
-  if (event.data.type === messages.requestSearchQuery) {
-    chrome.runtime.sendMessage({
-      type: messages.requestSearchQuery,
-      query: event.data.query,
-    });
+  if (event.data.type === messages.relatedLinksRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.relatedLinksRequest, url: event.data.url },
+      (response) =>
+        window.postMessage(
+          { type: messages.relatedLinksResponse, data: response },
+          "*"
+        )
+    );
   }
 
-  if (event.data.type === messages.requestRelatedLinks) {
-    chrome.runtime.sendMessage({
-      type: messages.requestRelatedLinks,
-      url: event.data.url,
-    });
+  if (event.data.type === messages.searchQueryRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.searchQueryRequest, query: event.data.query },
+      (response) =>
+        window.postMessage(
+          { type: messages.searchQueryResponse, data: response },
+          "*"
+        )
+    );
+  }
+
+  if (event.data.type === messages.viewByTypeRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.viewByTypeRequest, query: event.data.query },
+      (response) =>
+        window.postMessage(
+          { type: messages.viewByTypeResponse, data: response },
+          "*"
+        )
+    );
   }
 });
