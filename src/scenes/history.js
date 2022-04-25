@@ -403,11 +403,10 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
   }
 `;
 
-const STYLES_SEARCH_WRAPPER = (theme) => css`
+const STYLES_SEARCH_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: relative;
   height: 56px;
-  border-bottom: 1px solid ${theme.semantic.borderGrayLight};
 `;
 
 const STYLES_SEARCH_INPUT = (theme) => css`

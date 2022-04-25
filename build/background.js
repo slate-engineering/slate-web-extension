@@ -2557,16 +2557,24 @@ Fuse.config = Config;
 
 ;// CONCATENATED MODULE: ./src/Core/history/index.js
 const history_messages = {
-  requestHistoryDataByChunk: "REQUEST_HISTORY_DATA_BY_CHUNK",
-  historyChunk: "HISTORY_CHUNK",
+  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
+  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
+
+  relatedLinksRequest: "RELATED_LINKS_REQUEST",
+  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
+
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
+  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
 
   windowsUpdate: "WINDOWS_UPDATE",
+};
 
-  requestSearchQuery: "REQUEST_SEARCH_QUERY",
-  searchResults: "SEARCH_RESULTS",
-
-  requestRelatedLinks: "REQUEST_RELATED_LINKS",
-  relatedLinks: "RELATED_LINKS",
+const viewsType = {
+  recent: "recent",
+  relatedLinks: "relatedLinks",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/history/background.js
@@ -2619,8 +2627,8 @@ const historyInLocalStorage = {
     });
   },
   get: async () => {
-    const results = await chrome.storage.local.get([HISTORY_LOCAL_STORAGE_KEY]);
-    return results[HISTORY_LOCAL_STORAGE_KEY];
+    const result = await chrome.storage.local.get([HISTORY_LOCAL_STORAGE_KEY]);
+    return result[HISTORY_LOCAL_STORAGE_KEY];
   },
 };
 
@@ -2869,48 +2877,57 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
-chrome.runtime.onMessage.addListener(async (request, sender) => {
-  if (request.type === history_messages.requestHistoryDataByChunk) {
-    const response = {};
-    const history = await browserHistory.get();
-    response.history = history.slice(
-      request.startIndex,
-      request.startIndex + 1000
-    );
-    response.canFetchMore =
-      request.startIndex + response.history.length !== history.length;
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === history_messages.historyChunkRequest) {
+    const getHistoryResponse = async () => {
+      const response = {};
+      const history = await browserHistory.get();
+      response.history = history.slice(
+        request.startIndex,
+        request.startIndex + 1000
+      );
+      response.canFetchMore =
+        request.startIndex + response.history.length !== history.length;
 
-    if (request.startIndex === 0) {
-      response.activeWindowId = sender.tab.windowId;
-      response.windows = await Windows.getAll();
-    }
+      if (request.startIndex === 0) {
+        response.activeWindowId = sender.tab.windowId;
+        response.windows = await Windows.getAll();
+      }
+      return response;
+    };
 
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      data: response,
-      type: history_messages.historyChunk,
-    });
+    getHistoryResponse().then(sendResponse);
+
+    return true;
   }
 
-  if (request.type === history_messages.requestSearchQuery) {
+  if (request.type === history_messages.viewByTypeRequest) {
+    console.log(`VIEW FOR ${request.query}`);
+    sendResponse({
+      result: browserHistory.getRelatedLinks(request.query),
+      query: request.query,
+    });
+
+    return;
+  }
+
+  if (request.type === history_messages.searchQueryRequest) {
     console.log(`SEARCH FOR ${request.query}`);
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      type: history_messages.searchResults,
-      data: {
-        result: browserHistory.search(request.query),
-        query: request.query,
-      },
+    sendResponse({
+      result: browserHistory.search(request.query),
+      query: request.query,
     });
+
+    return;
   }
 
-  if (request.type === history_messages.requestRelatedLinks) {
+  if (request.type === history_messages.relatedLinksRequest) {
     console.log(`RELATED LINKS FOR ${request.url}`);
-    chrome.tabs.sendMessage(parseInt(sender.tab.id), {
-      type: history_messages.relatedLinks,
-      data: {
-        result: browserHistory.getRelatedLinks(request.url),
-        url: request.url,
-      },
+    sendResponse({
+      result: browserHistory.getRelatedLinks(request.url),
+      url: request.url,
     });
+    return;
   }
 });
 

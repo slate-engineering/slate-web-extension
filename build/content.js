@@ -778,76 +778,81 @@ const useHandleExternalNavigation = () => {
 
 ;// CONCATENATED MODULE: ./src/Core/history/index.js
 const history_messages = {
-  requestHistoryDataByChunk: "REQUEST_HISTORY_DATA_BY_CHUNK",
-  historyChunk: "HISTORY_CHUNK",
+  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
+  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
+
+  relatedLinksRequest: "RELATED_LINKS_REQUEST",
+  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
+
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
+  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
 
   windowsUpdate: "WINDOWS_UPDATE",
+};
 
-  requestSearchQuery: "REQUEST_SEARCH_QUERY",
-  searchResults: "SEARCH_RESULTS",
-
-  requestRelatedLinks: "REQUEST_RELATED_LINKS",
-  relatedLinks: "RELATED_LINKS",
+const viewsType = {
+  recent: "recent",
+  relatedLinks: "relatedLinks",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/history/content.js
 
 
 chrome.runtime.onMessage.addListener(function (request) {
-  if (request.type === history_messages.historyChunk) {
-    window.postMessage(
-      {
-        type: history_messages.historyChunk,
-        data: request.data,
-        canFetchMore: request.canFetchMore,
-      },
-      "*"
-    );
-    return;
-  }
-
   if (request.type === history_messages.windowsUpdate) {
     window.postMessage(
       { type: history_messages.windowsUpdate, data: request.data },
       "*"
     );
   }
-
-  if (request.type === history_messages.searchResults) {
-    window.postMessage(
-      { type: history_messages.searchResults, data: request.data },
-      "*"
-    );
-  }
-
-  if (request.type === history_messages.relatedLinks) {
-    window.postMessage(
-      { type: history_messages.relatedLinks, data: request.data },
-      "*"
-    );
-  }
 });
 
 window.addEventListener("message", async function (event) {
-  if (event.data.type === history_messages.requestHistoryDataByChunk) {
-    chrome.runtime.sendMessage({
-      type: history_messages.requestHistoryDataByChunk,
-      startIndex: event.data.startIndex,
-    });
+  if (event.data.type === history_messages.historyChunkRequest) {
+    chrome.runtime.sendMessage(
+      { type: history_messages.historyChunkRequest, startIndex: event.data.startIndex },
+      (response) =>
+        window.postMessage(
+          { type: history_messages.historyChunkResponse, data: response },
+          "*"
+        )
+    );
   }
 
-  if (event.data.type === history_messages.requestSearchQuery) {
-    chrome.runtime.sendMessage({
-      type: history_messages.requestSearchQuery,
-      query: event.data.query,
-    });
+  if (event.data.type === history_messages.relatedLinksRequest) {
+    chrome.runtime.sendMessage(
+      { type: history_messages.relatedLinksRequest, url: event.data.url },
+      (response) =>
+        window.postMessage(
+          { type: history_messages.relatedLinksResponse, data: response },
+          "*"
+        )
+    );
   }
 
-  if (event.data.type === history_messages.requestRelatedLinks) {
-    chrome.runtime.sendMessage({
-      type: history_messages.requestRelatedLinks,
-      url: event.data.url,
-    });
+  if (event.data.type === history_messages.searchQueryRequest) {
+    chrome.runtime.sendMessage(
+      { type: history_messages.searchQueryRequest, query: event.data.query },
+      (response) =>
+        window.postMessage(
+          { type: history_messages.searchQueryResponse, data: response },
+          "*"
+        )
+    );
+  }
+
+  if (event.data.type === history_messages.viewByTypeRequest) {
+    chrome.runtime.sendMessage(
+      { type: history_messages.viewByTypeRequest, query: event.data.query },
+      (response) =>
+        window.postMessage(
+          { type: history_messages.viewByTypeResponse, data: response },
+          "*"
+        )
+    );
   }
 });
 
