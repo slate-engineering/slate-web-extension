@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { isToday, isYesterday } from "../../Common/utilities";
-import { messages } from "./";
+import { messages, viewsType } from "./";
 
 const removeSessionDuplicateVisits = (session) => {
   const isAlreadyAdded = {};
@@ -11,6 +11,20 @@ const removeSessionDuplicateVisits = (session) => {
     return true;
   });
   return session;
+};
+
+const removeViewsDuplicateSession = (sessions) => {
+  const isAlreadyAdded = {};
+  return sessions.filter(({ item: session }) => {
+    if (session.visits.length > 1) return true;
+    const visitUrl = session.visits[0].url;
+    if (visitUrl in isAlreadyAdded) {
+      return false;
+    } else {
+      isAlreadyAdded[visitUrl] = true;
+      return true;
+    }
+  });
 };
 
 const updateSessionsFeed = ({ sessionsFeed, history }) => {
@@ -124,7 +138,7 @@ export const useHistory = () => {
 
     window.postMessage(
       {
-        type: messages.requestHistoryDataByChunk,
+        type: messages.historyChunkRequest,
         startIndex: paramsRef.current.startIndex,
       },
       "*"
@@ -134,7 +148,7 @@ export const useHistory = () => {
   React.useEffect(() => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
-      if (type === messages.historyChunk) {
+      if (type === messages.historyChunkResponse) {
         if (data.canFetchMore) {
           paramsRef.current.startIndex += data.history.length;
         } else {
@@ -201,7 +215,7 @@ export const useHistorySearch = ({ inputRef }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     window.postMessage(
-      { type: messages.requestSearchQuery, query: query },
+      { type: messages.searchQueryRequest, query: query },
       "*"
     );
   };
@@ -215,7 +229,7 @@ export const useHistorySearch = ({ inputRef }) => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
 
-      if (type === messages.searchResults) {
+      if (type === messages.searchQueryResponse) {
         if (data.query === inputRef.current.value)
           setSearch((prev) => ({ ...prev, result: [...data.result] }));
       }
@@ -239,7 +253,7 @@ export const useGetRelatedLinks = (url) => {
   const getRelatedLinks = () => {
     if (!url) return;
     setRelatedLinks(null);
-    window.postMessage({ type: messages.requestRelatedLinks, url }, "*");
+    window.postMessage({ type: messages.relatedLinksRequest, url }, "*");
   };
   React.useEffect(() => {
     getRelatedLinks();
@@ -251,7 +265,7 @@ export const useGetRelatedLinks = (url) => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
 
-      if (type === messages.relatedLinks) {
+      if (type === messages.relatedLinksResponse) {
         if (data.url === urlRef.current) {
           setRelatedLinks(data.result);
         }
@@ -263,4 +277,46 @@ export const useGetRelatedLinks = (url) => {
   }, []);
 
   return relatedLinks;
+};
+
+export const useViews = () => {
+  const [views, setViews] = React.useState({
+    feed: [],
+    type: viewsType.recent,
+    query: "",
+  });
+
+  const paramsRef = React.useRef();
+  const getViewsFeed = ({ type, query }) => {
+    setViews((prev) => ({ ...prev, type, query }));
+    if (type === viewsType.relatedLinks && query) {
+      window.postMessage({ type: messages.viewByTypeRequest, query }, "*");
+    }
+  };
+
+  paramsRef.current = { type: views.type, query: views.query };
+  React.useEffect(() => {
+    let handleMessage = (event) => {
+      if (paramsRef.current.type === viewsType.recent) return;
+      let { data, type } = event.data;
+      if (type === messages.viewByTypeResponse) {
+        if (data.query === paramsRef.current.query)
+          setViews((prev) => ({
+            ...prev,
+            feed: removeViewsDuplicateSession(data.result),
+          }));
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return {
+    viewsFeed: views.feed,
+    getViewsFeed,
+    currentView: views.type,
+    viewQuery: views.query,
+    viewsType,
+  };
 };
