@@ -9,6 +9,7 @@ import {
   useGetRelatedLinks,
   useHistory,
   useHistorySearch,
+  useViews,
 } from "../Core/history/app";
 import { useModalContext } from "../Contexts/ModalProvider";
 import { sendOpenUrlsRequest } from "../Utilities/navigation";
@@ -621,46 +622,97 @@ export default function History() {
     inputRef,
   });
 
+  const { viewsFeed, viewQuery, viewsType, getViewsFeed, currentView } =
+    useViews();
+
   return (
     <div css={STYLES_APP_MODAL_POSITION}>
       <section css={STYLES_VIEWS_MENU}>
         <Typography.H5
-          css={[STYLES_VIEWS_BUTTON, STYLES_VIEWS_BUTTON_ACTIVE]}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewsType.recent && STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
           as="button"
+          onClick={() => getViewsFeed({ type: viewsType.recent })}
         >
           Recent
         </Typography.H5>
 
         <Typography.H5
-          css={STYLES_VIEWS_BUTTON}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewsType.relatedLinks &&
+              viewQuery === "https://twitter.com/" &&
+              STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
           as="button"
           style={{ marginLeft: 12 }}
+          onClick={() =>
+            getViewsFeed({
+              type: viewsType.relatedLinks,
+              query: "https://twitter.com/",
+            })
+          }
         >
-          References
+          Twitter
         </Typography.H5>
 
         <Typography.H5
-          css={STYLES_VIEWS_BUTTON}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewsType.relatedLinks &&
+              viewQuery === "https://www.youtube.com/" &&
+              STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
           as="button"
           style={{ marginLeft: 12 }}
+          onClick={() =>
+            getViewsFeed({
+              type: viewsType.relatedLinks,
+              query: "https://www.youtube.com/",
+            })
+          }
         >
-          Music
+          Youtube
         </Typography.H5>
 
         <Typography.H5
-          css={STYLES_VIEWS_BUTTON}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewsType.relatedLinks &&
+              viewQuery === "https://news.ycombinator.com/" &&
+              STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
           as="button"
           style={{ marginLeft: 12 }}
+          onClick={() =>
+            getViewsFeed({
+              type: viewsType.relatedLinks,
+              query: "https://news.ycombinator.com/",
+            })
+          }
         >
-          Watchlist
+          Hacker news
         </Typography.H5>
 
         <Typography.H5
-          css={STYLES_VIEWS_BUTTON}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewsType.relatedLinks &&
+              viewQuery === "https://developer.chrome.com/" &&
+              STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
           as="button"
           style={{ marginLeft: 12 }}
+          onClick={() =>
+            getViewsFeed({
+              type: viewsType.relatedLinks,
+              query: "https://www.google.com/search?",
+            })
+          }
         >
-          Products
+          Google Searches
         </Typography.H5>
 
         <button css={STYLES_VIEWS_ADD_BUTTON}>
@@ -668,7 +720,7 @@ export default function History() {
         </button>
       </section>
 
-      {preview && (
+      {preview && currentView === viewsType.recent && (
         <div css={STYLES_RELATED_LINKS_POPUP}>
           {preview.type === "session" ? (
             <SessionPreview session={preview.session} />
@@ -710,13 +762,15 @@ export default function History() {
           <HistoryList.Wrapper ref={historyWrapperRef}>
             {search.query.length > 0 && search.result ? (
               <SearchFeed sessions={search.result} setPreview={setPreview} />
-            ) : (
+            ) : currentView === viewsType.recent ? (
               <HistoryFeed
                 windowsFeed={windowsFeed}
                 sessionsFeed={sessionsFeed}
                 sessionsFeedKeys={sessionsFeedKeys}
                 setPreview={setPreview}
               />
+            ) : (
+              <SearchFeed sessions={viewsFeed} setPreview={setPreview} />
             )}
           </HistoryList.Wrapper>
         </section>
