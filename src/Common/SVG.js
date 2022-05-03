@@ -1038,7 +1038,6 @@ export const Dismiss = (props) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    // tabIndex="0"
     height={props.height}
     style={props.style}
     {...props}
