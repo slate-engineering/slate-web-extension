@@ -251,7 +251,7 @@ const Windows = {
   },
 };
 
-/** ------------ listeners ------------- */
+/** ------------ Event listeners ------------- */
 
 chrome.runtime.onStartup.addListener(() => {
   const ADaysInMs = 24 * 60 * 60 * 1000;
@@ -304,7 +304,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const history = await browserHistory.get();
       response.history = history.slice(
         request.startIndex,
-        request.startIndex + 1000
+        request.startIndex + (request.startIndex === 0 ? 200 : 500)
       );
       response.canFetchMore =
         request.startIndex + response.history.length !== history.length;
