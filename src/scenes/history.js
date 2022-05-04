@@ -3,6 +3,7 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
+import * as Navigation from "../Core/navigation/app";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
@@ -12,8 +13,6 @@ import {
   useHistorySearch,
   useViews,
 } from "../Core/history/app";
-import { useModalContext } from "../Contexts/ModalProvider";
-import { sendOpenUrlsRequest } from "../Utilities/navigation";
 import { useEventListener } from "../Common/hooks";
 import { getFavicon } from "../Common/favicons";
 
@@ -54,7 +53,7 @@ function ObjectPreview({ url, ...props }) {
                 key={visit.id + i}
                 title={visit.title}
                 Favicon={getFavicon(visit.rootDomain)}
-                onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
+                onClick={() => Navigation.openUrls({ urls: [visit.url] })}
                 onMouseEnter={(e) => e.target.focus()}
               />
             ))}
@@ -92,7 +91,7 @@ const STYLES_SESSION_PREVIEW_ACTION = (theme) => css`
 
 function SessionPreview({ session }) {
   const handleOpenAllLinks = ({ newWindow = false } = { newWindow: false }) => {
-    sendOpenUrlsRequest({
+    Navigation.openUrls({
       urls: session.visits.map((visit) => visit.url),
       query: { newWindow },
     });
@@ -359,7 +358,7 @@ const useHistoryInfiniteScroll = ({
   const shouldFetchMore = React.useRef(true);
   const handleScroll = () => {
     if (!shouldFetchMore.current) return;
-    const OFFSET = 3000;
+    const OFFSET = 300;
     const element = historyWrapperRef.current;
 
     if (
@@ -407,11 +406,9 @@ function SearchDismiss({ css, ...props }) {
 export default function History() {
   const [preview, setPreview] = React.useState();
 
-  const { closeModal } = useModalContext();
-
   React.useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key === "Escape") closeModal();
+      if (e.key === "Escape") Navigation.closeExtensionJumper();
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -540,6 +537,7 @@ export default function History() {
             name="search"
             onChange={handleInputChange}
             autoComplete="off"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
           {search.query.length > 0 ? (
@@ -588,7 +586,7 @@ const SearchFeed = React.memo(({ sessions, setPreview }) => {
               key={session.id + visit.id}
               title={visit.title}
               Favicon={getFavicon(visit.rootDomain)}
-              onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
+              onClick={() => Navigation.openUrls({ urls: [visit.url] })}
               onMouseEnter={() => setPreview({ type: "link", url: visit.url })}
             />
           ));
@@ -626,7 +624,7 @@ const HistoryFeed = React.memo(({ setPreview }) => {
   });
 
   return (
-    <ListView.Root>
+    <ListView.Root ref={historyWrapperRef}>
       {windowsFeed.thisWindow.length || windowsFeed.currentlyOpen.length ? (
         <>
           {windowsFeed.thisWindow.length ? (
@@ -640,7 +638,7 @@ const HistoryFeed = React.memo(({ setPreview }) => {
                   title={tab.title}
                   Favicon={getFavicon(tab.rootDomain)}
                   onClick={() =>
-                    sendOpenUrlsRequest({
+                    Navigation.openUrls({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
@@ -663,7 +661,7 @@ const HistoryFeed = React.memo(({ setPreview }) => {
                   title={tab.title}
                   Favicon={getFavicon(tab.rootDomain)}
                   onClick={() =>
-                    sendOpenUrlsRequest({
+                    Navigation.openUrls({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
@@ -692,7 +690,7 @@ const HistoryFeed = React.memo(({ setPreview }) => {
                   key={visit.session + visit.id}
                   title={visit.title}
                   Favicon={getFavicon(visit.rootDomain)}
-                  onClick={() => sendOpenUrlsRequest({ urls: [visit.url] })}
+                  onClick={() => Navigation.openUrls({ urls: [visit.url] })}
                   onMouseEnter={() =>
                     setPreview({ type: "link", url: visit.url })
                   }

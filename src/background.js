@@ -1,8 +1,8 @@
 import * as Constants from "./Common/constants";
 import * as UploadUtilities from "./Utilities/upload";
-import * as Navigation from "./Utilities/navigation";
 
-import * as History from "./Core/history/background";
+import "./Core/history/background";
+import "./Core/navigation/background";
 
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
@@ -165,45 +165,25 @@ const checkLoginSession = async (tab) => {
   }
 };
 
-chrome.action.onClicked.addListener(async (tab) => {
-  Navigation.sendNavigationRequestToContent({
-    tab: tab.id,
-    search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
-  });
-  await checkLoginData(tab);
-});
-
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == Navigation.commands.openApp) {
-    Navigation.sendNavigationRequestToContent({
-      tab: tab.id,
-      search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
-    });
-    await checkLoginData(tab);
-  }
-
-  if (command == Navigation.commands.openSlate) {
-    chrome.tabs.create({
-      url: `${Constants.uri.hostname}/_/data&extension=true&id=${tab.id}`,
-    });
-  }
-
   if (command == UploadUtilities.commands.directSave) {
     let session = await checkLoginData(tab);
 
     if (session && session.user) {
-      Navigation.sendOpenAppRequestToContent({ tab: tab.id });
-      const apiKey = await getApiKey();
-      await UploadUtilities.handleSaveLinkRequests({
-        url: tab.url,
-        tab: tab.id,
-        apiKey,
-      });
-    } else {
-      Navigation.sendNavigationRequestToContent({
-        tab: tab.id,
-        search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
-      });
+      // NOTE(amine): update auth code
+      //   Navigation.sendOpenAppRequestToContent({ tab: tab.id });
+      //   const apiKey = await getApiKey();
+      //   await UploadUtilities.handleSaveLinkRequests({
+      //     url: tab.url,
+      //     tab: tab.id,
+      //     apiKey,
+      //   });
+      // } else {
+      //   Navigation.sendNavigationRequestToContent({
+      //     tab: tab.id,
+      //     search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
+      //   });
+      // }
     }
   }
 });
@@ -216,15 +196,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
       tab: sender.tab.id,
       apiKey,
     });
-  }
-
-  if (request.type === Navigation.messages.openUrls) {
-    await Navigation.handleOpenUrlsRequests({
-      urls: request.urls,
-      query: request.query,
-      sender,
-    });
-    return true;
   }
 
   if (request.type === "GO_BACK") {

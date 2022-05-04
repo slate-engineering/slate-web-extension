@@ -1,13 +1,14 @@
 import * as Constants from "./Common/constants";
 import * as UploadUtilities from "./Utilities/upload";
-import * as Navigation from "./Utilities/navigation";
 
 import "./Core/history/content";
+import "./Core/navigation/content";
 
+// eslint-disable-next-line no-redeclare
 /* global chrome */
 if (window.location.href.startsWith(Constants.uri.hostname)) {
   if (window.location.href.includes("extension=true")) {
-    document.addEventListener("keydown", function (e) {
+    document.addEventListener("keydown", function () {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
       chrome.runtime.sendMessage({
@@ -19,17 +20,7 @@ if (window.location.href.startsWith(Constants.uri.hostname)) {
   //TODO: Have the extension change the 'download chrome extension' button
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, callback) {
-  if (request.type === Navigation.messages.navigate) {
-    Navigation.handleNavigationRequests(request.data);
-    return;
-  }
-
-  if (request.type === Navigation.messages.openApp) {
-    Navigation.openApp();
-    return;
-  }
-
+chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === UploadUtilities.messages.uploadStatus) {
     UploadUtilities.forwardUploadStatusToApp({
       status: request.status,
@@ -56,14 +47,6 @@ window.addEventListener("message", async function (event) {
     UploadUtilities.forwardSaveLinkRequestsToBackground({
       url: event.data.url,
     });
-  }
-
-  if (event.data.type === Navigation.messages.openUrls) {
-    Navigation.forwardOpenUrlsRequestToBackground({
-      urls: event.data.urls,
-      query: event.data.query,
-    });
-    return;
   }
 
   if (event.data.run === "CHECK_LOGIN") {
