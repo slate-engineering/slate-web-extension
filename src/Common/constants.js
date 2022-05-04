@@ -1,3 +1,9 @@
+// NOTE(amine): commands are defined in manifest.json
+export const commands = {
+  openApp: "open-app",
+  openSlate: "open-slate",
+};
+
 export const values = {
   version: "1.0.0",
   sds: "0.2.0",
@@ -241,14 +247,3 @@ export const grids = {
 
 export const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
-
-export const routes = {
-  modal: {
-    key: "modal",
-    values: {
-      home: "home",
-      shortcuts: "shortcuts",
-      account: "account",
-    },
-  },
-};
