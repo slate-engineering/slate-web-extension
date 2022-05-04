@@ -174,6 +174,12 @@ var __webpack_exports__ = {};
 !function() {
 
 ;// CONCATENATED MODULE: ./src/Common/constants.js
+// NOTE(amine): commands are defined in manifest.json
+const commands = {
+  openApp: "open-app",
+  openSlate: "open-slate",
+};
+
 const values = {
   version: "1.0.0",
   sds: "0.2.0",
@@ -418,17 +424,6 @@ const grids = {
 const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
 
-const routes = {
-  modal: {
-    key: "modal",
-    values: {
-      home: "home",
-      shortcuts: "shortcuts",
-      account: "account",
-    },
-  },
-};
-
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(294);
 ;// CONCATENATED MODULE: ./src/Utilities/upload.js
@@ -441,7 +436,7 @@ const messages = {
 };
 
 // NOTE(amine): commands are defined in manifest.json
-const commands = {
+const upload_commands = {
   directSave: "direct-save",
 };
 
@@ -610,171 +605,6 @@ const handleSaveLinkRequests = async ({
 //   const json = await response.json();
 //   return json;
 // };
-
-;// CONCATENATED MODULE: ./src/Utilities/navigation.js
-
-
-
-
-const navigation_messages = {
-  navigate: "NAVIGATE",
-  openApp: "OPEN_APP",
-  openUrls: "OPEN_URLS",
-};
-
-// NOTE(amine): commands are defined in manifest.json
-const navigation_commands = {
-  openApp: "open-app",
-  openSlate: "open-slate",
-};
-
-/* -------------------------------------------------------------------------------------------------
- *  Address bar
- * -----------------------------------------------------------------------------------------------*/
-
-const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
-const createAddressBarElement = () => {
-  const element = document.createElement("div");
-  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
-  $(element).appendTo("html");
-};
-const getAddressBarElement = () =>
-  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-
-const DATA_CURRENT_URL = "data-current-url";
-const getAddressBarUrl = () => {
-  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-  return element.getAttribute(DATA_CURRENT_URL) || "/";
-};
-const updateAddressBarUrl = (url) => {
-  let nextUrl = url;
-  if (typeof url === "function") {
-    const currentUrl = getAddressBarUrl();
-    nextUrl = url(currentUrl);
-  }
-
-  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-  element.setAttribute(DATA_CURRENT_URL, nextUrl);
-};
-
-/** ------------ Background ------------- */
-
-const sendNavigationRequestToContent = ({ tab, pathname, search }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: navigation_messages.navigate,
-    data: { pathname, search },
-  });
-};
-
-const sendOpenAppRequestToContent = ({ tab }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: navigation_messages.openApp,
-  });
-};
-
-/** ------------ Content------------- */
-
-const handleNavigationRequests = ({ pathname, search }) => {
-  if (pathname) {
-    navigateToUrl([pathname, search].join(""));
-  } else {
-    navigateToUrl((currentUrl) => {
-      //NOTE(amine): using http://example as a workaround to get pathname using URL api.
-      const { pathname } = new URL(currentUrl, "http://example");
-      return [pathname, search].join("");
-    });
-  }
-};
-
-const openApp = (url = "/") => {
-  const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
-
-  const isAppOpen = document.getElementById("modal-window-slate-extension");
-  if (isAppOpen) return;
-  createAddressBarElement();
-  updateAddressBarUrl(url);
-  // Fetch the local React index.html page
-  fetch(chrome.runtime.getURL("index.html"))
-    .then((response) => response.text())
-    .then((html) => {
-      const styleStashHTML = html.replace(
-        /\/static\//g,
-        `${extensionOrigin}/static/`
-      );
-      $(styleStashHTML).appendTo("html");
-    })
-    .catch((error) => {
-      console.warn(error);
-    });
-};
-
-const navigateToUrl = (url) => {
-  const isAppOpen = document.getElementById("modal-window-slate-extension");
-
-  if (isAppOpen) {
-    updateAddressBarUrl(url);
-  } else {
-    openApp(url);
-  }
-};
-
-const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
-  if (query.newWindow) {
-    await chrome.windows.create({ focused: true, url: urls });
-    return;
-  }
-
-  if (query.tabId) {
-    await chrome.windows.update(query.windowId, { focused: true });
-    await chrome.tabs.update(query.tabId, { active: true });
-    return;
-  }
-
-  for (let url of urls) {
-    await chrome.tabs.create({ windowId: sender.tab.windowId, url });
-  }
-};
-
-const forwardOpenUrlsRequestToBackground = ({ urls, query }) => {
-  chrome.runtime.sendMessage({ type: navigation_messages.openUrls, urls, query });
-};
-
-/** ------------ App ------------- */
-
-const sendOpenUrlsRequest = ({ urls, query = { newWindow: false } }) =>
-  window.postMessage({ type: navigation_messages.openUrls, urls, query }, "*");
-
-const getInitialUrl = (/* unused pure expression or super */ null && (getAddressBarUrl));
-
-const useHandleExternalNavigation = () => {
-  let location = useLocation();
-  const navigate = useNavigate();
-
-  const storedLinkRef = React.useRef(null);
-  React.useEffect(() => {
-    updateAddressBarUrl(location.pathname + location.search);
-    storedLinkRef.current = location.pathname + location.search;
-  }, [location]);
-
-  React.useEffect(() => {
-    const element = getAddressBarElement();
-    const handleMutation = (mutationList) => {
-      const currentUrl = getAddressBarUrl();
-      mutationList.forEach((mutation) => {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === DATA_CURRENT_URL &&
-          storedLinkRef.current !== currentUrl
-        ) {
-          navigate(currentUrl);
-        }
-      });
-    };
-
-    const observer = new MutationObserver(handleMutation);
-    observer.observe(element, { attributeFilter: [DATA_CURRENT_URL] });
-  }, []);
-};
 
 ;// CONCATENATED MODULE: ./node_modules/fuse.js/dist/fuse.esm.js
 /**
@@ -2831,7 +2661,7 @@ const Windows = {
   },
 };
 
-/** ------------ listeners ------------- */
+/** ------------ Event listeners ------------- */
 
 chrome.runtime.onStartup.addListener(() => {
   const ADaysInMs = 24 * 60 * 60 * 1000;
@@ -2884,7 +2714,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const history = await browserHistory.get();
       response.history = history.slice(
         request.startIndex,
-        request.startIndex + 1000
+        request.startIndex + (request.startIndex === 0 ? 200 : 500)
       );
       response.canFetchMore =
         request.startIndex + response.history.length !== history.length;
@@ -2928,6 +2758,68 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       url: request.url,
     });
     return;
+  }
+});
+
+;// CONCATENATED MODULE: ./src/Core/navigation/index.js
+const navigation_messages = {
+  openExtensionJumperRequest: "OPEN_EXTENSION_JUMPER_REQUEST",
+  closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
+
+  openURLsRequest: "OPEN_URLS_REQUEST",
+};
+
+;// CONCATENATED MODULE: ./src/Core/navigation/background.js
+
+
+
+const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
+  if (query.newWindow) {
+    await chrome.windows.create({ focused: true, url: urls });
+    return;
+  }
+
+  if (query.tabId) {
+    await chrome.windows.update(query.windowId, { focused: true });
+    await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
+  for (let url of urls) {
+    await chrome.tabs.create({ windowId: sender.tab.windowId, url });
+  }
+};
+
+/** ------------ Event Listeners ------------- */
+
+chrome.runtime.onMessage.addListener(async (request, sender) => {
+  if (request.type === navigation_messages.openURLsRequest) {
+    await handleOpenUrlsRequests({
+      urls: request.urls,
+      query: request.query,
+      sender,
+    });
+    return true;
+  }
+});
+
+chrome.action.onClicked.addListener(async (tab) => {
+  chrome.tabs.sendMessage(parseInt(tab.id), {
+    type: navigation_messages.openExtensionJumperRequest,
+  });
+});
+
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command == commands.openApp) {
+    chrome.tabs.sendMessage(parseInt(tab.id), {
+      type: navigation_messages.openExtensionJumperRequest,
+    });
+  }
+
+  if (command == commands.openSlate) {
+    chrome.tabs.create({
+      url: `${uri.hostname}/_/data&extension=true&id=${tab.id}`,
+    });
   }
 });
 
@@ -3099,45 +2991,25 @@ const checkLoginSession = async (tab) => {
   }
 };
 
-chrome.action.onClicked.addListener(async (tab) => {
-  sendNavigationRequestToContent({
-    tab: tab.id,
-    search: `?${routes.modal.key}=${routes.modal.values.home}`,
-  });
-  await checkLoginData(tab);
-});
-
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == navigation_commands.openApp) {
-    sendNavigationRequestToContent({
-      tab: tab.id,
-      search: `?${routes.modal.key}=${routes.modal.values.home}`,
-    });
-    await checkLoginData(tab);
-  }
-
-  if (command == navigation_commands.openSlate) {
-    chrome.tabs.create({
-      url: `${uri.hostname}/_/data&extension=true&id=${tab.id}`,
-    });
-  }
-
-  if (command == commands.directSave) {
+  if (command == upload_commands.directSave) {
     let session = await checkLoginData(tab);
 
     if (session && session.user) {
-      sendOpenAppRequestToContent({ tab: tab.id });
-      const apiKey = await getApiKey();
-      await handleSaveLinkRequests({
-        url: tab.url,
-        tab: tab.id,
-        apiKey,
-      });
-    } else {
-      sendNavigationRequestToContent({
-        tab: tab.id,
-        search: `?${routes.modal.key}=${routes.modal.values.home}`,
-      });
+      // NOTE(amine): update auth code
+      //   Navigation.sendOpenAppRequestToContent({ tab: tab.id });
+      //   const apiKey = await getApiKey();
+      //   await UploadUtilities.handleSaveLinkRequests({
+      //     url: tab.url,
+      //     tab: tab.id,
+      //     apiKey,
+      //   });
+      // } else {
+      //   Navigation.sendNavigationRequestToContent({
+      //     tab: tab.id,
+      //     search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
+      //   });
+      // }
     }
   }
 });
@@ -3150,15 +3022,6 @@ chrome.runtime.onMessage.addListener(async (request, sender) => {
       tab: sender.tab.id,
       apiKey,
     });
-  }
-
-  if (request.type === navigation_messages.openUrls) {
-    await handleOpenUrlsRequests({
-      urls: request.urls,
-      query: request.query,
-      sender,
-    });
-    return true;
   }
 
   if (request.type === "GO_BACK") {

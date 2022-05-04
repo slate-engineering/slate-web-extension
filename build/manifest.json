@@ -24,6 +24,9 @@
       "run_at": "document_idle"
     }
   ],
+  "chrome_url_overrides":{
+    "newtab": "newTab.html"
+  },
   "permissions": ["tabs", "contextMenus", "cookies", "commands", "history", "storage", "unlimitedStorage" ],
   "host_permissions": [
     "https://slate.host/",

@@ -174,6 +174,12 @@ var __webpack_exports__ = {};
 !function() {
 
 ;// CONCATENATED MODULE: ./src/Common/constants.js
+// NOTE(amine): commands are defined in manifest.json
+const commands = {
+  openApp: "open-app",
+  openSlate: "open-slate",
+};
+
 const values = {
   version: "1.0.0",
   sds: "0.2.0",
@@ -418,17 +424,6 @@ const grids = {
 const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
 
-const routes = {
-  modal: {
-    key: "modal",
-    values: {
-      home: "home",
-      shortcuts: "shortcuts",
-      account: "account",
-    },
-  },
-};
-
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(294);
 ;// CONCATENATED MODULE: ./src/Utilities/upload.js
@@ -441,7 +436,7 @@ const messages = {
 };
 
 // NOTE(amine): commands are defined in manifest.json
-const commands = {
+const upload_commands = {
   directSave: "direct-save",
 };
 
@@ -611,171 +606,6 @@ const handleSaveLinkRequests = async ({
 //   return json;
 // };
 
-;// CONCATENATED MODULE: ./src/Utilities/navigation.js
-
-
-
-
-const navigation_messages = {
-  navigate: "NAVIGATE",
-  openApp: "OPEN_APP",
-  openUrls: "OPEN_URLS",
-};
-
-// NOTE(amine): commands are defined in manifest.json
-const navigation_commands = {
-  openApp: "open-app",
-  openSlate: "open-slate",
-};
-
-/* -------------------------------------------------------------------------------------------------
- *  Address bar
- * -----------------------------------------------------------------------------------------------*/
-
-const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
-const createAddressBarElement = () => {
-  const element = document.createElement("div");
-  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
-  $(element).appendTo("html");
-};
-const getAddressBarElement = () =>
-  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-
-const DATA_CURRENT_URL = "data-current-url";
-const getAddressBarUrl = () => {
-  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-  return element.getAttribute(DATA_CURRENT_URL) || "/";
-};
-const updateAddressBarUrl = (url) => {
-  let nextUrl = url;
-  if (typeof url === "function") {
-    const currentUrl = getAddressBarUrl();
-    nextUrl = url(currentUrl);
-  }
-
-  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
-  element.setAttribute(DATA_CURRENT_URL, nextUrl);
-};
-
-/** ------------ Background ------------- */
-
-const sendNavigationRequestToContent = ({ tab, pathname, search }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: navigation_messages.navigate,
-    data: { pathname, search },
-  });
-};
-
-const sendOpenAppRequestToContent = ({ tab }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: navigation_messages.openApp,
-  });
-};
-
-/** ------------ Content------------- */
-
-const handleNavigationRequests = ({ pathname, search }) => {
-  if (pathname) {
-    navigateToUrl([pathname, search].join(""));
-  } else {
-    navigateToUrl((currentUrl) => {
-      //NOTE(amine): using http://example as a workaround to get pathname using URL api.
-      const { pathname } = new URL(currentUrl, "http://example");
-      return [pathname, search].join("");
-    });
-  }
-};
-
-const openApp = (url = "/") => {
-  const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
-
-  const isAppOpen = document.getElementById("modal-window-slate-extension");
-  if (isAppOpen) return;
-  createAddressBarElement();
-  updateAddressBarUrl(url);
-  // Fetch the local React index.html page
-  fetch(chrome.runtime.getURL("index.html"))
-    .then((response) => response.text())
-    .then((html) => {
-      const styleStashHTML = html.replace(
-        /\/static\//g,
-        `${extensionOrigin}/static/`
-      );
-      $(styleStashHTML).appendTo("html");
-    })
-    .catch((error) => {
-      console.warn(error);
-    });
-};
-
-const navigateToUrl = (url) => {
-  const isAppOpen = document.getElementById("modal-window-slate-extension");
-
-  if (isAppOpen) {
-    updateAddressBarUrl(url);
-  } else {
-    openApp(url);
-  }
-};
-
-const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
-  if (query.newWindow) {
-    await chrome.windows.create({ focused: true, url: urls });
-    return;
-  }
-
-  if (query.tabId) {
-    await chrome.windows.update(query.windowId, { focused: true });
-    await chrome.tabs.update(query.tabId, { active: true });
-    return;
-  }
-
-  for (let url of urls) {
-    await chrome.tabs.create({ windowId: sender.tab.windowId, url });
-  }
-};
-
-const forwardOpenUrlsRequestToBackground = ({ urls, query }) => {
-  chrome.runtime.sendMessage({ type: navigation_messages.openUrls, urls, query });
-};
-
-/** ------------ App ------------- */
-
-const sendOpenUrlsRequest = ({ urls, query = { newWindow: false } }) =>
-  window.postMessage({ type: navigation_messages.openUrls, urls, query }, "*");
-
-const getInitialUrl = (/* unused pure expression or super */ null && (getAddressBarUrl));
-
-const useHandleExternalNavigation = () => {
-  let location = useLocation();
-  const navigate = useNavigate();
-
-  const storedLinkRef = React.useRef(null);
-  React.useEffect(() => {
-    updateAddressBarUrl(location.pathname + location.search);
-    storedLinkRef.current = location.pathname + location.search;
-  }, [location]);
-
-  React.useEffect(() => {
-    const element = getAddressBarElement();
-    const handleMutation = (mutationList) => {
-      const currentUrl = getAddressBarUrl();
-      mutationList.forEach((mutation) => {
-        if (
-          mutation.type === "attributes" &&
-          mutation.attributeName === DATA_CURRENT_URL &&
-          storedLinkRef.current !== currentUrl
-        ) {
-          navigate(currentUrl);
-        }
-      });
-    };
-
-    const observer = new MutationObserver(handleMutation);
-    observer.observe(element, { attributeFilter: [DATA_CURRENT_URL] });
-  }, []);
-};
-
 ;// CONCATENATED MODULE: ./src/Core/history/index.js
 const history_messages = {
   historyChunkRequest: "HISTORY_CHUNK_REQUEST",
@@ -856,6 +686,79 @@ window.addEventListener("message", async function (event) {
   }
 });
 
+;// CONCATENATED MODULE: ./src/Core/navigation/index.js
+const navigation_messages = {
+  openExtensionJumperRequest: "OPEN_EXTENSION_JUMPER_REQUEST",
+  closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
+
+  openURLsRequest: "OPEN_URLS_REQUEST",
+};
+
+;// CONCATENATED MODULE: ./src/Core/navigation/content.js
+
+
+const EXTENSION_JUMPER_WRAPPER_ID = "jumper-slate-extension-wrapper";
+
+const getExtensionJumperWrapper = () =>
+  document.getElementById(EXTENSION_JUMPER_WRAPPER_ID);
+
+const createExtensionJumperWrapper = () => {
+  if (getExtensionJumperWrapper()) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.setAttribute("id", EXTENSION_JUMPER_WRAPPER_ID);
+  document.body.appendChild(wrapper);
+};
+
+const openApp = () => {
+  const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
+
+  const isAppOpen = document.getElementById("modal-window-slate-extension");
+  if (isAppOpen) return;
+
+  createExtensionJumperWrapper();
+  // Fetch the local React index.html page
+  fetch(chrome.runtime.getURL("index.html"))
+    .then((response) => response.text())
+    .then((html) => {
+      const styleStashHTML = html.replace(
+        /\/static\//g,
+        `${extensionOrigin}/static/`
+      );
+      $(styleStashHTML).appendTo(`#${EXTENSION_JUMPER_WRAPPER_ID}`);
+    })
+    .catch((error) => {
+      console.warn(error);
+    });
+};
+
+const closeApp = () => {
+  const extensionJumperWrapper = getExtensionJumperWrapper();
+  extensionJumperWrapper.innerHTML = "";
+};
+
+/** ------------ Event Listeners ------------- */
+
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === navigation_messages.openExtensionJumperRequest) {
+    openApp();
+  }
+});
+
+window.addEventListener("message", async function (event) {
+  if (event.data.type === navigation_messages.openURLsRequest) {
+    chrome.runtime.sendMessage({
+      type: navigation_messages.openURLsRequest,
+      urls: event.data.urls,
+    });
+    return;
+  }
+
+  if (event.data.type === navigation_messages.closeExtensionJumperRequest) {
+    closeApp();
+  }
+});
+
 ;// CONCATENATED MODULE: ./src/content.js
 
 
@@ -863,10 +766,11 @@ window.addEventListener("message", async function (event) {
 
 
 
+// eslint-disable-next-line no-redeclare
 /* global chrome */
 if (window.location.href.startsWith(uri.hostname)) {
   if (window.location.href.includes("extension=true")) {
-    document.addEventListener("keydown", function (e) {
+    document.addEventListener("keydown", function () {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
       chrome.runtime.sendMessage({
@@ -878,17 +782,7 @@ if (window.location.href.startsWith(uri.hostname)) {
   //TODO: Have the extension change the 'download chrome extension' button
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, callback) {
-  if (request.type === navigation_messages.navigate) {
-    handleNavigationRequests(request.data);
-    return;
-  }
-
-  if (request.type === navigation_messages.openApp) {
-    openApp();
-    return;
-  }
-
+chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === messages.uploadStatus) {
     forwardUploadStatusToApp({
       status: request.status,
@@ -915,14 +809,6 @@ window.addEventListener("message", async function (event) {
     forwardSaveLinkRequestsToBackground({
       url: event.data.url,
     });
-  }
-
-  if (event.data.type === navigation_messages.openUrls) {
-    forwardOpenUrlsRequestToBackground({
-      urls: event.data.urls,
-      query: event.data.query,
-    });
-    return;
   }
 
   if (event.data.run === "CHECK_LOGIN") {
