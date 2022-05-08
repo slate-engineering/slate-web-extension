@@ -240,8 +240,10 @@ export const useHistorySearch = ({ inputRef }) => {
   }, []);
 
   React.useEffect(() => {
-    if (search.query.length === 0)
-      setSearch(SEARCH_DEFAULT_STATE), (inputRef.current.value = "");
+    if (search.query.length === 0) {
+      setSearch(SEARCH_DEFAULT_STATE);
+      if (inputRef.current) inputRef.current.value = "";
+    }
   }, [search.query]);
 
   return [search, { handleInputChange, searchByQuery, clearSearch }];
