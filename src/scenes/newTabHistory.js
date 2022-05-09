@@ -3,6 +3,7 @@ import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as Typography from "../Components/system/Typography";
 import * as Views from "../Components/Views";
+import * as Navigation from "../Core/navigation/app/newTab";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import LinkPreview from "../Components/LinkPreview";
@@ -15,10 +16,10 @@ import { css } from "@emotion/react";
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_APP_MODAL = (theme) => css`
+const STYLES_HISTORY_SCENE_WRAPPER = (theme) => css`
   ${Styles.VERTICAL_CONTAINER};
   position: relative;
-  height: 100%;
+  height: 100vh;
   width: 100%;
   border: 1px solid ${theme.semantic.borderGrayLight};
   box-shadow: ${theme.shadow.darkLarge};
@@ -106,7 +107,7 @@ export default function HistoryScene() {
   const [preview, setPreview] = React.useState({ url: "", title: "" });
 
   return (
-    <div css={STYLES_APP_MODAL}>
+    <div css={STYLES_HISTORY_SCENE_WRAPPER}>
       <section css={STYLES_SEARCH_WRAPPER}>
         <input
           css={STYLES_SEARCH_INPUT}
@@ -151,10 +152,11 @@ export default function HistoryScene() {
                 sessionsFeedKeys={sessionsFeedKeys}
                 onLoadMore={loadMoreHistory}
                 onObjectHover={({ url, title }) => setPreview({ url, title })}
-                style={{ padding: "0px 16px 32px" }}
+                onOpenUrl={Navigation.openUrls}
+                style={{ padding: "0px 16px 32px", minHeight: "100%" }}
               />
             ) : (
-              <Views.Feed />
+              <Views.Feed onOpenUrl={Navigation.openUrls} />
             )}
           </div>
           <Divider width="1px" height="100%" color="borderGrayLight" />

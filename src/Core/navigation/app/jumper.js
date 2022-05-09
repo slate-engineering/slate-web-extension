@@ -1,4 +1,4 @@
-import { messages } from "./";
+import { messages } from "../";
 
 export const openUrls = ({ urls, query }) =>
   window.postMessage({ type: messages.openURLsRequest, urls, query }, "*");

@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ListView from "./ListView";
-import * as Navigation from "../Core/navigation/app";
 
 import { Divider } from "./Divider";
 import { getFavicon } from "../Common/favicons";
@@ -42,6 +41,7 @@ export default function HistoryFeed({
   sessionsFeedKeys,
   onLoadMore,
   onObjectHover,
+  onOpenUrl,
   css,
   ...props
 }) {
@@ -83,7 +83,7 @@ export default function HistoryFeed({
                   title={tab.title}
                   Favicon={getFavicon(tab.rootDomain)}
                   onClick={() =>
-                    Navigation.openUrls({
+                    onOpenUrl({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
@@ -106,7 +106,7 @@ export default function HistoryFeed({
                   title={tab.title}
                   Favicon={getFavicon(tab.rootDomain)}
                   onClick={() =>
-                    Navigation.openUrls({
+                    onOpenUrl({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
@@ -135,7 +135,7 @@ export default function HistoryFeed({
                   key={visit.session + visit.id}
                   title={visit.title}
                   Favicon={getFavicon(visit.rootDomain)}
-                  onClick={() => Navigation.openUrls({ urls: [visit.url] })}
+                  onClick={() => onOpenUrl({ urls: [visit.url] })}
                   onMouseEnter={() =>
                     onObjectHover({ url: visit.url, title: visit.title })
                   }

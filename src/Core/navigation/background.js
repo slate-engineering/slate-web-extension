@@ -2,12 +2,12 @@ import * as Constants from "../../Common/constants";
 import { messages } from "./";
 
 export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
-  if (query.newWindow) {
+  if (query?.newWindow) {
     await chrome.windows.create({ focused: true, url: urls });
     return;
   }
 
-  if (query.tabId) {
+  if (query?.tabId) {
     await chrome.windows.update(query.windowId, { focused: true });
     await chrome.tabs.update(query.tabId, { active: true });
     return;

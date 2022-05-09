@@ -3,7 +3,7 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
-import * as Navigation from "../Core/navigation/app";
+import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
 
 import HistoryFeed from "../Components/HistoryFeed";
@@ -452,9 +452,11 @@ export default function History() {
                 windowsFeed={windowsFeed}
                 loadMoreHistory={loadMoreHistory}
                 onObjectHover={({ url }) => setPreview({ type: "link", url })}
+                onOpenUrl={Navigation.openUrls}
               />
             ) : (
               <Views.Feed
+                onOpenUrl={Navigation.openUrls}
                 onObjectHover={({ url }) => setPreview({ type: "link", url })}
               />
             )}

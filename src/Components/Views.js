@@ -2,7 +2,6 @@ import * as React from "react";
 import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
-import * as Navigation from "../Core/navigation/app";
 import * as SVG from "../Common/SVG";
 
 import { css } from "@emotion/react";
@@ -165,7 +164,7 @@ function Menu({ css, ...props }) {
   );
 }
 
-function Feed({ onObjectHover }) {
+function Feed({ onObjectHover, onOpenUrl }) {
   const { viewsFeed } = useViewsContext();
   return (
     <ListView.Root>
@@ -177,7 +176,7 @@ function Feed({ onObjectHover }) {
               key={session.id + visit.id}
               title={visit.title}
               Favicon={getFavicon(visit.rootDomain)}
-              onClick={() => Navigation.openUrls({ urls: [visit.url] })}
+              onClick={() => onOpenUrl({ urls: [visit.url] })}
               onMouseEnter={() => onObjectHover({ url: visit.url })}
             />
           ));

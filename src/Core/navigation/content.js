@@ -49,15 +49,16 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === messages.closeExtensionJumperRequest) {
+    closeApp();
+  }
+
   if (event.data.type === messages.openURLsRequest) {
     chrome.runtime.sendMessage({
       type: messages.openURLsRequest,
       urls: event.data.urls,
+      query: event.data.query,
     });
     return;
-  }
-
-  if (event.data.type === messages.closeExtensionJumperRequest) {
-    closeApp();
   }
 });
