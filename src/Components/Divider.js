@@ -4,7 +4,7 @@ import * as Constants from "../Common/constants";
 
 export const Divider = ({
   width,
-  height = "0.5px",
+  height = "1px",
   color = Constants.system.grayLight4,
   css,
   ...props
