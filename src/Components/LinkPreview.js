@@ -5,7 +5,7 @@ export default function LinkPreview({ url, title, ...props }) {
 
   React.useEffect(() => {
     const iframe = ref.current;
-    if (iframe) {
+    if (iframe && url) {
       iframe.contentWindow.location.replace(url);
     }
   }, [url]);
