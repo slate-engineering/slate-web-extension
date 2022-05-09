@@ -148,6 +148,25 @@ function SessionPreview({ session }) {
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
+const jumperFadeInAnimation = css`
+  @keyframes jumper-fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    57% {
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+
+  animation: jumper-fade-in 350ms ease;
+`;
+
 const MODALS_WIDTH = 696;
 const STYLES_APP_MODAL_POSITION = css`
   height: 432px;
@@ -158,17 +177,6 @@ const STYLES_APP_MODAL_POSITION = css`
   left: 50%;
   margin-left: calc(-696px / 2);
   margin-top: calc(-548px / 2);
-
-  @keyframes app-modal-fade-in {
-    from {
-      transform: translateY(100px) scale(0.9);
-    }
-    to {
-      transform: translateY(0px) scale(1);
-    }
-  }
-
-  /* animation: app-modal-fade-in 150ms ease; */
 `;
 
 const STYLES_APP_MODAL = (theme) => css`
@@ -181,6 +189,8 @@ const STYLES_APP_MODAL = (theme) => css`
   //NOTE(amine): when changing border-radius, change it also in STYLES_MARBLE_WRAPPER and STYLES_APP_MODAL_BACKGROUND
   border-radius: 24px;
   overflow: hidden;
+
+  ${jumperFadeInAnimation};
 `;
 
 const STYLES_MARBLE_WRAPPER = css`
@@ -192,6 +202,8 @@ const STYLES_MARBLE_WRAPPER = css`
   overflow: hidden;
   border-radius: 24px;
   z-index: -1;
+
+  ${jumperFadeInAnimation};
 `;
 
 const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
@@ -210,6 +222,8 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
     backdrop-filter: blur(75px);
     background-color: ${theme.semantic.bgBlurWhite};
   }
+
+  ${jumperFadeInAnimation};
 `;
 
 const STYLES_SEARCH_WRAPPER = css`
@@ -271,6 +285,19 @@ const STYLES_VIEWS_MENU = (theme) => css`
     backdrop-filter: blur(75px);
     background-color: ${theme.semantic.bgBlurWhiteOP};
   }
+
+  @keyframes views-menu-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(calc(-100% + 16px));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(-100%);
+    }
+  }
+
+  animation: views-menu-fade-in 200ms ease;
 `;
 
 const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
