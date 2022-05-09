@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { isToday, isYesterday } from "../../../Common/utilities";
+import { viewsType } from "../";
 
 const removeSessionDuplicateVisits = (session) => {
   const isAlreadyAdded = {};
@@ -12,19 +13,19 @@ const removeSessionDuplicateVisits = (session) => {
   return session;
 };
 
-// const removeViewsDuplicateSession = (sessions) => {
-//   const isAlreadyAdded = {};
-//   return sessions.filter(({ item: session }) => {
-//     if (session.visits.length > 1) return true;
-//     const visitUrl = session.visits[0].url;
-//     if (visitUrl in isAlreadyAdded) {
-//       return false;
-//     } else {
-//       isAlreadyAdded[visitUrl] = true;
-//       return true;
-//     }
-//   });
-// };
+const removeViewsDuplicateSession = (sessions) => {
+  const isAlreadyAdded = {};
+  return sessions.filter(({ item: session }) => {
+    if (session.visits.length > 1) return true;
+    const visitUrl = session.visits[0].url;
+    if (visitUrl in isAlreadyAdded) {
+      return false;
+    } else {
+      isAlreadyAdded[visitUrl] = true;
+      return true;
+    }
+  });
+};
 
 const filterSessionsFeed = ({ sessionsFeed, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
@@ -142,63 +143,34 @@ export const useHistoryState = () => {
     });
   };
 
-  //   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
-  //   const loadMoreHistory = () => {
-  //     if (!paramsRef.current.canFetchMore) return;
-
-  //     window.postMessage(
-  //       {
-  //         type: messages.historyChunkRequest,
-  //         startIndex: paramsRef.current.startIndex,
-  //       },
-  //       "*"
-  //     );
-  //   };
-
-  //   // handle messaging
-
-  //   React.useEffect(() => {
-  //     let handleMessage = (event) => {
-  //       let { data, type } = event.data;
-  //       if (type === messages.historyChunkResponse) {
-  //         if (data.canFetchMore) {
-  //           paramsRef.current.startIndex += data.history.length;
-  //         } else {
-  //           paramsRef.current.canFetchMore = false;
-  //         }
-  //         setSessionsFeed((prevFeed) => {
-  //           const newFeed = updateSessionsFeed({
-  //             sessionsFeed: { ...prevFeed },
-  //             history: data.history,
-  //           });
-  //           return newFeed;
-  //         });
-
-  //         if (data.windows) {
-  //           setWindowsFeed(
-  //             createWindowsFeed({
-  //               windows: data.windows,
-  //               activeWindowId: data.activeWindowId,
-  //             })
-  //           );
-  //         }
-  //         return;
-  //       }
-
-  //       if (type === messages.windowsUpdate) {
-  //         setWindowsFeed(
-  //           createWindowsFeed({
-  //             windows: data.windows,
-  //             activeWindowId: data.activeWindowId,
-  //           })
-  //         );
-  //       }
-  //     };
-  //     window.addEventListener("message", handleMessage);
-
-  //     loadMoreHistory();
-  //     return () => window.removeEventListener("message", handleMessage);
-  //   }, []);
-
   return { sessionsFeed: feed, sessionsFeedKeys, setSessionsFeed };
+};
+
+export const useViewsState = () => {
+  const [views, setViewsState] = React.useState({
+    feed: [],
+    type: viewsType.recent,
+    query: "",
+  });
+
+  const setViewsParams = ({ type, query }) => {
+    setViewsState((prev) => ({ ...prev, type, query }));
+  };
+
+  const setViewsFeed = (result) => {
+    setViewsState((prev) => ({
+      ...prev,
+      feed: removeViewsDuplicateSession(result),
+    }));
+  };
+
+  return [
+    {
+      viewsFeed: views.feed,
+      currentView: views.type,
+      viewQuery: views.query,
+      viewsType,
+    },
+    { setViewsFeed, setViewsParams },
+  ];
 };

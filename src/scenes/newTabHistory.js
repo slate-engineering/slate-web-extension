@@ -1,11 +1,12 @@
 import * as React from "react";
-import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
+import * as Typography from "../Components/system/Typography";
+import * as Views from "../Components/Views";
 
 import HistoryFeed from "../Components/HistoryFeed";
 
-import { useHistory } from "../Core/history/app/newTab";
+import { useHistory, useViews } from "../Core/history/app/newTab";
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
 
@@ -59,44 +60,6 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   }
 `;
 
-const STYLES_VIEWS_MENU = (theme) => css`
-  ${Styles.HORIZONTAL_CONTAINER};
-  width: 100%;
-  height: 56px;
-
-  padding: 12px 24px;
-  background-color: ${theme.semantic.bgWhite};
-`;
-
-const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
-  background-color: ${theme.semantic.bgGrayLight};
-  color: ${theme.semantic.textBlack};
-`;
-
-const STYLES_VIEWS_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  border-radius: 12px;
-  padding: 5px 12px 7px;
-  color: ${theme.semantic.textGray};
-
-  &:hover {
-    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
-  }
-`;
-
-const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  margin-left: auto;
-  border-radius: 8px;
-  padding: 8px;
-  height: 32px;
-  width: 32px;
-
-  &:hover {
-    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
-  }
-`;
-
 const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};
   position: absolute;
@@ -136,6 +99,9 @@ export default function HistoryScene() {
   const { windowsFeed, sessionsFeed, sessionsFeedKeys, loadMoreHistory } =
     useHistory();
 
+  const { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed } =
+    useViews();
+
   return (
     <div css={STYLES_APP_MODAL}>
       <section css={STYLES_SEARCH_WRAPPER}>
@@ -155,76 +121,43 @@ export default function HistoryScene() {
 
       <Divider color="borderGrayLight" />
 
-      <section css={STYLES_VIEWS_MENU}>
-        <Typography.H5
-          css={[STYLES_VIEWS_BUTTON, STYLES_VIEWS_BUTTON_ACTIVE]}
-          as="button"
-        >
-          Recent
-        </Typography.H5>
-
-        <Typography.H5
-          css={[STYLES_VIEWS_BUTTON]}
-          as="button"
-          style={{ marginLeft: 12 }}
-        >
-          Twitter
-        </Typography.H5>
-
-        <Typography.H5
-          css={[STYLES_VIEWS_BUTTON]}
-          as="button"
-          style={{ marginLeft: 12 }}
-        >
-          Youtube
-        </Typography.H5>
-
-        <Typography.H5
-          css={[STYLES_VIEWS_BUTTON]}
-          as="button"
-          style={{ marginLeft: 12 }}
-        >
-          Hacker news
-        </Typography.H5>
-
-        <Typography.H5
-          css={[STYLES_VIEWS_BUTTON]}
-          as="button"
-          style={{ marginLeft: 12 }}
-        >
-          Google Searches
-        </Typography.H5>
-
-        <button css={STYLES_VIEWS_ADD_BUTTON}>
-          <SVG.Plus width={16} height={16} />
-        </button>
-      </section>
-
-      <Divider color="borderGrayLight" />
-
-      <section
-        css={Styles.HORIZONTAL_CONTAINER}
-        style={{ height: "100%", flex: 1, overflow: "hidden" }}
+      <Views.Provider
+        viewsFeed={viewsFeed}
+        currentView={currentView}
+        viewQuery={viewQuery}
+        viewsType={viewsType}
+        getViewsFeed={getViewsFeed}
       >
-        <div style={{ flexGrow: 1 }}>
-          <section css={STYLES_FILTERS_MENU}>
-            <button css={STYLES_FILTER_BUTTON}>
-              <SVG.Plus width={16} height={16} />
-              <Typography.H5 as="span">Filter</Typography.H5>
-            </button>
-          </section>
-          <HistoryFeed
-            windowsFeed={windowsFeed}
-            sessionsFeed={sessionsFeed}
-            sessionsFeedKeys={sessionsFeedKeys}
-            onLoadMore={loadMoreHistory}
-            onObjectHover={() => {}}
-            style={{ padding: "0px 16px 32px" }}
-          />
-        </div>
-        <Divider width="1px" height="100%" color="borderGrayLight" />
-        <div style={{ width: 480 }}></div>
-      </section>
+        <Views.Menu />
+        <Divider color="borderGrayLight" />
+        <section
+          css={Styles.HORIZONTAL_CONTAINER}
+          style={{ height: "100%", flex: 1, overflow: "hidden" }}
+        >
+          <div style={{ flexGrow: 1 }}>
+            <section css={STYLES_FILTERS_MENU}>
+              <button css={STYLES_FILTER_BUTTON}>
+                <SVG.Plus width={16} height={16} />
+                <Typography.H5 as="span">Filter</Typography.H5>
+              </button>
+            </section>
+            {currentView === viewsType.recent ? (
+              <HistoryFeed
+                windowsFeed={windowsFeed}
+                sessionsFeed={sessionsFeed}
+                sessionsFeedKeys={sessionsFeedKeys}
+                onLoadMore={loadMoreHistory}
+                onObjectHover={() => {}}
+                style={{ padding: "0px 16px 32px" }}
+              />
+            ) : (
+              <Views.Feed />
+            )}
+          </div>
+          <Divider width="1px" height="100%" color="borderGrayLight" />
+          <div style={{ width: 480 }}></div>
+        </section>
+      </Views.Provider>
     </div>
   );
 }

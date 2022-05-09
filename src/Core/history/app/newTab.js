@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState } from "./";
+import { useHistoryState, useOpenWindowsState, useViewsState } from "./";
 import { messages } from "../";
 
 export const useHistory = () => {
@@ -52,4 +52,25 @@ export const useHistory = () => {
   }, []);
 
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
+};
+
+export const useViews = () => {
+  const [
+    { viewsFeed, currentView, viewQuery, viewsType },
+    { setViewsFeed, setViewsParams },
+  ] = useViewsState();
+
+  const getViewsFeed = ({ type, query }) => {
+    setViewsParams({ type, query });
+    if (type === viewsType.relatedLinks && query) {
+      chrome.runtime.sendMessage(
+        { type: messages.viewByTypeRequest, query },
+        (response) => {
+          setViewsFeed(response.result);
+        }
+      );
+    }
+  };
+
+  return { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed };
 };
