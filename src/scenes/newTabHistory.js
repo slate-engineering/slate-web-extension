@@ -5,6 +5,7 @@ import * as Typography from "../Components/system/Typography";
 import * as Views from "../Components/Views";
 
 import HistoryFeed from "../Components/HistoryFeed";
+import LinkPreview from "../Components/LinkPreview";
 
 import { useHistory, useViews } from "../Core/history/app/newTab";
 import { Divider } from "../Components/Divider";
@@ -102,6 +103,8 @@ export default function HistoryScene() {
   const { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed } =
     useViews();
 
+  const [preview, setPreview] = React.useState({ url: "", title: "" });
+
   return (
     <div css={STYLES_APP_MODAL}>
       <section css={STYLES_SEARCH_WRAPPER}>
@@ -147,7 +150,7 @@ export default function HistoryScene() {
                 sessionsFeed={sessionsFeed}
                 sessionsFeedKeys={sessionsFeedKeys}
                 onLoadMore={loadMoreHistory}
-                onObjectHover={() => {}}
+                onObjectHover={({ url, title }) => setPreview({ url, title })}
                 style={{ padding: "0px 16px 32px" }}
               />
             ) : (
@@ -155,7 +158,13 @@ export default function HistoryScene() {
             )}
           </div>
           <Divider width="1px" height="100%" color="borderGrayLight" />
-          <div style={{ width: 480 }}></div>
+          <div style={{ width: 480 }}>
+            <LinkPreview
+              url={preview.url}
+              title={preview.title}
+              style={{ width: "100%", height: "100%" }}
+            />
+          </div>
         </section>
       </Views.Provider>
     </div>

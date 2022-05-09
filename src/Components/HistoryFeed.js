@@ -87,7 +87,9 @@ export default function HistoryFeed({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
-                  onMouseEnter={() => onObjectHover({ url: tab.url })}
+                  onMouseEnter={() =>
+                    onObjectHover({ url: tab.url, title: tab.title })
+                  }
                 />
               ))}
             </ListView.Section>
@@ -108,7 +110,9 @@ export default function HistoryFeed({
                       query: { tabId: tab.id, windowId: tab.windowId },
                     })
                   }
-                  onMouseEnter={() => onObjectHover({ url: tab.url })}
+                  onMouseEnter={() =>
+                    onObjectHover({ url: tab.url, title: tab.title })
+                  }
                 />
               ))}
             </ListView.Section>
@@ -132,7 +136,9 @@ export default function HistoryFeed({
                   title={visit.title}
                   Favicon={getFavicon(visit.rootDomain)}
                   onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-                  onMouseEnter={() => onObjectHover({ url: visit.url })}
+                  onMouseEnter={() =>
+                    onObjectHover({ url: visit.url, title: visit.title })
+                  }
                 />
               ));
             })}
