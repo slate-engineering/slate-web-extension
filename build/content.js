@@ -746,16 +746,17 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === navigation_messages.closeExtensionJumperRequest) {
+    closeApp();
+  }
+
   if (event.data.type === navigation_messages.openURLsRequest) {
     chrome.runtime.sendMessage({
       type: navigation_messages.openURLsRequest,
       urls: event.data.urls,
+      query: event.data.query,
     });
     return;
-  }
-
-  if (event.data.type === navigation_messages.closeExtensionJumperRequest) {
-    closeApp();
   }
 });
 
