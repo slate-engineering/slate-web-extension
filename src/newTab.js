@@ -1,10 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import HistoryScene from "./scenes/newTabHistory";
+import EmotionThemeProvider from "./Components/EmotionThemeProvider";
+import EmotionGlobalStyles from "./Components/EmotionGlobalStyles";
 
 ReactDOM.render(
   <>
     <React.StrictMode>
-      <div>test</div>
+      <EmotionThemeProvider>
+        <EmotionGlobalStyles />
+        <HistoryScene />
+      </EmotionThemeProvider>
     </React.StrictMode>
   </>,
   document.getElementById("modal-window-slate-extension")
