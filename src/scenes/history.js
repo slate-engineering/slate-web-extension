@@ -4,17 +4,14 @@ import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
 import * as Navigation from "../Core/navigation/app";
+import * as Views from "../Components/Views";
 
 import HistoryFeed from "../Components/HistoryFeed";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
-import {
-  useGetRelatedLinks,
-  useHistorySearch,
-  useViews,
-} from "../Core/history/app";
-import { useHistory } from "../Core/history/app/jumper";
+import { useGetRelatedLinks, useHistorySearch } from "../Core/history/app";
+import { useHistory, useViews } from "../Core/history/app/jumper";
 import { getFavicon } from "../Common/favicons";
 
 /* -------------------------------------------------------------------------------------------------
@@ -264,16 +261,14 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   }
 `;
 
-const STYLES_VIEWS_MENU = (theme) => css`
+const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
   position: absolute;
   z-index: -1;
-  width: 100%;
-  height: 56px;
   left: 0%;
   top: -17px;
   transform: translateY(-100%);
-  padding: 12px 24px;
+
   border-radius: 24px;
   background-color: white;
   border: 1px solid ${theme.semantic.borderGrayLight4};
@@ -299,35 +294,6 @@ const STYLES_VIEWS_MENU = (theme) => css`
   }
 
   animation: views-menu-fade-in 200ms ease;
-`;
-
-const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
-  background-color: ${theme.semantic.bgGrayLight};
-  color: ${theme.semantic.textBlack};
-`;
-
-const STYLES_VIEWS_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  border-radius: 12px;
-  padding: 5px 12px 7px;
-  color: ${theme.semantic.textGray};
-
-  &:hover {
-    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
-  }
-`;
-
-const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  margin-left: auto;
-  border-radius: 8px;
-  padding: 8px;
-  height: 32px;
-  width: 32px;
-
-  &:hover {
-    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
-  }
 `;
 
 const STYLES_RELATED_LINKS_POPUP_HEADER = css`
@@ -428,154 +394,73 @@ export default function History() {
 
   return (
     <div css={STYLES_APP_MODAL_POSITION}>
-      <section css={STYLES_VIEWS_MENU}>
-        <Typography.H5
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewsType.recent && STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          as="button"
-          onClick={() => getViewsFeed({ type: viewsType.recent })}
-        >
-          Recent
-        </Typography.H5>
+      <Views.Provider
+        viewsFeed={viewsFeed}
+        currentView={currentView}
+        viewQuery={viewQuery}
+        viewsType={viewsType}
+        getViewsFeed={getViewsFeed}
+      >
+        <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
 
-        <Typography.H5
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewsType.relatedLinks &&
-              viewQuery === "https://twitter.com/" &&
-              STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          as="button"
-          style={{ marginLeft: 12 }}
-          onClick={() =>
-            getViewsFeed({
-              type: viewsType.relatedLinks,
-              query: "https://twitter.com/",
-            })
-          }
-        >
-          Twitter
-        </Typography.H5>
+        {preview && (
+          <div css={STYLES_RELATED_LINKS_POPUP}>
+            {preview.type === "session" ? (
+              <SessionPreview session={preview.session} />
+            ) : (
+              <ObjectPreview url={preview.url} />
+            )}
+          </div>
+        )}
 
-        <Typography.H5
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewsType.relatedLinks &&
-              viewQuery === "https://www.youtube.com/" &&
-              STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          as="button"
-          style={{ marginLeft: 12 }}
-          onClick={() =>
-            getViewsFeed({
-              type: viewsType.relatedLinks,
-              query: "https://www.youtube.com/",
-            })
-          }
-        >
-          Youtube
-        </Typography.H5>
-
-        <Typography.H5
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewsType.relatedLinks &&
-              viewQuery === "https://news.ycombinator.com/" &&
-              STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          as="button"
-          style={{ marginLeft: 12 }}
-          onClick={() =>
-            getViewsFeed({
-              type: viewsType.relatedLinks,
-              query: "https://news.ycombinator.com/",
-            })
-          }
-        >
-          Hacker news
-        </Typography.H5>
-
-        <Typography.H5
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewsType.relatedLinks &&
-              viewQuery === "https://developer.chrome.com/" &&
-              STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          as="button"
-          style={{ marginLeft: 12 }}
-          onClick={() =>
-            getViewsFeed({
-              type: viewsType.relatedLinks,
-              query: "https://www.google.com/search?",
-            })
-          }
-        >
-          Google Searches
-        </Typography.H5>
-
-        <button css={STYLES_VIEWS_ADD_BUTTON}>
-          <SVG.Plus width={16} height={16} />
-        </button>
-      </section>
-
-      {preview && currentView === viewsType.recent && (
-        <div css={STYLES_RELATED_LINKS_POPUP}>
-          {preview.type === "session" ? (
-            <SessionPreview session={preview.session} />
-          ) : (
-            <ObjectPreview url={preview.url} />
-          )}
-        </div>
-      )}
-
-      <div css={STYLES_APP_MODAL}>
-        <section css={STYLES_SEARCH_WRAPPER}>
-          <input
-            css={STYLES_SEARCH_INPUT}
-            ref={inputRef}
-            placeholder="Search by keywords, filters, tags"
-            name="search"
-            onChange={handleInputChange}
-            autoComplete="off"
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-          />
-          {search.query.length > 0 ? (
-            <SearchDismiss onClick={clearSearch} />
-          ) : (
-            <button css={STYLES_FILTER_TOGGLE_BUTTON}>
-              <SVG.Filter width={16} height={16} />
-            </button>
-          )}
-        </section>
-        <Divider color="borderGrayLight" />
-        <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
-          <SVG.Plus width={16} height={16} />
-          <Typography.H5 as="span">Filter</Typography.H5>
-        </button>
-        <Divider color="borderGrayLight" />
-        <section
-          css={Styles.HORIZONTAL_CONTAINER}
-          style={{ height: "100%", flex: 1, overflow: "hidden" }}
-        >
-          {search.query.length > 0 && search.result ? (
-            <SearchFeed sessions={search.result} setPreview={setPreview} />
-          ) : currentView === viewsType.recent ? (
-            <HistoryFeed
-              sessionsFeed={sessionsFeed}
-              sessionsFeedKeys={sessionsFeedKeys}
-              windowsFeed={windowsFeed}
-              loadMoreHistory={loadMoreHistory}
-              setPreview={setPreview}
+        <div css={STYLES_APP_MODAL}>
+          <section css={STYLES_SEARCH_WRAPPER}>
+            <input
+              css={STYLES_SEARCH_INPUT}
+              ref={inputRef}
+              placeholder="Search by keywords, filters, tags"
+              name="search"
+              onChange={handleInputChange}
+              autoComplete="off"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
             />
-          ) : (
-            <SearchFeed sessions={viewsFeed} setPreview={setPreview} />
-          )}
-        </section>
-      </div>
+            {search.query.length > 0 ? (
+              <SearchDismiss onClick={clearSearch} />
+            ) : (
+              <button css={STYLES_FILTER_TOGGLE_BUTTON}>
+                <SVG.Filter width={16} height={16} />
+              </button>
+            )}
+          </section>
+          <Divider color="borderGrayLight" />
+          <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
+            <SVG.Plus width={16} height={16} />
+            <Typography.H5 as="span">Filter</Typography.H5>
+          </button>
+          <Divider color="borderGrayLight" />
+          <section
+            css={Styles.HORIZONTAL_CONTAINER}
+            style={{ height: "100%", flex: 1, overflow: "hidden" }}
+          >
+            {search.query.length > 0 && search.result ? (
+              <SearchFeed sessions={search.result} setPreview={setPreview} />
+            ) : currentView === viewsType.recent ? (
+              <HistoryFeed
+                sessionsFeed={sessionsFeed}
+                sessionsFeedKeys={sessionsFeedKeys}
+                windowsFeed={windowsFeed}
+                loadMoreHistory={loadMoreHistory}
+                onObjectHover={({ url }) => setPreview({ type: "link", url })}
+              />
+            ) : (
+              <Views.Feed
+                onObjectHover={({ url }) => setPreview({ type: "link", url })}
+              />
+            )}
+          </section>
+        </div>
+      </Views.Provider>
       <div css={STYLES_MARBLE_WRAPPER}>
         <SVG.Marble />
       </div>

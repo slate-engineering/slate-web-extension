@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState } from "./";
+import { useHistoryState, useOpenWindowsState, useViewsState } from "./";
 import { messages } from "../";
 
 export const useHistory = () => {
@@ -54,4 +54,35 @@ export const useHistory = () => {
   }, []);
 
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
+};
+
+export const useViews = () => {
+  const [
+    { viewsFeed, currentView, viewQuery, viewsType },
+    { setViewsFeed, setViewsParams },
+  ] = useViewsState();
+
+  const getViewsFeed = ({ type, query }) => {
+    setViewsParams({ type, query });
+    if (type === viewsType.relatedLinks && query) {
+      window.postMessage({ type: messages.viewByTypeRequest, query }, "*");
+    }
+  };
+
+  const paramsRef = React.useRef();
+  paramsRef.current = { type: currentView, query: viewQuery };
+  React.useEffect(() => {
+    let handleMessage = (event) => {
+      if (paramsRef.current.type === viewsType.recent) return;
+      let { data, type } = event.data;
+      if (type === messages.viewByTypeResponse) {
+        if (data.query === paramsRef.current.query) setViewsFeed(data.result);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed };
 };

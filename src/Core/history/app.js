@@ -288,7 +288,6 @@ export const useViews = () => {
     query: "",
   });
 
-  const paramsRef = React.useRef();
   const getViewsFeed = ({ type, query }) => {
     setViews((prev) => ({ ...prev, type, query }));
     if (type === viewsType.relatedLinks && query) {
@@ -296,6 +295,7 @@ export const useViews = () => {
     }
   };
 
+  const paramsRef = React.useRef();
   paramsRef.current = { type: views.type, query: views.query };
   React.useEffect(() => {
     let handleMessage = (event) => {
