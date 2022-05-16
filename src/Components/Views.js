@@ -90,7 +90,6 @@ function Menu({ css, ...props }) {
         as="button"
         style={{ marginLeft: 12 }}
         onClick={() => {
-          console.log("TESTS");
           getViewsFeed({
             type: viewsType.relatedLinks,
             query: "https://twitter.com/",

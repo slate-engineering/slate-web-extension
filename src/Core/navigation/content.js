@@ -1,15 +1,29 @@
+import * as Constants from "../../Common/constants";
+
 import { messages } from "./";
 
-const EXTENSION_JUMPER_WRAPPER_ID = "jumper-slate-extension-wrapper";
+// SOURCE(amine): https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
+const setInnerHTML = (element, html) => {
+  element.innerHTML = html;
+  Array.from(element.querySelectorAll("script")).forEach((oldScript) => {
+    const newScript = document.createElement("script");
+    Array.from(oldScript.attributes).forEach((attr) =>
+      newScript.setAttribute(attr.name, attr.value)
+    );
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+};
 
 const getExtensionJumperWrapper = () =>
-  document.getElementById(EXTENSION_JUMPER_WRAPPER_ID);
+  document.getElementById(Constants.jumperSlateExtensionWrapper);
 
 const createExtensionJumperWrapper = () => {
   if (getExtensionJumperWrapper()) return;
 
   const wrapper = document.createElement("div");
-  wrapper.setAttribute("id", EXTENSION_JUMPER_WRAPPER_ID);
+  wrapper.setAttribute("id", Constants.jumperSlateExtensionWrapper);
+  wrapper.setAttribute("data-url", chrome.runtime.getURL("/"));
   document.body.appendChild(wrapper);
 };
 
@@ -28,7 +42,7 @@ export const openApp = () => {
         /\/static\//g,
         `${extensionOrigin}/static/`
       );
-      $(styleStashHTML).appendTo(`#${EXTENSION_JUMPER_WRAPPER_ID}`);
+      setInnerHTML(getExtensionJumperWrapper(), styleStashHTML);
     })
     .catch((error) => {
       console.warn(error);
