@@ -2,36 +2,29 @@ import * as Constants from "../../Common/constants";
 
 import { css } from "@emotion/react";
 
+const extensionURL = document
+  .getElementById(Constants.jumperSlateExtensionWrapper)
+  .getAttribute("data-url");
 /* prettier-ignore */
 export const injectGlobalStyles = () => css`
   @font-face {
-    font-family: 'mono';
-    src: url('https://slate.textile.io/ipfs/bafkreialkhtjtpwocdadbmra3o7mii47bzgl3k2v2ossrpvhk3qqsbqtza');
-  }
-
-  @font-face {
-    font-family: 'mono-bold';
-    src: url('https://slate.textile.io/ipfs/bafkreigaktonxehwl5bzah5ze4iruw272qybj22wpy32pgrcka3y4jvhc4');
-  }
-
-  @font-face {
     font-family: 'inter-regular';
-    src: url('https://slate.textile.io/ipfs/bafkreic3hkcuwvrmf6trweqcjp62valsfjh3zvwacikoreynakgw67wrvy');
+    src: url('${extensionURL}fonts/inter-regular.ttf');
   }
 
   @font-face {
     font-family: 'inter-semi-bold';
-    src: url('https://slate.textile.io/ipfs/bafkreiaezvuz6wawoqyntfl4gbprol3e7majovgof3uxvhilvd2pgk4w54');
+    src: url('${extensionURL}fonts/inter-semi-medium.ttf');
   }
 
   @font-face {
     font-family: 'inter-bold';
-    src: url('https://slate.textile.io/ipfs/bafybeigljfbymd52vnrie6qkcy4u4kplsz4yen2idpizhr3dvrgy7kufaq');
+    src: url('${extensionURL}fonts/inter-bold.ttf');
   }
 
   @font-face {
     font-family: 'inter-medium';
-    src: url('https://slate.textile.io/ipfs/bafkreiapyxmqjwoowqpek2cjocouzxoalwlzwwbv3dscug3e5l2ok7xmqe');
+    src: url('${extensionURL}fonts/inter-medium.ttf');
   }
 
   html, body, div, span, applet, object, iframe,
