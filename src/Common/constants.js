@@ -16,6 +16,7 @@ export const sizes = {
   header: 56,
   tablet: 960,
   desktop: 1024,
+  desktopM: 1300,
   topOffset: 0, //NOTE(martina): Pushes UI down. 16 when there is a persistent announcement banner, 0 otherwise
 };
 
@@ -247,3 +248,5 @@ export const grids = {
 
 export const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
+
+export const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
