@@ -2,9 +2,10 @@ import * as Constants from "../../Common/constants";
 
 import { css } from "@emotion/react";
 
-const extensionURL = document
-  .getElementById(Constants.jumperSlateExtensionWrapper)
-  .getAttribute("data-url");
+const extensionURL =
+  document
+    .getElementById(Constants.jumperSlateExtensionWrapper)
+    ?.getAttribute("data-url") || "/";
 /* prettier-ignore */
 export const injectGlobalStyles = () => css`
   @font-face {

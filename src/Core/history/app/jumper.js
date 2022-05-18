@@ -58,7 +58,7 @@ export const useHistory = () => {
 
 export const useViews = () => {
   const [
-    { viewsFeed, currentView, viewQuery, viewsType },
+    { viewsFeed, currentView, currentViewQuery, viewsType },
     { setViewsFeed, setViewsParams },
   ] = useViewsState();
 
@@ -70,7 +70,7 @@ export const useViews = () => {
   };
 
   const paramsRef = React.useRef();
-  paramsRef.current = { type: currentView, query: viewQuery };
+  paramsRef.current = { type: currentView, query: currentViewQuery };
   React.useEffect(() => {
     let handleMessage = (event) => {
       if (paramsRef.current.type === viewsType.recent) return;
@@ -84,5 +84,5 @@ export const useViews = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  return { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed };
+  return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
 };

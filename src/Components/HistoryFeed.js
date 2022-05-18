@@ -36,7 +36,6 @@ const useHistoryInfiniteScroll = ({
 };
 
 export default function HistoryFeed({
-  windowsFeed,
   sessionsFeed,
   sessionsFeedKeys,
   onLoadMore,
@@ -45,22 +44,6 @@ export default function HistoryFeed({
   css,
   ...props
 }) {
-  const isSessionOpenInTheBrowser = (session) => {
-    if (session.visits.length !== 1) return false;
-
-    for (let tab of windowsFeed.thisWindow) {
-      if (tab.url === session.visits[0].url) {
-        return true;
-      }
-    }
-    for (let tab of windowsFeed.currentlyOpen) {
-      if (tab.url === session.visits[0].url) {
-        return true;
-      }
-    }
-    return false;
-  };
-
   const historyWrapperRef = React.useRef();
   useHistoryInfiniteScroll({
     onLoadMore,
@@ -70,56 +53,6 @@ export default function HistoryFeed({
 
   return (
     <ListView.Root ref={historyWrapperRef} css={css} {...props}>
-      {windowsFeed.thisWindow.length || windowsFeed.currentlyOpen.length ? (
-        <>
-          {windowsFeed.thisWindow.length ? (
-            <ListView.Section>
-              <ListView.Title count={windowsFeed.thisWindow.length}>
-                This Window
-              </ListView.Title>
-              {windowsFeed.thisWindow.map((tab) => (
-                <ListView.Object
-                  key={tab.id}
-                  title={tab.title}
-                  Favicon={getFavicon(tab.rootDomain)}
-                  onClick={() =>
-                    onOpenUrl({
-                      query: { tabId: tab.id, windowId: tab.windowId },
-                    })
-                  }
-                  onMouseEnter={() =>
-                    onObjectHover({ url: tab.url, title: tab.title })
-                  }
-                />
-              ))}
-            </ListView.Section>
-          ) : null}
-
-          {windowsFeed.currentlyOpen.length ? (
-            <ListView.Section>
-              <ListView.Title count={windowsFeed.currentlyOpen.length}>
-                Currently Open
-              </ListView.Title>
-              {windowsFeed.currentlyOpen.map((tab) => (
-                <ListView.Object
-                  key={tab.id}
-                  title={tab.title}
-                  Favicon={getFavicon(tab.rootDomain)}
-                  onClick={() =>
-                    onOpenUrl({
-                      query: { tabId: tab.id, windowId: tab.windowId },
-                    })
-                  }
-                  onMouseEnter={() =>
-                    onObjectHover({ url: tab.url, title: tab.title })
-                  }
-                />
-              ))}
-            </ListView.Section>
-          ) : null}
-          <Divider color="borderGrayLight" style={{ margin: "4px 12px" }} />
-        </>
-      ) : null}
       {sessionsFeedKeys.map((key) => {
         if (!sessionsFeed[key].length) return null;
 
@@ -127,9 +60,6 @@ export default function HistoryFeed({
           <ListView.Section key={key}>
             <ListView.Title>{key}</ListView.Title>
             {sessionsFeed[key].map((session) => {
-              if (key === "Today" && isSessionOpenInTheBrowser(session))
-                return null;
-
               return session.visits.map((visit) => (
                 <ListView.Object
                   key={visit.session + visit.id}

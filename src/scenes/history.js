@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
@@ -7,138 +6,54 @@ import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
 
 import HistoryFeed from "../Components/HistoryFeed";
+import WindowsFeed from "../Components/WindowsFeed";
+import RelatedLinksFeed from "../Components/RelatedLinksFeed";
+import Logo from "../Components/Logo";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
-import { useGetRelatedLinks, useHistorySearch } from "../Core/history/app";
+import { useHistorySearch } from "../Core/history/app";
 import { useHistory, useViews } from "../Core/history/app/jumper";
 import { getFavicon } from "../Common/favicons";
+import { useMediaQuery } from "../Common/hooks";
+import { Switch, Match } from "../Components/Switch";
 
 /* -------------------------------------------------------------------------------------------------
- * Object and Session previews
+ * Related Links Popup
  * -----------------------------------------------------------------------------------------------*/
-
-const STYLES_OBJECT_PREVIEW_LIST_WRAPPER = css`
-  padding: 0px 8px 24px;
-  @keyframes object-preview-fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+const STYLES_RELATED_LINKS_POPUP = (theme) => css`
+  position: absolute;
+  height: 376px;
+  width: calc(((100vw - ${MODALS_WIDTH}px) / 2) - 24px * 2);
+  max-width: 348px;
+  bottom: 0%;
+  right: -16px;
+  transform: translateX(100%);
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
   }
 
-  animation: object-preview-fade-in 250ms ease;
+  border-radius: 24px;
+  box-shadow: ${theme.shadow.lightLarge};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+
+  background-color: ${theme.semantic.bgWhite};
+  @supports (
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+  ) {
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
+    background-color: ${theme.semantic.bgBlurLightOP};
+  }
 `;
 
-function ObjectPreview({ url, ...props }) {
-  const relatedLinks = useGetRelatedLinks(url);
-  return (
-    relatedLinks && (
-      <ListView.Section {...props}>
-        <ListView.Title
-          css={STYLES_RELATED_LINKS_POPUP_HEADER}
-          count={relatedLinks.length}
-        >
-          Related
-        </ListView.Title>
-        <div css={STYLES_OBJECT_PREVIEW_LIST_WRAPPER}>
-          {relatedLinks
-            .flatMap(({ item: session }) => session.visits)
-            .map((visit, i) => (
-              <ListView.Object
-                key={visit.id + i}
-                title={visit.title}
-                Favicon={getFavicon(visit.rootDomain)}
-                onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-                onMouseEnter={(e) => e.target.focus()}
-              />
-            ))}
-        </div>
-      </ListView.Section>
-    )
-  );
-}
-
-const STYLES_SESSION_PREVIEW_WRAPPER = css`
-  padding: 120px 24px;
-`;
-
-const STYLES_SESSION_PREVIEW_LIST_ICON = (theme) => css`
-  ${Styles.CONTAINER_CENTERED};
-  flex-shrink: 0;
-  height: 52px;
-  width: 52px;
-  border-radius: 16px;
-  background-color: ${theme.semantic.bgGrayLight};
-  color: ${theme.semantic.textBlack};
-`;
-
-const STYLES_SESSION_PREVIEW_HEADER = css`
-  ${Styles.HORIZONTAL_CONTAINER};
-`;
-
-// const STYLES_SESSION_PREVIEW_TAGS = css``;
-
-const STYLES_SESSION_PREVIEW_ACTION = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  color: ${theme.semantic.textBlack};
-`;
-
-function SessionPreview({ session }) {
-  const handleOpenAllLinks = ({ newWindow = false } = { newWindow: false }) => {
-    Navigation.openUrls({
-      urls: session.visits.map((visit) => visit.url),
-      query: { newWindow },
-    });
-  };
+function RelatedLinksPopup({ preview }) {
+  const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
+  if (isMatchingQuery || !preview) return null;
 
   return (
-    <div css={STYLES_SESSION_PREVIEW_WRAPPER}>
-      <div css={STYLES_SESSION_PREVIEW_HEADER}>
-        <div css={STYLES_SESSION_PREVIEW_LIST_ICON}>
-          <SVG.List width={16} height={16} />
-        </div>
-        <div style={{ marginLeft: 16 }}>
-          <Typography.H4 color="textBlack" as="p" nbrOflines={1}>
-            {session.title}
-          </Typography.H4>
-          <Typography.H4 color="textGrayDark" as="p">
-            {session.visits.length} session links
-          </Typography.H4>
-        </div>
-      </div>
-
-      <Divider
-        color="borderGrayLight"
-        style={{ marginTop: 20, marginBottom: 20 }}
-      />
-
-      <div>
-        <button
-          css={STYLES_SESSION_PREVIEW_ACTION}
-          onClick={handleOpenAllLinks}
-        >
-          <SVG.ExternalLink width={16} height={16} />
-          <Typography.H4 color="textGrayDark" style={{ marginLeft: 12 }}>
-            Open All Links
-          </Typography.H4>
-        </button>
-        <button
-          css={STYLES_SESSION_PREVIEW_ACTION}
-          style={{ marginTop: 12 }}
-          onClick={() => handleOpenAllLinks({ newWindow: true })}
-        >
-          <SVG.ExternalLink width={16} height={16} />
-          <Typography.H4 color="textGrayDark" style={{ marginLeft: 12 }}>
-            Open In a New Window
-          </Typography.H4>
-        </button>
-      </div>
-      <Divider color="borderGrayLight" style={{ marginTop: 20 }} />
-    </div>
+    <RelatedLinksFeed css={STYLES_RELATED_LINKS_POPUP} url={preview.url} />
   );
 }
 
@@ -182,10 +97,10 @@ const STYLES_APP_MODAL = (theme) => css`
   position: relative;
   height: 100%;
   width: 100%;
-  border: 1px solid ${theme.semantic.borderGrayLight};
+  border: 1px solid ${theme.semantic.borderGrayLight4};
   box-shadow: ${theme.shadow.darkLarge};
   //NOTE(amine): when changing border-radius, change it also in STYLES_MARBLE_WRAPPER and STYLES_APP_MODAL_BACKGROUND
-  border-radius: 24px;
+  border-radius: 16px;
   overflow: hidden;
 
   ${jumperFadeInAnimation};
@@ -198,7 +113,7 @@ const STYLES_MARBLE_WRAPPER = css`
   height: 100%;
   width: 100%;
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: 16px;
   z-index: -1;
 
   ${jumperFadeInAnimation};
@@ -212,7 +127,7 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
   width: 100%;
   height: 100%;
   background-color: ${theme.semantic.white};
-  border-radius: 24px;
+  border-radius: 16px;
   @supports (
     (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
   ) {
@@ -227,6 +142,7 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
 const STYLES_SEARCH_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: relative;
+  padding: 0px 16px;
   height: 56px;
 `;
 
@@ -237,8 +153,7 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   -webkit-appearance: none;
   width: 100%;
   height: 100%;
-  padding: 0px 24px;
-  padding-left: ${DISMISS_BUTTON_WIDTH + 24}px;
+  padding-right: ${DISMISS_BUTTON_WIDTH + 24}px;
   background-color: transparent;
   outline: 0;
   border: none;
@@ -269,7 +184,7 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   top: -17px;
   transform: translateY(-100%);
 
-  border-radius: 24px;
+  border-radius: 16px;
   background-color: white;
   border: 1px solid ${theme.semantic.borderGrayLight4};
   box-shadow: ${theme.shadow.darkLarge};
@@ -296,53 +211,30 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   animation: views-menu-fade-in 200ms ease;
 `;
 
-const STYLES_RELATED_LINKS_POPUP_HEADER = css`
-  ${Styles.HORIZONTAL_CONTAINER};
-  padding: 13px 16px 11px;
-`;
+// const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
+//   ${Styles.BUTTON_RESET};
+//   position: absolute;
+//   top: 50%;
+//   transform: translateY(-50%);
+//   right: 16px;
 
-const STYLES_RELATED_LINKS_POPUP = (theme) => css`
-  position: absolute;
-  height: 376px;
-  width: calc(((100vw - ${MODALS_WIDTH}px) / 2) - 24px * 2);
-  max-width: 348px;
-  bottom: 0%;
-  right: -16px;
-  transform: translateX(100%);
-  overflow-y: auto;
-  &::-webkit-scrollbar {
-    display: none;
-  }
+//   width: 32px;
+//   height: 32px;
+//   border-radius: 8px;
+//   padding: 8px;
+//   background-color: ${theme.semantic.bgGrayLight};
+//   color: ${theme.system.blue};
+// `;
 
-  border-radius: 24px;
-  background-color: ${theme.semantic.bgWhite};
-  box-shadow: ${theme.shadow.darkLarge};
-`;
-
-const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 16px;
-
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  padding: 8px;
-  background-color: ${theme.semantic.bgGrayLight};
-  color: ${theme.system.blue};
-`;
-
-const STYLES_FILTER_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  border-radius: 12px;
-  padding: 5px 12px 7px;
-  width: 78px;
-  border: 1px solid ${theme.semantic.borderGrayLight};
-  color: ${theme.system.blue};
-`;
+// const STYLES_FILTER_BUTTON = (theme) => css`
+//   ${Styles.BUTTON_RESET};
+//   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+//   border-radius: 12px;
+//   padding: 5px 12px 7px;
+//   width: 78px;
+//   border: 1px solid ${theme.semantic.borderGrayLight};
+//   color: ${theme.system.blue};
+// `;
 
 const DISMISS_BUTTON_WIDTH = 16;
 const STYLES_DISMISS_BUTTON = (theme) => css`
@@ -386,7 +278,7 @@ export default function History() {
   const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
     useHistory();
 
-  const { viewsFeed, viewQuery, viewsType, getViewsFeed, currentView } =
+  const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
   // NOTE(amine) don't render the app when history isn't available
@@ -397,69 +289,81 @@ export default function History() {
       <Views.Provider
         viewsFeed={viewsFeed}
         currentView={currentView}
-        viewQuery={viewQuery}
+        currentViewQuery={currentViewQuery}
         viewsType={viewsType}
         getViewsFeed={getViewsFeed}
       >
         <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
 
-        {preview && (
-          <div css={STYLES_RELATED_LINKS_POPUP}>
-            {preview.type === "session" ? (
-              <SessionPreview session={preview.session} />
-            ) : (
-              <ObjectPreview url={preview.url} />
-            )}
-          </div>
-        )}
+        <RelatedLinksPopup preview={preview} />
 
         <div css={STYLES_APP_MODAL}>
           <section css={STYLES_SEARCH_WRAPPER}>
+            <Logo />
             <input
               css={STYLES_SEARCH_INPUT}
               ref={inputRef}
               placeholder="Search by keywords, filters, tags"
               name="search"
               onChange={handleInputChange}
+              style={{ marginLeft: 12 }}
               autoComplete="off"
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
             {search.query.length > 0 ? (
               <SearchDismiss onClick={clearSearch} />
-            ) : (
+            ) : null}
+            {/* (
               <button css={STYLES_FILTER_TOGGLE_BUTTON}>
                 <SVG.Filter width={16} height={16} />
               </button>
-            )}
+            ) */}
           </section>
-          <Divider color="borderGrayLight" />
+          {/* <Divider color="borderGrayLight" />
           <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
             <SVG.Plus width={16} height={16} />
             <Typography.H5 as="span">Filter</Typography.H5>
-          </button>
+          </button> */}
           <Divider color="borderGrayLight" />
           <section
             css={Styles.HORIZONTAL_CONTAINER}
             style={{ height: "100%", flex: 1, overflow: "hidden" }}
           >
-            {search.query.length > 0 && search.result ? (
-              <SearchFeed sessions={search.result} setPreview={setPreview} />
-            ) : currentView === viewsType.recent ? (
-              <HistoryFeed
+            <Switch>
+              <Match
+                when={search.query.length > 0 && search.result}
+                component={SearchFeed}
+                sessions={search.result}
+                setPreview={setPreview}
+              />
+              <Match
+                when={currentView === viewsType.recent}
+                component={HistoryFeed}
                 sessionsFeed={sessionsFeed}
                 sessionsFeedKeys={sessionsFeedKeys}
-                windowsFeed={windowsFeed}
                 loadMoreHistory={loadMoreHistory}
                 onObjectHover={({ url }) => setPreview({ type: "link", url })}
                 onOpenUrl={Navigation.openUrls}
               />
-            ) : (
-              <Views.Feed
+              <Match
+                when={
+                  currentView === viewsType.currentWindow ||
+                  currentView === viewsType.allOpen
+                }
+                component={WindowsFeed}
+                windowsFeed={windowsFeed}
+                displayAllOpen={currentView === viewsType.allOpen}
+                onObjectHover={({ url }) => setPreview({ type: "link", url })}
+                onOpenUrl={Navigation.openUrls}
+              />
+              <Match
+                when={currentView === viewsType.relatedLinks}
+                component={Views.Feed}
                 onOpenUrl={Navigation.openUrls}
                 onObjectHover={({ url }) => setPreview({ type: "link", url })}
               />
-            )}
+            </Switch>
           </section>
         </div>
       </Views.Provider>

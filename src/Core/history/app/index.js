@@ -109,8 +109,8 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
 
 export const useOpenWindowsState = () => {
   const initiateWindowsFeed = () => ({
-    thisWindow: [],
-    currentlyOpen: [],
+    currentWindow: [],
+    allOpen: [],
   });
   const [feed, setFeed] = React.useState(initiateWindowsFeed());
 
@@ -118,10 +118,10 @@ export const useOpenWindowsState = () => {
     const windowsFeed = initiateWindowsFeed();
     windows.forEach((window) => {
       if (window.id === activeWindowId) {
-        windowsFeed.thisWindow = window.tabs;
+        windowsFeed.currentWindow = window.tabs;
         return;
       }
-      windowsFeed.currentlyOpen.push(...window.tabs);
+      windowsFeed.allOpen.push(...window.tabs);
     });
     setFeed(windowsFeed);
   };
@@ -168,7 +168,7 @@ export const useViewsState = () => {
     {
       viewsFeed: views.feed,
       currentView: views.type,
-      viewQuery: views.query,
+      currentViewQuery: views.query,
       viewsType,
     },
     { setViewsFeed, setViewsParams },

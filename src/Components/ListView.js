@@ -52,7 +52,7 @@ const Title = ({ children, count, css, ...props }) => {
   return (
     <Typography.H5
       css={[STYLES_SESSION_TITLE, css]}
-      color="textGray"
+      color="textGrayDark"
       as="p"
       nbrOflines={1}
       {...props}

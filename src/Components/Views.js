@@ -6,6 +6,8 @@ import * as SVG from "../Common/SVG";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
+import { viewsType } from "../Core/history";
+import { Divider } from "./Divider";
 
 const ViewsContext = React.createContext();
 const useViewsContext = () => React.useContext(ViewsContext);
@@ -14,13 +16,19 @@ function Provider({
   children,
   viewsFeed,
   currentView,
-  viewQuery,
+  currentViewQuery,
   viewsType,
   getViewsFeed,
 }) {
   const value = React.useMemo(
-    () => ({ viewsFeed, currentView, viewQuery, viewsType, getViewsFeed }),
-    [viewsFeed, currentView, viewQuery, viewsType, getViewsFeed]
+    () => ({
+      viewsFeed,
+      currentView,
+      currentViewQuery,
+      viewsType,
+      getViewsFeed,
+    }),
+    [viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed]
   );
 
   return (
@@ -47,8 +55,7 @@ const STYLES_VIEWS_BUTTON = (theme) => css`
 const STYLES_VIEWS_MENU = css`
   ${Styles.HORIZONTAL_CONTAINER};
   width: 100%;
-  height: 56px;
-  padding: 12px 24px;
+  padding: 8px;
 `;
 
 const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
@@ -64,97 +71,73 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   }
 `;
 
+const VIEWS_ACTIONS = [
+  { label: "Recent", data: { type: viewsType.recent } },
+  { label: "Current Window", data: { type: viewsType.currentWindow } },
+  { label: "All Open", data: { type: viewsType.allOpen } },
+];
+
+const CUSTON_VIEWS_ACTIONS = [
+  {
+    label: "Twitter",
+    data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
+  },
+  {
+    label: "Youtube",
+    data: { type: viewsType.relatedLinks, query: "https://www.youtube.com/" },
+  },
+  {
+    label: "Google Searches",
+    data: {
+      type: viewsType.relatedLinks,
+      query: "https://www.google.com/search?",
+    },
+  },
+];
+
 function Menu({ css, ...props }) {
-  const { currentView, viewQuery, viewsType, getViewsFeed } = useViewsContext();
+  const { currentView, currentViewQuery, getViewsFeed } = useViewsContext();
 
   return (
     <section css={[STYLES_VIEWS_MENU, css]} {...props}>
-      <Typography.H5
-        css={[
-          STYLES_VIEWS_BUTTON,
-          currentView === viewsType.recent && STYLES_VIEWS_BUTTON_ACTIVE,
-        ]}
-        as="button"
-        onClick={() => getViewsFeed({ type: viewsType.recent })}
-      >
-        Recent
-      </Typography.H5>
+      {VIEWS_ACTIONS.map((viewAction, i) => (
+        <Typography.H5
+          key={viewAction.label}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewAction.data.type && STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
+          style={{ marginLeft: i > 0 ? 4 : 0 }}
+          as="button"
+          onClick={() => getViewsFeed({ type: viewAction.data.type })}
+        >
+          {viewAction.label}
+        </Typography.H5>
+      ))}
 
-      <Typography.H5
-        css={[
-          STYLES_VIEWS_BUTTON,
-          currentView === viewsType.relatedLinks &&
-            viewQuery === "https://twitter.com/" &&
-            STYLES_VIEWS_BUTTON_ACTIVE,
-        ]}
-        as="button"
-        style={{ marginLeft: 12 }}
-        onClick={() => {
-          getViewsFeed({
-            type: viewsType.relatedLinks,
-            query: "https://twitter.com/",
-          });
-        }}
-      >
-        Twitter
-      </Typography.H5>
+      <Divider height="none" width="1px" style={{ margin: "0px 4px" }} />
 
-      <Typography.H5
-        css={[
-          STYLES_VIEWS_BUTTON,
-          currentView === viewsType.relatedLinks &&
-            viewQuery === "https://www.youtube.com/" &&
-            STYLES_VIEWS_BUTTON_ACTIVE,
-        ]}
-        as="button"
-        style={{ marginLeft: 12 }}
-        onClick={() =>
-          getViewsFeed({
-            type: viewsType.relatedLinks,
-            query: "https://www.youtube.com/",
-          })
-        }
-      >
-        Youtube
-      </Typography.H5>
-
-      <Typography.H5
-        css={[
-          STYLES_VIEWS_BUTTON,
-          currentView === viewsType.relatedLinks &&
-            viewQuery === "https://news.ycombinator.com/" &&
-            STYLES_VIEWS_BUTTON_ACTIVE,
-        ]}
-        as="button"
-        style={{ marginLeft: 12 }}
-        onClick={() =>
-          getViewsFeed({
-            type: viewsType.relatedLinks,
-            query: "https://news.ycombinator.com/",
-          })
-        }
-      >
-        Hacker news
-      </Typography.H5>
-
-      <Typography.H5
-        css={[
-          STYLES_VIEWS_BUTTON,
-          currentView === viewsType.relatedLinks &&
-            viewQuery === "https://developer.chrome.com/" &&
-            STYLES_VIEWS_BUTTON_ACTIVE,
-        ]}
-        as="button"
-        style={{ marginLeft: 12 }}
-        onClick={() =>
-          getViewsFeed({
-            type: viewsType.relatedLinks,
-            query: "https://www.google.com/search?",
-          })
-        }
-      >
-        Google Searches
-      </Typography.H5>
+      {CUSTON_VIEWS_ACTIONS.map((viewAction) => (
+        <Typography.H5
+          key={viewAction.label}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewAction.data.type &&
+              currentViewQuery === viewAction.data.query &&
+              STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
+          style={{ marginLeft: 4 }}
+          as="button"
+          onClick={() =>
+            getViewsFeed({
+              type: viewAction.data.type,
+              query: viewAction.data.query,
+            })
+          }
+        >
+          {viewAction.label}
+        </Typography.H5>
+      ))}
 
       <button css={STYLES_VIEWS_ADD_BUTTON}>
         <SVG.Plus width={16} height={16} />
