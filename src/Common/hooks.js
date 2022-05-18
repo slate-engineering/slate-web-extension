@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as Constants from "../Common/constants";
 
 export const useEventListener = (
   { type, handler, ref, options, enabled = true },
@@ -42,4 +43,27 @@ export const useOnWindowBlur = (callback) => {
     return () =>
       window.removeEventListener(visibilityChange, handleVisibilityChange);
   }, []);
+};
+
+export const useMediaQuery = (getMediaQuery) => {
+  const MEDIA_SIZE = getMediaQuery(Constants.sizes) || Constants.sizes.mobile;
+  const mediaQuery = `(max-width: ${MEDIA_SIZE}px)`;
+
+  const [isMatchingQuery, setMatchingQuery] = React.useState(true);
+
+  const handleResize = () => {
+    const isMatchingQuery = window.matchMedia(mediaQuery).matches;
+    setMatchingQuery(isMatchingQuery);
+  };
+
+  React.useEffect(() => {
+    if (!window) return;
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // NOTE(amine): currently only support mobile breakpoint, we can add more breakpoints as needed.
+  return isMatchingQuery;
 };
