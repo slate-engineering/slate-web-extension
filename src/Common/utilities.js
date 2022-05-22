@@ -1,3 +1,5 @@
+import { jsx } from "@emotion/react";
+
 export const getAvatarUrl = (user) => {
   if (user.photo) return user.photo;
 
@@ -37,5 +39,24 @@ export const isYesterday = (date) => {
   return (
     yesterday.getDate() === date.getDate() &&
     yesterday.getMonth() === date.getMonth()
+  );
+};
+
+// NOTE(amine): workaround to support css prop in cloned elements
+// SOURCE(amine): https://github.com/emotion-js/emotion/issues/1404#issuecomment-504527459
+export const cloneElementWithJsx = (element, config, ...children) => {
+  return jsx(
+    element.props["__EMOTION_TYPE_PLEASE_DO_NOT_USE__"]
+      ? element.props["__EMOTION_TYPE_PLEASE_DO_NOT_USE__"]
+      : element.type,
+    {
+      key: element.key !== null ? element.key : undefined,
+      ref: element.ref,
+      ...element.props,
+      ...config,
+      style: { ...element.props?.style, ...config?.style },
+      css: [element.props?.css, config.css],
+    },
+    ...children
   );
 };
