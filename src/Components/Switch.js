@@ -7,24 +7,26 @@ export const Match = React.memo((/** { component, when } */) => {
 // NOTE(amine): displayName is used to assert that direct children of Switch are the Match components
 Match.displayName = "$";
 
-export const Switch = React.forwardRef(({ children, fallback = null }, ref) => {
-  if (Array.isArray(children)) {
-    for (let element of children) {
-      if (element.type.displayName !== "$")
-        console.error(
-          "Switch component requires Match component as its children"
-        );
+export const Switch = React.memo(
+  React.forwardRef(({ children, fallback = null }, ref) => {
+    if (Array.isArray(children)) {
+      for (let element of children) {
+        if (element.type.displayName !== "$")
+          console.error(
+            "Switch component requires Match component as its children"
+          );
 
-      if (element.props.when) {
-        const { component: Component, ...props } = element.props;
-        return <Component ref={ref} {...props} />;
+        if (element.props.when) {
+          const { component: Component, ...props } = element.props;
+          return <Component ref={ref} {...props} />;
+        }
       }
+
+      return fallback;
     }
 
+    if (children?.props?.when) return children;
+
     return fallback;
-  }
-
-  if (children?.props?.when) return children;
-
-  return fallback;
-});
+  })
+);

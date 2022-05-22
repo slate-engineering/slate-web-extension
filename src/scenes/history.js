@@ -12,11 +12,15 @@ import Logo from "../Components/Logo";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
-import { useHistorySearch } from "../Core/history/app";
-import { useHistory, useViews } from "../Core/history/app/jumper";
+import {
+  useHistory,
+  useViews,
+  useHistorySearch,
+} from "../Core/history/app/jumper";
 import { getFavicon } from "../Common/favicons";
 import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
+import { ComboboxNavigation } from "Components/ComboboxNavigation";
 
 /* -------------------------------------------------------------------------------------------------
  * Related Links Popup
@@ -281,6 +285,11 @@ export default function History() {
   const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
+  const handleOnObjectHover = React.useCallback(
+    ({ url }) => setPreview({ type: "link", url }),
+    []
+  );
+
   // NOTE(amine) don't render the app when history isn't available
   if (sessionsFeedKeys.length === 0) return null;
 
@@ -298,73 +307,79 @@ export default function History() {
         <RelatedLinksPopup preview={preview} />
 
         <div css={STYLES_APP_MODAL}>
-          <section css={STYLES_SEARCH_WRAPPER}>
-            <Logo />
-            <input
-              css={STYLES_SEARCH_INPUT}
-              ref={inputRef}
-              placeholder="Search by keywords, filters, tags"
-              name="search"
-              onChange={handleInputChange}
-              style={{ marginLeft: 12 }}
-              autoComplete="off"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-            />
-            {search.query.length > 0 ? (
-              <SearchDismiss onClick={clearSearch} />
-            ) : null}
-            {/* (
+          <ComboboxNavigation.Provider
+            isInfiniteList={currentView === viewsType.recent}
+          >
+            <section css={STYLES_SEARCH_WRAPPER}>
+              <Logo />
+              <ComboboxNavigation.Input>
+                <input
+                  css={STYLES_SEARCH_INPUT}
+                  ref={inputRef}
+                  placeholder="Search by keywords, filters, tags"
+                  name="search"
+                  onChange={handleInputChange}
+                  style={{ marginLeft: 12 }}
+                  autoComplete="off"
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
+                  autoFocus
+                />
+              </ComboboxNavigation.Input>
+              {search.query.length > 0 ? (
+                <SearchDismiss onClick={clearSearch} />
+              ) : null}
+              {/* (
               <button css={STYLES_FILTER_TOGGLE_BUTTON}>
-                <SVG.Filter width={16} height={16} />
+              <SVG.Filter width={16} height={16} />
               </button>
             ) */}
-          </section>
-          {/* <Divider color="borderGrayLight" />
+            </section>
+            {/* <Divider color="borderGrayLight" />
           <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
-            <SVG.Plus width={16} height={16} />
-            <Typography.H5 as="span">Filter</Typography.H5>
-          </button> */}
-          <Divider color="borderGrayLight" />
-          <section
-            css={Styles.HORIZONTAL_CONTAINER}
-            style={{ height: "100%", flex: 1, overflow: "hidden" }}
-          >
-            <Switch>
-              <Match
-                when={search.query.length > 0 && search.result}
-                component={SearchFeed}
-                sessions={search.result}
-                setPreview={setPreview}
-              />
-              <Match
-                when={currentView === viewsType.recent}
-                component={HistoryFeed}
-                sessionsFeed={sessionsFeed}
-                sessionsFeedKeys={sessionsFeedKeys}
-                loadMoreHistory={loadMoreHistory}
-                onObjectHover={({ url }) => setPreview({ type: "link", url })}
-                onOpenUrl={Navigation.openUrls}
-              />
-              <Match
-                when={
-                  currentView === viewsType.currentWindow ||
-                  currentView === viewsType.allOpen
-                }
-                component={WindowsFeed}
-                windowsFeed={windowsFeed}
-                displayAllOpen={currentView === viewsType.allOpen}
-                onObjectHover={({ url }) => setPreview({ type: "link", url })}
-                onOpenUrl={Navigation.openUrls}
-              />
-              <Match
-                when={currentView === viewsType.relatedLinks}
-                component={Views.Feed}
-                onOpenUrl={Navigation.openUrls}
-                onObjectHover={({ url }) => setPreview({ type: "link", url })}
-              />
-            </Switch>
-          </section>
+          <SVG.Plus width={16} height={16} />
+          <Typography.H5 as="span">Filter</Typography.H5>
+        </button> */}
+            <Divider color="borderGrayLight" />
+            <section
+              css={Styles.HORIZONTAL_CONTAINER}
+              style={{ height: "100%", flex: 1, overflow: "hidden" }}
+            >
+              <Switch>
+                <Match
+                  when={search.query.length > 0 && search.result}
+                  component={SearchFeed}
+                  sessions={search.result}
+                  setPreview={setPreview}
+                />
+                <Match
+                  when={currentView === viewsType.recent}
+                  component={HistoryFeed}
+                  sessionsFeed={sessionsFeed}
+                  sessionsFeedKeys={sessionsFeedKeys}
+                  onLoadMore={loadMoreHistory}
+                  onObjectHover={handleOnObjectHover}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={
+                    currentView === viewsType.currentWindow ||
+                    currentView === viewsType.allOpen
+                  }
+                  component={WindowsFeed}
+                  windowsFeed={windowsFeed}
+                  displayAllOpen={currentView === viewsType.allOpen}
+                  onObjectHover={handleOnObjectHover}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={currentView === viewsType.relatedLinks}
+                  component={Views.Feed}
+                  onOpenUrl={Navigation.openUrls}
+                  onObjectHover={handleOnObjectHover}
+                />
+              </Switch>
+            </section>
+          </ComboboxNavigation.Provider>
         </div>
       </Views.Provider>
       <div css={STYLES_MARBLE_WRAPPER}>

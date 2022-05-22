@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ListView from "./ListView";
+import { ComboboxNavigation } from "./ComboboxNavigation";
 
-import { Divider } from "./Divider";
 import { getFavicon } from "../Common/favicons";
 import { useEventListener } from "../Common/hooks";
 
@@ -35,7 +35,7 @@ const useHistoryInfiniteScroll = ({
   }, [sessionsFeed]);
 };
 
-export default function HistoryFeed({
+const HistoryFeed = ({
   sessionsFeed,
   sessionsFeedKeys,
   onLoadMore,
@@ -43,7 +43,7 @@ export default function HistoryFeed({
   onOpenUrl,
   css,
   ...props
-}) {
+}) => {
   const historyWrapperRef = React.useRef();
   useHistoryInfiniteScroll({
     onLoadMore,
@@ -51,30 +51,54 @@ export default function HistoryFeed({
     sessionsFeed,
   });
 
-  return (
-    <ListView.Root ref={historyWrapperRef} css={css} {...props}>
-      {sessionsFeedKeys.map((key) => {
-        if (!sessionsFeed[key].length) return null;
+  const getVisitComoboboxIndex = (feedIndex, visitIndex) => {
+    let startingIndex = 0;
+    for (let i = 0; i < feedIndex; i++) {
+      let sessionKey = sessionsFeedKeys[i];
+      startingIndex += sessionsFeed[sessionKey].length;
+    }
 
-        return (
-          <ListView.Section key={key}>
-            <ListView.Title>{key}</ListView.Title>
-            {sessionsFeed[key].map((session) => {
-              return session.visits.map((visit) => (
-                <ListView.Object
-                  key={visit.session + visit.id}
-                  title={visit.title}
-                  Favicon={getFavicon(visit.rootDomain)}
-                  onClick={() => onOpenUrl({ urls: [visit.url] })}
-                  onMouseEnter={() =>
-                    onObjectHover({ url: visit.url, title: visit.title })
-                  }
-                />
-              ));
-            })}
-          </ListView.Section>
-        );
-      })}
-    </ListView.Root>
+    return startingIndex + visitIndex;
+  };
+
+  return (
+    <ComboboxNavigation.Menu>
+      <ListView.Root ref={historyWrapperRef} css={css} {...props}>
+        {sessionsFeedKeys.map((key, feedIndex) => {
+          if (!sessionsFeed[key].length) return null;
+
+          return (
+            <ListView.Section key={key}>
+              <ListView.Title>{key}</ListView.Title>
+              {sessionsFeed[key].map((visit, visitIndex) => {
+                const comboxboxItemIndex = getVisitComoboboxIndex(
+                  feedIndex,
+                  visitIndex
+                );
+
+                return (
+                  <ListView.ComboboxObject
+                    key={visit.id}
+                    index={comboxboxItemIndex}
+                    title={visit.title}
+                    Favicon={getFavicon(visit.rootDomain)}
+                    onSelect={() =>
+                      onObjectHover({ url: visit.url, title: visit.title })
+                    }
+                    onSubmit={() => onOpenUrl({ urls: [visit.url] })}
+                    onClick={() => onOpenUrl({ urls: [visit.url] })}
+                    onMouseEnter={() =>
+                      onObjectHover({ url: visit.url, title: visit.title })
+                    }
+                  />
+                );
+              })}
+            </ListView.Section>
+          );
+        })}
+      </ListView.Root>
+    </ComboboxNavigation.Menu>
   );
-}
+};
+
+export default React.memo(HistoryFeed);
