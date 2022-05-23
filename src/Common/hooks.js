@@ -67,3 +67,48 @@ export const useMediaQuery = (getMediaQuery) => {
   // NOTE(amine): currently only support mobile breakpoint, we can add more breakpoints as needed.
   return isMatchingQuery;
 };
+
+// SOURCE(amine): https://zellwk.com/blog/keyboard-focusable-elements/
+const getFocusableElements = (element = document) =>
+  [
+    ...element.querySelectorAll(
+      'a[href], button, input, textarea, select, details,[tabindex]:not([tabindex="-1"])'
+    ),
+  ]
+    // NOTE(amine): remove disabled buttons and elements with aria-hidden attribute
+    .filter(
+      (el) =>
+        !el.hasAttribute("disabled") &&
+        !el.getAttribute("aria-hidden") &&
+        el.getAttribute("tabindex") !== "-1"
+    );
+
+/* NOTE(amine): used to trap focus inside a component. **/
+export const useTrapFocusInShadowDom = ({ ref }) => {
+  const handleFocus = (e) => {
+    if (!ref.current) return;
+    const elements = getFocusableElements(ref.current);
+    const firstElement = elements[0];
+    const lastElement = elements[elements.length - 1];
+
+    const isTabPressed = e.key === "Tab" || e.keyCode === "9";
+    if (!isTabPressed) return;
+
+    const shadowRoot = ref.current.getRootNode();
+    const { activeElement } = shadowRoot;
+
+    if (e.shiftKey) {
+      if (activeElement === firstElement) {
+        lastElement.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (activeElement === lastElement) {
+        firstElement.focus();
+        e.preventDefault();
+      }
+    }
+  };
+
+  useEventListener({ type: "keydown", handler: handleFocus }, []);
+};
