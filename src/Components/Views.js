@@ -3,11 +3,13 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
 import * as SVG from "../Common/SVG";
+import * as RovingTabIndex from "../Components/RovingTabIndex";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
 import { viewsType } from "../Core/history";
 import { Divider } from "./Divider";
+import { ComboboxNavigation } from "./ComboboxNavigation";
 
 const ViewsContext = React.createContext();
 const useViewsContext = () => React.useContext(ViewsContext);
@@ -19,6 +21,7 @@ function Provider({
   currentViewQuery,
   viewsType,
   getViewsFeed,
+  onChange,
 }) {
   const value = React.useMemo(
     () => ({
@@ -27,8 +30,16 @@ function Provider({
       currentViewQuery,
       viewsType,
       getViewsFeed,
+      onChange,
     }),
-    [viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed]
+    [
+      viewsFeed,
+      currentView,
+      currentViewQuery,
+      viewsType,
+      onChange,
+      getViewsFeed,
+    ]
   );
 
   return (
@@ -50,6 +61,10 @@ const STYLES_VIEWS_BUTTON = (theme) => css`
   &:hover {
     ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
   }
+
+  &:focus {
+    outline: 2px solid ${theme.system.blue};
+  }
 `;
 
 const STYLES_VIEWS_MENU = css`
@@ -69,6 +84,10 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   &:hover {
     ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
   }
+
+  &:focus {
+    outline: 2px solid ${theme.system.blue};
+  }
 `;
 
 const VIEWS_ACTIONS = [
@@ -77,7 +96,7 @@ const VIEWS_ACTIONS = [
   { label: "All Open", data: { type: viewsType.allOpen } },
 ];
 
-const CUSTON_VIEWS_ACTIONS = [
+const CUSTOM_VIEWS_ACTIONS = [
   {
     label: "Twitter",
     data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
@@ -96,75 +115,98 @@ const CUSTON_VIEWS_ACTIONS = [
 ];
 
 function Menu({ css, ...props }) {
-  const { currentView, currentViewQuery, getViewsFeed } = useViewsContext();
+  const { currentView, currentViewQuery, getViewsFeed, onChange } =
+    useViewsContext();
+
+  const createOnClickHandler =
+    ({ type, query }) =>
+    () => {
+      getViewsFeed({ type, query });
+      if (onChange) onChange();
+    };
 
   return (
-    <section css={[STYLES_VIEWS_MENU, css]} {...props}>
-      {VIEWS_ACTIONS.map((viewAction, i) => (
-        <Typography.H5
-          key={viewAction.label}
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewAction.data.type && STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          style={{ marginLeft: i > 0 ? 4 : 0 }}
-          as="button"
-          onClick={() => getViewsFeed({ type: viewAction.data.type })}
-        >
-          {viewAction.label}
-        </Typography.H5>
-      ))}
+    <RovingTabIndex.Provider axis="horizontal">
+      <RovingTabIndex.List>
+        <section css={[STYLES_VIEWS_MENU, css]} {...props}>
+          {VIEWS_ACTIONS.map((viewAction, i) => (
+            <RovingTabIndex.Item key={viewAction.label} index={i}>
+              <Typography.H5
+                css={[
+                  STYLES_VIEWS_BUTTON,
+                  currentView === viewAction.data.type &&
+                    STYLES_VIEWS_BUTTON_ACTIVE,
+                ]}
+                style={{ marginLeft: i > 0 ? 4 : 0 }}
+                as="button"
+                onClick={createOnClickHandler({ type: viewAction.data.type })}
+              >
+                {viewAction.label}
+              </Typography.H5>
+            </RovingTabIndex.Item>
+          ))}
 
-      <Divider height="none" width="1px" style={{ margin: "0px 4px" }} />
+          <Divider height="none" width="1px" style={{ margin: "0px 4px" }} />
 
-      {CUSTON_VIEWS_ACTIONS.map((viewAction) => (
-        <Typography.H5
-          key={viewAction.label}
-          css={[
-            STYLES_VIEWS_BUTTON,
-            currentView === viewAction.data.type &&
-              currentViewQuery === viewAction.data.query &&
-              STYLES_VIEWS_BUTTON_ACTIVE,
-          ]}
-          style={{ marginLeft: 4 }}
-          as="button"
-          onClick={() =>
-            getViewsFeed({
-              type: viewAction.data.type,
-              query: viewAction.data.query,
-            })
-          }
-        >
-          {viewAction.label}
-        </Typography.H5>
-      ))}
+          {CUSTOM_VIEWS_ACTIONS.map((viewAction, i) => (
+            <RovingTabIndex.Item
+              key={viewAction.label}
+              index={VIEWS_ACTIONS.length + i}
+            >
+              <Typography.H5
+                css={[
+                  STYLES_VIEWS_BUTTON,
+                  currentView === viewAction.data.type &&
+                    currentViewQuery === viewAction.data.query &&
+                    STYLES_VIEWS_BUTTON_ACTIVE,
+                ]}
+                style={{ marginLeft: 4 }}
+                as="button"
+                onClick={createOnClickHandler({
+                  type: viewAction.data.type,
+                  query: viewAction.data.query,
+                })}
+              >
+                {viewAction.label}
+              </Typography.H5>
+            </RovingTabIndex.Item>
+          ))}
 
-      <button css={STYLES_VIEWS_ADD_BUTTON}>
-        <SVG.Plus width={16} height={16} />
-      </button>
-    </section>
+          <RovingTabIndex.Item
+            index={VIEWS_ACTIONS.length + CUSTOM_VIEWS_ACTIONS.length}
+          >
+            <button css={STYLES_VIEWS_ADD_BUTTON}>
+              <SVG.Plus width={16} height={16} />
+            </button>
+          </RovingTabIndex.Item>
+        </section>
+      </RovingTabIndex.List>
+    </RovingTabIndex.Provider>
   );
 }
 
 function Feed({ onObjectHover, onOpenUrl }) {
   const { viewsFeed } = useViewsContext();
   return (
-    <ListView.Root>
-      <ListView.Title count={viewsFeed.length}>Result</ListView.Title>
-      <div key={viewsFeed.length}>
-        {viewsFeed.map(({ item: session }) => {
-          return session.visits.map((visit) => (
-            <ListView.Object
-              key={session.id + visit.id}
+    <ComboboxNavigation.Menu>
+      <ListView.Root>
+        <ListView.Title count={viewsFeed.length}>Result</ListView.Title>
+        <div key={viewsFeed.length}>
+          {viewsFeed.map((visit, i) => (
+            <ListView.ComboboxObject
+              key={visit.id}
+              index={i}
               title={visit.title}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => onOpenUrl({ urls: [visit.url] })}
               onMouseEnter={() => onObjectHover({ url: visit.url })}
+              onSubmit={() => onOpenUrl({ urls: [visit.url] })}
+              onSelect={() => onObjectHover({ url: visit.url })}
             />
-          ));
-        })}
-      </div>
-    </ListView.Root>
+          ))}
+        </div>
+      </ListView.Root>
+    </ComboboxNavigation.Menu>
   );
 }
 
