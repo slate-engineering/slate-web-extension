@@ -14,7 +14,7 @@ const useManageScrollPosition = ({
   focusedIndex,
 }) => {
   React.useLayoutEffect(() => {
-    if (axis === "vertical") return;
+    if (axis === "horizontals") return;
 
     const listNode = listRef.current;
     const focusedNode = focusedElementsRefs.current[focusedIndex]?.current;
