@@ -1,5 +1,10 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState, useViewsState } from "./";
+import {
+  useHistoryState,
+  useOpenWindowsState,
+  useViewsState,
+  useHistorySearchState,
+} from "./";
 import { messages } from "../";
 
 export const useHistory = () => {
@@ -56,7 +61,7 @@ export const useHistory = () => {
 
 export const useViews = () => {
   const [
-    { viewsFeed, currentView, viewQuery, viewsType },
+    { viewsFeed, currentView, currentViewQuery, viewsType },
     { setViewsFeed, setViewsParams },
   ] = useViewsState();
 
@@ -72,5 +77,32 @@ export const useViews = () => {
     }
   };
 
-  return { viewsFeed, currentView, viewQuery, viewsType, getViewsFeed };
+  return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
+};
+
+export const useHistorySearch = ({ inputRef }) => {
+  const searchByQuery = (query) => {
+    if (query.length === 0) return;
+    chrome.runtime.sendMessage(
+      { type: messages.searchQueryRequest, query: query },
+      (response) => {
+        if (response.query === inputRef.current.value)
+          setSearch((prev) => ({ ...prev, result: [...response.result] }));
+      }
+    );
+  };
+
+  const [
+    { search, initialState },
+    { handleInputChange, setSearch, clearSearch },
+  ] = useHistorySearchState({ inputRef, onSearch: searchByQuery });
+
+  React.useEffect(() => {
+    if (search.query.length === 0) {
+      setSearch(initialState);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }, [search.query]);
+
+  return [search, { handleInputChange, clearSearch }];
 };

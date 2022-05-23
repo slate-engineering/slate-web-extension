@@ -1,5 +1,10 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState, useViewsState } from "./";
+import {
+  useHistoryState,
+  useOpenWindowsState,
+  useViewsState,
+  useHistorySearchState,
+} from "./";
 import { messages } from "../";
 
 export const useHistory = () => {
@@ -8,7 +13,7 @@ export const useHistory = () => {
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
-  const loadMoreHistory = () => {
+  const loadMoreHistory = React.useCallback(() => {
     if (!paramsRef.current.canFetchMore) return;
 
     window.postMessage(
@@ -18,7 +23,7 @@ export const useHistory = () => {
       },
       "*"
     );
-  };
+  }, []);
 
   React.useEffect(() => {
     let handleMessage = (event) => {
@@ -85,4 +90,78 @@ export const useViews = () => {
   }, []);
 
   return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
+};
+
+export const useGetRelatedLinks = (url) => {
+  const [relatedLinks, setRelatedLinks] = React.useState(null);
+
+  const timeoutRef = React.useRef();
+  React.useEffect(() => {
+    const getRelatedLinks = () => {
+      if (!url) return;
+      setRelatedLinks(null);
+      window.postMessage({ type: messages.relatedLinksRequest, url }, "*");
+    };
+
+    timeoutRef.current = setTimeout(getRelatedLinks, 500);
+    return () => clearTimeout(timeoutRef.current);
+  }, [url]);
+
+  const urlRef = React.useRef();
+  urlRef.current = url;
+  React.useEffect(() => {
+    const handleMessage = (event) => {
+      let { data, type } = event.data;
+
+      if (
+        type === messages.relatedLinksResponse &&
+        data.url === urlRef.current
+      ) {
+        setRelatedLinks(data.result);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return relatedLinks;
+};
+
+export const useHistorySearch = ({ inputRef }) => {
+  const searchByQuery = (query) => {
+    if (query.length === 0) return;
+    window.postMessage(
+      { type: messages.searchQueryRequest, query: query },
+      "*"
+    );
+  };
+
+  const [
+    { search, initialState },
+    { handleInputChange, setSearch, clearSearch },
+  ] = useHistorySearchState({ inputRef, onSearch: searchByQuery });
+
+  React.useEffect(() => {
+    let handleMessage = (event) => {
+      let { data, type } = event.data;
+
+      if (type === messages.searchQueryResponse) {
+        if (data.query === inputRef.current.value)
+          setSearch((prev) => ({ ...prev, result: [...data.result] }));
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  React.useEffect(() => {
+    if (search.query.length === 0) {
+      setSearch(initialState);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }, [search.query]);
+
+  return [search, { handleInputChange, clearSearch }];
 };

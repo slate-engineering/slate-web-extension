@@ -163,3 +163,43 @@ export const useViewsState = () => {
     { setViewsFeed, setViewsParams },
   ];
 };
+
+const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
+  const timeRef = React.useRef();
+  const handleChange = (e) => {
+    clearTimeout(timeRef.current);
+    const { value } = e.target;
+    timeRef.current = setTimeout(
+      () => (setQuery(value), handleSearch(value)),
+      300
+    );
+  };
+  return handleChange;
+};
+
+export const useHistorySearchState = ({ inputRef, onSearch }) => {
+  const SEARCH_INITIAL_STATE = {
+    query: "",
+    result: null,
+  };
+  const [search, setSearch] = React.useState(SEARCH_INITIAL_STATE);
+
+  const clearSearch = () => setSearch(SEARCH_INITIAL_STATE);
+
+  const handleInputChange = useDebouncedOnChange({
+    setQuery: (query) => setSearch((prev) => ({ ...prev, query })),
+    handleSearch: onSearch,
+  });
+
+  React.useEffect(() => {
+    if (search.query.length === 0) {
+      setSearch(SEARCH_INITIAL_STATE);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }, [search.query]);
+
+  return [
+    { search, initialState: SEARCH_INITIAL_STATE },
+    { handleInputChange, setSearch, clearSearch },
+  ];
+};
