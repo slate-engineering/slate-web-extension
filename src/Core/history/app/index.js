@@ -46,37 +46,30 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
     const cleanedSession = removeSessionDuplicateVisits(session);
 
     if (isToday(new Date(cleanedSession.visitTime))) {
-      if (
-        isUrlAlreadyAddedToFeedTimeline(
-          "Today",
-          cleanedSession.visits.map((visit) => visit.url).join("")
-        )
-      ) {
-        return;
-      }
-
-      ifKeyExistAppendValueElseCreate({
-        object: sessionsFeed,
-        key: "Today",
-        value: cleanedSession,
+      session.visits.forEach((visit) => {
+        if (isUrlAlreadyAddedToFeedTimeline("Today", visit.url)) {
+          return;
+        }
+        ifKeyExistAppendValueElseCreate({
+          object: sessionsFeed,
+          key: "Today",
+          value: visit,
+        });
       });
       return;
     }
 
     if (isYesterday(new Date(cleanedSession.visitTime))) {
-      if (
-        isUrlAlreadyAddedToFeedTimeline(
-          "Yesterday",
-          cleanedSession.visits.map((visit) => visit.url).join("")
-        )
-      ) {
-        return;
-      }
+      session.visits.forEach((visit) => {
+        if (isUrlAlreadyAddedToFeedTimeline("Yesterday", visit.url)) {
+          return;
+        }
 
-      ifKeyExistAppendValueElseCreate({
-        object: sessionsFeed,
-        key: "Yesterday",
-        value: cleanedSession,
+        ifKeyExistAppendValueElseCreate({
+          object: sessionsFeed,
+          key: "Yesterday",
+          value: visit,
+        });
       });
       return;
     }
@@ -87,20 +80,16 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
     })}, ${sessionVisitDate.toLocaleDateString("en-EN", {
       month: "short",
     })} ${sessionVisitDate.getDate()} `;
+    session.visits.forEach((visit) => {
+      if (isUrlAlreadyAddedToFeedTimeline(formattedDate, visit.url)) {
+        return;
+      }
 
-    if (
-      isUrlAlreadyAddedToFeedTimeline(
-        formattedDate,
-        cleanedSession.visits.map((visit) => visit.url).join("")
-      )
-    ) {
-      return;
-    }
-
-    ifKeyExistAppendValueElseCreate({
-      object: sessionsFeed,
-      key: formattedDate,
-      value: cleanedSession,
+      ifKeyExistAppendValueElseCreate({
+        object: sessionsFeed,
+        key: formattedDate,
+        value: visit,
+      });
     });
   });
 
