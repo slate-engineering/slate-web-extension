@@ -123,23 +123,27 @@ const Feed = React.memo(({ setPreview }) => {
   const {
     search: { result: feed },
   } = useSearchContext();
+
   return (
-    <ListView.Root>
-      <ListView.Title count={feed.length}>Result</ListView.Title>
-      <div key={feed.length}>
-        {feed.map(({ item: session }) => {
-          return session.visits.map((visit) => (
-            <ListView.Object
-              key={session.id + visit.id}
+    <ComboboxNavigation.Menu>
+      <ListView.Root>
+        <ListView.Title count={feed.length}>Result</ListView.Title>
+        <div key={feed.length}>
+          {feed.map((visit, i) => (
+            <ListView.ComboboxObject
+              key={visit.id}
+              index={i}
               title={visit.title}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => Navigation.openUrls({ urls: [visit.url] })}
               onMouseEnter={() => setPreview({ type: "link", url: visit.url })}
+              onSelect={() => setPreview({ type: "link", url: visit.url })}
+              onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
             />
-          ));
-        })}
-      </div>
-    </ListView.Root>
+          ))}
+        </div>
+      </ListView.Root>
+    </ComboboxNavigation.Menu>
   );
 });
 

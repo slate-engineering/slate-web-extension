@@ -13,20 +13,6 @@ const removeSessionDuplicateVisits = (session) => {
   return session;
 };
 
-const removeViewsDuplicateSession = (sessions) => {
-  const isAlreadyAdded = {};
-  return sessions.filter(({ item: session }) => {
-    if (session.visits.length > 1) return true;
-    const visitUrl = session.visits[0].url;
-    if (visitUrl in isAlreadyAdded) {
-      return false;
-    } else {
-      isAlreadyAdded[visitUrl] = true;
-      return true;
-    }
-  });
-};
-
 const filterSessionsFeed = ({ sessionsFeed, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
     key in object ? object[key].push(value) : (object[key] = [value]);
@@ -149,7 +135,7 @@ export const useViewsState = () => {
   const setViewsFeed = (result) => {
     setViewsState((prev) => ({
       ...prev,
-      feed: removeViewsDuplicateSession(result),
+      feed: result,
     }));
   };
 

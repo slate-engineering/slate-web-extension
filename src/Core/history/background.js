@@ -2,6 +2,24 @@ import Fuse from "fuse.js";
 
 import { messages } from "./";
 
+const removeDuplicatesFromSearchResults = (result) => {
+  const isAlreadyAdded = {};
+
+  const MAX_SEARCH_RESULT = 300;
+  const cleanedResult = [];
+  for (let { item } of result) {
+    for (let visit of item.visits) {
+      if (cleanedResult.length > MAX_SEARCH_RESULT) {
+        return cleanedResult;
+      }
+      if (visit.url in isAlreadyAdded) continue;
+      isAlreadyAdded[visit.url] = true;
+      cleanedResult.push(visit);
+    }
+  }
+  return cleanedResult;
+};
+
 /** ----------------------------------------- */
 
 const getRootDomain = (url) => {
@@ -210,7 +228,7 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return fuse.search(query);
+    return removeDuplicatesFromSearchResults(fuse.search(query));
   }
 
   async getRelatedLinks(url) {
@@ -223,7 +241,7 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return fuse.search(url);
+    return removeDuplicatesFromSearchResults(fuse.search(url));
   }
 }
 
