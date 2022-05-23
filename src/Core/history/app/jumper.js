@@ -103,7 +103,7 @@ export const useGetRelatedLinks = (url) => {
       window.postMessage({ type: messages.relatedLinksRequest, url }, "*");
     };
 
-    timeoutRef.current = setTimeout(getRelatedLinks, 500);
+    timeoutRef.current = setTimeout(getRelatedLinks, 300);
     return () => clearTimeout(timeoutRef.current);
   }, [url]);
 
