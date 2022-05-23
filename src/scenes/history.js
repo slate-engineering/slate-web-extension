@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
 import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
 import * as Search from "../Components/Search";
@@ -16,7 +15,7 @@ import {
   useViews,
   useHistorySearch,
 } from "../Core/history/app/jumper";
-import { useMediaQuery } from "../Common/hooks";
+import { useMediaQuery, useTrapFocusInShadowDom } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
 import { useGetRelatedLinks } from "../Core/history/app/jumper";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
@@ -55,7 +54,7 @@ function RelatedLinksPopup({ preview }) {
   const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
 
   const relatedLinksFeed = useGetRelatedLinks(
-    isMatchingQuery ? preview?.url : null
+    isMatchingQuery ? null : preview?.url
   );
 
   if (isMatchingQuery || !preview) return null;
@@ -109,34 +108,11 @@ const STYLES_APP_MODAL = (theme) => css`
   height: 100%;
   width: 100%;
   border: 1px solid ${theme.semantic.borderGrayLight4};
-  box-shadow: ${theme.shadow.darkLarge};
+  box-shadow: ${theme.shadow.jumperLight};
   //NOTE(amine): when changing border-radius, change it also in STYLES_MARBLE_WRAPPER and STYLES_APP_MODAL_BACKGROUND
   border-radius: 16px;
   overflow: hidden;
 
-  ${jumperFadeInAnimation};
-`;
-
-const STYLES_MARBLE_WRAPPER = css`
-  position: absolute;
-  top: 0%;
-  left: 0%;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  border-radius: 16px;
-  z-index: -1;
-
-  ${jumperFadeInAnimation};
-`;
-
-const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  width: 100%;
-  height: 100%;
   background-color: ${theme.semantic.white};
   border-radius: 16px;
   @supports (
@@ -144,7 +120,7 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
   ) {
     -webkit-backdrop-filter: blur(75px);
     backdrop-filter: blur(75px);
-    background-color: ${theme.semantic.bgBlurWhite};
+    background-color: ${theme.semantic.bgBlurLight};
   }
 
   ${jumperFadeInAnimation};
@@ -161,14 +137,14 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   border-radius: 16px;
   background-color: white;
   border: 1px solid ${theme.semantic.borderGrayLight4};
-  box-shadow: ${theme.shadow.darkLarge};
+  box-shadow: ${theme.shadow.jumperLight};
 
   @supports (
     (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
   ) {
     -webkit-backdrop-filter: blur(75px);
     backdrop-filter: blur(75px);
-    background-color: ${theme.semantic.bgBlurWhiteOP};
+    background-color: ${theme.semantic.bgBlurWhite};
   }
 
   @keyframes views-menu-fade-in {
@@ -185,37 +161,13 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   animation: views-menu-fade-in 200ms ease;
 `;
 
-// const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
-//   ${Styles.BUTTON_RESET};
-//   position: absolute;
-//   top: 50%;
-//   transform: translateY(-50%);
-//   right: 16px;
-
-//   width: 32px;
-//   height: 32px;
-//   border-radius: 8px;
-//   padding: 8px;
-//   background-color: ${theme.semantic.bgGrayLight};
-//   color: ${theme.system.blue};
-// `;
-
-// const STYLES_FILTER_BUTTON = (theme) => css`
-//   ${Styles.BUTTON_RESET};
-//   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-//   border-radius: 12px;
-//   padding: 5px 12px 7px;
-//   width: 78px;
-//   border: 1px solid ${theme.semantic.borderGrayLight};
-//   color: ${theme.system.blue};
-// `;
-
 export default function History() {
   const [preview, setPreview] = React.useState();
 
+  const { closeTheJumper } = Navigation.useNavigation();
   React.useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key === "Escape") Navigation.closeExtensionJumper();
+      if (e.key === "Escape") closeTheJumper();
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -233,27 +185,30 @@ export default function History() {
   const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
+  const focusInputOnViewChange = () => inputRef.current.focus();
+
   const handleOnObjectHover = React.useCallback(
     ({ url }) => setPreview({ type: "link", url }),
     []
   );
 
+  const wrapperRef = React.useRef();
+  useTrapFocusInShadowDom({ ref: wrapperRef });
+
   // NOTE(amine) don't render the app when history isn't available
   if (sessionsFeedKeys.length === 0) return null;
 
   return (
-    <div css={STYLES_APP_MODAL_POSITION}>
+    <div ref={wrapperRef} css={STYLES_APP_MODAL_POSITION}>
       <Views.Provider
         viewsFeed={viewsFeed}
         currentView={currentView}
         currentViewQuery={currentViewQuery}
         viewsType={viewsType}
         getViewsFeed={getViewsFeed}
+        onChange={focusInputOnViewChange}
       >
         <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
-
-        <RelatedLinksPopup preview={preview} />
-
         <div css={STYLES_APP_MODAL}>
           <ComboboxNavigation.Provider
             isInfiniteList={currentView === viewsType.recent}
@@ -307,11 +262,9 @@ export default function History() {
             </Search.Provider>
           </ComboboxNavigation.Provider>
         </div>
+
+        <RelatedLinksPopup preview={preview} />
       </Views.Provider>
-      <div css={STYLES_MARBLE_WRAPPER}>
-        <SVG.Marble />
-      </div>
-      <div css={STYLES_APP_MODAL_BACKGROUND} />
     </div>
   );
 }
