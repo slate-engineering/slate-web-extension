@@ -1,14 +1,13 @@
 import * as React from "react";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
-import * as ListView from "../Components/ListView";
 import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
+import * as Search from "../Components/Search";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
 import RelatedLinksFeed from "../Components/RelatedLinksFeed";
-import Logo from "../Components/Logo";
 
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
@@ -17,9 +16,9 @@ import {
   useViews,
   useHistorySearch,
 } from "../Core/history/app/jumper";
-import { getFavicon } from "../Common/favicons";
 import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
+import { useGetRelatedLinks } from "../Core/history/app/jumper";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
 
 /* -------------------------------------------------------------------------------------------------
@@ -54,10 +53,18 @@ const STYLES_RELATED_LINKS_POPUP = (theme) => css`
 
 function RelatedLinksPopup({ preview }) {
   const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
+
+  const relatedLinksFeed = useGetRelatedLinks(
+    isMatchingQuery ? preview?.url : null
+  );
+
   if (isMatchingQuery || !preview) return null;
 
   return (
-    <RelatedLinksFeed css={STYLES_RELATED_LINKS_POPUP} url={preview.url} />
+    <RelatedLinksFeed
+      css={STYLES_RELATED_LINKS_POPUP}
+      feed={relatedLinksFeed}
+    />
   );
 }
 
@@ -143,43 +150,6 @@ const STYLES_APP_MODAL_BACKGROUND = (theme) => css`
   ${jumperFadeInAnimation};
 `;
 
-const STYLES_SEARCH_WRAPPER = css`
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  position: relative;
-  padding: 0px 16px;
-  height: 56px;
-`;
-
-const STYLES_SEARCH_INPUT = (theme) => css`
-  ${Styles.H3};
-
-  font-family: ${theme.font.text};
-  -webkit-appearance: none;
-  width: 100%;
-  height: 100%;
-  padding-right: ${DISMISS_BUTTON_WIDTH + 24}px;
-  background-color: transparent;
-  outline: 0;
-  border: none;
-  box-sizing: border-box;
-
-  ::placeholder {
-    /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: ${theme.semantic.textGrayLight};
-    opacity: 1; /* Firefox */
-  }
-
-  :-ms-input-placeholder {
-    /* Internet Explorer 10-11 */
-    color: ${theme.semantic.textGrayLight};
-  }
-
-  ::-ms-input-placeholder {
-    /* Microsoft Edge */
-    color: ${theme.semantic.textGrayLight};
-  }
-`;
-
 const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
   position: absolute;
@@ -240,29 +210,6 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
 //   color: ${theme.system.blue};
 // `;
 
-const DISMISS_BUTTON_WIDTH = 16;
-const STYLES_DISMISS_BUTTON = (theme) => css`
-  ${Styles.BUTTON_RESET};
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 24px;
-  display: block;
-  color: ${theme.semantic.textGray};
-`;
-
-function SearchDismiss({ css, ...props }) {
-  return (
-    <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
-      <SVG.Dismiss
-        style={{ display: "block", marginLeft: 12 }}
-        height={DISMISS_BUTTON_WIDTH}
-        width={DISMISS_BUTTON_WIDTH}
-      />
-    </button>
-  );
-}
-
 export default function History() {
   const [preview, setPreview] = React.useState();
 
@@ -279,6 +226,7 @@ export default function History() {
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
   });
+
   const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
     useHistory();
 
@@ -310,75 +258,53 @@ export default function History() {
           <ComboboxNavigation.Provider
             isInfiniteList={currentView === viewsType.recent}
           >
-            <section css={STYLES_SEARCH_WRAPPER}>
-              <Logo />
-              <ComboboxNavigation.Input>
-                <input
-                  css={STYLES_SEARCH_INPUT}
-                  ref={inputRef}
-                  placeholder="Search by keywords, filters, tags"
-                  name="search"
-                  onChange={handleInputChange}
-                  style={{ marginLeft: 12 }}
-                  autoComplete="off"
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
-                />
-              </ComboboxNavigation.Input>
-              {search.query.length > 0 ? (
-                <SearchDismiss onClick={clearSearch} />
-              ) : null}
-              {/* (
-              <button css={STYLES_FILTER_TOGGLE_BUTTON}>
-              <SVG.Filter width={16} height={16} />
-              </button>
-            ) */}
-            </section>
-            {/* <Divider color="borderGrayLight" />
-          <button css={STYLES_FILTER_BUTTON} style={{ margin: "8px 16px" }}>
-          <SVG.Plus width={16} height={16} />
-          <Typography.H5 as="span">Filter</Typography.H5>
-        </button> */}
-            <Divider color="borderGrayLight" />
-            <section
-              css={Styles.HORIZONTAL_CONTAINER}
-              style={{ height: "100%", flex: 1, overflow: "hidden" }}
+            <Search.Provider
+              onInputChange={handleInputChange}
+              search={search}
+              clearSearch={clearSearch}
             >
-              <Switch>
-                <Match
-                  when={search.query.length > 0 && search.result}
-                  component={SearchFeed}
-                  sessions={search.result}
-                  setPreview={setPreview}
-                />
-                <Match
-                  when={currentView === viewsType.recent}
-                  component={HistoryFeed}
-                  sessionsFeed={sessionsFeed}
-                  sessionsFeedKeys={sessionsFeedKeys}
-                  onLoadMore={loadMoreHistory}
-                  onObjectHover={handleOnObjectHover}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={
-                    currentView === viewsType.currentWindow ||
-                    currentView === viewsType.allOpen
-                  }
-                  component={WindowsFeed}
-                  windowsFeed={windowsFeed}
-                  displayAllOpen={currentView === viewsType.allOpen}
-                  onObjectHover={handleOnObjectHover}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={currentView === viewsType.relatedLinks}
-                  component={Views.Feed}
-                  onOpenUrl={Navigation.openUrls}
-                  onObjectHover={handleOnObjectHover}
-                />
-              </Switch>
-            </section>
+              <Search.Input ref={inputRef} />
+
+              <Divider color="borderGrayLight" />
+              <section
+                css={Styles.HORIZONTAL_CONTAINER}
+                style={{ height: "100%", flex: 1, overflow: "hidden" }}
+              >
+                <Switch>
+                  <Match
+                    when={search.query.length > 0 && search.result}
+                    component={Search.Feed}
+                    setPreview={setPreview}
+                  />
+                  <Match
+                    when={currentView === viewsType.recent}
+                    component={HistoryFeed}
+                    sessionsFeed={sessionsFeed}
+                    sessionsFeedKeys={sessionsFeedKeys}
+                    onLoadMore={loadMoreHistory}
+                    onObjectHover={handleOnObjectHover}
+                    onOpenUrl={Navigation.openUrls}
+                  />
+                  <Match
+                    when={
+                      currentView === viewsType.currentWindow ||
+                      currentView === viewsType.allOpen
+                    }
+                    component={WindowsFeed}
+                    windowsFeed={windowsFeed}
+                    displayAllOpen={currentView === viewsType.allOpen}
+                    onObjectHover={handleOnObjectHover}
+                    onOpenUrl={Navigation.openUrls}
+                  />
+                  <Match
+                    when={currentView === viewsType.relatedLinks}
+                    component={Views.Feed}
+                    onOpenUrl={Navigation.openUrls}
+                    onObjectHover={handleOnObjectHover}
+                  />
+                </Switch>
+              </section>
+            </Search.Provider>
           </ComboboxNavigation.Provider>
         </div>
       </Views.Provider>
@@ -389,24 +315,3 @@ export default function History() {
     </div>
   );
 }
-
-const SearchFeed = React.memo(({ sessions, setPreview }) => {
-  return (
-    <ListView.Root>
-      <ListView.Title count={sessions.length}>Result</ListView.Title>
-      <div key={sessions.length}>
-        {sessions.map(({ item: session }) => {
-          return session.visits.map((visit) => (
-            <ListView.Object
-              key={session.id + visit.id}
-              title={visit.title}
-              Favicon={getFavicon(visit.rootDomain)}
-              onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-              onMouseEnter={() => setPreview({ type: "link", url: visit.url })}
-            />
-          ));
-        })}
-      </div>
-    </ListView.Root>
-  );
-});
