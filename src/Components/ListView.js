@@ -79,8 +79,11 @@ const STYLES_OBJECT_SELECTED = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
 `;
 
-const STYLES_OBJECT_HOVER_STATE = (theme) => css`
+const STYLES_OBJECT_HOVER_AND_FOCUS_STATE = (theme) => css`
   &:hover {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
+  &:focus {
     background-color: ${theme.semantic.bgGrayLight};
   }
 `;
@@ -102,7 +105,8 @@ const Object = React.forwardRef(
           STYLES_OBJECT,
           isSelected && STYLES_OBJECT_SELECTED,
           // NOTE(amine): if the 'isSelected' prop is set, don't show the hover styles
-          typeof isSelected === "undefined" && STYLES_OBJECT_HOVER_STATE,
+          typeof isSelected === "undefined" &&
+            STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
         ]}
         {...props}
