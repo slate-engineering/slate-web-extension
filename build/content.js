@@ -192,6 +192,7 @@ const sizes = {
   header: 56,
   tablet: 960,
   desktop: 1024,
+  desktopM: 1300,
   topOffset: 0, //NOTE(martina): Pushes UI down. 16 when there is a persistent announcement banner, 0 otherwise
 };
 
@@ -278,6 +279,8 @@ const semantic = {
   bgBlurWhite: "rgba(255, 255, 255, 0.7)",
   bgBlurWhiteOP: "rgba(255, 255, 255, 0.85)",
   bgBlurWhiteTRN: "rgba(255, 255, 255, 0.3)",
+  bgBlurLight: "rgba(247, 248, 249, 0.7)",
+  bgBlurLightOP: "rgba(247, 248, 249, 0.85)",
   bgBlurLight6: "rgba(247, 248, 249, 0.7)",
   bgBlurLight6OP: "rgba(247, 248, 249, 0.85)",
   bgBlurLight6TRN: "rgba(247, 248, 249, 0.3)",
@@ -312,6 +315,7 @@ const shadow = {
   darkSmall: "0px 4px 16px 0 rgba(99, 101, 102, 0.1)",
   darkMedium: "0px 8px 32px 0 rgba(99, 101, 102, 0.2)",
   darkLarge: "0px 12px 64px 0 rgba(99, 101, 102, 0.3)",
+  jumperLight: "0px 20px 36px 0 rgba(99, 101, 102, 0.6)",
   card: "0px 0px 32px #E5E8EA;",
 };
 
@@ -423,6 +427,8 @@ const grids = {
 
 const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
+
+const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
 
 // EXTERNAL MODULE: ./node_modules/react/index.js
 var react = __webpack_require__(294);
@@ -625,6 +631,8 @@ const history_messages = {
 
 const viewsType = {
   recent: "recent",
+  currentWindow: "currentWindow",
+  allOpen: "allOpen",
   relatedLinks: "relatedLinks",
 };
 
@@ -697,16 +705,30 @@ const navigation_messages = {
 ;// CONCATENATED MODULE: ./src/Core/navigation/content.js
 
 
-const EXTENSION_JUMPER_WRAPPER_ID = "jumper-slate-extension-wrapper";
+
+
+// SOURCE(amine): https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
+const setInnerHTML = (element, html) => {
+  element.innerHTML = html;
+  Array.from(element.querySelectorAll("script")).forEach((oldScript) => {
+    const newScript = document.createElement("script");
+    Array.from(oldScript.attributes).forEach((attr) =>
+      newScript.setAttribute(attr.name, attr.value)
+    );
+    newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+    oldScript.parentNode.replaceChild(newScript, oldScript);
+  });
+};
 
 const getExtensionJumperWrapper = () =>
-  document.getElementById(EXTENSION_JUMPER_WRAPPER_ID);
+  document.getElementById(jumperSlateExtensionWrapper);
 
 const createExtensionJumperWrapper = () => {
   if (getExtensionJumperWrapper()) return;
 
   const wrapper = document.createElement("div");
-  wrapper.setAttribute("id", EXTENSION_JUMPER_WRAPPER_ID);
+  wrapper.setAttribute("id", jumperSlateExtensionWrapper);
+  wrapper.setAttribute("data-url", chrome.runtime.getURL("/"));
   document.body.appendChild(wrapper);
 };
 
@@ -725,7 +747,7 @@ const openApp = () => {
         /\/static\//g,
         `${extensionOrigin}/static/`
       );
-      $(styleStashHTML).appendTo(`#${EXTENSION_JUMPER_WRAPPER_ID}`);
+      setInnerHTML(getExtensionJumperWrapper(), styleStashHTML);
     })
     .catch((error) => {
       console.warn(error);
@@ -739,14 +761,17 @@ const closeApp = () => {
 
 /** ------------ Event Listeners ------------- */
 
+let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === navigation_messages.openExtensionJumperRequest) {
+    activeElement = document.activeElement;
     openApp();
   }
 });
 
 window.addEventListener("message", async function (event) {
   if (event.data.type === navigation_messages.closeExtensionJumperRequest) {
+    if (activeElement) activeElement.focus();
     closeApp();
   }
 
