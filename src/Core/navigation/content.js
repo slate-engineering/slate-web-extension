@@ -56,14 +56,17 @@ export const closeApp = () => {
 
 /** ------------ Event Listeners ------------- */
 
+let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === messages.openExtensionJumperRequest) {
+    activeElement = document.activeElement;
     openApp();
   }
 });
 
 window.addEventListener("message", async function (event) {
   if (event.data.type === messages.closeExtensionJumperRequest) {
+    if (activeElement) activeElement.focus();
     closeApp();
   }
 
