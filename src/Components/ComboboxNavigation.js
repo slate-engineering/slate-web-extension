@@ -238,7 +238,7 @@ function ComboboxMenuButton({
   }, [index]);
 
   React.useLayoutEffect(() => {
-    if (selectedIdx === index) {
+    if (onSelect && selectedIdx === index) {
       onSelect();
     }
   }, [selectedIdx === index]);
