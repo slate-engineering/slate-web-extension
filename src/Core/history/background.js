@@ -185,8 +185,9 @@ class BrowserHistory {
       return this._set(localHistory);
     }
     const history = await this._buildHistory();
+    this._set(history);
     await this._updateLocalStorage();
-    return this._set(history);
+    return history;
   }
 
   async removeSessionsOlderThanOneMonth() {
