@@ -119,7 +119,7 @@ const Input = React.forwardRef(({ props }, ref) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const Feed = React.memo(({ setPreview }) => {
+const Feed = React.memo(() => {
   const {
     search: { result: feed },
   } = useSearchContext();
@@ -136,8 +136,6 @@ const Feed = React.memo(({ setPreview }) => {
               title={visit.title}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-              onMouseEnter={() => setPreview({ type: "link", url: visit.url })}
-              onSelect={() => setPreview({ type: "link", url: visit.url })}
               onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
             />
           ))}

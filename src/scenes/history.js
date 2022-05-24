@@ -50,14 +50,14 @@ const STYLES_RELATED_LINKS_POPUP = (theme) => css`
   }
 `;
 
-function RelatedLinksPopup({ preview }) {
+function RelatedLinksPopup({ preview, isEnabled }) {
   const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
 
   const relatedLinksFeed = useGetRelatedLinks(
     isMatchingQuery ? null : preview?.url
   );
 
-  if (isMatchingQuery || !preview) return null;
+  if (isMatchingQuery || !preview || !isEnabled) return null;
 
   return (
     <RelatedLinksFeed
@@ -178,6 +178,7 @@ export default function History() {
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
   });
+  const isSearching = search.query.length > 0 && search.result;
 
   const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
     useHistory();
@@ -226,11 +227,7 @@ export default function History() {
                 style={{ height: "100%", flex: 1, overflow: "hidden" }}
               >
                 <Switch>
-                  <Match
-                    when={search.query.length > 0 && search.result}
-                    component={Search.Feed}
-                    setPreview={setPreview}
-                  />
+                  <Match when={isSearching} component={Search.Feed} />
                   <Match
                     when={currentView === viewsType.recent}
                     component={HistoryFeed}
@@ -263,7 +260,7 @@ export default function History() {
           </ComboboxNavigation.Provider>
         </div>
 
-        <RelatedLinksPopup preview={preview} />
+        <RelatedLinksPopup preview={preview} isEnabled={!isSearching} />
       </Views.Provider>
     </div>
   );

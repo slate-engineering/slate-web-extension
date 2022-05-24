@@ -17,6 +17,7 @@ export const useHistory = () => {
     if (!paramsRef.current.canFetchMore) return;
 
     const handleResponse = (response) => {
+      console.log("GOT HISTORY", response);
       if (response.canFetchMore) {
         paramsRef.current.startIndex += response.history.length;
       } else {

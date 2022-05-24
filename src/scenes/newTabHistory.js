@@ -74,6 +74,7 @@ export default function HistoryScene() {
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
   });
+  const isSearching = search.query.length > 0 && search.result;
 
   const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
     useViews();
@@ -123,7 +124,7 @@ export default function HistoryScene() {
 
                 <Switch>
                   <Match
-                    when={search.query.length > 0 && search.result}
+                    when={isSearching}
                     component={Search.Feed}
                     setPreview={setPreview}
                   />
