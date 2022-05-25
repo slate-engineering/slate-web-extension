@@ -7,6 +7,10 @@ import {
 } from "./";
 import { messages } from "../";
 
+/* -------------------------------------------------------------------------------------------------
+ * useHistory
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useHistory = () => {
   const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
   const { windowsFeed, setWindowsFeed } = useOpenWindowsState();
@@ -17,7 +21,6 @@ export const useHistory = () => {
     if (!paramsRef.current.canFetchMore) return;
 
     const handleResponse = (response) => {
-      console.log("GOT HISTORY", response);
       if (response.canFetchMore) {
         paramsRef.current.startIndex += response.history.length;
       } else {
@@ -60,6 +63,10 @@ export const useHistory = () => {
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
 };
 
+/* -------------------------------------------------------------------------------------------------
+ * useViews
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useViews = () => {
   const [
     { viewsFeed, currentView, currentViewQuery, viewsType },
@@ -71,15 +78,17 @@ export const useViews = () => {
     if (type === viewsType.relatedLinks && query) {
       chrome.runtime.sendMessage(
         { type: messages.viewByTypeRequest, query },
-        (response) => {
-          setViewsFeed(response.result);
-        }
+        (response) => setViewsFeed(response.result)
       );
     }
   };
 
   return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useGetRelatedLinks
+ * -----------------------------------------------------------------------------------------------*/
 
 export const useHistorySearch = ({ inputRef }) => {
   const searchByQuery = (query) => {

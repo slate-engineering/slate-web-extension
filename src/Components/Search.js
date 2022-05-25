@@ -93,7 +93,7 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   }
 `;
 
-const Input = React.forwardRef(({ props }, ref) => {
+const Input = React.forwardRef((props, ref) => {
   const { onInputChange, clearSearch, search } = useSearchContext();
   return (
     <section css={STYLES_SEARCH_WRAPPER}>

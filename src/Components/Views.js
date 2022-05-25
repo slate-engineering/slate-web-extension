@@ -2,7 +2,6 @@ import * as React from "react";
 import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
-import * as RovingTabIndex from "../Components/RovingTabIndex";
 import * as SVG from "../Common/SVG";
 import * as Favicons from "../Common/favicons";
 
@@ -73,6 +72,10 @@ function Provider({
       getViewsFeed,
     ]
   );
+
+  React.useLayoutEffect(() => {
+    if (onChange) onChange();
+  }, [currentView, currentViewQuery]);
 
   React.useEffect(() => {
     const handleKeyboardNavigation = (e) => {
@@ -193,80 +196,57 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
 `;
 
 function Menu({ css, ...props }) {
-  const { currentView, currentViewQuery, getViewsFeed, onChange } =
-    useViewsContext();
+  const { currentView, currentViewQuery, getViewsFeed } = useViewsContext();
 
   const createOnClickHandler =
     ({ type, query }) =>
-    () => {
+    () =>
       getViewsFeed({ type, query });
-      if (onChange) onChange();
-    };
 
   return (
-    <RovingTabIndex.Provider axis="horizontal">
-      <RovingTabIndex.List>
-        <section css={[STYLES_VIEWS_MENU, css]} {...props}>
-          {VIEWS_ACTIONS.map((viewAction, i) => (
-            <RovingTabIndex.Item key={viewAction.label} index={i}>
-              <Typography.H5
-                css={[
-                  STYLES_VIEWS_BUTTON,
-                  currentView === viewAction.data.type &&
-                    STYLES_VIEWS_BUTTON_ACTIVE,
-                ]}
-                style={{ marginLeft: i > 0 ? 4 : 0 }}
-                as="button"
-                onClick={createOnClickHandler({ type: viewAction.data.type })}
-              >
-                {viewAction.label}
-              </Typography.H5>
-            </RovingTabIndex.Item>
-          ))}
-
-          <Divider height="none" width="1px" style={{ margin: "0px 4px" }} />
-
-          {CUSTOM_VIEWS_ACTIONS.map((viewAction, i) => {
-            const { Favicon } = viewAction;
-            const isApplied =
-              currentView === viewAction.data.type &&
-              currentViewQuery === viewAction.data.query;
-            return (
-              <RovingTabIndex.Item
-                key={viewAction.label}
-                index={VIEWS_ACTIONS.length + i}
-              >
-                <Typography.H5
-                  css={[
-                    STYLES_VIEWS_BUTTON,
-                    isApplied && STYLES_VIEWS_BUTTON_ACTIVE,
-                  ]}
-                  style={{ marginLeft: 4 }}
-                  as="button"
-                  onClick={createOnClickHandler({
-                    type: viewAction.data.type,
-                    query: viewAction.data.query,
-                  })}
-                >
-                  <Favicon
-                    style={{ marginRight: 4, opacity: isApplied ? 1 : 0.5 }}
-                  />
-                  {viewAction.label}
-                </Typography.H5>
-              </RovingTabIndex.Item>
-            );
-          })}
-
-          <RovingTabIndex.Item
-            index={VIEWS_ACTIONS.length + CUSTOM_VIEWS_ACTIONS.length}
+    <section css={[STYLES_VIEWS_MENU, css]} {...props}>
+      {VIEWS_ACTIONS.map((viewAction, i) => (
+        <Typography.H5
+          key={viewAction.label}
+          css={[
+            STYLES_VIEWS_BUTTON,
+            currentView === viewAction.data.type && STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
+          style={{ marginLeft: i > 0 ? 4 : 0 }}
+          as="button"
+          onClick={createOnClickHandler({ type: viewAction.data.type })}
+          tabIndex="-1"
+        >
+          {viewAction.label}
+        </Typography.H5>
+      ))}
+      <Divider height="none" width="1px" style={{ margin: "0px 4px" }} />
+      {CUSTOM_VIEWS_ACTIONS.map((viewAction) => {
+        const { Favicon } = viewAction;
+        const isApplied =
+          currentView === viewAction.data.type &&
+          currentViewQuery === viewAction.data.query;
+        return (
+          <Typography.H5
+            key={viewAction.label}
+            css={[STYLES_VIEWS_BUTTON, isApplied && STYLES_VIEWS_BUTTON_ACTIVE]}
+            style={{ marginLeft: 4 }}
+            as="button"
+            onClick={createOnClickHandler({
+              type: viewAction.data.type,
+              query: viewAction.data.query,
+            })}
+            tabIndex="-1"
           >
-            <button css={STYLES_VIEWS_ADD_BUTTON}>
-              <SVG.Plus width={16} height={16} />
-            </button>
-          </RovingTabIndex.Item>
-        </section>
-      </RovingTabIndex.List>
-    </RovingTabIndex.Provider>
+            <Favicon style={{ marginRight: 4, opacity: isApplied ? 1 : 0.5 }} />
+            {viewAction.label}
+          </Typography.H5>
+        );
+      })}
+      <button css={STYLES_VIEWS_ADD_BUTTON}>
+        <SVG.Plus width={16} height={16} />
+      </button>
+    </section>
   );
 }
 

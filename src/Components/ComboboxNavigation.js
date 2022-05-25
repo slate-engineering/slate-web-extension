@@ -185,12 +185,6 @@ const ComboboxInput = React.forwardRef(
           e.stopPropagation();
           moveSelectionOnArrowDown();
           break;
-        case "ArrowLeft":
-          e.preventDefault();
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          break;
         case "Enter":
           e.preventDefault();
           e.stopPropagation();
@@ -202,7 +196,11 @@ const ComboboxInput = React.forwardRef(
     return React.cloneElement(React.Children.only(children), {
       onFocus: mergeEvents(() => setInputFocus(true), onFocus),
       onBlur: mergeEvents(() => setInputFocus(false), onBlur),
-      onKeyDown: mergeEvents(keyDownHandler, onKeyDown),
+      onKeyDown: mergeEvents(
+        children.props.onKeyDown,
+        keyDownHandler,
+        onKeyDown
+      ),
       ref: mergeRefs([ref, children.ref, registerInputRef]),
       ...props,
     });
@@ -274,7 +272,7 @@ const ComboboxMenu = React.forwardRef(({ children, ...props }, ref) => {
   React.useLayoutEffect(() => cleanupMenu, []);
   return React.cloneElement(React.Children.only(children), {
     ref: mergeRefs([ref, children.ref, registerMenuRef]),
-    style: { position: "relative", ...children.style },
+    style: { position: "relative", ...children.props.style },
     ...props,
   });
 });

@@ -7,6 +7,10 @@ import {
 } from "./";
 import { messages } from "../";
 
+/* -------------------------------------------------------------------------------------------------
+ * useHistory
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useHistory = () => {
   const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
   const { windowsFeed, setWindowsFeed } = useOpenWindowsState();
@@ -61,6 +65,10 @@ export const useHistory = () => {
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
 };
 
+/* -------------------------------------------------------------------------------------------------
+ * useViews
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useViews = () => {
   const [
     { viewsFeed, currentView, currentViewQuery, viewsType },
@@ -91,6 +99,10 @@ export const useViews = () => {
 
   return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useGetRelatedLinks
+ * -----------------------------------------------------------------------------------------------*/
 
 export const useGetRelatedLinks = (url) => {
   const [relatedLinks, setRelatedLinks] = React.useState(null);
@@ -127,6 +139,10 @@ export const useGetRelatedLinks = (url) => {
 
   return relatedLinks;
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useHistorySearch
+ * -----------------------------------------------------------------------------------------------*/
 
 export const useHistorySearch = ({ inputRef }) => {
   const searchByQuery = (query) => {

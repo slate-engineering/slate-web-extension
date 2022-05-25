@@ -51,7 +51,7 @@ const useManageScrollPosition = ({
 const rovingIndexContext = React.createContext({});
 const useRovingIndexContext = () => React.useContext(rovingIndexContext);
 
-function Provider({ axis = "vertical", children }) {
+const Provider = React.forwardRef(({ axis = "vertical", children }, ref) => {
   const focusedElementsRefs = React.useRef({});
   const initialIndex = 0;
   const [focusedIndex, setFocusedIndex] = React.useState(initialIndex);
@@ -89,7 +89,9 @@ function Provider({ axis = "vertical", children }) {
 
   const focusElement = (index) => {
     const focusedElementRef = focusedElementsRefs.current[index];
-    focusedElementRef.current.focus({ preventScroll: true });
+    if (focusedElementRef) {
+      focusedElementRef.current.focus({ preventScroll: true });
+    }
   };
 
   const setIndexToNextElement = () => {
@@ -120,6 +122,14 @@ function Provider({ axis = "vertical", children }) {
 
   useManageScrollPosition({ listRef, focusedElementsRefs, focusedIndex, axis });
 
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      focusSelectedElement: () => focusElement(focusedIndex),
+    }),
+    [focusedIndex]
+  );
+
   const contextValue = React.useMemo(
     () => [
       { focusedIndex, axis },
@@ -144,7 +154,7 @@ function Provider({ axis = "vertical", children }) {
       {children}
     </rovingIndexContext.Provider>
   );
-}
+});
 
 /* -------------------------------------------------------------------------------------------------
  * RovingTabIndex List

@@ -82,6 +82,10 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
   return sessionsFeed;
 };
 
+/* -------------------------------------------------------------------------------------------------
+ * useOpenWindowsState
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useOpenWindowsState = () => {
   const initiateWindowsFeed = () => ({
     currentWindow: [],
@@ -104,6 +108,10 @@ export const useOpenWindowsState = () => {
   return { windowsFeed: feed, setWindowsFeed };
 };
 
+/* -------------------------------------------------------------------------------------------------
+ * useHistoryState
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useHistoryState = () => {
   const [feed, setFeed] = React.useState({});
   const sessionsFeedKeys = React.useMemo(() => Object.keys(feed), [feed]);
@@ -121,11 +129,15 @@ export const useHistoryState = () => {
   return { sessionsFeed: feed, sessionsFeedKeys, setSessionsFeed };
 };
 
+/* -------------------------------------------------------------------------------------------------
+ * useViewsState
+ * -----------------------------------------------------------------------------------------------*/
+
 export const useViewsState = () => {
   const [views, setViewsState] = React.useState({
     feed: [],
     type: viewsType.recent,
-    query: "",
+    query: undefined,
   });
 
   const setViewsParams = ({ type, query }) => {
@@ -149,6 +161,10 @@ export const useViewsState = () => {
     { setViewsFeed, setViewsParams },
   ];
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useHistorySearchState
+ * -----------------------------------------------------------------------------------------------*/
 
 const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
   const timeRef = React.useRef();

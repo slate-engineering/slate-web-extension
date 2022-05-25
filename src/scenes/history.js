@@ -3,6 +3,7 @@ import * as Styles from "../Common/styles";
 import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
 import * as Search from "../Components/Search";
+import * as RovingTabIndex from "../Components/RovingTabIndex";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
@@ -50,7 +51,7 @@ const STYLES_RELATED_LINKS_POPUP = (theme) => css`
   }
 `;
 
-function RelatedLinksPopup({ preview, isEnabled }) {
+function RelatedLinksPopup({ preview, isEnabled, ...props }) {
   const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
 
   const relatedLinksFeed = useGetRelatedLinks(
@@ -63,6 +64,7 @@ function RelatedLinksPopup({ preview, isEnabled }) {
     <RelatedLinksFeed
       css={STYLES_RELATED_LINKS_POPUP}
       feed={relatedLinksFeed}
+      {...props}
     />
   );
 }
@@ -161,9 +163,7 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
   animation: views-menu-fade-in 200ms ease;
 `;
 
-export default function History() {
-  const [preview, setPreview] = React.useState();
-
+const useCloseJumperOnEsc = () => {
   const { closeTheJumper } = Navigation.useNavigation();
   React.useEffect(() => {
     const onKeyDown = (e) => {
@@ -173,6 +173,14 @@ export default function History() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+};
+
+export default function History() {
+  const [preview, setPreview] = React.useState();
+  const handleOnObjectHover = React.useCallback(
+    ({ url }) => setPreview({ type: "link", url }),
+    []
+  );
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -186,15 +194,30 @@ export default function History() {
   const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
-  const focusInputOnViewChange = () => inputRef.current.focus();
-
-  const handleOnObjectHover = React.useCallback(
-    ({ url }) => setPreview({ type: "link", url }),
-    []
-  );
-
   const wrapperRef = React.useRef();
   useTrapFocusInShadowDom({ ref: wrapperRef });
+
+  useCloseJumperOnEsc();
+
+  // NOTE(amine): Navigate between the jumper and the related links feed via the the left and right arrow keys
+  const relatedLinksFeedRovingTabRef = React.useRef();
+  const focusRelatedLinksFeedObject = () =>
+    relatedLinksFeedRovingTabRef.current.focusSelectedElement();
+  const focusSearchInput = () => inputRef.current.focus();
+
+  const onInputKeyDownHandler = (e) => {
+    if (e.key === "ArrowRight") {
+      focusRelatedLinksFeedObject();
+      e.preventDefault();
+    }
+  };
+
+  const onRelatedLinksFeedKeyDownHandler = (e) => {
+    if (e.key === "ArrowLeft") {
+      focusSearchInput();
+      e.preventDefault();
+    }
+  };
 
   // NOTE(amine) don't render the app when history isn't available
   if (sessionsFeedKeys.length === 0) return null;
@@ -207,7 +230,7 @@ export default function History() {
         currentViewQuery={currentViewQuery}
         viewsType={viewsType}
         getViewsFeed={getViewsFeed}
-        onChange={focusInputOnViewChange}
+        onChange={focusSearchInput}
       >
         <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
         <div css={STYLES_APP_MODAL}>
@@ -219,7 +242,7 @@ export default function History() {
               search={search}
               clearSearch={clearSearch}
             >
-              <Search.Input ref={inputRef} />
+              <Search.Input onKeyDown={onInputKeyDownHandler} ref={inputRef} />
 
               <Divider color="borderGrayLight" />
               <section
@@ -260,7 +283,13 @@ export default function History() {
           </ComboboxNavigation.Provider>
         </div>
 
-        <RelatedLinksPopup preview={preview} isEnabled={!isSearching} />
+        <RovingTabIndex.Provider ref={relatedLinksFeedRovingTabRef}>
+          <RelatedLinksPopup
+            preview={preview}
+            isEnabled={!isSearching}
+            onKeyDown={onRelatedLinksFeedKeyDownHandler}
+          />
+        </RovingTabIndex.Provider>
       </Views.Provider>
     </div>
   );

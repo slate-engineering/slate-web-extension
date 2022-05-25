@@ -28,32 +28,30 @@ const STYLES_OBJECT_PREVIEW_LIST_WRAPPER = css`
 
 export default function RelatedLinksFeed({ feed, ...props }) {
   return (
-    <RovingTabIndex.Provider>
-      <RovingTabIndex.List>
-        <ListView.Root {...props}>
-          <ListView.Section>
-            <ListView.Title
-              css={STYLES_RELATED_LINKS_POPUP_HEADER}
-              count={feed?.length}
-            >
-              Related
-            </ListView.Title>
-            <div css={STYLES_OBJECT_PREVIEW_LIST_WRAPPER}>
-              {feed &&
-                feed.map((visit, i) => (
-                  <RovingTabIndex.Item key={visit.id} index={i}>
-                    <ListView.Object
-                      title={visit.title}
-                      Favicon={getFavicon(visit.rootDomain)}
-                      onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-                      onMouseEnter={(e) => e.target.focus()}
-                    />
-                  </RovingTabIndex.Item>
-                ))}
-            </div>
-          </ListView.Section>
-        </ListView.Root>
-      </RovingTabIndex.List>
-    </RovingTabIndex.Provider>
+    <RovingTabIndex.List>
+      <ListView.Root {...props}>
+        <ListView.Section>
+          <ListView.Title
+            css={STYLES_RELATED_LINKS_POPUP_HEADER}
+            count={feed?.length}
+          >
+            Related
+          </ListView.Title>
+          <div css={STYLES_OBJECT_PREVIEW_LIST_WRAPPER}>
+            {feed &&
+              feed.map((visit, i) => (
+                <RovingTabIndex.Item key={visit.id} index={i}>
+                  <ListView.Object
+                    title={visit.title}
+                    Favicon={getFavicon(visit.rootDomain)}
+                    onClick={() => Navigation.openUrls({ urls: [visit.url] })}
+                    onMouseEnter={(e) => e.target.focus()}
+                  />
+                </RovingTabIndex.Item>
+              ))}
+          </div>
+        </ListView.Section>
+      </ListView.Root>
+    </RovingTabIndex.List>
   );
 }
