@@ -12,6 +12,37 @@ import { viewsType } from "../Core/history";
 import { Divider } from "./Divider";
 import { ComboboxNavigation } from "./ComboboxNavigation";
 
+const VIEWS_ACTIONS = [
+  { label: "Recent", data: { type: viewsType.recent } },
+  { label: "Current Window", data: { type: viewsType.currentWindow } },
+  { label: "All Open", data: { type: viewsType.allOpen } },
+];
+
+const CUSTOM_VIEWS_ACTIONS = [
+  {
+    label: "Twitter",
+    data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
+    Favicon: Favicons.getFavicon("twitter.com"),
+  },
+  {
+    label: "Hacker News",
+    data: {
+      type: viewsType.relatedLinks,
+      query: "https://news.ycombinator.com",
+    },
+    Favicon: Favicons.getFavicon("ycombinator.com"),
+  },
+  {
+    label: "Youtube",
+    data: { type: viewsType.relatedLinks, query: "https://www.youtube.com/" },
+    Favicon: Favicons.getFavicon("youtube.com"),
+  },
+];
+
+/* -------------------------------------------------------------------------------------------------
+ * Views Provider
+ * -----------------------------------------------------------------------------------------------*/
+
 const ViewsContext = React.createContext();
 const useViewsContext = () => React.useContext(ViewsContext);
 
@@ -43,10 +74,83 @@ function Provider({
     ]
   );
 
+  React.useEffect(() => {
+    const handleKeyboardNavigation = (e) => {
+      const getSelectedViewIndex = () => {
+        const isViewCurrentlySelected = (view) =>
+          view.data.type === currentView &&
+          view.data.query === currentViewQuery;
+
+        for (let [index, view] of VIEWS_ACTIONS.entries()) {
+          if (isViewCurrentlySelected(view)) {
+            return index;
+          }
+        }
+
+        for (let [index, view] of CUSTOM_VIEWS_ACTIONS.entries()) {
+          if (isViewCurrentlySelected(view)) {
+            return index + CUSTOM_VIEWS_ACTIONS.length;
+          }
+        }
+      };
+
+      const goToViewByIndex = (index) => {
+        const initialIndex = 0;
+        const totalCustomViews = CUSTOM_VIEWS_ACTIONS.length;
+        const totalDefaultViews = VIEWS_ACTIONS.length;
+        const totalViews = totalDefaultViews + totalCustomViews;
+
+        if (index > totalViews - 1) {
+          getViewsFeed(VIEWS_ACTIONS[initialIndex].data);
+          return;
+        }
+
+        if (index < initialIndex) {
+          getViewsFeed(CUSTOM_VIEWS_ACTIONS[totalCustomViews - 1].data);
+          return;
+        }
+
+        if (VIEWS_ACTIONS[index]) {
+          getViewsFeed(VIEWS_ACTIONS[index].data);
+          return;
+        }
+
+        if (CUSTOM_VIEWS_ACTIONS[index - totalDefaultViews]) {
+          getViewsFeed(CUSTOM_VIEWS_ACTIONS[index - totalDefaultViews].data);
+        }
+      };
+
+      if (e.altKey && e.shiftKey && e.key === "Tab") {
+        const selectedIndex = getSelectedViewIndex();
+        goToViewByIndex(selectedIndex - 1);
+
+        e.stopPropagation();
+        e.preventDefault();
+        return;
+      }
+
+      if (e.altKey && e.key === "Tab") {
+        const selectedIndex = getSelectedViewIndex();
+        goToViewByIndex(selectedIndex + 1);
+
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboardNavigation);
+    return () =>
+      window.removeEventListener("keydown", handleKeyboardNavigation);
+  }, [currentView, currentViewQuery, getViewsFeed]);
+
   return (
     <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
   );
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * Views Menu
+ * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
@@ -62,10 +166,6 @@ const STYLES_VIEWS_BUTTON = (theme) => css`
 
   &:hover {
     ${STYLES_VIEWS_BUTTON_ACTIVE(theme)}
-  }
-
-  &:focus {
-    outline: 2px solid ${theme.system.blue};
   }
 `;
 
@@ -88,36 +188,9 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   }
 
   &:focus {
-    outline: 2px solid ${theme.system.blue};
+    ${STYLES_VIEWS_BUTTON_ACTIVE(theme)};
   }
 `;
-
-const VIEWS_ACTIONS = [
-  { label: "Recent", data: { type: viewsType.recent } },
-  { label: "Current Window", data: { type: viewsType.currentWindow } },
-  { label: "All Open", data: { type: viewsType.allOpen } },
-];
-
-const CUSTOM_VIEWS_ACTIONS = [
-  {
-    label: "Twitter",
-    data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
-    Favicon: Favicons.getFavicon("twitter.com"),
-  },
-  {
-    label: "Hacker News",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://www.hackernews.com",
-    },
-    Favicon: Favicons.getFavicon("hackernews.com"),
-  },
-  {
-    label: "Youtube",
-    data: { type: viewsType.relatedLinks, query: "https://www.youtube.com/" },
-    Favicon: Favicons.getFavicon("youtube.com"),
-  },
-];
 
 function Menu({ css, ...props }) {
   const { currentView, currentViewQuery, getViewsFeed, onChange } =
@@ -196,6 +269,10 @@ function Menu({ css, ...props }) {
     </RovingTabIndex.Provider>
   );
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * Views Feed
+ * -----------------------------------------------------------------------------------------------*/
 
 function Feed({ onObjectHover, onOpenUrl }) {
   const { viewsFeed } = useViewsContext();
