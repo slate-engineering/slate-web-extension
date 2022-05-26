@@ -111,7 +111,6 @@ export const useGetRelatedLinks = (url) => {
   React.useEffect(() => {
     const getRelatedLinks = () => {
       if (!url) return;
-      setRelatedLinks(null);
       window.postMessage({ type: messages.relatedLinksRequest, url }, "*");
     };
 

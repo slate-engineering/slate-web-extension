@@ -66,8 +66,24 @@ const Provider = React.forwardRef(({ axis = "vertical", children }, ref) => {
   };
 
   const listRef = React.useRef();
-  const registerList = (node) => (listRef.current = node);
-  const cleanupList = () => setFocusedIndex(0);
+  const isFocusWithinBeforeCleanup = React.useRef(false);
+  const registerList = (ref) => {
+    listRef.current = ref.current;
+    //NOTE(amine): if a child element was focused before unmounting, focus the first child when mounting
+    if (isFocusWithinBeforeCleanup.current) {
+      focusElement(focusedIndex);
+      isFocusWithinBeforeCleanup.current = false;
+    }
+  };
+  const cleanupList = () => {
+    setFocusedIndex(0);
+    const listElement = listRef.current;
+    if (!listElement) return;
+    const root = listRef.current.getRootNode() || document;
+    if (listElement.contains(root.activeElement)) {
+      isFocusWithinBeforeCleanup.current = true;
+    }
+  };
 
   const syncFocusedIndexState = ({ index, isFocused }) => {
     if (!isFocused) return;
@@ -187,10 +203,13 @@ const List = React.forwardRef(({ children, ...props }, forwardedRef) => {
 
   const [, { cleanupList, registerList }] = useRovingIndexContext();
 
-  React.useLayoutEffect(() => cleanupList, []);
+  React.useLayoutEffect(() => {
+    if (ref.current) registerList(ref);
+    return cleanupList;
+  }, []);
 
   return React.cloneElement(React.Children.only(children), {
-    ref: mergeRefs([ref, forwardedRef, registerList]),
+    ref: mergeRefs([ref, forwardedRef]),
     ...props,
   });
 });

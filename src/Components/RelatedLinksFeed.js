@@ -28,7 +28,7 @@ const STYLES_OBJECT_PREVIEW_LIST_WRAPPER = css`
 
 export default function RelatedLinksFeed({ feed, ...props }) {
   return (
-    <RovingTabIndex.List>
+    <RovingTabIndex.List key={feed}>
       <ListView.Root {...props}>
         <ListView.Section>
           <ListView.Title
