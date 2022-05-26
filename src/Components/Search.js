@@ -134,6 +134,7 @@ const Feed = React.memo(() => {
               key={visit.id}
               index={i}
               title={visit.title}
+              relatedVisits={visit.relatedVisits}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => Navigation.openUrls({ urls: [visit.url] })}
               onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}

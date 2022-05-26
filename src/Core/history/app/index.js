@@ -1,19 +1,9 @@
 import * as React from "react";
 
-import { isToday, isYesterday } from "../../../Common/utilities";
+import { isToday, isYesterday, getRootDomain } from "../../../Common/utilities";
 import { viewsType } from "../";
 
-const removeSessionDuplicateVisits = (session) => {
-  const isAlreadyAdded = {};
-  session.visits = session.visits.filter(({ url }) => {
-    if (url in isAlreadyAdded) return false;
-    isAlreadyAdded[url] = true;
-    return true;
-  });
-  return session;
-};
-
-const filterSessionsFeed = ({ sessionsFeed, history }) => {
+const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
     key in object ? object[key].push(value) : (object[key] = [value]);
 
@@ -28,39 +18,78 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
     return false;
   };
 
-  history.forEach((session) => {
-    const cleanedSession = removeSessionDuplicateVisits(session);
+  const visitWithSameTitle = sessionsFeedKeys.reduce((acc, time) => {
+    sessionsFeedKeys[time].forEach((visit) => {
+      if (visit.relatedVisits) {
+        acc[`${time}-${getRootDomain(visit.url)}-${visit.title}`] =
+          visit.relatedVisits;
+      }
+    });
+    return acc;
+  }, {});
 
-    if (isToday(new Date(cleanedSession.visitTime))) {
+  const doesVisitExistWithSameTitle = (time, visit) =>
+    `${time}-${getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
+  const addVisitToDuplicateList = (time, visit) =>
+    visitWithSameTitle[
+      `${time}-${getRootDomain(visit.url)}-${visit.title}`
+    ].push(visit);
+  const createVisitDuplicate = (time, visit) => {
+    visitWithSameTitle[`${time}-${getRootDomain(visit.url)}-${visit.title}`] =
+      [];
+    return visitWithSameTitle[
+      `${time}-${getRootDomain(visit.url)}-${visit.title}`
+    ];
+  };
+
+  history.forEach((session) => {
+    if (isToday(new Date(session.visitTime))) {
       session.visits.forEach((visit) => {
         if (isUrlAlreadyAddedToFeedTimeline("Today", visit.url)) {
           return;
         }
+
+        if (doesVisitExistWithSameTitle("Today", visit)) {
+          addVisitToDuplicateList("Today", visit);
+          return;
+        }
+
         ifKeyExistAppendValueElseCreate({
           object: sessionsFeed,
           key: "Today",
-          value: visit,
+          value: {
+            ...visit,
+            relatedVisits: createVisitDuplicate("Today", visit),
+          },
         });
       });
       return;
     }
 
-    if (isYesterday(new Date(cleanedSession.visitTime))) {
+    if (isYesterday(new Date(session.visitTime))) {
       session.visits.forEach((visit) => {
         if (isUrlAlreadyAddedToFeedTimeline("Yesterday", visit.url)) {
+          return;
+        }
+
+        if (doesVisitExistWithSameTitle("Yesterday", visit)) {
+          addVisitToDuplicateList("Yesterday", visit);
           return;
         }
 
         ifKeyExistAppendValueElseCreate({
           object: sessionsFeed,
           key: "Yesterday",
-          value: visit,
+          value: {
+            ...visit,
+            relatedVisits: createVisitDuplicate("Yesterday", visit),
+          },
         });
       });
       return;
     }
 
-    const sessionVisitDate = new Date(cleanedSession.visitTime);
+    const sessionVisitDate = new Date(session.visitTime);
     const formattedDate = `${sessionVisitDate.toLocaleDateString("en-EN", {
       weekday: "long",
     })}, ${sessionVisitDate.toLocaleDateString("en-EN", {
@@ -71,10 +100,18 @@ const filterSessionsFeed = ({ sessionsFeed, history }) => {
         return;
       }
 
+      if (doesVisitExistWithSameTitle(formattedDate, visit)) {
+        addVisitToDuplicateList(formattedDate, visit);
+        return;
+      }
+
       ifKeyExistAppendValueElseCreate({
         object: sessionsFeed,
         key: formattedDate,
-        value: visit,
+        value: {
+          ...visit,
+          relatedVisits: createVisitDuplicate(formattedDate, visit),
+        },
       });
     });
   });
@@ -120,6 +157,7 @@ export const useHistoryState = () => {
     setFeed((prevFeed) => {
       const newFeed = filterSessionsFeed({
         sessionsFeed: { ...prevFeed },
+        sessionsFeedKeys,
         history: history,
       });
       return newFeed;

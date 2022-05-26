@@ -2,26 +2,6 @@ import Fuse from "fuse.js";
 
 import { messages } from "./";
 
-const removeDuplicatesFromSearchResults = (result) => {
-  const isAlreadyAdded = {};
-
-  const MAX_SEARCH_RESULT = 300;
-  const cleanedResult = [];
-  for (let { item } of result) {
-    for (let visit of item.visits) {
-      if (cleanedResult.length > MAX_SEARCH_RESULT) {
-        return cleanedResult;
-      }
-      if (visit.url in isAlreadyAdded) continue;
-      isAlreadyAdded[visit.url] = true;
-      cleanedResult.push(visit);
-    }
-  }
-  return cleanedResult;
-};
-
-/** ----------------------------------------- */
-
 const getRootDomain = (url) => {
   let hostname;
   try {
@@ -32,6 +12,49 @@ const getRootDomain = (url) => {
   const hostnameParts = hostname.split(".");
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
+
+const removeDuplicatesFromSearchResults = (result) => {
+  const isAlreadyAdded = {};
+
+  const visitWithSameTitle = {};
+  const doesVisitExistWithSameTitle = (visit) =>
+    `${getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
+  const addVisitToDuplicateList = (visit) =>
+    visitWithSameTitle[`${getRootDomain(visit.url)}-${visit.title}`].push(
+      visit
+    );
+  const createVisitDuplicate = (visit) => {
+    visitWithSameTitle[`${getRootDomain(visit.url)}-${visit.title}`] = [];
+    return visitWithSameTitle[`${getRootDomain(visit.url)}-${visit.title}`];
+  };
+
+  const MAX_SEARCH_RESULT = 300;
+  const cleanedResult = [];
+  for (let { item } of result) {
+    for (let visit of item.visits) {
+      if (cleanedResult.length > MAX_SEARCH_RESULT) {
+        return cleanedResult;
+      }
+
+      if (visit.url in isAlreadyAdded) continue;
+
+      isAlreadyAdded[visit.url] = true;
+
+      if (doesVisitExistWithSameTitle(visit)) {
+        addVisitToDuplicateList(visit);
+        continue;
+      }
+
+      cleanedResult.push({
+        ...visit,
+        relatedVisits: createVisitDuplicate(visit),
+      });
+    }
+  }
+  return cleanedResult;
+};
+
+/** ----------------------------------------- */
 
 const Session = {
   createVisit: (historyItem, visit) => ({

@@ -81,6 +81,7 @@ const HistoryFeed = ({
                     key={visit.id}
                     index={comboxboxItemIndex}
                     title={visit.title}
+                    relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
                     onSelect={() =>
                       onObjectHover({ url: visit.url, title: visit.title })

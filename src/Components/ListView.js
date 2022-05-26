@@ -96,8 +96,27 @@ const STYLES_OBJECT = css`
   border-radius: 12px;
 `;
 
+const STYLES_RELATED_LINKS_TOTAL = (theme) => css`
+  ${Styles.CONTAINER_CENTERED};
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background-color: ${theme.semantic.bgGrayLight};
+`;
+
 const Object = React.forwardRef(
-  ({ Favicon, title, css, isSelected, withActions = false, ...props }, ref) => {
+  (
+    {
+      Favicon,
+      title,
+      css,
+      isSelected,
+      withActions = false,
+      relatedVisits,
+      ...props
+    },
+    ref
+  ) => {
     return (
       <button
         ref={ref}
@@ -111,7 +130,15 @@ const Object = React.forwardRef(
         ]}
         {...props}
       >
-        <Favicon style={{ margin: 2, flexShrink: 0 }} />
+        {relatedVisits?.length ? (
+          <div css={STYLES_RELATED_LINKS_TOTAL} style={{ flexShrink: 0 }}>
+            <Typography.H5 color="textBlack">
+              {relatedVisits.length + 1}
+            </Typography.H5>
+          </div>
+        ) : (
+          <Favicon style={{ margin: 2, flexShrink: 0 }} />
+        )}
         <Typography.H5
           style={{ width: 384, marginLeft: 12 }}
           color="textBlack"

@@ -44,6 +44,7 @@ export default function RelatedLinksFeed({ feed, ...props }) {
                   <ListView.Object
                     title={visit.title}
                     Favicon={getFavicon(visit.rootDomain)}
+                    relatedVisits={visit.relatedVisits}
                     onClick={() => Navigation.openUrls({ urls: [visit.url] })}
                     onMouseEnter={(e) => e.target.focus()}
                   />
