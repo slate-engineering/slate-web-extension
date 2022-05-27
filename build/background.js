@@ -2714,6 +2714,24 @@ const Windows = {
       tabs: window.tabs.map(Tabs.create),
     }));
   },
+  search: async (query, { windowId }) => {
+    const options = {
+      findAllMatches: true,
+      includeMatches: true,
+      minMatchCharLength: query.length,
+      keys: ["url", "title"],
+    };
+
+    const windows = await chrome.windows.getAll({ populate: true });
+    let tabs = windows.flatMap(({ tabs }) => tabs);
+    if (windowId) {
+      tabs = tabs.filter((tab) => tab.windowId === windowId);
+    }
+
+    const fuse = new Fuse(tabs, options);
+
+    return fuse.search(query);
+  },
 };
 
 /** ------------ Event listeners ------------- */
@@ -2799,10 +2817,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === history_messages.searchQueryRequest) {
-    console.log(`SEARCH FOR ${request.query}`);
-    browserHistory.search(request.query).then((result) => {
+    const searchHandlers = [];
+    if (
+      request.viewType === viewsType.allOpen ||
+      request.viewType === viewsType.currentWindow
+    ) {
+      const searchOptions = {};
+      if (request.viewType === viewsType.currentWindow)
+        searchOptions.windowId = sender.tab.windowId;
+
+      searchHandlers.push({
+        handler: Windows.search(request.query, searchOptions),
+        title: request.viewType,
+      });
+    }
+    searchHandlers.push({
+      handler: browserHistory.search(request.query),
+      title: "recent",
+    });
+
+    Promise.all(searchHandlers.map(({ handler }) => handler)).then((result) => {
       sendResponse({
-        result,
+        result: result.reduce((acc, result, i) => {
+          if (result.length === 0) return acc;
+          acc.push({
+            title: searchHandlers[i].title,
+            result,
+          });
+          return acc;
+        }, []),
         query: request.query,
       });
     });

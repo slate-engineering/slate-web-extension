@@ -673,7 +673,11 @@ window.addEventListener("message", async function (event) {
 
   if (event.data.type === history_messages.searchQueryRequest) {
     chrome.runtime.sendMessage(
-      { type: history_messages.searchQueryRequest, query: event.data.query },
+      {
+        type: history_messages.searchQueryRequest,
+        query: event.data.query,
+        viewType: event.data.viewType,
+      },
       (response) =>
         window.postMessage(
           { type: history_messages.searchQueryResponse, data: response },
