@@ -70,15 +70,17 @@ export default function HistoryScene() {
   const { windowsFeed, sessionsFeed, sessionsFeedKeys, loadMoreHistory } =
     useHistory();
 
+  const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
+    useViews();
+
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
+    viewType: currentView,
   });
   const isSearching = search.query.length > 0 && search.result;
 
-  const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
-    useViews();
-  const focusInputOnViewChange = () => inputRef.current.focus();
+  const focusSearchInput = () => inputRef.current.focus();
 
   const [preview, setPreview] = React.useState({ url: "", title: "" });
   const handleOnObjectHover = React.useCallback(
@@ -106,7 +108,7 @@ export default function HistoryScene() {
             currentViewQuery={currentViewQuery}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
-            onChange={focusInputOnViewChange}
+            onChange={() => (clearSearch(), focusSearchInput())}
           >
             <Views.Menu />
             <Divider color="borderGrayLight" />

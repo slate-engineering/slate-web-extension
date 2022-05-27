@@ -9,6 +9,7 @@ import Logo from "../Components/Logo";
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
+import { getRootDomain } from "../Common/utilities";
 
 const SearchContext = React.createContext();
 const useSearchContext = () => React.useContext(SearchContext);
@@ -119,26 +120,64 @@ const Input = React.forwardRef((props, ref) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const getTitleFromView = (view) => {
+  const titles = {
+    currentWindow: "Current Window",
+    allOpen: "All Open",
+    recent: "Recent",
+  };
+  return titles[view];
+};
 const Feed = React.memo(() => {
   const {
-    search: { result: feed },
+    search: { result: feeds },
   } = useSearchContext();
-
   return (
     <ComboboxNavigation.Menu>
       <ListView.Root>
-        <ListView.Title count={feed.length}>Result</ListView.Title>
-        <div key={feed.length}>
-          {feed.map((visit, i) => (
-            <ListView.ComboboxObject
-              key={visit.id}
-              index={i}
-              title={visit.title}
-              relatedVisits={visit.relatedVisits}
-              Favicon={getFavicon(visit.rootDomain)}
-              onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-              onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
-            />
+        <div key={feeds}>
+          {feeds.map(({ title: view, result: feed }, feedIndex) => (
+            <>
+              <ListView.Title count={feed.length}>
+                {getTitleFromView(view)}
+              </ListView.Title>
+              {feed.map((item, i) => {
+                if (view === "currentWindow" || view === "allOpen") {
+                  const tab = item.item;
+                  return (
+                    <ListView.ComboboxObject
+                      key={tab.id}
+                      index={i}
+                      title={tab.title}
+                      Favicon={getFavicon(getRootDomain(tab.url))}
+                      onClick={() =>
+                        Navigation.openUrls({
+                          query: { tabId: tab.id, windowId: tab.windowId },
+                        })
+                      }
+                      onSubmit={() =>
+                        Navigation.openUrls({
+                          query: { tabId: tab.id, windowId: tab.windowId },
+                        })
+                      }
+                    />
+                  );
+                }
+
+                const visit = item;
+                return (
+                  <ListView.ComboboxObject
+                    key={visit.id}
+                    index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
+                    title={visit.title}
+                    relatedVisits={visit.relatedVisits}
+                    Favicon={getFavicon(visit.rootDomain)}
+                    onClick={() => Navigation.openUrls({ urls: [visit.url] })}
+                    onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
+                  />
+                );
+              })}
+            </>
           ))}
         </div>
       </ListView.Root>

@@ -143,11 +143,11 @@ export const useGetRelatedLinks = (url) => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef }) => {
+export const useHistorySearch = ({ inputRef, viewType }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     window.postMessage(
-      { type: messages.searchQueryRequest, query: query },
+      { type: messages.searchQueryRequest, query: query, viewType },
       "*"
     );
   };

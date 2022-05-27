@@ -90,11 +90,11 @@ export const useViews = () => {
  * useGetRelatedLinks
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef }) => {
+export const useHistorySearch = ({ inputRef, viewType }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     chrome.runtime.sendMessage(
-      { type: messages.searchQueryRequest, query: query },
+      { type: messages.searchQueryRequest, query: query, viewType },
       (response) => {
         if (response.query === inputRef.current.value)
           setSearch((prev) => ({ ...prev, result: [...response.result] }));

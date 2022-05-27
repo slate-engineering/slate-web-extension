@@ -181,18 +181,18 @@ export default function History() {
     ({ url }) => setPreview({ type: "link", url }),
     []
   );
+  const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
+    useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
+    viewType: currentView,
   });
   const isSearching = search.query.length > 0 && search.result;
 
   const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
     useHistory();
-
-  const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
-    useViews();
 
   const wrapperRef = React.useRef();
   useTrapFocusInShadowDom({ ref: wrapperRef });
@@ -230,7 +230,7 @@ export default function History() {
         currentViewQuery={currentViewQuery}
         viewsType={viewsType}
         getViewsFeed={getViewsFeed}
-        onChange={focusSearchInput}
+        onChange={() => (clearSearch(), focusSearchInput())}
       >
         <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
         <div css={STYLES_APP_MODAL}>
