@@ -19,7 +19,7 @@ const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
   };
 
   const visitWithSameTitle = sessionsFeedKeys.reduce((acc, time) => {
-    sessionsFeedKeys[time].forEach((visit) => {
+    sessionsFeed[time].forEach((visit) => {
       if (visit.relatedVisits) {
         acc[`${time}-${getRootDomain(visit.url)}-${visit.title}`] =
           visit.relatedVisits;
