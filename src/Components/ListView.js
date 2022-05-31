@@ -130,22 +130,19 @@ const Object = React.forwardRef(
         ]}
         {...props}
       >
-        {relatedVisits?.length ? (
-          <div css={STYLES_RELATED_LINKS_TOTAL} style={{ flexShrink: 0 }}>
-            <Typography.H5 color="textBlack">
-              {relatedVisits.length + 1}
-            </Typography.H5>
-          </div>
-        ) : (
-          <Favicon style={{ margin: 2, flexShrink: 0 }} />
-        )}
+        <Favicon style={{ margin: 2, flexShrink: 0 }} />
         <Typography.H5
-          style={{ width: 384, marginLeft: 12 }}
+          style={{ maxWidth: 384, marginLeft: 12 }}
           color="textBlack"
           nbrOflines={1}
         >
           {title}
         </Typography.H5>
+        {relatedVisits?.length ? (
+          <Typography.H5 color="textGray" style={{ marginLeft: 12 }}>
+            {relatedVisits.length + 1}
+          </Typography.H5>
+        ) : null}
         {withActions && <div>actions...</div>}
       </button>
     );
