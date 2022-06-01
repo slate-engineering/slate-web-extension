@@ -110,7 +110,7 @@ export default function HistoryScene() {
             getViewsFeed={getViewsFeed}
             onChange={() => (clearSearch(), focusSearchInput())}
           >
-            <Views.Menu />
+            <Views.Menu showAllOpenAction={windowsFeed?.allOpen?.length > 0} />
             <Divider color="borderGrayLight" />
             <section
               css={Styles.HORIZONTAL_CONTAINER}

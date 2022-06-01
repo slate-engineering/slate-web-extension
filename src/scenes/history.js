@@ -89,7 +89,7 @@ const jumperFadeInAnimation = css`
     }
   }
 
-  animation: jumper-fade-in 350ms ease;
+  animation: jumper-fade-in 200ms ease;
 `;
 
 const MODALS_WIDTH = 696;
@@ -160,7 +160,7 @@ const STYLES_VIEWS_MENU_WRAPPER = (theme) => css`
     }
   }
 
-  animation: views-menu-fade-in 200ms ease;
+  animation: views-menu-fade-in 100ms ease;
 `;
 
 const useCloseJumperOnEsc = () => {
@@ -232,7 +232,10 @@ export default function History() {
         getViewsFeed={getViewsFeed}
         onChange={() => (clearSearch(), focusSearchInput())}
       >
-        <Views.Menu css={STYLES_VIEWS_MENU_WRAPPER} />
+        <Views.Menu
+          showAllOpenAction={windowsFeed?.allOpen?.length > 0}
+          css={STYLES_VIEWS_MENU_WRAPPER}
+        />
         <div css={STYLES_APP_MODAL}>
           <ComboboxNavigation.Provider
             isInfiniteList={currentView === viewsType.recent}
