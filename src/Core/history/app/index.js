@@ -174,7 +174,7 @@ export const useHistoryState = () => {
 export const useViewsState = () => {
   const [views, setViewsState] = React.useState({
     feed: [],
-    type: viewsType.recent,
+    type: viewsType.currentWindow,
     query: undefined,
   });
 

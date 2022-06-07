@@ -15,9 +15,9 @@ import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import { mergeRefs, mergeEvents } from "../Common/utilities";
 
 const VIEWS_ACTIONS = [
-  { label: "Recent", data: { type: viewsType.recent } },
   { label: "Current Window", data: { type: viewsType.currentWindow } },
   { label: "All Open", data: { type: viewsType.allOpen } },
+  { label: "Recent", data: { type: viewsType.recent } },
 ];
 
 const CUSTOM_VIEWS_ACTIONS = [
@@ -50,10 +50,18 @@ const CUSTOM_VIEWS_ACTIONS = [
     Favicon: Favicons.getFavicon("notion.so"),
   },
   {
-    label: "Google Searches",
+    label: "Google Search",
     data: {
       type: viewsType.relatedLinks,
       query: "https://www.google.com/search",
+    },
+    Favicon: Favicons.getFavicon("google.com"),
+  },
+  {
+    label: "Google Calendar",
+    data: {
+      type: viewsType.relatedLinks,
+      query: "https://calendar.google.com/",
     },
     Favicon: Favicons.getFavicon("google.com"),
   },
