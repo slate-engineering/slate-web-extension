@@ -10,11 +10,8 @@ import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
 import LinkPreview from "../Components/LinkPreview";
 
-import {
-  useHistory,
-  useViews,
-  useHistorySearch,
-} from "../Core/history/app/newTab";
+import { useHistory } from "../Core/history/app/newTab";
+import { useViews, useHistorySearch } from "../Core/views/app/newTab";
 import { Divider } from "../Components/Divider";
 import { css } from "@emotion/react";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
