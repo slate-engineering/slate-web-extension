@@ -153,7 +153,7 @@ export const C3 = css`
 export const B1 = css`
   font-family: ${Constants.font.medium};
   font-size: 0.875rem;
-  line-height: 1;
+  line-height: 20px;
   letter-spacing: -0.006px;
 
   ${TEXT}
