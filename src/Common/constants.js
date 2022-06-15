@@ -88,6 +88,8 @@ export const system = {
   redDark4: "#800E00",
   redDark5: "#550500",
   redDark6: "#2B0000",
+
+  twitterBlue: "1DA1F2",
 };
 
 export const semantic = {
@@ -99,7 +101,9 @@ export const semantic = {
   textBlack: system.black,
 
   bgLight: system.grayLight6,
+
   bgGrayLight: system.grayLight5,
+  bgGrayLight4: system.grayLight4,
   bgBlurWhite: "rgba(255, 255, 255, 0.7)",
   bgBlurWhiteOP: "rgba(255, 255, 255, 0.85)",
   bgBlurWhiteTRN: "rgba(255, 255, 255, 0.3)",
@@ -120,8 +124,9 @@ export const semantic = {
   bgBlurDark6TRN: "rgba(28, 29, 30, 0.3)",
 
   borderLight: system.grayLight6,
-  borderGrayLight: system.grayLight5,
   borderDark: system.grayDark6,
+  borderGray: system.gray,
+  borderGrayLight: system.grayLight5,
   borderGrayDark: system.grayDark5,
   borderGrayLight4: system.grayLight4,
 
