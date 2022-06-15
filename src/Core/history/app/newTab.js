@@ -1,10 +1,5 @@
 import * as React from "react";
-import {
-  useHistoryState,
-  useOpenWindowsState,
-  useViewsState,
-  useHistorySearchState,
-} from "./";
+import { useHistoryState, useOpenWindowsState } from "./";
 import { messages } from "../";
 
 /* -------------------------------------------------------------------------------------------------
@@ -61,58 +56,4 @@ export const useHistory = () => {
   }, []);
 
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
-};
-
-/* -------------------------------------------------------------------------------------------------
- * useViews
- * -----------------------------------------------------------------------------------------------*/
-
-export const useViews = () => {
-  const [
-    { viewsFeed, currentView, currentViewQuery, viewsType },
-    { setViewsFeed, setViewsParams },
-  ] = useViewsState();
-
-  const getViewsFeed = ({ type, query }) => {
-    setViewsParams({ type, query });
-    if (type === viewsType.relatedLinks && query) {
-      chrome.runtime.sendMessage(
-        { type: messages.viewByTypeRequest, query },
-        (response) => setViewsFeed(response.result)
-      );
-    }
-  };
-
-  return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
-};
-
-/* -------------------------------------------------------------------------------------------------
- * useGetRelatedLinks
- * -----------------------------------------------------------------------------------------------*/
-
-export const useHistorySearch = ({ inputRef, viewType }) => {
-  const searchByQuery = (query) => {
-    if (query.length === 0) return;
-    chrome.runtime.sendMessage(
-      { type: messages.searchQueryRequest, query: query, viewType },
-      (response) => {
-        if (response.query === inputRef.current.value)
-          setSearch((prev) => ({ ...prev, result: [...response.result] }));
-      }
-    );
-  };
-
-  const [
-    { search, initialState },
-    { handleInputChange, setSearch, clearSearch },
-  ] = useHistorySearchState({ inputRef, onSearch: searchByQuery });
-
-  React.useEffect(() => {
-    if (search.query.length === 0) {
-      setSearch(initialState);
-      if (inputRef.current) inputRef.current.value = "";
-    }
-  }, [search.query]);
-
-  return [search, { handleInputChange, clearSearch }];
 };

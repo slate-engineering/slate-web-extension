@@ -1,6 +1,6 @@
 import Fuse from "fuse.js";
 
-import { messages, viewsType } from "./";
+import { messages } from "./";
 
 const getRootDomain = (url) => {
   let hostname;
@@ -269,7 +269,7 @@ class BrowserHistory {
   }
 }
 
-const browserHistory = new BrowserHistory();
+export const browserHistory = new BrowserHistory();
 
 /** ----------------------------------------- */
 
@@ -288,7 +288,7 @@ const Tabs = {
   },
 };
 
-const Windows = {
+export const Windows = {
   getAll: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
     return windows.map((window) => ({
@@ -382,55 +382,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     };
 
     getHistoryResponse().then(sendResponse);
-
-    return true;
-  }
-
-  if (request.type === messages.viewByTypeRequest) {
-    console.log(`VIEW FOR ${request.query}`);
-    browserHistory.getRelatedLinks(request.query).then((result) => {
-      sendResponse({
-        result: result,
-        query: request.query,
-      });
-    });
-
-    return true;
-  }
-
-  if (request.type === messages.searchQueryRequest) {
-    const searchHandlers = [];
-    if (
-      request.viewType === viewsType.allOpen ||
-      request.viewType === viewsType.currentWindow
-    ) {
-      const searchOptions = {};
-      if (request.viewType === viewsType.currentWindow)
-        searchOptions.windowId = sender.tab.windowId;
-
-      searchHandlers.push({
-        handler: Windows.search(request.query, searchOptions),
-        title: request.viewType,
-      });
-    }
-    searchHandlers.push({
-      handler: browserHistory.search(request.query),
-      title: "recent",
-    });
-
-    Promise.all(searchHandlers.map(({ handler }) => handler)).then((result) => {
-      sendResponse({
-        result: result.reduce((acc, result, i) => {
-          if (result.length === 0) return acc;
-          acc.push({
-            title: searchHandlers[i].title,
-            result,
-          });
-          return acc;
-        }, []),
-        query: request.query,
-      });
-    });
 
     return true;
   }
