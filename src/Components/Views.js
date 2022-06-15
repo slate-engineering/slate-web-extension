@@ -7,7 +7,7 @@ import * as Favicons from "../Common/favicons";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { viewsType } from "../Core/history";
+import { viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import { ComboboxNavigation } from "./ComboboxNavigation";
 import { useEventListener } from "Common/hooks";
@@ -18,6 +18,7 @@ const VIEWS_ACTIONS = [
   { label: "Current Window", data: { type: viewsType.currentWindow } },
   { label: "All Open", data: { type: viewsType.allOpen } },
   { label: "Recent", data: { type: viewsType.recent } },
+  { label: "Saved Files", data: { type: viewsType.savedFiles } },
 ];
 
 const CUSTOM_VIEWS_ACTIONS = [
