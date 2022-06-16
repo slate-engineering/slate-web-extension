@@ -264,6 +264,8 @@ const system = {
   redDark4: "#800E00",
   redDark5: "#550500",
   redDark6: "#2B0000",
+
+  twitterBlue: "1DA1F2",
 };
 
 const semantic = {
@@ -275,7 +277,9 @@ const semantic = {
   textBlack: system.black,
 
   bgLight: system.grayLight6,
+
   bgGrayLight: system.grayLight5,
+  bgGrayLight4: system.grayLight4,
   bgBlurWhite: "rgba(255, 255, 255, 0.7)",
   bgBlurWhiteOP: "rgba(255, 255, 255, 0.85)",
   bgBlurWhiteTRN: "rgba(255, 255, 255, 0.3)",
@@ -296,8 +300,9 @@ const semantic = {
   bgBlurDark6TRN: "rgba(28, 29, 30, 0.3)",
 
   borderLight: system.grayLight6,
-  borderGrayLight: system.grayLight5,
   borderDark: system.grayDark6,
+  borderGray: system.gray,
+  borderGrayLight: system.grayLight5,
   borderGrayDark: system.grayDark5,
   borderGrayLight4: system.grayLight4,
 
@@ -620,20 +625,7 @@ const history_messages = {
   relatedLinksRequest: "RELATED_LINKS_REQUEST",
   relatedLinksResponse: "RELATED_LINKS_RESPONSE",
 
-  searchQueryRequest: "SEARCH_QUERY_REQUEST",
-  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
-
-  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
-  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
-
   windowsUpdate: "WINDOWS_UPDATE",
-};
-
-const viewsType = {
-  recent: "recent",
-  currentWindow: "currentWindow",
-  allOpen: "allOpen",
-  relatedLinks: "relatedLinks",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/history/content.js
@@ -666,32 +658,6 @@ window.addEventListener("message", async function (event) {
       (response) =>
         window.postMessage(
           { type: history_messages.relatedLinksResponse, data: response },
-          "*"
-        )
-    );
-  }
-
-  if (event.data.type === history_messages.searchQueryRequest) {
-    chrome.runtime.sendMessage(
-      {
-        type: history_messages.searchQueryRequest,
-        query: event.data.query,
-        viewType: event.data.viewType,
-      },
-      (response) =>
-        window.postMessage(
-          { type: history_messages.searchQueryResponse, data: response },
-          "*"
-        )
-    );
-  }
-
-  if (event.data.type === history_messages.viewByTypeRequest) {
-    chrome.runtime.sendMessage(
-      { type: history_messages.viewByTypeRequest, query: event.data.query },
-      (response) =>
-        window.postMessage(
-          { type: history_messages.viewByTypeResponse, data: response },
           "*"
         )
     );
@@ -789,7 +755,97 @@ window.addEventListener("message", async function (event) {
   }
 });
 
+;// CONCATENATED MODULE: ./src/Core/views/index.js
+const views_messages = {
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
+  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
+};
+
+const viewsType = {
+  currentWindow: "currentWindow",
+  allOpen: "allOpen",
+  recent: "recent",
+  savedFiles: "savedFiles",
+  relatedLinks: "relatedLinks",
+};
+
+const initialView = viewsType.currentWindow;
+
+;// CONCATENATED MODULE: ./src/Core/views/content.js
+
+
+window.addEventListener("message", async function (event) {
+  if (event.data.type === views_messages.searchQueryRequest) {
+    chrome.runtime.sendMessage(
+      {
+        type: views_messages.searchQueryRequest,
+        query: event.data.query,
+        viewType: event.data.viewType,
+      },
+      (response) =>
+        window.postMessage(
+          { type: views_messages.searchQueryResponse, data: response },
+          "*"
+        )
+    );
+  }
+
+  if (event.data.type === views_messages.viewByTypeRequest) {
+    chrome.runtime.sendMessage(
+      {
+        type: views_messages.viewByTypeRequest,
+        viewType: event.data.viewType,
+        query: event.data.query,
+      },
+      (response) =>
+        window.postMessage(
+          { type: views_messages.viewByTypeResponse, data: response },
+          "*"
+        )
+    );
+  }
+});
+
+;// CONCATENATED MODULE: ./src/Core/initialLoad/index.js
+
+
+const initialLoad_messages = {
+  preloadInitialDataRequest: "PRELOAD_INITIAL_DATA_REQUEST",
+  preloadInitialDataResponse: "PRELOAD_INITIAL_DATA_RESPONSE",
+};
+
+const appInitialState = {
+  isAuthenticated: false,
+  shouldSync: false,
+  initialView: initialView,
+  currentWindow: [],
+  allOpen: [],
+  // NOTE(amine):if there is one tab is open,populate the recent view
+};
+
+;// CONCATENATED MODULE: ./src/Core/initialLoad/content.js
+
+
+window.addEventListener("message", async function (event) {
+  if (event.data.type === initialLoad_messages.preloadInitialDataRequest) {
+    chrome.runtime.sendMessage(
+      { type: initialLoad_messages.preloadInitialDataRequest },
+      (response) => {
+        window.postMessage(
+          { type: initialLoad_messages.preloadInitialDataResponse, data: response },
+          "*"
+        );
+      }
+    );
+  }
+});
+
 ;// CONCATENATED MODULE: ./src/content.js
+
+
 
 
 
