@@ -109,44 +109,42 @@ export default function History() {
             </Jumper.Header>
 
             <Jumper.Divider color="borderGrayLight" />
-            <Jumper.Body>
-              <section
-                css={Styles.HORIZONTAL_CONTAINER}
-                style={{ height: "100%", flex: 1, overflow: "hidden" }}
-              >
-                <Switch>
-                  <Match when={search.isSearching} component={Search.Feed} />
-                  <Match
-                    when={currentView === viewsType.recent}
-                    component={HistoryFeed}
-                    sessionsFeed={sessionsFeed}
-                    sessionsFeedKeys={sessionsFeedKeys}
-                    onLoadMore={loadMoreHistory}
-                    onObjectHover={handleOnObjectHover}
-                    onOpenUrl={Navigation.openUrls}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.currentWindow ||
-                      currentView === viewsType.allOpen
-                    }
-                    component={WindowsFeed}
-                    windowsFeed={windowsFeed}
-                    displayAllOpen={currentView === viewsType.allOpen}
-                    onObjectHover={handleOnObjectHover}
-                    onOpenUrl={Navigation.openUrls}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.relatedLinks ||
-                      currentView === viewsType.savedFiles
-                    }
-                    component={Views.Feed}
-                    onOpenUrl={Navigation.openUrls}
-                    onObjectHover={handleOnObjectHover}
-                  />
-                </Switch>
-              </section>
+            <Jumper.Body
+              css={Styles.HORIZONTAL_CONTAINER}
+              style={{ height: "100%", flex: 1, overflow: "hidden" }}
+            >
+              <Switch>
+                <Match when={search.isSearching} component={Search.Feed} />
+                <Match
+                  when={currentView === viewsType.recent}
+                  component={HistoryFeed}
+                  sessionsFeed={sessionsFeed}
+                  sessionsFeedKeys={sessionsFeedKeys}
+                  onLoadMore={loadMoreHistory}
+                  onObjectHover={handleOnObjectHover}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={
+                    currentView === viewsType.currentWindow ||
+                    currentView === viewsType.allOpen
+                  }
+                  component={WindowsFeed}
+                  windowsFeed={windowsFeed}
+                  displayAllOpen={currentView === viewsType.allOpen}
+                  onObjectHover={handleOnObjectHover}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={
+                    currentView === viewsType.relatedLinks ||
+                    currentView === viewsType.savedFiles
+                  }
+                  component={Views.Feed}
+                  onOpenUrl={Navigation.openUrls}
+                  onObjectHover={handleOnObjectHover}
+                />
+              </Switch>
             </Jumper.Body>
           </Search.Provider>
         </ComboboxNavigation.Provider>
