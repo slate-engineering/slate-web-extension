@@ -1,6 +1,7 @@
-import Fuse from "fuse.js";
-
 import { messages } from "./";
+import { viewer } from "../../Core/auth/background";
+
+import Fuse from "fuse.js";
 
 const getRootDomain = (url) => {
   let hostname;
@@ -267,6 +268,20 @@ class BrowserHistory {
 
     return removeDuplicatesFromSearchResults(fuse.search(url));
   }
+
+  async getChunk(startIndex = 0) {
+    const history = await browserHistory.get();
+
+    const historyChunk = history.slice(
+      startIndex,
+      startIndex + (startIndex === 0 ? 200 : 500)
+    );
+
+    return {
+      history,
+      canFetchMore: startIndex + historyChunk.length !== history.length,
+    };
+  }
 }
 
 export const browserHistory = new BrowserHistory();
@@ -274,13 +289,14 @@ export const browserHistory = new BrowserHistory();
 /** ----------------------------------------- */
 
 const Tabs = {
-  create: (tab) => ({
-    url: tab.url,
-    rootDomain: getRootDomain(tab.url),
+  create: async (tab) => ({
     id: tab.id,
+    windowId: tab.windowId,
     title: tab.title,
     favicon: tab.favIconUrl,
-    windowId: tab.windowId,
+    url: tab.url,
+    rootDomain: getRootDomain(tab.url),
+    isSaved: await viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -289,12 +305,24 @@ const Tabs = {
 };
 
 export const Windows = {
+  getAllTabsInWindow: async (windowId) => {
+    const window = await chrome.windows.get(windowId, { populate: true });
+    const tabs = await Promise.all(window.tabs.map(Tabs.create));
+    return tabs;
+  },
+  getAllTabs: async () => {
+    const windows = await chrome.windows.getAll({ populate: true });
+    const tabs = windows.flatMap((window) => window.tabs.map(Tabs.create));
+    return await Promise.all(tabs);
+  },
   getAll: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
-    return windows.map((window) => ({
-      id: window.id,
-      tabs: window.tabs.map(Tabs.create),
-    }));
+    return await Promise.all(
+      windows.map(async (window) => ({
+        id: window.id,
+        tabs: await Promise.all(window.tabs.map(Tabs.create)),
+      }))
+    );
   },
   search: async (query, { windowId }) => {
     const options = {

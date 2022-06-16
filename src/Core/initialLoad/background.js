@@ -1,6 +1,7 @@
 import { viewer } from "../auth/background";
-import { Windows } from "../history/background";
-import { messages } from "./";
+import { browserHistory, Windows } from "../history/background";
+import { viewsType } from "../views";
+import { messages, appInitialState } from "./";
 
 /** ------------ Event listeners ------------- */
 
@@ -16,16 +17,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return {
           isAuthenticated,
           shouldSync,
-          windows: { currentWindow: [], allOpen: [] },
+          currentWindow: [],
+          allOpen: [],
         };
       }
-
-      const windows = await Windows.getAll();
-      return {
+      const response = {
+        ...appInitialState,
         isAuthenticated,
         shouldSync,
-        windows: { currentWindow: windows, allOpen: windows },
+        currentWindow: await Windows.getAllTabsInWindow(sender.tab.windowId),
+        allOpen: await Windows.getAllTabs(),
       };
+
+      // NOTE(amine): if there is only tab that's open, preload recent view
+      if (response.allOpen.length === 1) {
+        response.recent = await browserHistory.getChunk();
+        response.initialView = viewsType.recent;
+      }
+      return response;
     };
 
     getInitialData().then(sendResponse);

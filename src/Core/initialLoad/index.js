@@ -1,3 +1,5 @@
+import * as views from "../views";
+
 export const messages = {
   preloadInitialDataRequest: "PRELOAD_INITIAL_DATA_REQUEST",
   preloadInitialDataResponse: "PRELOAD_INITIAL_DATA_RESPONSE",
@@ -6,5 +8,8 @@ export const messages = {
 export const appInitialState = {
   isAuthenticated: false,
   shouldSync: false,
-  windows: { currentWindow: [], allOpen: [] },
+  initialView: views.initialView,
+  currentWindow: [],
+  allOpen: [],
+  // NOTE(amine):if there is one tab is open,populate the recent view
 };
