@@ -13,6 +13,7 @@ const getRootDomain = (url) => {
 };
 
 /** ----------------------------------------- */
+
 const VIEWER_INITIAL_STATE = {
   objects: [],
   // NOTE(amine): { key: URL, value: id }
@@ -21,7 +22,7 @@ const VIEWER_INITIAL_STATE = {
   isAuthenticated: false,
 };
 
-let VIEWER_INTERNAL_STORAGE = {};
+let VIEWER_INTERNAL_STORAGE;
 const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
 
 class Viewer {
@@ -41,6 +42,7 @@ class Viewer {
     serializedViewer.objects = viewer.library.map((object) => {
       if (object.isLink) {
         serializedViewer.savedLinks[object.url] = object.id;
+
         return {
           id: object.id,
           title: object.linkName,
@@ -54,7 +56,7 @@ class Viewer {
         id: object.id,
         title: object.name,
         rootDomain: Constants.uri.domain,
-        url: `https://slate.textile.io/ipfs/${object.cid}`,
+        url: `${Constants.gateways.ipfs}/${object.cid}`,
       };
     });
     return serializedViewer;
@@ -67,11 +69,10 @@ class Viewer {
   }
 
   async get() {
-    if (VIEWER_INTERNAL_STORAGE && VIEWER_INTERNAL_STORAGE.isAuthenticated)
-      return VIEWER_INTERNAL_STORAGE;
+    if (VIEWER_INTERNAL_STORAGE) return VIEWER_INTERNAL_STORAGE;
 
     const localViewer = await this._getFromLocalStorage();
-    if (localViewer && localViewer.isAuthenticated) {
+    if (localViewer) {
       VIEWER_INTERNAL_STORAGE = localViewer;
       return localViewer;
     }
@@ -81,11 +82,34 @@ class Viewer {
   }
 
   async checkIfShouldSync() {
-    return false;
+    // NOTE(amine): if the session cookie is not set, don't sync
+    const SLATE_COOKIE_NAME = "WEB_SERVICE_SESSION_KEY";
+    const cookie = await chrome.cookies.get({
+      name: SLATE_COOKIE_NAME,
+      url: Constants.uri.hostname,
+    });
+
+    if (!cookie) return false;
+
+    // NOTE(amine): if 10 mins is passed since last update return true (should sync)
+    const viewer = await this.get();
+    const lastUpdated = viewer.lastFetched;
+    if (!lastUpdated) return true;
+
+    const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
+    const lastUpdatedInMs = new Date(lastUpdated).getTime();
+    const nowInMs = new Date().getTime();
+
+    return nowInMs > lastUpdatedInMs + TEN_MINUTES_IN_MS;
   }
 
   async checkIfAuthenticated() {
     return (await this.get()).isAuthenticated;
+  }
+
+  async checkIfLinkIsSaved(url) {
+    const viewer = await this.get();
+    return !!viewer.savedLinks[url];
   }
 
   async reset() {
@@ -110,6 +134,9 @@ class Viewer {
   }
 
   async lazySync() {
+    const shouldSync = await this.checkIfShouldSync();
+    if (!shouldSync) return;
+
     const viewer = await Actions.hydrateAuthenticatedUser();
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
@@ -131,14 +158,12 @@ export const viewer = new Viewer();
 
 /** ------------ Event listeners ------------- */
 
-// NOTE(amine): update viewer when the background scripts fire
-viewer.lazySync();
-
 chrome.runtime.onInstalled.addListener(() => {
   viewer.lazySync();
 });
 
 chrome.cookies.onChanged.addListener((e) => {
+  viewer.checkIfShouldSync();
   if (e.cookie.domain !== Constants.uri.domain) return;
 
   if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {

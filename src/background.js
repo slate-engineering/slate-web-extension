@@ -3,6 +3,7 @@ import * as UploadUtilities from "./Utilities/upload";
 
 import "./Core/history/background";
 import "./Core/navigation/background";
+import "./Core/views/background";
 import "./Core/initialLoad/background";
 
 const getSessionID = async () => {
