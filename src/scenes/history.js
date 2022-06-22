@@ -10,7 +10,7 @@ import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
 import RelatedLinksFeed from "../Components/RelatedLinksFeed";
 
-import { useHistory } from "../Core/history/app/jumper";
+import { useHistory, useWindows } from "../Core/history/app/jumper";
 import { useViews, useHistorySearch } from "../Core/views/app/jumper";
 import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
@@ -56,8 +56,9 @@ export default function History() {
     viewType: currentView,
   });
 
-  const { sessionsFeed, sessionsFeedKeys, windowsFeed, loadMoreHistory } =
-    useHistory();
+  const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
+
+  const windowsFeed = useWindows();
 
   // NOTE(amine): Navigate between the jumper and the related links feed
   // via the the left and right arrow keys

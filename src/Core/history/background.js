@@ -355,11 +355,8 @@ chrome.tabs.onRemoved.addListener(async () => {
   const activeTab = await Tabs.getActive();
   if (activeTab) {
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
-      data: {
-        windows: await Windows.getAll(),
-        activeWindowId: activeTab.windowId,
-      },
       type: messages.windowsUpdate,
+      data: { openTabs: await Windows.getAll() },
     });
   }
 });
@@ -369,11 +366,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
-        data: {
-          windows: await Windows.getAll(),
-          activeWindowId: activeTab.windowId,
-        },
         type: messages.windowsUpdate,
+        data: { openTabs: await Windows.getAll() },
       });
     }
 
@@ -402,10 +396,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       response.canFetchMore =
         request.startIndex + response.history.length !== history.length;
 
-      if (request.startIndex === 0) {
-        response.activeWindowId = sender.tab.windowId;
-        response.windows = await Windows.getAll();
-      }
       return response;
     };
 

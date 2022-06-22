@@ -5,7 +5,8 @@ import { messages, appInitialState } from "../";
 import JumperAuth from "../../../scenes/jumperAuth";
 
 const DataPreloaderContext = React.createContext();
-const useDataPreloader = () => React.useContext(DataPreloaderContext);
+
+export const useDataPreloader = () => React.useContext(DataPreloaderContext);
 
 export const DataPreloader = ({ children }) => {
   const [state, setState] = React.useState({
@@ -22,10 +23,6 @@ export const DataPreloader = ({ children }) => {
       if (type === messages.preloadInitialDataResponse) {
         setState((prev) => ({ ...prev, ...data, shouldRender: true }));
         return;
-      }
-
-      if (type === messages.windowsUpdate) {
-        setState((prev) => ({ ...prev, ...data }));
       }
     };
     window.addEventListener("message", handleMessage);

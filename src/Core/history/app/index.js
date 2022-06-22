@@ -119,29 +119,31 @@ const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
 };
 
 /* -------------------------------------------------------------------------------------------------
- * useOpenWindowsState
+ * useWindowsState
  * -----------------------------------------------------------------------------------------------*/
 
-export const useOpenWindowsState = () => {
-  const initiateWindowsFeed = () => ({
-    currentWindow: [],
-    allOpen: [],
-  });
-  const [feed, setFeed] = React.useState(initiateWindowsFeed());
+/**
+ * @description get active window (currentWindow) and all windows (allOpen) open tabs
+ *
+ * @param {Object} Arguments
+ * @param {string} Arguments.initialState - pass currentWindow and allOpen tabs if they're preloaded
+ * @param {string} Arguments.activeWindowId - used to get active window's open tabs
+ *
+ * @returns {{ windows: {currentWindow:[], allOpen:[] }, setWindowsFeed: Function }
+ */
 
-  const setWindowsFeed = ({ windows, activeWindowId }) => {
-    const windowsFeed = initiateWindowsFeed();
-    windows.forEach((window) => {
-      if (window.id === activeWindowId) {
-        windowsFeed.currentWindow = window.tabs;
-        return;
-      }
-      windowsFeed.allOpen.push(...window.tabs);
-    });
-    setFeed(windowsFeed);
+export const useWindowsState = ({
+  initialState = { currentWindow: [], allOpen: [] },
+  activeWindowId,
+}) => {
+  const [windows, setWindows] = React.useState(initialState);
+  const setWindowsFeed = (tabs) => {
+    const currentWindow = tabs.filter((tab) => tab.windowId === activeWindowId);
+
+    setWindows({ currentWindow, allOpen: windows });
   };
 
-  return { windowsFeed: feed, setWindowsFeed };
+  return { windows, setWindowsFeed };
 };
 
 /* -------------------------------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState } from "./";
+import { useHistoryState, useWindowsState } from "./";
 import { messages } from "../";
 
 /* -------------------------------------------------------------------------------------------------
@@ -8,7 +8,7 @@ import { messages } from "../";
 
 export const useHistory = () => {
   const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
-  const { windowsFeed, setWindowsFeed } = useOpenWindowsState();
+  const { windows: windowsFeed, setWindowsFeed } = useWindowsState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 

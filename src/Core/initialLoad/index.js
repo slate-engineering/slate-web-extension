@@ -9,7 +9,8 @@ export const appInitialState = {
   isAuthenticated: false,
   shouldSync: false,
   initialView: views.initialView,
-  currentWindow: [],
-  allOpen: [],
+  windows: {
+    data: { currentWindow: [], allOpen: [] },
+  },
   // NOTE(amine):if there is one tab is open,populate the recent view
 };

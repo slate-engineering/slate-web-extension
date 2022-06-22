@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useHistoryState, useOpenWindowsState } from "./";
+import { useHistoryState, useWindowsState } from "./";
 import { messages } from "../";
+import { useDataPreloader } from "../../initialLoad/app/jumper";
 
 /* -------------------------------------------------------------------------------------------------
  * useHistory
@@ -8,7 +9,6 @@ import { messages } from "../";
 
 export const useHistory = () => {
   const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
-  const { windowsFeed, setWindowsFeed } = useOpenWindowsState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
@@ -35,20 +35,7 @@ export const useHistory = () => {
         }
         setSessionsFeed(data.history);
 
-        if (data.windows) {
-          setWindowsFeed({
-            windows: data.windows,
-            activeWindowId: data.activeWindowId,
-          });
-        }
         return;
-      }
-
-      if (type === messages.windowsUpdate) {
-        setWindowsFeed({
-          windows: data.windows,
-          activeWindowId: data.activeWindowId,
-        });
       }
     };
     window.addEventListener("message", handleMessage);
@@ -57,7 +44,36 @@ export const useHistory = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
+  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory };
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * useWindows
+ * -----------------------------------------------------------------------------------------------*/
+
+export const useWindows = () => {
+  // NOTE(amine): currentWindow and allOpen are created in the background (We can access the sender's window id)
+  const preloadedWindowsData = useDataPreloader().windows;
+  const initialState = preloadedWindowsData.data;
+
+  const { windows, setWindowsFeed } = useWindowsState({
+    initialState,
+    // NOTE(amine): creating currentWindow view requires this current tab's windowId
+    activeWindowId: preloadedWindowsData.windowId,
+  });
+
+  React.useEffect(() => {
+    const handleMessage = (event) => {
+      let { data, type } = event.data;
+      if (type === messages.windowsUpdate) {
+        setWindowsFeed(data.openTabs);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+  return windows;
 };
 
 /* -------------------------------------------------------------------------------------------------

@@ -14,26 +14,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (shouldSync) viewer.lazySync();
 
       if (!isAuthenticated) {
-        return {
-          isAuthenticated,
-          shouldSync,
-          currentWindow: [],
-          allOpen: [],
-        };
+        return { isAuthenticated };
       }
+
       const response = {
         ...appInitialState,
         isAuthenticated,
         shouldSync,
-        currentWindow: await Windows.getAllTabsInWindow(sender.tab.windowId),
-        allOpen: await Windows.getAllTabs(),
+        windows: {
+          data: {
+            currentWindow: await Windows.getAllTabsInWindow(
+              sender.tab.windowId
+            ),
+            allOpen: await Windows.getAllTabs(),
+          },
+          params: { windowId: sender.tab.windowId },
+        },
       };
 
-      // NOTE(amine): if there is only tab that's open, preload recent view
-      if (response.allOpen.length === 1) {
+      // NOTE(amine): if there is only one tab open, preload recent view
+      if (response.windows.data.allOpen.length === 1) {
         response.recent = await browserHistory.getChunk();
         response.initialView = viewsType.recent;
       }
+
       return response;
     };
 
