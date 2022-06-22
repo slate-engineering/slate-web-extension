@@ -23,6 +23,8 @@ export default function WindowsFeed({
                 index={i}
                 title={tab.title}
                 Favicon={getFavicon(tab.rootDomain)}
+                withActions
+                isSaved={tab.isSaved}
                 onClick={() =>
                   onOpenUrl({
                     query: { tabId: tab.id, windowId: tab.windowId },
@@ -53,6 +55,8 @@ export default function WindowsFeed({
                   index={comboxboxItemIndex}
                   title={tab.title}
                   Favicon={getFavicon(tab.rootDomain)}
+                  withActions
+                  isSaved={tab.isSaved}
                   onClick={() =>
                     onOpenUrl({
                       query: { tabId: tab.id, windowId: tab.windowId },

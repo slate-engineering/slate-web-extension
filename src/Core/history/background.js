@@ -253,7 +253,14 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return removeDuplicatesFromSearchResults(fuse.search(query));
+    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
+
+    return await Promise.all(
+      cleanedResult.map(async (item) => ({
+        ...item,
+        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+      }))
+    );
   }
 
   async getRelatedLinks(url) {
@@ -266,19 +273,32 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return removeDuplicatesFromSearchResults(fuse.search(url));
+    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(url));
+    return await Promise.all(
+      cleanedResult.map(async (item) => ({
+        ...item,
+        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+      }))
+    );
   }
 
-  async getChunk(startIndex = 0) {
+  async getChunk(startIndex = 0, endIndex) {
     const history = await browserHistory.get();
 
-    const historyChunk = history.slice(
-      startIndex,
-      startIndex + (startIndex === 0 ? 200 : 500)
-    );
+    const historyChunk = history.slice(startIndex, endIndex);
 
+    for (let session of historyChunk) {
+      session.visits = await Promise.all(
+        session.visits.map(async (visit) => ({
+          ...visit,
+          isSaved: await viewer.checkIfLinkIsSaved(visit.url),
+        }))
+      );
+    }
+
+    console.log({ historyChunk });
     return {
-      history,
+      history: historyChunk,
       canFetchMore: startIndex + historyChunk.length !== history.length,
     };
   }
@@ -353,6 +373,7 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.tabs.onRemoved.addListener(async () => {
   const activeTab = await Tabs.getActive();
+
   if (activeTab) {
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
@@ -386,20 +407,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.historyChunkRequest) {
-    const getHistoryResponse = async () => {
-      const response = {};
-      const history = await browserHistory.get();
-      response.history = history.slice(
+    browserHistory
+      .getChunk(
         request.startIndex,
         request.startIndex + (request.startIndex === 0 ? 200 : 500)
-      );
-      response.canFetchMore =
-        request.startIndex + response.history.length !== history.length;
-
-      return response;
-    };
-
-    getHistoryResponse().then(sendResponse);
+      )
+      .then(sendResponse);
 
     return true;
   }

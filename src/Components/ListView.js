@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
+import * as SVG from "../Common/SVG";
 
 import { css } from "@emotion/react";
 import {
@@ -104,6 +105,10 @@ const STYLES_RELATED_LINKS_TOTAL = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
 `;
 
+const STYLES_COLOR_SYSTEM_GREEN = (theme) => css`
+  color: ${theme.system.green};
+`;
+
 const Object = React.forwardRef(
   (
     {
@@ -113,6 +118,7 @@ const Object = React.forwardRef(
       isSelected,
       withActions = false,
       relatedVisits,
+      isSaved,
       ...props
     },
     ref
@@ -143,7 +149,15 @@ const Object = React.forwardRef(
             {relatedVisits.length + 1}
           </Typography.H5>
         ) : null}
-        {withActions && <div>actions...</div>}
+        {withActions && (
+          <div style={{ marginLeft: "auto" }}>
+            {isSaved && (
+              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ margin: 2 }}>
+                <SVG.CheckCircle />
+              </div>
+            )}
+          </div>
+        )}
       </button>
     );
   }

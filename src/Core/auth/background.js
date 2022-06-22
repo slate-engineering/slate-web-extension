@@ -49,6 +49,7 @@ class Viewer {
           favicon: object.linkFavicon,
           url: object.url,
           rootDomain: getRootDomain(object.url),
+          isSaved: true,
         };
       }
 
@@ -57,6 +58,7 @@ class Viewer {
         title: object.name,
         rootDomain: Constants.uri.domain,
         url: `${Constants.gateways.ipfs}/${object.cid}`,
+        isSaved: true,
       };
     });
     return serializedViewer;

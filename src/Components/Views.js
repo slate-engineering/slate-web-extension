@@ -608,6 +608,8 @@ function Feed({ onObjectHover, onOpenUrl }) {
               index={i}
               title={visit.title}
               relatedVisits={visit.relatedVisits}
+              withActions
+              isSaved={visit.isSaved}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => onOpenUrl({ urls: [visit.url] })}
               onMouseEnter={() => onObjectHover({ url: visit.url })}

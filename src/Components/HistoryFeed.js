@@ -83,6 +83,8 @@ const HistoryFeed = ({
                     title={visit.title}
                     relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
+                    withActions
+                    isSaved={visit.isSaved}
                     onSelect={() =>
                       onObjectHover({ url: visit.url, title: visit.title })
                     }

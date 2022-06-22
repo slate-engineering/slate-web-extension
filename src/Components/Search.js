@@ -150,6 +150,8 @@ const Feed = React.memo(() => {
                       index={i}
                       title={tab.title}
                       Favicon={getFavicon(getRootDomain(tab.url))}
+                      withActions
+                      isSaved={tab.isSaved}
                       onClick={() =>
                         Navigation.openUrls({
                           query: { tabId: tab.id, windowId: tab.windowId },
@@ -172,6 +174,8 @@ const Feed = React.memo(() => {
                     title={visit.title}
                     relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
+                    withActions
+                    isSaved={visit.isSaved}
                     onClick={() => Navigation.openUrls({ urls: [visit.url] })}
                     onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
                   />
