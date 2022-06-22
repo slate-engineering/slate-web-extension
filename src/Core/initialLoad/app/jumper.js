@@ -47,8 +47,6 @@ export const DataPreloader = ({ children }) => {
   );
 };
 
-export const useSync = () => ({ shouldSync: useDataPreloader().shouldSync });
-
 export const useWindows = () => ({
   ...useDataPreloader().windows,
 });
