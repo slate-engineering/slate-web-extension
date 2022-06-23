@@ -712,6 +712,7 @@ class Viewer {
           favicon: object.linkFavicon,
           url: object.url,
           rootDomain: getRootDomain(object.url),
+          isSaved: true,
         };
       }
 
@@ -720,6 +721,7 @@ class Viewer {
         title: object.name,
         rootDomain: uri.domain,
         url: `${gateways.ipfs}/${object.cid}`,
+        isSaved: true,
       };
     });
     return serializedViewer;
@@ -2873,7 +2875,14 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return removeDuplicatesFromSearchResults(fuse.search(query));
+    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
+
+    return await Promise.all(
+      cleanedResult.map(async (item) => ({
+        ...item,
+        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+      }))
+    );
   }
 
   async getRelatedLinks(url) {
@@ -2886,19 +2895,32 @@ class BrowserHistory {
     const history = await this.get();
     const fuse = new Fuse(history, options);
 
-    return removeDuplicatesFromSearchResults(fuse.search(url));
+    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(url));
+    return await Promise.all(
+      cleanedResult.map(async (item) => ({
+        ...item,
+        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+      }))
+    );
   }
 
-  async getChunk(startIndex = 0) {
+  async getChunk(startIndex = 0, endIndex) {
     const history = await browserHistory.get();
 
-    const historyChunk = history.slice(
-      startIndex,
-      startIndex + (startIndex === 0 ? 200 : 500)
-    );
+    const historyChunk = history.slice(startIndex, endIndex);
 
+    for (let session of historyChunk) {
+      session.visits = await Promise.all(
+        session.visits.map(async (visit) => ({
+          ...visit,
+          isSaved: await viewer.checkIfLinkIsSaved(visit.url),
+        }))
+      );
+    }
+
+    console.log({ historyChunk });
     return {
-      history,
+      history: historyChunk,
       canFetchMore: startIndex + historyChunk.length !== history.length,
     };
   }
@@ -2925,33 +2947,6 @@ const Tabs = {
 };
 
 const Windows = {
-  // _serialize(activeWindowId) {
-  //   // const serializedResponse = { currentWindow: [], windows: {} };
-  //   // if (activeWindowId) {
-  //   //   serializedResponse.currentWindow = windows.flatMap((window) =>
-  //   //     window.id === activeWindowId ? window.tabs.map(window.tab) : []
-  //   //   );
-  //   // }
-  //   // serializedViewer.objects = viewer.library.map((object) => {
-  //   //   if (object.isLink) {
-  //   //     serializedViewer.savedLinks[object.url] = object.id;
-  //   //     return {
-  //   //       id: object.id,
-  //   //       title: object.linkName,
-  //   //       favicon: object.linkFavicon,
-  //   //       url: object.url,
-  //   //       rootDomain: getRootDomain(object.url),
-  //   //     };
-  //   //   }
-  //   //   return {
-  //   //     id: object.id,
-  //   //     title: object.name,
-  //   //     rootDomain: Constants.uri.domain,
-  //   //     url: `${Constants.gateways.ipfs}/${object.cid}`,
-  //   //   };
-  //   // });
-  //   // return serializedViewer;
-  // },
   getAllTabsInWindow: async (windowId) => {
     const window = await chrome.windows.get(windowId, { populate: true });
     const tabs = await Promise.all(window.tabs.map(Tabs.create));
@@ -3000,13 +2995,11 @@ chrome.runtime.onStartup.addListener(() => {
 
 chrome.tabs.onRemoved.addListener(async () => {
   const activeTab = await Tabs.getActive();
+
   if (activeTab) {
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
-      data: {
-        windows: await Windows.getAll(),
-        activeWindowId: activeTab.windowId,
-      },
       type: history_messages.windowsUpdate,
+      data: { openTabs: await Windows.getAll() },
     });
   }
 });
@@ -3016,11 +3009,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
-        data: {
-          windows: await Windows.getAll(),
-          activeWindowId: activeTab.windowId,
-        },
         type: history_messages.windowsUpdate,
+        data: { openTabs: await Windows.getAll() },
       });
     }
 
@@ -3039,24 +3029,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === history_messages.historyChunkRequest) {
-    const getHistoryResponse = async () => {
-      const response = {};
-      const history = await browserHistory.get();
-      response.history = history.slice(
+    browserHistory
+      .getChunk(
         request.startIndex,
         request.startIndex + (request.startIndex === 0 ? 200 : 500)
-      );
-      response.canFetchMore =
-        request.startIndex + response.history.length !== history.length;
-
-      if (request.startIndex === 0) {
-        response.activeWindowId = sender.tab.windowId;
-        response.windows = await Windows.getAll();
-      }
-      return response;
-    };
-
-    getHistoryResponse().then(sendResponse);
+      )
+      .then(sendResponse);
 
     return true;
   }
@@ -3239,8 +3217,9 @@ const appInitialState = {
   isAuthenticated: false,
   shouldSync: false,
   initialView: initialView,
-  currentWindow: [],
-  allOpen: [],
+  windows: {
+    data: { currentWindow: [], allOpen: [] },
+  },
   // NOTE(amine):if there is one tab is open,populate the recent view
 };
 
@@ -3261,26 +3240,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (shouldSync) viewer.lazySync();
 
       if (!isAuthenticated) {
-        return {
-          isAuthenticated,
-          shouldSync,
-          currentWindow: [],
-          allOpen: [],
-        };
+        return { isAuthenticated };
       }
+
       const response = {
         ...appInitialState,
         isAuthenticated,
         shouldSync,
-        currentWindow: await Windows.getAllTabsInWindow(sender.tab.windowId),
-        allOpen: await Windows.getAllTabs(),
+        windows: {
+          data: {
+            currentWindow: await Windows.getAllTabsInWindow(
+              sender.tab.windowId
+            ),
+            allOpen: await Windows.getAllTabs(),
+          },
+          params: { windowId: sender.tab.windowId },
+        },
       };
 
-      // NOTE(amine): if there is only tab that's open, preload recent view
-      if (response.allOpen.length === 1) {
+      // NOTE(amine): if there is only one tab open, preload recent view
+      if (response.windows.data.allOpen.length === 1) {
         response.recent = await browserHistory.getChunk();
         response.initialView = viewsType.recent;
       }
+
       return response;
     };
 

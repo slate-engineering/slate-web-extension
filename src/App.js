@@ -6,7 +6,7 @@ import ShadowDom from "./Components/ShadowDom";
 
 import { NavigationProvider } from "./Core/navigation/app/jumper";
 import { useOnWindowBlur } from "./Common/hooks";
-import { DataPreloader } from "./Core/initialLoad/app/jumper";
+import { ViewerProvider } from "./Core/viewer/app/jumper";
 
 function App() {
   useOnWindowBlur(Navigation.closeExtensionJumper);
@@ -15,9 +15,9 @@ function App() {
     <NavigationProvider>
       <div style={{ all: "initial" }}>
         <ShadowDom>
-          <DataPreloader>
+          <ViewerProvider>
             <HistoryScene />
-          </DataPreloader>
+          </ViewerProvider>
         </ShadowDom>
       </div>
     </NavigationProvider>

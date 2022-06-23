@@ -4,7 +4,7 @@ import * as UploadUtilities from "./Utilities/upload";
 import "./Core/history/content";
 import "./Core/navigation/content";
 import "./Core/views/content";
-import "./Core/initialLoad/content";
+import "./Core/viewer/content";
 
 // eslint-disable-next-line no-redeclare
 /* global chrome */

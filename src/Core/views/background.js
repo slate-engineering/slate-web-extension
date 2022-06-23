@@ -1,5 +1,5 @@
 import { messages, viewsType } from "./";
-import { viewer } from "../auth/background";
+import { viewer } from "../viewer/background";
 import { browserHistory, Windows } from "../history/background";
 
 /** ------------ Event listeners ------------- */

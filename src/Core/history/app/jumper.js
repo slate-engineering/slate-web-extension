@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useHistoryState, useWindowsState } from "./";
 import { messages } from "../";
-import { useDataPreloader } from "../../initialLoad/app/jumper";
+import { useViewer } from "../../viewer/app/jumper";
 
 /* -------------------------------------------------------------------------------------------------
  * useHistory
@@ -53,7 +53,7 @@ export const useHistory = () => {
 
 export const useWindows = () => {
   // NOTE(amine): currentWindow and allOpen are created in the background (We can access the sender's window id)
-  const preloadedWindowsData = useDataPreloader().windows;
+  const preloadedWindowsData = useViewer().windows;
   const initialState = preloadedWindowsData.data;
 
   const { windows, setWindowsFeed } = useWindowsState({

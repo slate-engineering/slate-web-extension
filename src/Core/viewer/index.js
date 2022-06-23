@@ -1,11 +1,11 @@
 import * as views from "../views";
 
 export const messages = {
-  preloadInitialDataRequest: "PRELOAD_INITIAL_DATA_REQUEST",
-  preloadInitialDataResponse: "PRELOAD_INITIAL_DATA_RESPONSE",
+  loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
+  loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
 };
 
-export const appInitialState = {
+export const viewerInitialState = {
   isAuthenticated: false,
   shouldSync: false,
   initialView: views.initialView,

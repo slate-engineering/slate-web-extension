@@ -1,27 +1,32 @@
 import * as React from "react";
 
-import { messages, appInitialState } from "../";
+import { messages, viewerInitialState } from "..";
 
 import JumperAuth from "../../../scenes/jumperAuth";
 
-const DataPreloaderContext = React.createContext();
+const viewerContext = React.createContext();
 
-export const useDataPreloader = () => React.useContext(DataPreloaderContext);
+export const useViewer = () => React.useContext(viewerContext);
 
-export const DataPreloader = ({ children }) => {
+export const ViewerProvider = ({ children }) => {
   const [state, setState] = React.useState({
-    ...appInitialState,
+    ...viewerInitialState,
     shouldRender: false,
   });
 
   const fetchInitialData = () => {
-    window.postMessage({ type: messages.preloadInitialDataRequest }, "*");
+    window.postMessage({ type: messages.loadViewerDataRequest }, "*");
   };
   React.useEffect(() => {
     const handleMessage = (event) => {
       let { data, type } = event.data;
-      if (type === messages.preloadInitialDataResponse) {
-        setState((prev) => ({ ...prev, ...data, shouldRender: true }));
+      if (type === messages.loadViewerDataResponse) {
+        setState((prev) => ({
+          ...prev,
+          ...data,
+          //NOTE(amine): don't render the app till we recieve the viewer's initial data
+          shouldRender: true,
+        }));
         return;
       }
     };
@@ -41,12 +46,8 @@ export const DataPreloader = ({ children }) => {
   if (!state.isAuthenticated) return <JumperAuth />;
 
   return (
-    <DataPreloaderContext.Provider value={contextValue}>
+    <viewerContext.Provider value={contextValue}>
       {children}
-    </DataPreloaderContext.Provider>
+    </viewerContext.Provider>
   );
 };
-
-export const useWindows = () => ({
-  ...useDataPreloader().windows,
-});

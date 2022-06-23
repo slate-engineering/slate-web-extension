@@ -1,5 +1,5 @@
 import { messages } from "./";
-import { viewer } from "../../Core/auth/background";
+import { viewer } from "../viewer/background";
 
 import Fuse from "fuse.js";
 
@@ -296,7 +296,6 @@ class BrowserHistory {
       );
     }
 
-    console.log({ historyChunk });
     return {
       history: historyChunk,
       canFetchMore: startIndex + historyChunk.length !== history.length,

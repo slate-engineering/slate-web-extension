@@ -4,7 +4,7 @@ import * as UploadUtilities from "./Utilities/upload";
 import "./Core/history/background";
 import "./Core/navigation/background";
 import "./Core/views/background";
-import "./Core/initialLoad/background";
+import "./Core/viewer/background";
 
 const getSessionID = async () => {
   return new Promise((resolve, reject) => {
