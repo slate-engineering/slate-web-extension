@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Navigation from "./Core/navigation/app";
+import * as Navigation from "./Core/navigation/app/jumper";
 
 import HistoryScene from "./scenes/history";
 import ShadowDom from "./Components/ShadowDom";

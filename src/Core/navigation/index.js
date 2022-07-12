@@ -3,4 +3,6 @@ export const messages = {
   closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
 
   openURLsRequest: "OPEN_URLS_REQUEST",
+
+  createGroup: "BROWSER_CREATE_GROUP",
 };

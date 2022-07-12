@@ -2,12 +2,21 @@ import * as React from "react";
 
 import { messages } from "../";
 
+export const createGroupFromUrls = ({ urls, title }) =>
+  window.postMessage({ type: messages.createGroup, urls, title }, "*");
+
 export const openUrls = ({ urls, query }) =>
   window.postMessage({ type: messages.openURLsRequest, urls, query }, "*");
 
-const closeExtensionJumper = () => {
+export const closeExtensionJumper = () => {
   window.postMessage({ type: messages.closeExtensionJumperRequest }, "*");
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * Navigation Provider:
+ * First, close the jumper using state to clean up all the components effects
+ * before removing the node from jumper node from the dom
+ * -----------------------------------------------------------------------------------------------*/
 
 const NavigationContext = React.createContext({ open: true });
 

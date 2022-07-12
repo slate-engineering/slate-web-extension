@@ -68,6 +68,17 @@ window.addEventListener("message", async function (event) {
   if (event.data.type === messages.closeExtensionJumperRequest) {
     if (activeElement) activeElement.focus();
     closeApp();
+    return;
+  }
+
+  if (event.data.type === messages.createGroup) {
+    chrome.runtime.sendMessage({
+      type: messages.createGroup,
+      urls: event.data.urls,
+      windowId: event.data.windowId,
+      title: event.data.title,
+    });
+    return;
   }
 
   if (event.data.type === messages.openURLsRequest) {

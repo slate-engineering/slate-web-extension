@@ -1,4 +1,5 @@
 import * as Constants from "../../Common/constants";
+
 import { messages } from "./";
 
 export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
@@ -18,15 +19,40 @@ export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   }
 };
 
+const createGroupFromUrls = async ({ urls, windowId, title }) => {
+  const createdTabs = await Promise.all(
+    urls.map(async (url) =>
+      chrome.tabs.create({ url, windowId, active: false })
+    )
+  );
+
+  const createdGroupId = await chrome.tabs.group({
+    createProperties: { windowId },
+    tabIds: createdTabs.map((tab) => tab.id),
+  });
+
+  chrome.tabGroups.update(createdGroupId, { title, collapsed: true });
+};
+
 /** ------------ Event Listeners ------------- */
 
-chrome.runtime.onMessage.addListener(async (request, sender) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.type === messages.openURLsRequest) {
     await handleOpenUrlsRequests({
       urls: request.urls,
       query: request.query,
       sender,
     });
+    return true;
+  }
+
+  if (request.type === messages.createGroup) {
+    console.log(`Create tabs group with title: ${request.title}`);
+    createGroupFromUrls({
+      urls: request.urls,
+      windowId: sender.tab.windowId,
+      title: request.title,
+    }).then(sendResponse);
     return true;
   }
 });
