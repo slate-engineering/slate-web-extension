@@ -1,9 +1,15 @@
 import * as Actions from "../../Common/actions";
 import * as Constants from "../../Common/constants";
 
-import { browserHistory, Windows } from "../history/background";
+import { browserHistory, Windows } from "../browser/background";
 import { viewsType } from "../views";
-import { messages, viewerInitialState } from ".";
+import {
+  messages,
+  commands,
+  viewerInitialState,
+  savingStates,
+  savingSources,
+} from ".";
 
 const getRootDomain = (url) => {
   let hostname;
@@ -20,7 +26,7 @@ const getRootDomain = (url) => {
 
 const VIEWER_INITIAL_STATE = {
   objects: [],
-  // NOTE(amine): { key: URL, value: id || 'saving' when saving an object (will be updated with the id when it's saved)}
+  // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
   savedLinks: {},
   lastFetched: null,
   isAuthenticated: false,
@@ -165,24 +171,43 @@ class Viewer {
     this.reset(VIEWER_INITIAL_STATE);
   }
 
-  async saveLink({ url, onError, onStart, onSuccess }) {
-    if (onStart) onStart(url);
+  /**
+   * @description save a link and send saving status to new tab and the jumper
+   *
+   * @param {Object} Arguments
+   * @param {string} Arguments.url - the url to save
+   * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
+   * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
+   */
+
+  async saveLink({ url, tab, source = savingSources.app }) {
     const viewer = await this.get();
+    if (viewer.savedLinks[url] === savingStates.start) return;
+
+    const sendStatusUpdate = (status) => {
+      chrome.tabs.sendMessage(parseInt(tab.id), {
+        type: messages.savingStatus,
+        data: { savingStatus: status, url, source },
+      });
+    };
+
+    sendStatusUpdate(savingStates.start);
+
     const oldViewerState = { ...viewer };
     this._set({
       ...viewer,
-      savedLinks: { ...viewer.savedLinks, [url]: "saving" },
+      savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
     });
 
     const response = await Actions.createLink({ url });
-    if (response.error) {
+
+    if (!response || response.error) {
+      sendStatusUpdate(savingStates.failed);
       this._set(oldViewerState);
-      if (onError) onError(url);
       return;
     }
 
-    console.log(response);
-    if (onSuccess) onSuccess(url);
+    sendStatusUpdate(savingStates.done);
     this.sync();
   }
 }
@@ -190,6 +215,14 @@ class Viewer {
 export const viewer = new Viewer();
 
 /** ------------ Event listeners ------------- */
+
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command == commands.directSave) {
+    if (await viewer.checkIfAuthenticated()) {
+      viewer.saveLink({ url: tab.url, tab, source: savingSources.command });
+    }
+  }
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   viewer.lazySync();
@@ -209,6 +242,12 @@ chrome.cookies.onChanged.addListener((e) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === messages.saveLink) {
+    viewer
+      .saveLink({ url: request.url, tab: sender.tab, source: request.source })
+      .then(sendResponse);
+  }
+
   if (request.type === messages.loadViewerDataRequest) {
     const getInitialData = async () => {
       const isAuthenticated = await viewer.checkIfAuthenticated();

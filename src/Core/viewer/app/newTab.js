@@ -3,6 +3,8 @@ import * as React from "react";
 import { messages, savingStates, viewerInitialState } from "..";
 import { useSavingState } from ".";
 
+import JumperAuth from "../../../scenes/jumperAuth";
+
 /* -------------------------------------------------------------------------------------------------
  * useSaving
  * -----------------------------------------------------------------------------------------------*/
@@ -13,8 +15,8 @@ const useSaving = () => {
     useSavingState();
 
   React.useEffect(() => {
-    const handleMessage = (event) => {
-      let { data, type } = event.data;
+    const handleMessage = (request) => {
+      let { data, type } = request;
       if (type === messages.savingStatus) {
         if (
           data.savingStatus === savingStates.start ||
@@ -30,13 +32,16 @@ const useSaving = () => {
         return;
       }
     };
-    window.addEventListener("message", handleMessage);
+    chrome.runtime.onMessage.addListener(handleMessage);
 
-    return () => window.removeEventListener("message", handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
   const sendSaveLinkRequest = (url) => {
-    window.postMessage({ type: messages.saveLink, url }, "*");
+    chrome.runtime.sendMessage({
+      type: messages.saveLink,
+      url,
+    });
   };
 
   return { savedObjects, saveLink: sendSaveLinkRequest };
@@ -57,25 +62,21 @@ export const ViewerProvider = ({ children }) => {
   });
 
   const fetchInitialData = () => {
-    window.postMessage({ type: messages.loadViewerDataRequest }, "*");
-  };
-  React.useEffect(() => {
-    const handleMessage = (event) => {
-      let { data, type } = event.data;
-      if (type === messages.loadViewerDataResponse) {
+    chrome.runtime.sendMessage(
+      { type: messages.loadViewerDataRequest },
+      (response) => {
         setState((prev) => ({
           ...prev,
-          ...data,
+          ...response,
           //NOTE(amine): don't render the app till we recieve the viewer's initial data
           shouldRender: true,
         }));
-        return;
       }
-    };
-    window.addEventListener("message", handleMessage);
+    );
+  };
 
+  React.useLayoutEffect(() => {
     fetchInitialData();
-    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
   const { savedObjects, saveLink } = useSaving();
@@ -92,8 +93,7 @@ export const ViewerProvider = ({ children }) => {
 
   if (!state.shouldRender) return null;
 
-  //TODO(amine): change auth screen
-  if (!state.isAuthenticated) return <div>login</div>;
+  if (!state.isAuthenticated) return <JumperAuth />;
 
   return (
     <viewerContext.Provider value={contextValue}>
