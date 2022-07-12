@@ -157,6 +157,7 @@ export const zindex = {
   modal: 6,
   tooltip: 7,
   cta: 8,
+  extensionJumper: 2147483647,
 };
 
 export const font = {
