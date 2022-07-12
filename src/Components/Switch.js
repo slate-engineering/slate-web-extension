@@ -8,7 +8,7 @@ export const Match = React.memo((/** { component, when } */) => {
 Match.displayName = "$";
 
 export const Switch = React.memo(
-  React.forwardRef(({ children, fallback = null }, ref) => {
+  React.forwardRef(({ children, fallback = null, ...sharedProps }, ref) => {
     if (Array.isArray(children)) {
       for (let element of children) {
         if (element.type.displayName !== "$")
@@ -18,7 +18,7 @@ export const Switch = React.memo(
 
         if (element.props.when) {
           const { component: Component, ...props } = element.props;
-          return <Component ref={ref} {...props} />;
+          return <Component ref={ref} {...sharedProps} {...props} />;
         }
       }
 
