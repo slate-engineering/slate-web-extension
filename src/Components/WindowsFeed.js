@@ -10,18 +10,24 @@ export default function WindowsFeed({
   onOpenUrl,
   displayAllOpen,
   css,
+  style,
   ...props
 }) {
   return (
     <ComboboxNavigation.Menu>
-      <ListView.Root style={{ paddingTop: "8px" }} css={css} {...props}>
-        {windowsFeed.currentWindow.length ? (
+      <ListView.Root
+        style={{ paddingTop: "8px", ...style }}
+        css={css}
+        {...props}
+      >
+        {!displayAllOpen && windowsFeed.currentWindow.length ? (
           <ListView.Section>
             {windowsFeed.currentWindow.map((tab, i) => (
               <ListView.ComboboxObject
                 key={tab.id}
                 index={i}
                 title={tab.title}
+                url={tab.url}
                 Favicon={getFavicon(tab.rootDomain)}
                 withActions
                 isSaved={tab.isSaved}
@@ -31,10 +37,10 @@ export default function WindowsFeed({
                   })
                 }
                 onMouseEnter={() =>
-                  onObjectHover({ url: tab.url, title: tab.title })
+                  onObjectHover?.({ url: tab.url, title: tab.title })
                 }
                 onSelect={() =>
-                  onObjectHover({ url: tab.url, title: tab.title })
+                  onObjectHover?.({ url: tab.url, title: tab.title })
                 }
                 onSubmit={() =>
                   onOpenUrl({
@@ -54,6 +60,7 @@ export default function WindowsFeed({
                   key={tab.id}
                   index={comboxboxItemIndex}
                   title={tab.title}
+                  url={tab.url}
                   Favicon={getFavicon(tab.rootDomain)}
                   withActions
                   isSaved={tab.isSaved}
@@ -63,10 +70,10 @@ export default function WindowsFeed({
                     })
                   }
                   onMouseEnter={() =>
-                    onObjectHover({ url: tab.url, title: tab.title })
+                    onObjectHover?.({ url: tab.url, title: tab.title })
                   }
                   onSelect={() =>
-                    onObjectHover({ url: tab.url, title: tab.title })
+                    onObjectHover?.({ url: tab.url, title: tab.title })
                   }
                   onSubmit={() =>
                     onOpenUrl({
