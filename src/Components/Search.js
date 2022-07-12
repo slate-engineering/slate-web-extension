@@ -4,8 +4,6 @@ import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
 import * as Navigation from "../Core/navigation/app/jumper";
 
-import Logo from "../Components/Logo";
-
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
@@ -60,8 +58,7 @@ function Dismiss({ css, ...props }) {
 const STYLES_SEARCH_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: relative;
-  padding: 0px 16px;
-  height: 56px;
+  width: 100%;
 `;
 
 const STYLES_SEARCH_INPUT = (theme) => css`
@@ -70,7 +67,7 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
-  height: 100%;
+  height: 56px;
   padding-right: ${DISMISS_BUTTON_WIDTH + 24}px;
   background-color: transparent;
   outline: 0;
@@ -94,22 +91,18 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   }
 `;
 
-const Input = React.forwardRef((props, ref) => {
+const Input = React.forwardRef(({ css, containerStyle, ...props }, ref) => {
   const { onInputChange, clearSearch, search } = useSearchContext();
   return (
-    <section css={STYLES_SEARCH_WRAPPER}>
-      <Logo />
+    <section css={[STYLES_SEARCH_WRAPPER]} style={containerStyle}>
       <ComboboxNavigation.Input>
         <input
-          css={STYLES_SEARCH_INPUT}
+          css={[STYLES_SEARCH_INPUT, css]}
           ref={ref}
           placeholder="Search by keywords, filters, tags"
           name="search"
           onChange={onInputChange}
-          style={{ marginLeft: 12 }}
           autoComplete="off"
-          // eslint-disable-next-line jsx-a11y/no-autofocus
-          autoFocus
           {...props}
         />
       </ComboboxNavigation.Input>
@@ -128,13 +121,14 @@ const getTitleFromView = (view) => {
   };
   return titles[view];
 };
-const Feed = React.memo(() => {
+
+const Feed = React.memo(({ onOpenUrl, ...props }) => {
   const {
     search: { result: feeds },
   } = useSearchContext();
   return (
     <ComboboxNavigation.Menu>
-      <ListView.Root>
+      <ListView.Root {...props}>
         <div key={feeds}>
           {feeds.map(({ title: view, result: feed }, feedIndex) => (
             <>
@@ -149,16 +143,17 @@ const Feed = React.memo(() => {
                       key={tab.id}
                       index={i}
                       title={tab.title}
+                      url={tab.url}
                       Favicon={getFavicon(getRootDomain(tab.url))}
                       withActions
                       isSaved={tab.isSaved}
                       onClick={() =>
-                        Navigation.openUrls({
+                        onOpenUrl({
                           query: { tabId: tab.id, windowId: tab.windowId },
                         })
                       }
                       onSubmit={() =>
-                        Navigation.openUrls({
+                        onOpenUrl({
                           query: { tabId: tab.id, windowId: tab.windowId },
                         })
                       }
@@ -169,9 +164,10 @@ const Feed = React.memo(() => {
                 const visit = item;
                 return (
                   <ListView.ComboboxObject
-                    key={visit.id}
+                    key={visit.url}
                     index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
                     title={visit.title}
+                    url={visit.url}
                     relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
                     withActions
