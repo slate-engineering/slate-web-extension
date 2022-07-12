@@ -28,3 +28,11 @@ export const hydrateAuthenticatedUser = async () => {
     ...DEFAULT_OPTIONS,
   });
 };
+
+export const createLink = async (data, options) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/data/create-link`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+    ...options,
+  });
+};
