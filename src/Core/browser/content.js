@@ -1,4 +1,4 @@
-import { messages } from "./";
+import { messages } from ".";
 
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === messages.windowsUpdate) {
@@ -19,6 +19,7 @@ window.addEventListener("message", async function (event) {
           "*"
         )
     );
+    return;
   }
 
   if (event.data.type === messages.relatedLinksRequest) {
@@ -30,5 +31,6 @@ window.addEventListener("message", async function (event) {
           "*"
         )
     );
+    return;
   }
 });

@@ -1,4 +1,4 @@
-import { messages } from "./";
+import { messages } from ".";
 import { viewer } from "../viewer/background";
 
 import Fuse from "fuse.js";
@@ -376,7 +376,7 @@ chrome.tabs.onRemoved.addListener(async () => {
   if (activeTab) {
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
-      data: { openTabs: await Windows.getAll() },
+      data: { openTabs: await Windows.getAllTabs() },
     });
   }
 });
@@ -387,7 +387,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (activeTab) {
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
         type: messages.windowsUpdate,
-        data: { openTabs: await Windows.getAll() },
+        data: { openTabs: await Windows.getAllTabs() },
       });
     }
 

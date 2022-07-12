@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useHistoryState, useWindowsState } from "./";
-import { messages } from "../";
+import { useHistoryState, useWindowsState } from ".";
+import { messages } from "..";
 import { useViewer } from "../../viewer/app/jumper";
 
 /* -------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ export const useWindows = () => {
   const { windows, setWindowsFeed } = useWindowsState({
     initialState,
     // NOTE(amine): creating currentWindow view requires this current tab's windowId
-    activeWindowId: preloadedWindowsData.windowId,
+    activeWindowId: preloadedWindowsData.params.windowId,
   });
 
   React.useEffect(() => {
@@ -73,6 +73,7 @@ export const useWindows = () => {
 
     return () => window.removeEventListener("message", handleMessage);
   }, []);
+
   return windows;
 };
 

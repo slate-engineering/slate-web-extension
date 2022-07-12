@@ -1,6 +1,37 @@
 import * as React from "react";
-import { useHistoryState, useWindowsState } from "./";
-import { messages } from "../";
+
+import { useHistoryState, useWindowsState } from ".";
+import { useViewer } from "../../viewer/app/newTab";
+import { messages } from "..";
+
+/* -------------------------------------------------------------------------------------------------
+ * useWindows
+ * -----------------------------------------------------------------------------------------------*/
+
+export const useWindows = () => {
+  // NOTE(amine): currentWindow and allOpen are created in the background (We can access the sender's window id)
+  const preloadedWindowsData = useViewer().windows;
+  const initialState = preloadedWindowsData.data;
+
+  const { windows, setWindowsFeed } = useWindowsState({
+    initialState,
+    // NOTE(amine): creating currentWindow view requires this current tab's windowId
+    activeWindowId: preloadedWindowsData.params.windowId,
+  });
+
+  React.useEffect(() => {
+    const handleMessage = (request) => {
+      let { data, type } = request;
+      if (type === messages.windowsUpdate) {
+        setWindowsFeed(data.openTabs);
+      }
+    };
+    chrome.runtime.onMessage.addListener(handleMessage);
+
+    return () => chrome.runtime.onMessage.addListener(handleMessage);
+  }, []);
+  return windows;
+};
 
 /* -------------------------------------------------------------------------------------------------
  * useHistory
@@ -8,7 +39,6 @@ import { messages } from "../";
 
 export const useHistory = () => {
   const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
-  const { windows: windowsFeed, setWindowsFeed } = useWindowsState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
@@ -22,13 +52,6 @@ export const useHistory = () => {
         paramsRef.current.canFetchMore = false;
       }
       setSessionsFeed(response.history);
-
-      if (response.windows) {
-        setWindowsFeed({
-          windows: response.windows,
-          activeWindowId: response.activeWindowId,
-        });
-      }
     };
 
     chrome.runtime.sendMessage(
@@ -55,5 +78,5 @@ export const useHistory = () => {
     return () => chrome.runtime.onMessage.removeListener(handleWindowsUpdate);
   }, []);
 
-  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory, windowsFeed };
+  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory };
 };
