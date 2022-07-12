@@ -1170,7 +1170,7 @@ export const Maximize = (props) => (
   </svg>
 );
 
-export const Plus = (props) => (
+export const Plus = ({ style, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -1179,6 +1179,7 @@ export const Plus = (props) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    style={{ display: "block", ...style }}
     {...props}
   >
     <line x1="12" y1="5" x2="12" y2="19" />
@@ -1269,7 +1270,7 @@ export const Help = (props) => {
   );
 };
 
-export const CopyAndPaste = (props) => {
+export const CopyAndPaste = ({ style, ...props }) => {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -1279,6 +1280,7 @@ export const CopyAndPaste = (props) => {
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
+      style={{ display: "block", ...style }}
       {...props}
     >
       <path d="M20 9H11C9.89543 9 9 9.89543 9 11V20C9 21.1046 9.89543 22 11 22H20C21.1046 22 22 21.1046 22 20V11C22 9.89543 21.1046 9 20 9Z" />
@@ -1444,29 +1446,26 @@ export const Check = (props) => {
   );
 };
 
-export const CheckCircle = (props) => {
+export const CheckCircle = ({ style, ...props }) => {
   return (
     <svg
-      width="16"
-      height="17"
-      viewBox="0 0 16 17"
+      width={16}
+      height={16}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      style={{ display: "block", ...style }}
       {...props}
     >
       <path
-        d="M14.6666 7.88674V8.50007C14.6658 9.93769 14.2003 11.3365 13.3395 12.488C12.4788 13.6394 11.2688 14.4817 9.89022 14.8893C8.5116 15.297 7.03815 15.248 5.68963 14.7498C4.3411 14.2516 3.18975 13.3308 2.40729 12.1248C1.62482 10.9188 1.25317 9.49212 1.34776 8.05762C1.44235 6.62312 1.99812 5.25762 2.93217 4.16479C3.86621 3.07195 5.1285 2.31033 6.53077 1.9935C7.93304 1.67668 9.40016 1.82163 10.7133 2.40674"
-        stroke="#34D159"
-        stroke-width="1.25"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        d="M0 7.75A7.75 7.75 0 017.75 0h.5a7.75 7.75 0 010 15.5h-.5A7.75 7.75 0 010 7.75z"
+        fill="#34D159"
       />
       <path
-        d="M14.6667 3.16675L8 9.84008L6 7.84008"
-        stroke="#34D159"
-        stroke-width="1.25"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        d="M12 5l-5.5 5.5L4 8"
+        stroke="#fff"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -1729,7 +1728,7 @@ export const ArrowDownLeft = (props) => (
   </svg>
 );
 
-export const Hash = (props) => (
+export const Hash = ({ style, ...props }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 16 16"
@@ -1738,6 +1737,7 @@ export const Hash = (props) => (
     strokeWidth="1.3333"
     strokeLinecap="round"
     strokeLinejoin="round"
+    style={{ display: "block", ...style }}
     {...props}
   >
     <path d="M2.66663 6H13.3333" />
