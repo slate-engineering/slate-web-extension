@@ -78,20 +78,21 @@ const HistoryFeed = ({
 
                 return (
                   <ListView.ComboboxObject
-                    key={visit.id}
+                    key={visit.url}
                     index={comboxboxItemIndex}
                     title={visit.title}
+                    url={visit.url}
                     relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
                     withActions
                     isSaved={visit.isSaved}
                     onSelect={() =>
-                      onObjectHover({ url: visit.url, title: visit.title })
+                      onObjectHover?.({ url: visit.url, title: visit.title })
                     }
                     onSubmit={() => onOpenUrl({ urls: [visit.url] })}
                     onClick={() => onOpenUrl({ urls: [visit.url] })}
                     onMouseEnter={() =>
-                      onObjectHover({ url: visit.url, title: visit.title })
+                      onObjectHover?.({ url: visit.url, title: visit.title })
                     }
                   />
                 );
