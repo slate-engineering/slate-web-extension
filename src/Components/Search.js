@@ -36,7 +36,9 @@ const STYLES_DISMISS_BUTTON = (theme) => css`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  right: 24px;
+  height: 54px;
+  right: 0px;
+  padding-right: 16px;
   display: block;
   color: ${theme.semantic.textGray};
 `;
