@@ -4,12 +4,16 @@ import HistoryScene from "./scenes/newTabHistory";
 import EmotionThemeProvider from "./Components/EmotionThemeProvider";
 import EmotionGlobalStyles from "./Components/EmotionGlobalStyles";
 
+import { ViewerProvider } from "./Core/viewer/app/newTab";
+
 ReactDOM.render(
   <>
     <React.StrictMode>
       <EmotionThemeProvider>
         <EmotionGlobalStyles />
-        <HistoryScene />
+        <ViewerProvider>
+          <HistoryScene />
+        </ViewerProvider>
       </EmotionThemeProvider>
     </React.StrictMode>
   </>,
