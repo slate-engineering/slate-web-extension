@@ -4,7 +4,7 @@ import * as Styles from "../Common/styles";
 
 import { css } from "@emotion/react";
 import { useTrapFocusInShadowDom } from "../Common/hooks";
-import { mergeRefs } from "Common/utilities";
+import { mergeRefs, getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
 
 // NOTE(amine): used to fix stacking issues in overflowing parts
@@ -55,6 +55,22 @@ const STYLES_JUMPER_ROOT_FIXED_POSITION = css`
   margin-top: calc(-548px / 2);
 `;
 
+const STYLES_JUMPER_ROOT_ANIMATION_WRAPPER = css`
+  position: relative;
+
+  ${STYLES_JUMPER_FADE_IN_ANIMATION};
+`;
+
+const STYLES_JUMPER_ROOT_BACKGROUND = css`
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+  background-image: url("${getExtensionURL("/images/bg-jumper-body.png")}");
+  background-size: contain;
+`;
+
 const STYLES_JUMPER_ROOT = (theme) => css`
   ${Styles.VERTICAL_CONTAINER};
   position: relative;
@@ -69,14 +85,12 @@ const STYLES_JUMPER_ROOT = (theme) => css`
   background-color: ${theme.semantic.white};
   border-radius: 16px;
   @supports (
-    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
   ) {
-    -webkit-backdrop-filter: blur(75px);
-    backdrop-filter: blur(75px);
-    background-color: ${theme.semantic.bgBlurLight};
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
+    background-color: ${theme.semantic.bgBlurLight6};
   }
-
-  ${STYLES_JUMPER_FADE_IN_ANIMATION};
 `;
 
 const useCloseJumperOnEsc = ({ onClose }) => {
@@ -105,7 +119,10 @@ function Root({ children, onClose }) {
         css={STYLES_JUMPER_ROOT_FIXED_POSITION}
         ref={mergeRefs([wrapperRef, setJumperNode])}
       >
-        <div css={STYLES_JUMPER_ROOT}>{children}</div>
+        <div css={STYLES_JUMPER_ROOT_ANIMATION_WRAPPER}>
+          <div css={STYLES_JUMPER_ROOT_BACKGROUND} />
+          <div css={STYLES_JUMPER_ROOT}>{children}</div>
+        </div>
       </div>
     </JumperContext.Provider>
   );
@@ -150,15 +167,32 @@ const STYLES_JUMPER_TOP_PANEL_FADE_IN = css`
   animation: views-menu-fade-in 100ms ease;
 `;
 
-const STYLES_JUMPER_TOP_PANEL = (theme) => css`
-  ${Styles.HORIZONTAL_CONTAINER};
+const STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER = css`
   position: absolute;
   z-index: -1;
   left: 0%;
   top: -17px;
+  transform: translateY(-100%);
 
   width: 100%;
-  transform: translateY(-100%);
+
+  ${STYLES_JUMPER_TOP_PANEL_FADE_IN};
+`;
+
+const STYLES_JUMPER_TOP_PANEL_BACKGROUND = css`
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+  background-image: url("${getExtensionURL(
+    "/images/bg-jumper-top-panel.png"
+  )}");
+  background-size: contain;
+`;
+
+const STYLES_JUMPER_TOP_PANEL = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
 
   border-radius: 16px;
   background-color: white;
@@ -166,20 +200,21 @@ const STYLES_JUMPER_TOP_PANEL = (theme) => css`
   box-shadow: ${theme.shadow.jumperLight};
 
   @supports (
-    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
   ) {
-    -webkit-backdrop-filter: blur(75px);
-    backdrop-filter: blur(75px);
-    background-color: ${theme.semantic.bgBlurWhite};
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
+    background-color: ${theme.semantic.bgBlurLight6};
   }
-
-  ${STYLES_JUMPER_TOP_PANEL_FADE_IN};
 `;
 
 const TopPanel = ({ children }) => {
   return (
     <JumperPanelsPortal>
-      <div css={STYLES_JUMPER_TOP_PANEL}>{children}</div>
+      <div css={STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER}>
+        <div css={STYLES_JUMPER_TOP_PANEL_BACKGROUND} />
+        <div css={STYLES_JUMPER_TOP_PANEL}>{children}</div>
+      </div>
     </JumperPanelsPortal>
   );
 };

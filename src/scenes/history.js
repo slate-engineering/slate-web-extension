@@ -3,50 +3,57 @@ import * as Styles from "../Common/styles";
 import * as Navigation from "../Core/navigation/app/jumper";
 import * as Views from "../Components/Views";
 import * as Search from "../Components/Search";
-import * as RovingTabIndex from "../Components/RovingTabIndex";
+// import * as RovingTabIndex from "../Components/RovingTabIndex";
 import * as Jumper from "../Components/jumper";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
-import RelatedLinksFeed from "../Components/RelatedLinksFeed";
+// import RelatedLinksFeed from "../Components/RelatedLinksFeed";
+import Logo from "../Components/Logo";
 
 import { useHistory, useWindows } from "../Core/browser/app/jumper";
 import { useViews, useHistorySearch } from "../Core/views/app/jumper";
-import { useMediaQuery } from "../Common/hooks";
+// import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
-import { useGetRelatedLinks } from "../Core/browser/app/jumper";
+// import { useGetRelatedLinks } from "../Core/browser/app/jumper";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
+import { css } from "@emotion/react";
 
 /* -------------------------------------------------------------------------------------------------
  * Related Links Panel
  * -----------------------------------------------------------------------------------------------*/
 
-function RelatedLinksSidePanel({ preview, isEnabled, ...props }) {
-  const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
+// function RelatedLinksSidePanel({ preview, isEnabled, ...props }) {
+//   const isMatchingQuery = useMediaQuery((sizes) => sizes.desktopM);
 
-  const relatedLinksFeed = useGetRelatedLinks(
-    isMatchingQuery ? null : preview?.url
-  );
+//   const relatedLinksFeed = useGetRelatedLinks(
+//     isMatchingQuery ? null : preview?.url
+//   );
 
-  if (isMatchingQuery || !preview || !isEnabled) return null;
+//   if (isMatchingQuery || !preview || !isEnabled) return null;
 
-  return (
-    <Jumper.SidePanel>
-      <RelatedLinksFeed feed={relatedLinksFeed} {...props} />
-    </Jumper.SidePanel>
-  );
-}
+//   return (
+//     <Jumper.SidePanel>
+//       <RelatedLinksFeed feed={relatedLinksFeed} {...props} />
+//     </Jumper.SidePanel>
+//   );
+// }
 
 /* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
+const STYLES_JUMPER_INPUT_WRAPPER = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  padding-left: 16px;
+`;
+
 export default function History() {
-  const [preview, setPreview] = React.useState();
-  const handleOnObjectHover = React.useCallback(
-    ({ url }) => setPreview({ type: "link", url }),
-    []
-  );
+  // const [preview, setPreview] = React.useState();
+  // const handleOnObjectHover = React.useCallback(
+  //   ({ url }) => setPreview({ type: "link", url }),
+  //   []
+  // );
   const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
@@ -74,12 +81,12 @@ export default function History() {
     }
   };
 
-  const onRelatedLinksFeedKeyDownHandler = (e) => {
-    if (e.key === "ArrowLeft") {
-      focusSearchInput();
-      e.preventDefault();
-    }
-  };
+  // const onRelatedLinksFeedKeyDownHandler = (e) => {
+  //   if (e.key === "ArrowLeft") {
+  //     focusSearchInput();
+  //     e.preventDefault();
+  //   }
+  // };
 
   const { closeTheJumper } = Navigation.useNavigation();
 
@@ -105,7 +112,8 @@ export default function History() {
             search={search}
             clearSearch={clearSearch}
           >
-            <Jumper.Header>
+            <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
+              <Logo width={20} height={20} style={{ marginRight: 12 }} />
               <Search.Input onKeyDown={onInputKeyDownHandler} ref={inputRef} />
             </Jumper.Header>
 
@@ -122,7 +130,7 @@ export default function History() {
                   sessionsFeed={sessionsFeed}
                   sessionsFeedKeys={sessionsFeedKeys}
                   onLoadMore={loadMoreHistory}
-                  onObjectHover={handleOnObjectHover}
+                  // onObjectHover={handleOnObjectHover}
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match
@@ -133,7 +141,7 @@ export default function History() {
                   component={WindowsFeed}
                   windowsFeed={windowsFeed}
                   displayAllOpen={currentView === viewsType.allOpen}
-                  onObjectHover={handleOnObjectHover}
+                  // onObjectHover={handleOnObjectHover}
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match
@@ -143,20 +151,20 @@ export default function History() {
                   }
                   component={Views.Feed}
                   onOpenUrl={Navigation.openUrls}
-                  onObjectHover={handleOnObjectHover}
+                  // onObjectHover={handleOnObjectHover}
                 />
               </Switch>
             </Jumper.Body>
           </Search.Provider>
         </ComboboxNavigation.Provider>
 
-        <RovingTabIndex.Provider ref={relatedLinksFeedRovingTabRef}>
+        {/* <RovingTabIndex.Provider ref={relatedLinksFeedRovingTabRef}>
           <RelatedLinksSidePanel
             preview={preview}
             isEnabled={!search.isSearching}
             onKeyDown={onRelatedLinksFeedKeyDownHandler}
           />
-        </RovingTabIndex.Provider>
+        </RovingTabIndex.Provider> */}
       </Views.Provider>
     </Jumper.Root>
   );
