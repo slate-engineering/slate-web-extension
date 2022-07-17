@@ -1,3 +1,5 @@
+import * as Constants from "../Common/constants";
+
 import { jsx } from "@emotion/react";
 
 export const getAvatarUrl = (user) => {
@@ -70,4 +72,18 @@ export const getRootDomain = (url) => {
   }
   const hostnameParts = hostname.split(".");
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
+export const isNewTab = window.location.protocol === "chrome-extension:";
+
+export const getExtensionURL = (path) => {
+  if (isNewTab) {
+    return chrome.runtime.getURL(path);
+  }
+
+  return (
+    document
+      .getElementById(Constants.jumperSlateExtensionWrapper)
+      .getAttribute("data-url") + path
+  );
 };
