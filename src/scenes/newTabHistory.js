@@ -36,6 +36,7 @@ const STYLES_HISTORY_SCENE_BACKGROUND = css`
   width: 100%;
   height: 100vh;
   background-image: url("${getExtensionURL("/images/bg-new-tab.png")}");
+  background-size: contain;
 `;
 
 const STYLES_HISTORY_SCENE_WRAPPER = css`
@@ -50,17 +51,17 @@ const STYLES_HISTORY_TOP_POPUP = (theme) => css`
   position: relative;
   padding-bottom: 48px;
   @supports (
-    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+    (-webkit-backdrop-filter: blur(35px)) or (backdrop-filter: blur(35px))
   ) {
-    -webkit-backdrop-filter: blur(75px);
-    backdrop-filter: blur(75px);
+    -webkit-backdrop-filter: blur(35px);
+    backdrop-filter: blur(35px);
     background-color: ${theme.semantic.bgBlurLight6OP};
   }
 `;
 
 const STYLES_HISTORY_SCENE_VIEWS_MENU = css`
   ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
-  padding: 16px 0px;
+  padding: 16px 8px 16px 0px;
   margin-left: 16px;
   margin-right: 16px;
 `;
@@ -73,10 +74,10 @@ const STYLES_HISTORY_SCENE_INPUT = (theme) => css`
 const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
   @supports (
-    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
   ) {
-    -webkit-backdrop-filter: blur(75px);
-    backdrop-filter: blur(75px);
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
     background-color: ${theme.semantic.bgBlurWhiteOP};
   }
 `;
@@ -163,12 +164,16 @@ export default function HistoryScene() {
               />
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
               <Logo
-                style={{ width: "24.78px", height: "24px", marginTop: 48 }}
+                style={{
+                  width: "24.78px",
+                  height: "24px",
+                  marginTop: 48,
+                  marginBottom: 24,
+                }}
               />
               <Search.Input
                 ref={inputRef}
                 containerCss={STYLES_HISTORY_SCENE_INPUT}
-                style={{ marginTop: 24 }}
               />
             </section>
 
