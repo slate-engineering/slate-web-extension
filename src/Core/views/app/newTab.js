@@ -14,7 +14,10 @@ export const useViews = () => {
 
   const getViewsFeed = ({ type, query }) => {
     setViewsParams({ type, query });
-    if (type === viewsType.relatedLinks && query) {
+    if (
+      (type === viewsType.relatedLinks && query) ||
+      type === viewsType.savedFiles
+    ) {
       chrome.runtime.sendMessage(
         { type: messages.viewByTypeRequest, viewType: type, query },
         (response) => setViewsFeed(response.result)

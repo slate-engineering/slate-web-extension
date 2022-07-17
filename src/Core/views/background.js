@@ -1,6 +1,6 @@
 import { messages, viewsType } from "./";
 import { viewer } from "../viewer/background";
-import { browserHistory, Windows } from "../history/background";
+import { browserHistory, Windows } from "../browser/background";
 
 /** ------------ Event listeners ------------- */
 
@@ -10,11 +10,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.viewType === viewsType.savedFiles) {
       viewer.get().then((res) =>
         sendResponse({
-          result: {
-            objects: res.objects,
-            savedLinks: res.savedLinks,
-            isAuthenticated: res.isAuthenticated,
-          },
+          result: res.objects,
           viewType: request.viewType,
         })
       );

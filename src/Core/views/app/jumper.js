@@ -33,7 +33,7 @@ export const useViews = () => {
       let { data, type } = event.data;
       if (type === messages.viewByTypeResponse) {
         if (data.viewType === viewsType.savedFiles) {
-          setViewsFeed(data.result.objects);
+          setViewsFeed(data.result);
           return;
         }
         if (data.query === paramsRef.current.query) setViewsFeed(data.result);
