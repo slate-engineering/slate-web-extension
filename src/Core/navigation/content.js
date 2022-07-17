@@ -23,7 +23,7 @@ const createExtensionJumperWrapper = () => {
 
   const wrapper = document.createElement("div");
   wrapper.setAttribute("id", Constants.jumperSlateExtensionWrapper);
-  wrapper.setAttribute("data-url", chrome.runtime.getURL("/"));
+  wrapper.setAttribute("data-url", chrome.runtime.getURL("/").slice(0, -1));
   document.body.appendChild(wrapper);
 };
 

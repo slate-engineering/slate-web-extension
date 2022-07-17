@@ -91,25 +91,30 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   }
 `;
 
-const Input = React.forwardRef(({ css, containerStyle, ...props }, ref) => {
-  const { onInputChange, clearSearch, search } = useSearchContext();
-  return (
-    <section css={[STYLES_SEARCH_WRAPPER]} style={containerStyle}>
-      <ComboboxNavigation.Input>
-        <input
-          css={[STYLES_SEARCH_INPUT, css]}
-          ref={ref}
-          placeholder="Search by keywords, filters, tags"
-          name="search"
-          onChange={onInputChange}
-          autoComplete="off"
-          {...props}
-        />
-      </ComboboxNavigation.Input>
-      {search.query.length > 0 ? <Dismiss onClick={clearSearch} /> : null}
-    </section>
-  );
-});
+const Input = React.forwardRef(
+  ({ css, containerCss, containerStyle, ...props }, ref) => {
+    const { onInputChange, clearSearch, search } = useSearchContext();
+    return (
+      <section
+        css={[STYLES_SEARCH_WRAPPER, containerCss]}
+        style={containerStyle}
+      >
+        <ComboboxNavigation.Input>
+          <input
+            css={[STYLES_SEARCH_INPUT, css]}
+            ref={ref}
+            placeholder="Search by keywords, filters, tags"
+            name="search"
+            onChange={onInputChange}
+            autoComplete="off"
+            {...props}
+          />
+        </ComboboxNavigation.Input>
+        {search.query.length > 0 ? <Dismiss onClick={clearSearch} /> : null}
+      </section>
+    );
+  }
+);
 
 /* -----------------------------------------------------------------------------------------------*/
 

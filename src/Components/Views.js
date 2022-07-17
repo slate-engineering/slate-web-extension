@@ -478,6 +478,8 @@ function Menu({ css, showAllOpenAction, ...props }) {
     currentViewQuery,
     getViewsFeed,
 
+    scrollButtonCss,
+
     registerMenuRef,
     cleanupMenu,
   } = useViewsContext();
@@ -566,7 +568,7 @@ function Menu({ css, showAllOpenAction, ...props }) {
         {isOverflowFrom.left ? (
           <button
             className="views_actions_chevron"
-            css={STYLES_SCROLL_BUTTON_LEFT}
+            css={[STYLES_SCROLL_BUTTON_LEFT, scrollButtonCss]}
             onClick={scrollToLeft}
           >
             <SVG.ChevronLeft width={16} height={16} />
@@ -576,7 +578,7 @@ function Menu({ css, showAllOpenAction, ...props }) {
         {isOverflowFrom.right ? (
           <button
             className="views_actions_chevron"
-            css={STYLES_SCROLL_BUTTON_RIGHT}
+            css={[STYLES_SCROLL_BUTTON_RIGHT, scrollButtonCss]}
             onClick={scrollToRight}
           >
             <SVG.ChevronRight width={16} height={16} />
@@ -595,12 +597,11 @@ function Menu({ css, showAllOpenAction, ...props }) {
  * Views Feed
  * -----------------------------------------------------------------------------------------------*/
 
-function Feed({ onObjectHover, onOpenUrl }) {
+function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
   const { viewsFeed } = useViewsContext();
   return (
     <ComboboxNavigation.Menu>
-      <ListView.Root>
-        <ListView.Title count={viewsFeed.length}>Result</ListView.Title>
+      <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
         <div key={viewsFeed.length}>
           {viewsFeed.map((visit, i) => (
             <ListView.ComboboxObject
@@ -612,9 +613,9 @@ function Feed({ onObjectHover, onOpenUrl }) {
               isSaved={visit.isSaved}
               Favicon={getFavicon(visit.rootDomain)}
               onClick={() => onOpenUrl({ urls: [visit.url] })}
-              onMouseEnter={() => onObjectHover({ url: visit.url })}
+              onMouseEnter={() => onObjectHover?.({ url: visit.url })}
               onSubmit={() => onOpenUrl({ urls: [visit.url] })}
-              onSelect={() => onObjectHover({ url: visit.url })}
+              onSelect={() => onObjectHover?.({ url: visit.url })}
             />
           ))}
         </div>

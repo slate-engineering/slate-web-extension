@@ -10,11 +10,11 @@ import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
 import RelatedLinksFeed from "../Components/RelatedLinksFeed";
 
-import { useHistory, useWindows } from "../Core/history/app/jumper";
+import { useHistory, useWindows } from "../Core/browser/app/jumper";
 import { useViews, useHistorySearch } from "../Core/views/app/jumper";
 import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
-import { useGetRelatedLinks } from "../Core/history/app/jumper";
+import { useGetRelatedLinks } from "../Core/browser/app/jumper";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
 
 /* -------------------------------------------------------------------------------------------------

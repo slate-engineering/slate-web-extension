@@ -8,26 +8,83 @@ import * as Search from "../Components/Search";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
-import LinkPreview from "../Components/LinkPreview";
+import Logo from "../Components/Logo";
 
-import { useHistory } from "../Core/history/app/newTab";
+import { useHistory, useWindows } from "../Core/browser/app/newTab";
 import { useViews, useHistorySearch } from "../Core/views/app/newTab";
 import { Divider } from "../Components/Divider";
-import { css } from "@emotion/react";
 import { ComboboxNavigation } from "Components/ComboboxNavigation";
 import { Switch, Match } from "../Components/Switch";
+import { getExtensionURL } from "../Common/utilities";
+import { css } from "@emotion/react";
 
 /* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_HISTORY_SCENE_WRAPPER = (theme) => css`
+const STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH = css`
+  max-width: 1080px;
+  margin-right: 16px;
+  margin-left: 16px;
+`;
+
+const STYLES_HISTORY_SCENE_BACKGROUND = css`
+  position: fixed;
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100vh;
+  background-image: url("${getExtensionURL("/images/bg-new-tab.png")}");
+`;
+
+const STYLES_HISTORY_SCENE_WRAPPER = css`
   ${Styles.VERTICAL_CONTAINER};
   position: relative;
   height: 100vh;
   width: 100%;
-  border: 1px solid ${theme.semantic.borderGrayLight};
-  box-shadow: ${theme.shadow.darkLarge};
+`;
+
+const STYLES_HISTORY_TOP_POPUP = (theme) => css`
+  ${Styles.VERTICAL_CONTAINER_CENTERED};
+  position: relative;
+  padding-bottom: 48px;
+  @supports (
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+  ) {
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
+    background-color: ${theme.semantic.bgBlurLight6OP};
+  }
+`;
+
+const STYLES_HISTORY_SCENE_VIEWS_MENU = css`
+  ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
+  padding: 16px 0px;
+  margin-left: 16px;
+  margin-right: 16px;
+`;
+
+const STYLES_HISTORY_SCENE_INPUT = (theme) => css`
+  ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
+  border-bottom: 1px solid ${theme.semantic.borderGrayLight};
+`;
+
+const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
+  @supports (
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
+  ) {
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
+    background-color: ${theme.semantic.bgBlurWhiteOP};
+  }
+`;
+
+const STYLES_HISTORY_SCENE_FEED = css`
+  ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
+  position: relative;
+  margin: 0 auto;
 `;
 
 // const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
@@ -64,8 +121,9 @@ const STYLES_HISTORY_SCENE_WRAPPER = (theme) => css`
 // `;
 
 export default function HistoryScene() {
-  const { windowsFeed, sessionsFeed, sessionsFeedKeys, loadMoreHistory } =
-    useHistory();
+  const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
+
+  const windowsFeed = useWindows();
 
   const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
     useViews();
@@ -79,14 +137,9 @@ export default function HistoryScene() {
 
   const focusSearchInput = () => inputRef.current.focus();
 
-  const [preview, setPreview] = React.useState({ url: "", title: "" });
-  const handleOnObjectHover = React.useCallback(
-    ({ url }) => setPreview({ type: "link", url }),
-    []
-  );
-
   return (
     <div css={STYLES_HISTORY_SCENE_WRAPPER}>
+      <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
       <ComboboxNavigation.Provider
         isInfiniteList={currentView === viewsType.recent}
       >
@@ -95,10 +148,6 @@ export default function HistoryScene() {
           search={search}
           clearSearch={clearSearch}
         >
-          <Search.Input ref={inputRef} />
-
-          <Divider color="borderGrayLight" />
-
           <Views.Provider
             viewsFeed={viewsFeed}
             currentView={currentView}
@@ -107,10 +156,24 @@ export default function HistoryScene() {
             getViewsFeed={getViewsFeed}
             onChange={() => (clearSearch(), focusSearchInput())}
           >
-            <Views.Menu showAllOpenAction={windowsFeed?.allOpen?.length > 0} />
-            <Divider color="borderGrayLight" />
+            <section css={STYLES_HISTORY_TOP_POPUP}>
+              <Views.Menu
+                showAllOpenAction={windowsFeed?.allOpen?.length > 0}
+                css={STYLES_HISTORY_SCENE_VIEWS_MENU}
+              />
+              <Divider style={{ width: "100%" }} color="borderGrayLight" />
+              <Logo
+                style={{ width: "24.78px", height: "24px", marginTop: 48 }}
+              />
+              <Search.Input
+                ref={inputRef}
+                containerCss={STYLES_HISTORY_SCENE_INPUT}
+                style={{ marginTop: 24 }}
+              />
+            </section>
+
             <section
-              css={Styles.HORIZONTAL_CONTAINER}
+              css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
               style={{ height: "100%", flex: 1, overflow: "hidden" }}
             >
               <div style={{ flexGrow: 1 }}>
@@ -121,19 +184,14 @@ export default function HistoryScene() {
                   </button>
                 </section> */}
 
-                <Switch>
-                  <Match
-                    when={isSearching}
-                    component={Search.Feed}
-                    setPreview={setPreview}
-                  />
+                <Switch css={STYLES_HISTORY_SCENE_FEED}>
+                  <Match when={isSearching} component={Search.Feed} />
                   <Match
                     when={currentView === viewsType.recent}
                     component={HistoryFeed}
                     sessionsFeed={sessionsFeed}
                     sessionsFeedKeys={sessionsFeedKeys}
                     onLoadMore={loadMoreHistory}
-                    onObjectHover={handleOnObjectHover}
                     onOpenUrl={Navigation.openUrls}
                   />
                   <Match
@@ -144,24 +202,17 @@ export default function HistoryScene() {
                     component={WindowsFeed}
                     windowsFeed={windowsFeed}
                     displayAllOpen={currentView === viewsType.allOpen}
-                    onObjectHover={handleOnObjectHover}
                     onOpenUrl={Navigation.openUrls}
                   />
                   <Match
-                    when={currentView === viewsType.relatedLinks}
+                    when={
+                      currentView === viewsType.relatedLinks ||
+                      currentView === viewsType.savedFiles
+                    }
                     component={Views.Feed}
                     onOpenUrl={Navigation.openUrls}
-                    onObjectHover={handleOnObjectHover}
                   />
                 </Switch>
-              </div>
-              <Divider width="1px" height="100%" color="borderGrayLight" />
-              <div style={{ width: 480 }}>
-                <LinkPreview
-                  url={preview.url}
-                  title={preview.title}
-                  style={{ width: "100%", height: "100%" }}
-                />
               </div>
             </section>
           </Views.Provider>
