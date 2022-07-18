@@ -8,7 +8,7 @@ import {
   ComboboxNavigation,
   useComboboxNavigation,
 } from "./ComboboxNavigation";
-import { isNewTab } from "../Common/utilities";
+import { isNewTab, copyToClipboard } from "../Common/utilities";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
@@ -116,6 +116,43 @@ const STYLES_OBJECT_ACTION_BUTTON = (theme) => css`
   color: ${theme.semantic.textBlack};
 `;
 
+const STYLES_OBJECT_ACTIONS_WRAPPER = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  & > * + * {
+    margin-left: 8px !important;
+  }
+`;
+
+const CopyAction = ({ url }) => {
+  const [isCopied, setCopied] = React.useState(false);
+  React.useEffect(() => {
+    let timeout;
+    if (isCopied) {
+      timeout = setTimeout(() => setCopied(false), 2000);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [isCopied]);
+
+  const handleCopying = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setCopied(true);
+    copyToClipboard(url);
+  };
+
+  return (
+    <button css={STYLES_OBJECT_ACTION_BUTTON} onClick={handleCopying}>
+      {isCopied ? (
+        <SVG.Check width={16} height={16} />
+      ) : (
+        <SVG.CopyAndPaste width={16} height={16} />
+      )}
+    </button>
+  );
+};
+
 const Object = React.forwardRef(
   (
     {
@@ -168,9 +205,19 @@ const Object = React.forwardRef(
           </Typography.H5>
         ) : null}
         {withActions && (
-          <div style={{ marginLeft: "auto" }}>
+          <div
+            css={STYLES_OBJECT_ACTIONS_WRAPPER}
+            style={{ marginLeft: "auto" }}
+          >
             {isSelected && (
               <>
+                <button css={STYLES_OBJECT_ACTION_BUTTON}>
+                  <SVG.Hash width={16} height={16} />
+                </button>
+                <CopyAction url={url} />
+                <button css={STYLES_OBJECT_ACTION_BUTTON}>
+                  <SVG.Trash width={16} height={16} />
+                </button>
                 {!isSaved && (
                   <button
                     css={STYLES_OBJECT_ACTION_BUTTON}
