@@ -8,6 +8,11 @@ import {
   ComboboxNavigation,
   useComboboxNavigation,
 } from "./ComboboxNavigation";
+import { isNewTab } from "../Common/utilities";
+// NOTE(amine): hacky way to resolve shared hook between jumper and new tab
+import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
+import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
+const useViewer = isNewTab ? useNewTabViewer : useJumperViewer;
 
 /* -------------------------------------------------------------------------------------------------
  * ListView Root
@@ -88,6 +93,13 @@ const STYLES_OBJECT_HOVER_AND_FOCUS_STATE = (theme) => css`
     background-color: ${theme.semantic.bgGrayLight};
   }
 `;
+const STYLES_TEXT_BLACK = (theme) => css`
+  color: ${theme.semantic.textBlack};
+`;
+
+const STYLES_COLOR_SYSTEM_GREEN = (theme) => css`
+  color: ${theme.system.green};
+`;
 
 const STYLES_OBJECT = css`
   ${Styles.BUTTON_RESET};
@@ -97,16 +109,11 @@ const STYLES_OBJECT = css`
   border-radius: 12px;
 `;
 
-const STYLES_RELATED_LINKS_TOTAL = (theme) => css`
-  ${Styles.CONTAINER_CENTERED};
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  background-color: ${theme.semantic.bgGrayLight};
-`;
-
-const STYLES_COLOR_SYSTEM_GREEN = (theme) => css`
-  color: ${theme.system.green};
+const STYLES_OBJECT_ACTION_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  padding: 2px;
+  border-radius: 6px;
+  color: ${theme.semantic.textBlack};
 `;
 
 const Object = React.forwardRef(
@@ -118,11 +125,22 @@ const Object = React.forwardRef(
       isSelected,
       withActions = false,
       relatedVisits,
-      isSaved,
+      favicon,
+
+      url,
+      isSaved: isSavedProp,
       ...props
     },
     ref
   ) => {
+    const { savedObjects, saveLink } = useViewer();
+    const isSaved = url in savedObjects || isSavedProp;
+    console.log(savedObjects, url);
+
+    const handleLinkSaving = (e) => (
+      e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
+    );
+
     return (
       <button
         ref={ref}
@@ -136,7 +154,7 @@ const Object = React.forwardRef(
         ]}
         {...props}
       >
-        <Favicon style={{ margin: 2, flexShrink: 0 }} />
+        <Favicon css={STYLES_TEXT_BLACK} style={{ margin: 2, flexShrink: 0 }} />
         <Typography.H5
           style={{ maxWidth: 384, marginLeft: 12 }}
           color="textBlack"
@@ -151,6 +169,19 @@ const Object = React.forwardRef(
         ) : null}
         {withActions && (
           <div style={{ marginLeft: "auto" }}>
+            {isSelected && (
+              <>
+                {!isSaved && (
+                  <button
+                    css={STYLES_OBJECT_ACTION_BUTTON}
+                    onClick={handleLinkSaving}
+                  >
+                    <SVG.Plus width={16} height={16} />
+                  </button>
+                )}
+              </>
+            )}
+
             {isSaved && (
               <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ margin: 2 }}>
                 <SVG.CheckCircle />
