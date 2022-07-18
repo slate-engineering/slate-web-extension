@@ -1,31 +1,28 @@
 import * as Constants from "../../Common/constants";
 
 import { css } from "@emotion/react";
+import { getExtensionURL } from "../../Common/utilities";
 
-const extensionURL =
-  document
-    .getElementById(Constants.jumperSlateExtensionWrapper)
-    ?.getAttribute("data-url") || "/";
 /* prettier-ignore */
 export const injectGlobalStyles = () => css`
   @font-face {
     font-family: 'inter-regular';
-    src: url('${extensionURL}fonts/inter-regular.ttf');
+    src: url('${getExtensionURL('/fonts/inter-regular.ttf')}');
   }
 
   @font-face {
     font-family: 'inter-semi-bold';
-    src: url('${extensionURL}fonts/inter-semi-medium.ttf');
+    src: url('${getExtensionURL('/fonts/inter-semi-medium.ttf')}');
   }
 
   @font-face {
     font-family: 'inter-bold';
-    src: url('${extensionURL}fonts/inter-bold.ttf');
+    src: url('${getExtensionURL('/fonts/inter-bold.ttf')}');
   }
 
   @font-face {
     font-family: 'inter-medium';
-    src: url('${extensionURL}fonts/inter-medium.ttf');
+    src: url('${getExtensionURL('/fonts/inter-medium.ttf')}');
   }
 
   html, body, div, span, applet, object, iframe,
