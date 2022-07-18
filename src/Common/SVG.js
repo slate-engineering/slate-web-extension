@@ -758,20 +758,19 @@ export const Slate = (props) => (
 
 export const Trash = (props) => (
   <svg
-    xmlns="http://www.w3.org/2000/svg"
-    height={props.height}
-    style={props.style}
-    viewBox="0 0 24 24"
+    width={16}
+    height={16}
     fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
   >
-    <path d="M3 6H5H21" />
-    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" />
-    <path d="M10 11V17" />
-    <path d="M14 11V17" />
+    <path
+      d="M2 4h12M5.333 4V2.667a1.333 1.333 0 011.334-1.334h2.666a1.333 1.333 0 011.334 1.334V4m2 0v9.333a1.333 1.333 0 01-1.334 1.334H4.667a1.333 1.333 0 01-1.334-1.334V4h9.334z"
+      stroke="#00050A"
+      strokeWidth={1.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -1270,21 +1269,29 @@ export const Help = (props) => {
   );
 };
 
-export const CopyAndPaste = ({ style, ...props }) => {
+export const CopyAndPaste = (props) => {
   return (
     <svg
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
+      width={16}
+      height={16}
       fill="none"
-      strokeWidth="2"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ display: "block", ...style }}
+      xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path d="M20 9H11C9.89543 9 9 9.89543 9 11V20C9 21.1046 9.89543 22 11 22H20C21.1046 22 22 21.1046 22 20V11C22 9.89543 21.1046 9 20 9Z" />
-      <path d="M5 15H4C3.46957 15 2.96086 14.7893 2.58579 14.4142C2.21071 14.0391 2 13.5304 2 13V4C2 3.46957 2.21071 2.96086 2.58579 2.58579C2.96086 2.21071 3.46957 2 4 2H13C13.5304 2 14.0391 2.21071 14.4142 2.58579C14.7893 2.96086 15 3.46957 15 4V5" />
+      <path
+        d="M13.333 6h-6C6.597 6 6 6.597 6 7.333v6c0 .737.597 1.334 1.333 1.334h6c.737 0 1.334-.597 1.334-1.334v-6c0-.736-.597-1.333-1.334-1.333z"
+        stroke="#00050A"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3.333 10h-.666a1.333 1.333 0 01-1.334-1.333v-6a1.333 1.333 0 011.334-1.334h6A1.333 1.333 0 0110 2.667v.666"
+        stroke="#00050A"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 };
