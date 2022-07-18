@@ -61,6 +61,7 @@ export default function WindowsFeed({
                   index={comboxboxItemIndex}
                   title={tab.title}
                   url={tab.url}
+                  favicon={tab.favicon}
                   Favicon={getFavicon(tab.rootDomain)}
                   withActions
                   isSaved={tab.isSaved}

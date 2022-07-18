@@ -75,6 +75,7 @@ const STYLES_SEARCH_INPUT = (theme) => css`
   outline: 0;
   border: none;
   box-sizing: border-box;
+  color: ${theme.semantic.textBlack};
 
   ::placeholder {
     /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -151,6 +152,7 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
                       index={i}
                       title={tab.title}
                       url={tab.url}
+                      favicon={tab.favicon}
                       Favicon={getFavicon(getRootDomain(tab.url))}
                       withActions
                       isSaved={tab.isSaved}

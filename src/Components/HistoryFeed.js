@@ -82,6 +82,7 @@ const HistoryFeed = ({
                     index={comboxboxItemIndex}
                     title={visit.title}
                     url={visit.url}
+                    favicon={visit.favicon}
                     relatedVisits={visit.relatedVisits}
                     Favicon={getFavicon(visit.rootDomain)}
                     withActions

@@ -377,6 +377,7 @@ const STYLES_SCROLL_BUTTON = (theme) => css`
   height: 32px;
   width: 32px;
   background-color: ${theme.semantic.bgLight};
+  color: ${theme.semantic.textGrayDark};
 
   opacity: 0;
   transition: opacity 0.25s;
@@ -414,6 +415,7 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   height: 32px;
   width: 32px;
   background-color: ${theme.semantic.bgLight};
+  color: ${theme.semantic.textGrayDark};
 
   &:hover {
     background-color: ${theme.semantic.bgGrayLight};
@@ -605,9 +607,11 @@ function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
         <div key={viewsFeed.length}>
           {viewsFeed.map((visit, i) => (
             <ListView.ComboboxObject
-              key={visit.id}
+              key={visit.url}
               index={i}
               title={visit.title}
+              url={visit.url}
+              favicon={visit.favicon}
               relatedVisits={visit.relatedVisits}
               withActions
               isSaved={visit.isSaved}
