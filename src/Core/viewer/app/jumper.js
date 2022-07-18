@@ -35,8 +35,8 @@ const useSaving = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const sendSaveLinkRequest = (url) => {
-    window.postMessage({ type: messages.saveLink, url }, "*");
+  const sendSaveLinkRequest = ({ url, title, favicon }) => {
+    window.postMessage({ type: messages.saveLink, url, title, favicon }, "*");
   };
 
   return { savedObjects, saveLink: sendSaveLinkRequest };

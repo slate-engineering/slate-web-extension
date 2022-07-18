@@ -37,10 +37,12 @@ const useSaving = () => {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
-  const sendSaveLinkRequest = (url) => {
+  const sendSaveLinkRequest = ({ url, title, favicon }) => {
     chrome.runtime.sendMessage({
       type: messages.saveLink,
       url,
+      title,
+      favicon,
     });
   };
 

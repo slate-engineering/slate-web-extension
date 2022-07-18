@@ -180,30 +180,46 @@ class Viewer {
    * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
    */
 
-  async saveLink({ url, tab, source = savingSources.app }) {
+  async saveLink({ url, title, favicon, tab, source = savingSources.app }) {
     const viewer = await this.get();
     if (viewer.savedLinks[url] === savingStates.start) return;
 
     const sendStatusUpdate = (status) => {
       chrome.tabs.sendMessage(parseInt(tab.id), {
         type: messages.savingStatus,
-        data: { savingStatus: status, url, source },
+        data: { savingStatus: status, url, title, favicon, source },
       });
     };
 
     sendStatusUpdate(savingStates.start);
 
-    const oldViewerState = { ...viewer };
-    this._set({
-      ...viewer,
-      savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
-    });
+    if (!(url in viewer.savedLinks)) {
+      this._set({
+        ...viewer,
+        savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
+        objects: [
+          {
+            title,
+            url,
+            favicon,
+            rootDomain: getRootDomain(url),
+            isSaved: true,
+          },
+          ...viewer.objects,
+        ],
+      });
+    }
 
     const response = await Actions.createLink({ url });
 
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
-      this._set(oldViewerState);
+      const viewer = await this.get();
+      const savedLinks = { ...viewer.savedLinks };
+      delete savedLinks[url];
+      const objects = objects.filter((object) => object.url !== url);
+
+      this._set({ ...viewer, savedLinks, objects });
       return;
     }
 
@@ -219,7 +235,13 @@ export const viewer = new Viewer();
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.directSave) {
     if (await viewer.checkIfAuthenticated()) {
-      viewer.saveLink({ url: tab.url, tab, source: savingSources.command });
+      viewer.saveLink({
+        url: tab.url,
+        title: tab.title,
+        favicon: tab.favIconUrl,
+        tab,
+        source: savingSources.command,
+      });
     }
   }
 });
@@ -244,7 +266,13 @@ chrome.cookies.onChanged.addListener((e) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.saveLink) {
     viewer
-      .saveLink({ url: request.url, tab: sender.tab, source: request.source })
+      .saveLink({
+        url: request.url,
+        title: request.title,
+        favicon: request.favicon,
+        tab: sender.tab,
+        source: request.source,
+      })
       .then(sendResponse);
   }
 

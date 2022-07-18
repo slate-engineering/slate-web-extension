@@ -228,7 +228,7 @@ const removeSavingPopup = () => {
 };
 
 let timeout;
-const showSavingStatusPopup = async (status) => {
+const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
   if (status === savingStates.start) {
     removeSavingPopup();
     await createSavingPopupSuccess();
@@ -243,7 +243,9 @@ const showSavingStatusPopup = async (status) => {
       console.log("retrying");
       chrome.runtime.sendMessage({
         type: messages.saveLink,
-        url: window.location.href,
+        url,
+        title,
+        favicon,
         source: savingSources.command,
       });
     };
@@ -269,7 +271,12 @@ chrome.runtime.onMessage.addListener(async (request) => {
       data.url === window.location.href &&
       data.source === savingSources.command
     ) {
-      await showSavingStatusPopup(request.data.savingStatus);
+      await showSavingStatusPopup({
+        status: request.data.savingStatus,
+        url: data.url,
+        title: data.title,
+        favicon: data.favicon,
+      });
     }
   }
 });
@@ -292,6 +299,7 @@ window.addEventListener("message", async function (event) {
     chrome.runtime.sendMessage({
       type: messages.saveLink,
       url: event.data.url,
+      title: event.data.title,
     });
   }
 });
