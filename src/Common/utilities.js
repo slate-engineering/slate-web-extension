@@ -74,6 +74,8 @@ export const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+export const copyToClipboard = (text) => navigator.clipboard.writeText(text);
+
 export const isNewTab = window.location.protocol === "chrome-extension:";
 
 export const getExtensionURL = (path) => {
