@@ -57,6 +57,8 @@ const STYLES_JUMPER_ROOT_FIXED_POSITION = css`
 
 const STYLES_JUMPER_ROOT_ANIMATION_WRAPPER = css`
   position: relative;
+  height: 100%;
+  width: 100%;
 
   ${STYLES_JUMPER_FADE_IN_ANIMATION};
 `;
