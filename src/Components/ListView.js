@@ -8,6 +8,7 @@ import {
   ComboboxNavigation,
   useComboboxNavigation,
 } from "./ComboboxNavigation";
+import * as RovingTabIndex from "./RovingTabIndex";
 import { isNewTab, copyToClipboard } from "../Common/utilities";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
@@ -92,7 +93,17 @@ const STYLES_OBJECT_HOVER_AND_FOCUS_STATE = (theme) => css`
   &:focus {
     background-color: ${theme.semantic.bgGrayLight};
   }
+  .object_action_button {
+    display: none;
+  }
+  &:hover .object_action_button {
+    display: block;
+  }
+  &:focus .object_action_button {
+    display: block;
+  }
 `;
+
 const STYLES_TEXT_BLACK = (theme) => css`
   color: ${theme.semantic.textBlack};
 `;
@@ -123,7 +134,7 @@ const STYLES_OBJECT_ACTIONS_WRAPPER = css`
   }
 `;
 
-const CopyAction = ({ url }) => {
+const CopyAction = ({ url, ...props }) => {
   const [isCopied, setCopied] = React.useState(false);
   React.useEffect(() => {
     let timeout;
@@ -143,7 +154,11 @@ const CopyAction = ({ url }) => {
   };
 
   return (
-    <button css={STYLES_OBJECT_ACTION_BUTTON} onClick={handleCopying}>
+    <button
+      css={STYLES_OBJECT_ACTION_BUTTON}
+      onClick={handleCopying}
+      {...props}
+    >
       {isCopied ? (
         <SVG.Check width={16} height={16} />
       ) : (
@@ -172,7 +187,6 @@ const Object = React.forwardRef(
   ) => {
     const { savedObjects, saveLink } = useViewer();
     const isSaved = url in savedObjects || isSavedProp;
-    console.log(savedObjects, url);
 
     const handleLinkSaving = (e) => (
       e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
@@ -184,7 +198,7 @@ const Object = React.forwardRef(
         css={[
           STYLES_OBJECT,
           isSelected && STYLES_OBJECT_SELECTED,
-          // NOTE(amine): if the 'isSelected' prop is set, don't show the hover styles
+          // NOTE(amine): if the 'isSelected' prop isn't set, add hover and focus styles
           typeof isSelected === "undefined" &&
             STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
@@ -209,17 +223,24 @@ const Object = React.forwardRef(
             css={STYLES_OBJECT_ACTIONS_WRAPPER}
             style={{ marginLeft: "auto" }}
           >
-            {isSelected && (
+            {(typeof isSelected === "undefined" || isSelected) && (
               <>
-                <button css={STYLES_OBJECT_ACTION_BUTTON}>
+                <button
+                  className="object_action_button"
+                  css={STYLES_OBJECT_ACTION_BUTTON}
+                >
                   <SVG.Hash width={16} height={16} />
                 </button>
-                <CopyAction url={url} />
-                <button css={STYLES_OBJECT_ACTION_BUTTON}>
+                <CopyAction className="object_action_button" url={url} />
+                <button
+                  className="object_action_button"
+                  css={STYLES_OBJECT_ACTION_BUTTON}
+                >
                   <SVG.Trash width={16} height={16} />
                 </button>
                 {!isSaved && (
                   <button
+                    className="object_action_button"
                     css={STYLES_OBJECT_ACTION_BUTTON}
                     onClick={handleLinkSaving}
                   >
@@ -261,4 +282,17 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
   );
 };
 
-export { Root, Section, Title, Object, ComboboxObject };
+/* -------------------------------------------------------------------------------------------------
+ * ListView RovingTabIndexObject
+ * Supports for ./RovingTabIndex component
+ * -----------------------------------------------------------------------------------------------*/
+
+const RovingTabIndexObject = ({ index, ...props }) => {
+  return (
+    <RovingTabIndex.Item index={index}>
+      <Object {...props} />
+    </RovingTabIndex.Item>
+  );
+};
+
+export { Root, Section, Title, Object, ComboboxObject, RovingTabIndexObject };

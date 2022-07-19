@@ -2,11 +2,10 @@ import * as React from "react";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
-import * as Navigation from "../Core/navigation/app/jumper";
+import * as RovingTabIndex from "./RovingTabIndex";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { ComboboxNavigation } from "Components/ComboboxNavigation";
 import { getRootDomain } from "../Common/utilities";
 
 const SearchContext = React.createContext();
@@ -102,17 +101,16 @@ const Input = React.forwardRef(
         css={[STYLES_SEARCH_WRAPPER, containerCss]}
         style={containerStyle}
       >
-        <ComboboxNavigation.Input>
-          <input
-            css={[STYLES_SEARCH_INPUT, css]}
-            ref={ref}
-            placeholder="Search by keywords, filters, tags"
-            name="search"
-            onChange={onInputChange}
-            autoComplete="off"
-            {...props}
-          />
-        </ComboboxNavigation.Input>
+        <input
+          css={[STYLES_SEARCH_INPUT, css]}
+          ref={ref}
+          placeholder="Search by keywords, filters, tags"
+          name="search"
+          onChange={onInputChange}
+          autoComplete="off"
+          {...props}
+        />
+
         {search.query.length > 0 ? <Dismiss onClick={clearSearch} /> : null}
       </section>
     );
@@ -135,62 +133,64 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
     search: { result: feeds },
   } = useSearchContext();
   return (
-    <ComboboxNavigation.Menu>
-      <ListView.Root {...props}>
-        <div key={feeds}>
-          {feeds.map(({ title: view, result: feed }, feedIndex) => (
-            <>
-              <ListView.Title count={feed.length}>
-                {getTitleFromView(view)}
-              </ListView.Title>
-              {feed.map((item, i) => {
-                if (view === "currentWindow" || view === "allOpen") {
-                  const tab = item.item;
+    <RovingTabIndex.Provider>
+      <RovingTabIndex.List>
+        <ListView.Root {...props}>
+          <div key={feeds}>
+            {feeds.map(({ title: view, result: feed }, feedIndex) => (
+              <>
+                <ListView.Title count={feed.length}>
+                  {getTitleFromView(view)}
+                </ListView.Title>
+                {feed.map((item, i) => {
+                  if (view === "currentWindow" || view === "allOpen") {
+                    const tab = item.item;
+                    return (
+                      <ListView.RovingTabIndexObject
+                        key={tab.id}
+                        index={i}
+                        title={tab.title}
+                        url={tab.url}
+                        favicon={tab.favicon}
+                        Favicon={getFavicon(getRootDomain(tab.url))}
+                        withActions
+                        isSaved={tab.isSaved}
+                        onClick={() =>
+                          onOpenUrl({
+                            query: { tabId: tab.id, windowId: tab.windowId },
+                          })
+                        }
+                        onSubmit={() =>
+                          onOpenUrl({
+                            query: { tabId: tab.id, windowId: tab.windowId },
+                          })
+                        }
+                      />
+                    );
+                  }
+
+                  const visit = item;
                   return (
-                    <ListView.ComboboxObject
-                      key={tab.id}
-                      index={i}
-                      title={tab.title}
-                      url={tab.url}
-                      favicon={tab.favicon}
-                      Favicon={getFavicon(getRootDomain(tab.url))}
+                    <ListView.RovingTabIndexObject
+                      key={visit.url}
+                      index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
+                      title={visit.title}
+                      url={visit.url}
+                      relatedVisits={visit.relatedVisits}
+                      Favicon={getFavicon(visit.rootDomain)}
                       withActions
-                      isSaved={tab.isSaved}
-                      onClick={() =>
-                        onOpenUrl({
-                          query: { tabId: tab.id, windowId: tab.windowId },
-                        })
-                      }
-                      onSubmit={() =>
-                        onOpenUrl({
-                          query: { tabId: tab.id, windowId: tab.windowId },
-                        })
-                      }
+                      isSaved={visit.isSaved}
+                      onClick={() => onOpenUrl({ urls: [visit.url] })}
+                      onSubmit={() => onOpenUrl({ urls: [visit.url] })}
                     />
                   );
-                }
-
-                const visit = item;
-                return (
-                  <ListView.ComboboxObject
-                    key={visit.url}
-                    index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
-                    title={visit.title}
-                    url={visit.url}
-                    relatedVisits={visit.relatedVisits}
-                    Favicon={getFavicon(visit.rootDomain)}
-                    withActions
-                    isSaved={visit.isSaved}
-                    onClick={() => Navigation.openUrls({ urls: [visit.url] })}
-                    onSubmit={() => Navigation.openUrls({ urls: [visit.url] })}
-                  />
-                );
-              })}
-            </>
-          ))}
-        </div>
-      </ListView.Root>
-    </ComboboxNavigation.Menu>
+                })}
+              </>
+            ))}
+          </div>
+        </ListView.Root>
+      </RovingTabIndex.List>
+    </RovingTabIndex.Provider>
   );
 });
 

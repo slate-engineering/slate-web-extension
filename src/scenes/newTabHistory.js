@@ -13,7 +13,6 @@ import Logo from "../Components/Logo";
 import { useHistory, useWindows } from "../Core/browser/app/newTab";
 import { useViews, useHistorySearch } from "../Core/views/app/newTab";
 import { Divider } from "../Components/Divider";
-import { ComboboxNavigation } from "Components/ComboboxNavigation";
 import { Switch, Match } from "../Components/Switch";
 import { getExtensionURL } from "../Common/utilities";
 import { css } from "@emotion/react";
@@ -141,88 +140,85 @@ export default function HistoryScene() {
   return (
     <div css={STYLES_HISTORY_SCENE_WRAPPER}>
       <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
-      <ComboboxNavigation.Provider
-        isInfiniteList={currentView === viewsType.recent}
-      >
-        <Search.Provider
-          onInputChange={handleInputChange}
-          search={search}
-          clearSearch={clearSearch}
-        >
-          <Views.Provider
-            viewsFeed={viewsFeed}
-            currentView={currentView}
-            currentViewQuery={currentViewQuery}
-            viewsType={viewsType}
-            getViewsFeed={getViewsFeed}
-            onChange={() => (clearSearch(), focusSearchInput())}
-          >
-            <section css={STYLES_HISTORY_TOP_POPUP}>
-              <Views.Menu
-                showAllOpenAction={windowsFeed?.allOpen?.length > 0}
-                css={STYLES_HISTORY_SCENE_VIEWS_MENU}
-              />
-              <Divider style={{ width: "100%" }} color="borderGrayLight" />
-              <Logo
-                style={{
-                  width: "24.78px",
-                  height: "24px",
-                  marginTop: 48,
-                  marginBottom: 24,
-                }}
-              />
-              <Search.Input
-                ref={inputRef}
-                containerCss={STYLES_HISTORY_SCENE_INPUT}
-              />
-            </section>
 
-            <section
-              css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
-              style={{ height: "100%", flex: 1, overflow: "hidden" }}
-            >
-              <div style={{ flexGrow: 1 }}>
-                {/* <section css={STYLES_FILTERS_MENU}>
+      <Search.Provider
+        onInputChange={handleInputChange}
+        search={search}
+        clearSearch={clearSearch}
+      >
+        <Views.Provider
+          viewsFeed={viewsFeed}
+          currentView={currentView}
+          currentViewQuery={currentViewQuery}
+          viewsType={viewsType}
+          getViewsFeed={getViewsFeed}
+          onChange={() => (clearSearch(), focusSearchInput())}
+        >
+          <section css={STYLES_HISTORY_TOP_POPUP}>
+            <Views.Menu
+              showAllOpenAction={windowsFeed?.allOpen?.length > 0}
+              css={STYLES_HISTORY_SCENE_VIEWS_MENU}
+            />
+            <Divider style={{ width: "100%" }} color="borderGrayLight" />
+            <Logo
+              style={{
+                width: "24.78px",
+                height: "24px",
+                marginTop: 48,
+                marginBottom: 24,
+              }}
+            />
+            <Search.Input
+              ref={inputRef}
+              containerCss={STYLES_HISTORY_SCENE_INPUT}
+            />
+          </section>
+
+          <section
+            css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
+            style={{ height: "100%", flex: 1, overflow: "hidden" }}
+          >
+            <div style={{ flexGrow: 1 }}>
+              {/* <section css={STYLES_FILTERS_MENU}>
                   <button css={STYLES_FILTER_BUTTON}>
                     <SVG.Plus width={16} height={16} />
                     <Typography.H5 as="span">Filter</Typography.H5>
                   </button>
                 </section> */}
 
-                <Switch css={STYLES_HISTORY_SCENE_FEED}>
-                  <Match when={isSearching} component={Search.Feed} />
-                  <Match
-                    when={currentView === viewsType.recent}
-                    component={HistoryFeed}
-                    sessionsFeed={sessionsFeed}
-                    sessionsFeedKeys={sessionsFeedKeys}
-                    onLoadMore={loadMoreHistory}
-                    onOpenUrl={Navigation.openUrls}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.currentWindow ||
-                      currentView === viewsType.allOpen
-                    }
-                    component={WindowsFeed}
-                    windowsFeed={windowsFeed}
-                    displayAllOpen={currentView === viewsType.allOpen}
-                    onOpenUrl={Navigation.openUrls}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.relatedLinks ||
-                      currentView === viewsType.savedFiles
-                    }
-                    component={Views.Feed}
-                    onOpenUrl={Navigation.openUrls}
-                  />
-                </Switch>
-              </div>
-            </section>
-          </Views.Provider>
-        </Search.Provider>
-      </ComboboxNavigation.Provider>
+              <Switch css={STYLES_HISTORY_SCENE_FEED}>
+                <Match when={isSearching} component={Search.Feed} />
+                <Match
+                  when={currentView === viewsType.recent}
+                  component={HistoryFeed}
+                  sessionsFeed={sessionsFeed}
+                  sessionsFeedKeys={sessionsFeedKeys}
+                  onLoadMore={loadMoreHistory}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={
+                    currentView === viewsType.currentWindow ||
+                    currentView === viewsType.allOpen
+                  }
+                  component={WindowsFeed}
+                  windowsFeed={windowsFeed}
+                  displayAllOpen={currentView === viewsType.allOpen}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={
+                    currentView === viewsType.relatedLinks ||
+                    currentView === viewsType.savedFiles
+                  }
+                  component={Views.Feed}
+                  onOpenUrl={Navigation.openUrls}
+                />
+              </Switch>
+            </div>
+          </section>
+        </Views.Provider>
+      </Search.Provider>
     </div>
   );
 }

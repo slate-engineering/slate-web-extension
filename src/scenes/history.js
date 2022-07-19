@@ -16,7 +16,6 @@ import { useViews, useHistorySearch } from "../Core/views/app/jumper";
 // import { useMediaQuery } from "../Common/hooks";
 import { Switch, Match } from "../Components/Switch";
 // import { useGetRelatedLinks } from "../Core/browser/app/jumper";
-import { ComboboxNavigation } from "Components/ComboboxNavigation";
 import { css } from "@emotion/react";
 
 /* -------------------------------------------------------------------------------------------------
@@ -49,11 +48,6 @@ const STYLES_JUMPER_INPUT_WRAPPER = css`
 `;
 
 export default function History() {
-  // const [preview, setPreview] = React.useState();
-  // const handleOnObjectHover = React.useCallback(
-  //   ({ url }) => setPreview({ type: "link", url }),
-  //   []
-  // );
   const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
     useViews();
 
@@ -67,20 +61,26 @@ export default function History() {
 
   const windowsFeed = useWindows();
 
-  // NOTE(amine): Navigate between the jumper and the related links feed
-  // via the the left and right arrow keys
-  const relatedLinksFeedRovingTabRef = React.useRef();
-  const focusRelatedLinksFeedObject = () =>
-    relatedLinksFeedRovingTabRef.current.focusSelectedElement();
-  const focusSearchInput = () => inputRef.current.focus();
+  const feedRef = React.useRef();
 
+  const focusSearchInput = () => inputRef.current.focus();
   const onInputKeyDownHandler = (e) => {
-    if (e.key === "ArrowRight") {
-      focusRelatedLinksFeedObject();
-      e.preventDefault();
+    if (e.key === "ArrowDown") {
+      console.log("down", feedRef);
     }
   };
 
+  // const [preview, setPreview] = React.useState();
+  // const handleOnObjectHover = React.useCallback(
+  //   ({ url }) => setPreview({ type: "link", url }),
+  //   []
+  // );
+
+  // NOTE(amine): Navigate between the jumper and the related links feed
+  // via the the left and right arrow keys
+  // const relatedLinksFeedRovingTabRef = React.useRef();
+  // const focusRelatedLinksFeedObject = () =>
+  //   relatedLinksFeedRovingTabRef.current.focusSelectedElement();
   // const onRelatedLinksFeedKeyDownHandler = (e) => {
   //   if (e.key === "ArrowLeft") {
   //     focusSearchInput();
@@ -104,59 +104,59 @@ export default function History() {
           <Views.Menu showAllOpenAction={windowsFeed?.allOpen?.length > 0} />
         </Jumper.TopPanel>
 
-        <ComboboxNavigation.Provider
-          isInfiniteList={currentView === viewsType.recent}
+        <Search.Provider
+          onInputChange={handleInputChange}
+          search={search}
+          clearSearch={clearSearch}
         >
-          <Search.Provider
-            onInputChange={handleInputChange}
-            search={search}
-            clearSearch={clearSearch}
-          >
-            <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
-              <Logo width={20} height={20} style={{ marginRight: 12 }} />
-              <Search.Input onKeyDown={onInputKeyDownHandler} ref={inputRef} />
-            </Jumper.Header>
+          <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
+            <Logo width={20} height={20} style={{ marginRight: 12 }} />
+            <Search.Input onKeyDown={onInputKeyDownHandler} ref={inputRef} />
+          </Jumper.Header>
 
-            <Jumper.Divider color="borderGrayLight" />
-            <Jumper.Body
-              css={Styles.HORIZONTAL_CONTAINER}
-              style={{ height: "100%", flex: 1, overflow: "hidden" }}
-            >
-              <Switch>
-                <Match when={search.isSearching} component={Search.Feed} />
-                <Match
-                  when={currentView === viewsType.recent}
-                  component={HistoryFeed}
-                  sessionsFeed={sessionsFeed}
-                  sessionsFeedKeys={sessionsFeedKeys}
-                  onLoadMore={loadMoreHistory}
-                  // onObjectHover={handleOnObjectHover}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={
-                    currentView === viewsType.currentWindow ||
-                    currentView === viewsType.allOpen
-                  }
-                  component={WindowsFeed}
-                  windowsFeed={windowsFeed}
-                  displayAllOpen={currentView === viewsType.allOpen}
-                  // onObjectHover={handleOnObjectHover}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={
-                    currentView === viewsType.relatedLinks ||
-                    currentView === viewsType.savedFiles
-                  }
-                  component={Views.Feed}
-                  onOpenUrl={Navigation.openUrls}
-                  // onObjectHover={handleOnObjectHover}
-                />
-              </Switch>
-            </Jumper.Body>
-          </Search.Provider>
-        </ComboboxNavigation.Provider>
+          <Jumper.Divider color="borderGrayLight" />
+          <Jumper.Body
+            css={Styles.HORIZONTAL_CONTAINER}
+            style={{ height: "100%", flex: 1, overflow: "hidden" }}
+          >
+            <Switch ref={feedRef}>
+              <Match
+                when={search.isSearching}
+                component={Search.Feed}
+                onOpenUrl={Navigation.openUrls}
+              />
+              <Match
+                when={currentView === viewsType.recent}
+                component={HistoryFeed}
+                sessionsFeed={sessionsFeed}
+                sessionsFeedKeys={sessionsFeedKeys}
+                onLoadMore={loadMoreHistory}
+                // onObjectHover={handleOnObjectHover}
+                onOpenUrl={Navigation.openUrls}
+              />
+              <Match
+                when={
+                  currentView === viewsType.currentWindow ||
+                  currentView === viewsType.allOpen
+                }
+                component={WindowsFeed}
+                windowsFeed={windowsFeed}
+                displayAllOpen={currentView === viewsType.allOpen}
+                // onObjectHover={handleOnObjectHover}
+                onOpenUrl={Navigation.openUrls}
+              />
+              <Match
+                when={
+                  currentView === viewsType.relatedLinks ||
+                  currentView === viewsType.savedFiles
+                }
+                component={Views.Feed}
+                onOpenUrl={Navigation.openUrls}
+                // onObjectHover={handleOnObjectHover}
+              />
+            </Switch>
+          </Jumper.Body>
+        </Search.Provider>
 
         {/* <RovingTabIndex.Provider ref={relatedLinksFeedRovingTabRef}>
           <RelatedLinksSidePanel

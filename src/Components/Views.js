@@ -4,12 +4,12 @@ import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
 import * as SVG from "../Common/SVG";
 import * as Favicons from "../Common/favicons";
+import * as RovingTabIndex from "./RovingTabIndex";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
 import { viewsType } from "../Core/views";
 import { Divider } from "./Divider";
-import { ComboboxNavigation } from "./ComboboxNavigation";
 import { useEventListener } from "Common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import { mergeRefs, mergeEvents } from "../Common/utilities";
@@ -602,29 +602,29 @@ function Menu({ css, showAllOpenAction, ...props }) {
 function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
   const { viewsFeed } = useViewsContext();
   return (
-    <ComboboxNavigation.Menu>
-      <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
-        <div key={viewsFeed.length}>
-          {viewsFeed.map((visit, i) => (
-            <ListView.ComboboxObject
-              key={visit.url}
-              index={i}
-              title={visit.title}
-              url={visit.url}
-              favicon={visit.favicon}
-              relatedVisits={visit.relatedVisits}
-              withActions
-              isSaved={visit.isSaved}
-              Favicon={getFavicon(visit.rootDomain)}
-              onClick={() => onOpenUrl({ urls: [visit.url] })}
-              onMouseEnter={() => onObjectHover?.({ url: visit.url })}
-              onSubmit={() => onOpenUrl({ urls: [visit.url] })}
-              onSelect={() => onObjectHover?.({ url: visit.url })}
-            />
-          ))}
-        </div>
-      </ListView.Root>
-    </ComboboxNavigation.Menu>
+    <RovingTabIndex.Provider>
+      <RovingTabIndex.List>
+        <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
+          <div key={viewsFeed.length}>
+            {viewsFeed.map((visit, i) => (
+              <ListView.RovingTabIndexObject
+                key={visit.url}
+                index={i}
+                title={visit.title}
+                url={visit.url}
+                favicon={visit.favicon}
+                relatedVisits={visit.relatedVisits}
+                withActions
+                isSaved={visit.isSaved}
+                Favicon={getFavicon(visit.rootDomain)}
+                onClick={() => onOpenUrl({ urls: [visit.url] })}
+                onMouseEnter={() => onObjectHover?.({ url: visit.url })}
+              />
+            ))}
+          </div>
+        </ListView.Root>
+      </RovingTabIndex.List>
+    </RovingTabIndex.Provider>
   );
 }
 
