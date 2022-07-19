@@ -89,3 +89,11 @@ export const getExtensionURL = (path) => {
       .getAttribute("data-url") + path
   );
 };
+
+export const isObjectEmpty = (object) => {
+  for (let key of object) {
+    return false;
+  }
+
+  return true;
+};
