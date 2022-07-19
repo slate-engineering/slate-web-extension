@@ -3,18 +3,17 @@ import * as ListView from "./ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 
 import { getFavicon } from "../Common/favicons";
-import { useEventListener } from "../Common/hooks";
 
-const useHistoryInfiniteScroll = ({
-  historyWrapperRef,
-  onLoadMore,
-  sessionsFeed,
-}) => {
+const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
   const shouldFetchMore = React.useRef(true);
-  const handleScroll = () => {
-    if (!shouldFetchMore.current) return;
+
+  React.useEffect(() => {
+    shouldFetchMore.current = true;
+  }, [sessionsFeed]);
+
+  const handleInfiniteScroll = (e) => {
     const OFFSET = 300;
-    const element = historyWrapperRef.current;
+    const element = e.target;
 
     if (
       element.scrollTop + element.offsetHeight + OFFSET >=
@@ -24,15 +23,8 @@ const useHistoryInfiniteScroll = ({
       shouldFetchMore.current = false;
     }
   };
-  useEventListener({
-    type: "scroll",
-    ref: historyWrapperRef,
-    handler: handleScroll,
-  });
 
-  React.useEffect(() => {
-    shouldFetchMore.current = true;
-  }, [sessionsFeed]);
+  return handleInfiniteScroll;
 };
 
 const HistoryFeed = ({
@@ -46,7 +38,7 @@ const HistoryFeed = ({
   ...props
 }) => {
   const historyWrapperRef = React.useRef();
-  useHistoryInfiniteScroll({
+  const handleInfiniteScroll = useHistoryInfiniteScroll({
     onLoadMore,
     historyWrapperRef,
     sessionsFeed,
@@ -65,7 +57,7 @@ const HistoryFeed = ({
   return (
     <RovingTabIndex.Provider isInfiniteList>
       <RovingTabIndex.List>
-        <ListView.Root ref={historyWrapperRef} css={css} {...props}>
+        <ListView.Root onScroll={handleInfiniteScroll} css={css} {...props}>
           {sessionsFeedKeys.map((key, feedIndex) => {
             if (!sessionsFeed[key].length) return null;
 

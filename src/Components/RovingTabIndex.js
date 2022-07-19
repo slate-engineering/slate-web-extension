@@ -222,6 +222,7 @@ const List = React.forwardRef(({ children, ...props }, forwardedRef) => {
 
   return React.cloneElement(React.Children.only(children), {
     ref: mergeRefs([ref, forwardedRef]),
+    style: { position: "relative", ...children.props.style },
     ...props,
   });
 });
