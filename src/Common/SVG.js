@@ -2307,3 +2307,44 @@ export const List = (props) => {
     </svg>
   );
 };
+
+export const Star = (props) => {
+  return (
+    <svg
+      width={16}
+      height={16}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M8 1.333l2.06 4.174 4.606.673-3.333 3.247.787 4.587L8 11.847l-4.12 2.167.786-4.587L1.333 6.18l4.607-.673L8 1.334z"
+        fill="#FF9F00"
+        stroke="#FF9F00"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+export const XCircle = (props) => {
+  return (
+    <svg
+      width={16}
+      height={16}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M8 14.667A6.667 6.667 0 108 1.334a6.667 6.667 0 000 13.333zM10 6l-4 4M6 6l4 4"
+        stroke="#00050A"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
