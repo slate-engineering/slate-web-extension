@@ -59,7 +59,7 @@ export default function History() {
 
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const windowsFeed = useWindows();
+  const { windowsFeed, totalWindows } = useWindows();
 
   const feedRef = React.useRef();
 
@@ -101,7 +101,7 @@ export default function History() {
         onChange={() => (clearSearch(), focusSearchInput())}
       >
         <Jumper.TopPanel>
-          <Views.Menu showAllOpenAction={windowsFeed?.allOpen?.length > 0} />
+          <Views.Menu showAllOpenAction={totalWindows > 1} />
         </Jumper.TopPanel>
 
         <Search.Provider
@@ -135,13 +135,16 @@ export default function History() {
                 onOpenUrl={Navigation.openUrls}
               />
               <Match
-                when={
-                  currentView === viewsType.currentWindow ||
-                  currentView === viewsType.allOpen
-                }
+                when={currentView === viewsType.currentWindow}
                 component={WindowsFeed}
-                windowsFeed={windowsFeed}
-                displayAllOpen={currentView === viewsType.allOpen}
+                windowsFeed={windowsFeed.currentWindow}
+                // onObjectHover={handleOnObjectHover}
+                onOpenUrl={Navigation.openUrls}
+              />
+              <Match
+                when={currentView === viewsType.allOpen}
+                component={WindowsFeed}
+                windowsFeed={windowsFeed.allOpen}
                 // onObjectHover={handleOnObjectHover}
                 onOpenUrl={Navigation.openUrls}
               />

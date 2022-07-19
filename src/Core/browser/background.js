@@ -374,9 +374,12 @@ chrome.tabs.onRemoved.addListener(async () => {
   const activeTab = await Tabs.getActive();
 
   if (activeTab) {
+    const openTabs = await Windows.getAllTabs();
+    const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
+
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
-      data: { openTabs: await Windows.getAllTabs() },
+      data: { openTabs, totalWindows, activeTabId: activeTab.id },
     });
   }
 });

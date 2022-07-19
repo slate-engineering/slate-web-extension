@@ -123,7 +123,7 @@ const STYLES_HISTORY_SCENE_FEED = css`
 export default function HistoryScene() {
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const windowsFeed = useWindows();
+  const { windowsFeed, totalWindows } = useWindows();
 
   const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
     useViews();
@@ -156,7 +156,7 @@ export default function HistoryScene() {
         >
           <section css={STYLES_HISTORY_TOP_POPUP}>
             <Views.Menu
-              showAllOpenAction={windowsFeed?.allOpen?.length > 0}
+              showAllOpenAction={totalWindows > 1}
               css={STYLES_HISTORY_SCENE_VIEWS_MENU}
             />
             <Divider style={{ width: "100%" }} color="borderGrayLight" />
@@ -197,13 +197,15 @@ export default function HistoryScene() {
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match
-                  when={
-                    currentView === viewsType.currentWindow ||
-                    currentView === viewsType.allOpen
-                  }
+                  when={currentView === viewsType.currentWindow}
                   component={WindowsFeed}
-                  windowsFeed={windowsFeed}
-                  displayAllOpen={currentView === viewsType.allOpen}
+                  windowsFeed={windowsFeed.currentWindow}
+                  onOpenUrl={Navigation.openUrls}
+                />
+                <Match
+                  when={currentView === viewsType.allOpen}
+                  component={WindowsFeed}
+                  windowsFeed={windowsFeed.allOpen}
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match

@@ -13,7 +13,9 @@ export const useWindows = () => {
   const preloadedWindowsData = useViewer().windows;
   const initialState = preloadedWindowsData.data;
 
-  const { windows, setWindowsFeed } = useWindowsState({
+  const paramsRef = React.useRef(preloadedWindowsData.params);
+
+  const { windowsFeed, setWindowsFeed } = useWindowsState({
     initialState,
     // NOTE(amine): creating currentWindow view requires this current tab's windowId
     activeWindowId: preloadedWindowsData.params.windowId,
@@ -24,13 +26,20 @@ export const useWindows = () => {
       let { data, type } = request;
       if (type === messages.windowsUpdate) {
         setWindowsFeed(data.openTabs);
+
+        paramsRef.current.totalWindows = data.totalWindows;
+        paramsRef.current.activeTabId = data.activeTabId;
       }
     };
     chrome.runtime.onMessage.addListener(handleMessage);
 
     return () => chrome.runtime.onMessage.addListener(handleMessage);
   }, []);
-  return windows;
+  return {
+    windowsFeed,
+    totalWindows: paramsRef.current.totalWindows,
+    activeTabId: paramsRef.current.activeTabId,
+  };
 };
 
 /* -------------------------------------------------------------------------------------------------

@@ -287,18 +287,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return { isAuthenticated };
       }
 
+      const currentWindow = await Windows.getAllTabsInWindow(
+        sender.tab.windowId
+      );
+      const allOpen = await Windows.getAllTabs();
+      const totalWindows = new Set(allOpen.map((tab) => tab.windowId)).size;
+
       const response = {
         ...viewerInitialState,
         isAuthenticated,
         shouldSync,
         windows: {
-          data: {
-            currentWindow: await Windows.getAllTabsInWindow(
-              sender.tab.windowId
-            ),
-            allOpen: await Windows.getAllTabs(),
+          data: { currentWindow, allOpen },
+          params: {
+            windowId: sender.tab.windowId,
+            totalWindows,
+            activeTabId: sender.tab.id,
           },
-          params: { windowId: sender.tab.windowId },
         },
       };
 

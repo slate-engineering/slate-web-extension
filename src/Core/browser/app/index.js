@@ -143,7 +143,7 @@ export const useWindowsState = ({
     setWindows({ currentWindow, allOpen: windows });
   };
 
-  return { windows, setWindowsFeed };
+  return { windowsFeed: windows, setWindowsFeed };
 };
 
 /* -------------------------------------------------------------------------------------------------
