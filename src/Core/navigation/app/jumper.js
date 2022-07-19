@@ -12,6 +12,10 @@ export const closeExtensionJumper = () => {
   window.postMessage({ type: messages.closeExtensionJumperRequest }, "*");
 };
 
+export const closeTab = (tabId) => {
+  window.postMessage({ type: messages.closeTab, tabId }, "*");
+};
+
 /* -------------------------------------------------------------------------------------------------
  * Navigation Provider:
  * First, close the jumper using state to clean up all the components effects

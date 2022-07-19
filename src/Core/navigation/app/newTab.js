@@ -5,3 +5,6 @@ export const createGroupFromUrls = ({ urls, title }) =>
 
 export const openUrls = ({ urls, query }) =>
   chrome.runtime.sendMessage({ type: messages.openURLsRequest, urls, query });
+
+export const closeTab = (tabId) =>
+  chrome.runtime.sendMessage({ type: messages.closeTab, tabId });

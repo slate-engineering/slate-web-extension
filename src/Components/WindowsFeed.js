@@ -8,8 +8,10 @@ const WindowsFeed = React.forwardRef(
   (
     {
       windowsFeed,
+      activeTabId,
       onObjectHover,
       onOpenUrl,
+      onCloseTab,
       displayAllOpen,
       css,
       style,
@@ -32,12 +34,15 @@ const WindowsFeed = React.forwardRef(
               {windowsFeed.map((tab, i) => (
                 <ListView.RovingTabIndexObject
                   key={tab.id}
+                  isTab
+                  isActiveTab={tab.id === activeTabId}
                   index={i}
                   title={tab.title}
                   url={tab.url}
                   Favicon={getFavicon(tab.rootDomain)}
                   withActions
                   isSaved={tab.isSaved}
+                  onCloseTab={() => onCloseTab(tab.id)}
                   onClick={() =>
                     onOpenUrl({
                       query: { tabId: tab.id, windowId: tab.windowId },

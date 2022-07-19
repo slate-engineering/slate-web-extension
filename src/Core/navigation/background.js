@@ -37,6 +37,11 @@ const createGroupFromUrls = async ({ urls, windowId, title }) => {
 /** ------------ Event Listeners ------------- */
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.type === messages.closeTab) {
+    chrome.tabs.remove(request.tabId);
+    return true;
+  }
+
   if (request.type === messages.openURLsRequest) {
     await handleOpenUrlsRequests({
       urls: request.urls,

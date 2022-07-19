@@ -65,6 +65,14 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === messages.closeTab) {
+    chrome.runtime.sendMessage({
+      type: messages.closeTab,
+      tabId: event.data.tabId,
+    });
+    return;
+  }
+
   if (event.data.type === messages.closeExtensionJumperRequest) {
     if (activeElement) activeElement.focus();
     closeApp();

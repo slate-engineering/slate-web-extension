@@ -5,4 +5,6 @@ export const messages = {
   openURLsRequest: "OPEN_URLS_REQUEST",
 
   createGroup: "BROWSER_CREATE_GROUP",
+
+  closeTab: "CLOSE_TAB",
 };

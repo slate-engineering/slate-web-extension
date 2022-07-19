@@ -2,13 +2,13 @@ import * as React from "react";
 import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
+import * as RovingTabIndex from "./RovingTabIndex";
 
 import { css } from "@emotion/react";
 import {
   ComboboxNavigation,
   useComboboxNavigation,
 } from "./ComboboxNavigation";
-import * as RovingTabIndex from "./RovingTabIndex";
 import { isNewTab, copyToClipboard } from "../Common/utilities";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
@@ -179,6 +179,9 @@ const Object = React.forwardRef(
       relatedVisits,
       favicon,
 
+      isActiveTab,
+      onCloseTab,
+
       url,
       isSaved: isSavedProp,
       ...props
@@ -238,6 +241,22 @@ const Object = React.forwardRef(
                 >
                   <SVG.Trash width={16} height={16} />
                 </button>
+                {onCloseTab && !isActiveTab && (
+                  <button
+                    className="object_action_button"
+                    css={STYLES_OBJECT_ACTION_BUTTON}
+                    onClick={(e) => (
+                      e.stopPropagation(), e.preventDefault(), onCloseTab()
+                    )}
+                  >
+                    <SVG.XCircle width={16} height={16} />
+                  </button>
+                )}
+                {isActiveTab && (
+                  <div style={{ padding: 2 }}>
+                    <SVG.Star width={16} height={16} />
+                  </div>
+                )}
                 {!isSaved && (
                   <button
                     className="object_action_button"
@@ -251,7 +270,7 @@ const Object = React.forwardRef(
             )}
 
             {isSaved && (
-              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ margin: 2 }}>
+              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
                 <SVG.CheckCircle />
               </div>
             )}

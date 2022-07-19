@@ -59,7 +59,7 @@ export default function History() {
 
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const { windowsFeed, totalWindows } = useWindows();
+  const { windowsFeed, totalWindows, activeTabId } = useWindows();
 
   const feedRef = React.useRef();
 
@@ -138,14 +138,18 @@ export default function History() {
                 when={currentView === viewsType.currentWindow}
                 component={WindowsFeed}
                 windowsFeed={windowsFeed.currentWindow}
+                activeTabId={activeTabId}
                 // onObjectHover={handleOnObjectHover}
+                onCloseTab={Navigation.closeTab}
                 onOpenUrl={Navigation.openUrls}
               />
               <Match
                 when={currentView === viewsType.allOpen}
                 component={WindowsFeed}
                 windowsFeed={windowsFeed.allOpen}
+                activeTabId={activeTabId}
                 // onObjectHover={handleOnObjectHover}
+                onCloseTab={Navigation.closeTab}
                 onOpenUrl={Navigation.openUrls}
               />
               <Match
