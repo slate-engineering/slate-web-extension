@@ -3,13 +3,15 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as RovingTabIndex from "./RovingTabIndex";
+import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
 import {
   ComboboxNavigation,
   useComboboxNavigation,
 } from "./ComboboxNavigation";
-import { isNewTab, copyToClipboard } from "../Common/utilities";
+import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
+import { Checkbox } from "./system";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
@@ -29,13 +31,20 @@ const STYLES_LIST_VIEW_ROOT = css`
   }
 `;
 
-const Root = React.forwardRef(({ children, css, ...props }, ref) => {
-  return (
-    <section ref={ref} css={[STYLES_LIST_VIEW_ROOT, css]} {...props}>
-      {children}
-    </section>
-  );
-});
+const Root = React.forwardRef(
+  ({ children, css, totalSelectableItems, withSelectAll, ...props }, ref) => {
+    return (
+      <MultiSelection.Provider
+        withSelectAll={withSelectAll}
+        totalSelectableItems={totalSelectableItems}
+      >
+        <section ref={ref} css={[STYLES_LIST_VIEW_ROOT, css]} {...props}>
+          {children}
+        </section>
+      </MultiSelection.Provider>
+    );
+  }
+);
 
 /* -------------------------------------------------------------------------------------------------
  * ListView Section
@@ -87,19 +96,28 @@ const STYLES_OBJECT_SELECTED = (theme) => css`
 `;
 
 const STYLES_OBJECT_HOVER_AND_FOCUS_STATE = (theme) => css`
-  &:hover {
-    background-color: ${theme.semantic.bgGrayLight};
-  }
   &:focus {
     background-color: ${theme.semantic.bgGrayLight};
   }
+
   .object_action_button {
     display: none;
   }
-  &:hover .object_action_button {
+  &:focus .object_action_button {
     display: block;
   }
-  &:focus .object_action_button {
+
+  .object_favicon {
+    display: block;
+  }
+  &:focus .object_favicon {
+    display: none;
+  }
+
+  .object_checkbox {
+    display: none;
+  }
+  &:focus .object_checkbox {
     display: block;
   }
 `;
@@ -134,7 +152,7 @@ const STYLES_OBJECT_ACTIONS_WRAPPER = css`
   }
 `;
 
-const CopyAction = ({ url, ...props }) => {
+const useCopyState = (url) => {
   const [isCopied, setCopied] = React.useState(false);
   React.useEffect(() => {
     let timeout;
@@ -145,20 +163,17 @@ const CopyAction = ({ url, ...props }) => {
     return () => clearTimeout(timeout);
   }, [isCopied]);
 
-  const handleCopying = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
+  const handleCopying = () => {
     setCopied(true);
     copyToClipboard(url);
   };
 
+  return { isCopied, handleCopying };
+};
+
+const CopyAction = ({ isCopied, ...props }) => {
   return (
-    <button
-      css={STYLES_OBJECT_ACTION_BUTTON}
-      onClick={handleCopying}
-      {...props}
-    >
+    <button css={STYLES_OBJECT_ACTION_BUTTON} {...props}>
       {isCopied ? (
         <SVG.Check width={16} height={16} />
       ) : (
@@ -182,8 +197,13 @@ const Object = React.forwardRef(
       isActiveTab,
       onCloseTab,
 
+      withMultiSelection,
+      isChecked,
+      onCheck,
+
       url,
       isSaved: isSavedProp,
+      onKeyDown,
       ...props
     },
     ref
@@ -194,6 +214,28 @@ const Object = React.forwardRef(
     const handleLinkSaving = (e) => (
       e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
     );
+    const handleOnChecking = (e) => onCheck(e.target.checked);
+
+    const { isCopied, handleCopying } = useCopyState(url);
+
+    const preventFocus = (e) => e.preventDefault();
+
+    const handleKeyboardActions = (e) => {
+      if (e.code === "KeyS") {
+        handleLinkSaving(e);
+        return;
+      }
+
+      if (e.code === "KeyC") {
+        handleCopying();
+        return;
+      }
+
+      if (onCloseTab && e.code === "KeyX") {
+        onCloseTab();
+        return;
+      }
+    };
 
     return (
       <button
@@ -206,9 +248,24 @@ const Object = React.forwardRef(
             STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
         ]}
+        onKeyDown={mergeEvents(handleKeyboardActions, onKeyDown)}
         {...props}
       >
-        <Favicon css={STYLES_TEXT_BLACK} style={{ margin: 2, flexShrink: 0 }} />
+        {withMultiSelection && (
+          <Checkbox
+            className="object_checkbox"
+            checked={isChecked}
+            onChange={handleOnChecking}
+            style={{ display: isChecked && "block" }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.preventDefault()}
+          />
+        )}
+        <Favicon
+          className="object_favicon"
+          css={STYLES_TEXT_BLACK}
+          style={{ margin: 2, flexShrink: 0, display: isChecked && "none" }}
+        />
         <Typography.H5
           style={{ maxWidth: 384, marginLeft: 12 }}
           color="textBlack"
@@ -231,13 +288,23 @@ const Object = React.forwardRef(
                 <button
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}
+                  onMouseDown={preventFocus}
                 >
                   <SVG.Hash width={16} height={16} />
                 </button>
-                <CopyAction className="object_action_button" url={url} />
+                <CopyAction
+                  className="object_action_button"
+                  isCopied={isCopied}
+                  onClick={(e) => (
+                    e.stopPropagation(), e.preventDefault(), handleCopying()
+                  )}
+                  onMouseDown={preventFocus}
+                  url={url}
+                />
                 <button
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}
+                  onMouseDown={preventFocus}
                 >
                   <SVG.Trash width={16} height={16} />
                 </button>
@@ -248,6 +315,7 @@ const Object = React.forwardRef(
                     onClick={(e) => (
                       e.stopPropagation(), e.preventDefault(), onCloseTab()
                     )}
+                    onMouseDown={preventFocus}
                   >
                     <SVG.XCircle width={16} height={16} />
                   </button>
@@ -262,6 +330,7 @@ const Object = React.forwardRef(
                     className="object_action_button"
                     css={STYLES_OBJECT_ACTION_BUTTON}
                     onClick={handleLinkSaving}
+                    onMouseDown={preventFocus}
                   >
                     <SVG.Plus width={16} height={16} />
                   </button>
@@ -307,9 +376,24 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
  * -----------------------------------------------------------------------------------------------*/
 
 const RovingTabIndexObject = ({ index, ...props }) => {
+  const {
+    isAllChecked,
+    isIndexChecked,
+
+    createHandleOnIndexCheckChange,
+    createHandleKeyDownNavigation,
+  } = MultiSelection.useMultiSelectionContext();
+
   return (
     <RovingTabIndex.Item index={index}>
-      <Object {...props} />
+      <Object
+        index={index}
+        withMultiSelection
+        isChecked={isAllChecked || isIndexChecked(index)}
+        onCheck={createHandleOnIndexCheckChange(index)}
+        onKeyDown={createHandleKeyDownNavigation(index)}
+        {...props}
+      />
     </RovingTabIndex.Item>
   );
 };
