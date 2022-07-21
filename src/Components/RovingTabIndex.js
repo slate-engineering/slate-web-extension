@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { mergeRefs } from "../Common/utilities";
+import { mergeEvents, mergeRefs } from "../Common/utilities";
 import { useEventListener, useIsomorphicLayoutEffect } from "../Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
@@ -12,9 +12,10 @@ const useManageScrollPosition = ({
   listRef,
   focusedElementsRefs,
   focusedIndex,
+  isNavigatingViaKeyboardRef,
 }) => {
   React.useLayoutEffect(() => {
-    if (axis === "horizontals") return;
+    if (axis === "horizontals" || !isNavigatingViaKeyboardRef.current) return;
 
     const listNode = listRef.current;
     const focusedNode = focusedElementsRefs.current[focusedIndex]?.current;
@@ -52,7 +53,9 @@ const rovingIndexContext = React.createContext({});
 export const useRovingIndexContext = () => React.useContext(rovingIndexContext);
 
 const Provider = React.forwardRef(
-  ({ isInfiniteList, axis = "vertical", children }, ref) => {
+  ({ isInfiniteList, axis = "vertical", withFocusOnHover, children }, ref) => {
+    const isNavigatingViaKeyboardRef = React.useRef(true);
+
     const focusedElementsRefs = React.useRef({});
     const initialIndex = 0;
     const [focusedIndex, setFocusedIndex] = React.useState(initialIndex);
@@ -112,6 +115,8 @@ const Provider = React.forwardRef(
     };
 
     const setIndexToNextElement = () => {
+      isNavigatingViaKeyboardRef.current = true;
+
       const nextIndex = focusedIndex + 1;
       const elementsExists = focusedElementsRefs.current[nextIndex];
       if (!elementsExists && isInfiniteList) {
@@ -123,10 +128,14 @@ const Provider = React.forwardRef(
     };
 
     const setIndexPreviousElement = () => {
+      isNavigatingViaKeyboardRef.current = true;
+
       const prevIndex = focusedIndex - 1;
       let prevFocusedIndex = null;
       if (prevIndex >= initialIndex) {
         prevFocusedIndex = prevIndex;
+      } else if (isInfiniteList) {
+        return;
       } else {
         prevFocusedIndex = Math.max(
           ...Object.keys(focusedElementsRefs.current)
@@ -137,12 +146,15 @@ const Provider = React.forwardRef(
     };
 
     const setIndexTo = (index) => {
+      isNavigatingViaKeyboardRef.current = false;
+
       if (!focusedElementsRefs.current[index]) return;
       setFocusedIndex(index);
       focusElement(index);
     };
 
     useManageScrollPosition({
+      isNavigatingViaKeyboardRef,
       listRef,
       focusedElementsRefs,
       focusedIndex,
@@ -159,7 +171,7 @@ const Provider = React.forwardRef(
 
     const contextValue = React.useMemo(
       () => [
-        { focusedIndex, axis },
+        { focusedIndex, axis, withFocusOnHover },
         {
           registerItem,
           cleanupItem,
@@ -233,7 +245,7 @@ const List = React.forwardRef(({ children, ...props }, forwardedRef) => {
 
 const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
   const [
-    { focusedIndex },
+    { focusedIndex, withFocusOnHover },
     { registerItem, cleanupItem, syncFocusedIndexState, setIndexTo },
   ] = useRovingIndexContext();
   const ref = React.useRef();
@@ -267,6 +279,20 @@ const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
       });
     };
   }, []);
+
+  const handleFocusOnMouseMove = () => {
+    if (withFocusOnHover) setIndexTo(index);
+  };
+
+  useEventListener(
+    {
+      type: "mousemove",
+      handler: handleFocusOnMouseMove,
+      ref,
+      options: { once: true },
+    },
+    [focusedIndex]
+  );
 
   return React.cloneElement(React.Children.only(children), {
     ...props,
