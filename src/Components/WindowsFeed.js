@@ -12,7 +12,6 @@ const WindowsFeed = React.forwardRef(
       onObjectHover,
       onOpenUrl,
       onCloseTab,
-      displayAllOpen,
       css,
       style,
       ...props
@@ -22,12 +21,17 @@ const WindowsFeed = React.forwardRef(
     const rovingIndexRef = React.useRef();
 
     return (
-      <RovingTabIndex.Provider key={displayAllOpen} ref={rovingIndexRef}>
+      <RovingTabIndex.Provider
+        key={windowsFeed}
+        ref={rovingIndexRef}
+        withFocusOnHover
+      >
         <RovingTabIndex.List>
           <ListView.Root
             ref={ref}
             style={{ paddingTop: "8px", ...style }}
             css={css}
+            totalSelectableItems={windowsFeed.length}
             {...props}
           >
             <ListView.Section>
@@ -35,12 +39,13 @@ const WindowsFeed = React.forwardRef(
                 <ListView.RovingTabIndexObject
                   key={tab.id}
                   isTab
+                  withActions
+                  withMultiSelection
                   isActiveTab={tab.id === activeTabId}
                   index={i}
                   title={tab.title}
                   url={tab.url}
                   Favicon={getFavicon(tab.rootDomain)}
-                  withActions
                   isSaved={tab.isSaved}
                   onCloseTab={() => onCloseTab(tab.id)}
                   onClick={() =>

@@ -33,20 +33,31 @@ const DISMISS_BUTTON_WIDTH = 16;
 const STYLES_DISMISS_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};
   position: absolute;
+  right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  height: 54px;
-  right: 0px;
-  padding-right: 16px;
-  display: block;
+  height: 32px;
+  width: 32px;
+  padding: 8px;
+  border-radius: 8px;
   color: ${theme.semantic.textGray};
+
+  &:hover {
+    background-color: ${theme.semantic.bgGrayLight};
+    color: ${theme.semantic.textBlack};
+  }
+
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+    color: ${theme.semantic.textBlack};
+  }
 `;
 
 function Dismiss({ css, ...props }) {
   return (
     <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
       <SVG.Dismiss
-        style={{ display: "block", marginLeft: 12 }}
+        style={{ display: "block" }}
         height={DISMISS_BUTTON_WIDTH}
         width={DISMISS_BUTTON_WIDTH}
       />
@@ -132,10 +143,19 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
   const {
     search: { result: feeds },
   } = useSearchContext();
+
+  const searchFeedLength = React.useMemo(() => {
+    let length = 0;
+    for (let feed in feeds) {
+      length += feed.length;
+    }
+    return length;
+  }, [feeds]);
+
   return (
-    <RovingTabIndex.Provider>
+    <RovingTabIndex.Provider key={feeds} withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root {...props}>
+        <ListView.Root totalSelectableItems={searchFeedLength} {...props}>
           <div key={feeds}>
             {feeds.map(({ title: view, result: feed }, feedIndex) => (
               <>
@@ -148,12 +168,13 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
                     return (
                       <ListView.RovingTabIndexObject
                         key={tab.id}
+                        withActions
+                        withMultiSelection
                         index={i}
                         title={tab.title}
                         url={tab.url}
                         favicon={tab.favicon}
                         Favicon={getFavicon(getRootDomain(tab.url))}
-                        withActions
                         isSaved={tab.isSaved}
                         onClick={() =>
                           onOpenUrl({
@@ -173,12 +194,13 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
                   return (
                     <ListView.RovingTabIndexObject
                       key={visit.url}
+                      withActions
+                      withMultiSelection
                       index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
                       title={visit.title}
                       url={visit.url}
                       relatedVisits={visit.relatedVisits}
                       Favicon={getFavicon(visit.rootDomain)}
-                      withActions
                       isSaved={visit.isSaved}
                       onClick={() => onOpenUrl({ urls: [visit.url] })}
                       onSubmit={() => onOpenUrl({ urls: [visit.url] })}

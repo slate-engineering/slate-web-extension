@@ -421,6 +421,11 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
     background-color: ${theme.semantic.bgGrayLight};
     color: ${theme.semantic.textBlack};
   }
+
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+    color: ${theme.semantic.textBlack};
+  }
 `;
 
 const useHandleScrollNavigation = ({ containerRef }) => {
@@ -602,19 +607,24 @@ function Menu({ css, showAllOpenAction, ...props }) {
 function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
   const { viewsFeed } = useViewsContext();
   return (
-    <RovingTabIndex.Provider>
+    <RovingTabIndex.Provider key={viewsFeed} withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
+        <ListView.Root
+          style={{ paddingTop: 8, ...style }}
+          totalSelectableItems={viewsFeed.length}
+          {...props}
+        >
           <div key={viewsFeed.length}>
             {viewsFeed.map((visit, i) => (
               <ListView.RovingTabIndexObject
                 key={visit.url}
+                withActions
+                withMultiSelection
                 index={i}
                 title={visit.title}
                 url={visit.url}
                 favicon={visit.favicon}
                 relatedVisits={visit.relatedVisits}
-                withActions
                 isSaved={visit.isSaved}
                 Favicon={getFavicon(visit.rootDomain)}
                 onClick={() => onOpenUrl({ urls: [visit.url] })}

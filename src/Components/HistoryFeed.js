@@ -54,10 +54,23 @@ const HistoryFeed = ({
     return startingIndex + visitIndex;
   };
 
+  const sessionsFeedLength = React.useMemo(() => {
+    let length = 0;
+    sessionsFeedKeys.forEach((key) => {
+      length += sessionsFeed[key].length;
+    });
+    return length;
+  }, [sessionsFeed, sessionsFeedKeys]);
+
   return (
-    <RovingTabIndex.Provider isInfiniteList>
+    <RovingTabIndex.Provider isInfiniteList withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root onScroll={handleInfiniteScroll} css={css} {...props}>
+        <ListView.Root
+          css={css}
+          onScroll={handleInfiniteScroll}
+          totalSelectableItems={sessionsFeedLength}
+          {...props}
+        >
           {sessionsFeedKeys.map((key, feedIndex) => {
             if (!sessionsFeed[key].length) return null;
 
@@ -73,13 +86,14 @@ const HistoryFeed = ({
                   return (
                     <ListView.RovingTabIndexObject
                       key={visit.url}
+                      withActions
+                      withMultiSelection
                       index={comboxboxItemIndex}
                       title={visit.title}
                       url={visit.url}
                       favicon={visit.favicon}
                       relatedVisits={visit.relatedVisits}
                       Favicon={getFavicon(visit.rootDomain)}
-                      withActions
                       isSaved={visit.isSaved}
                       onClick={() => onOpenUrl({ urls: [visit.url] })}
                       onMouseEnter={() =>
