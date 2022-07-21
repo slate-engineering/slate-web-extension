@@ -91,9 +91,14 @@ export const getExtensionURL = (path) => {
 };
 
 export const isObjectEmpty = (object) => {
-  for (let key of object) {
+  for (let key in object) {
     return false;
   }
 
   return true;
+};
+
+export const removeKeyFromObject = (key, object) => {
+  const { [key]: deletedKey, ...newObject } = object;
+  return newObject;
 };
