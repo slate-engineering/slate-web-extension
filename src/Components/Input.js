@@ -8,7 +8,7 @@ import { mergeRefs } from "../Common/utilities";
 
 const INPUT_STYLES = (theme) => css`
   box-sizing: border-box;
-  font-family: ${Constants.font.text};
+  font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
   height: 100%;
@@ -19,21 +19,22 @@ const INPUT_STYLES = (theme) => css`
   border: none;
   box-sizing: border-box;
   transition: 200ms ease all;
+  color: ${theme.semantic.textBlack};
 
   ::placeholder {
     /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: ${Constants.semantic.textGray};
+    color: ${theme.semantic.textGray};
     opacity: 1; /* Firefox */
   }
 
   :-ms-input-placeholder {
     /* Internet Explorer 10-11 */
-    color: ${Constants.semantic.textGray};
+    color: ${theme.semantic.textGray};
   }
 
   ::-ms-input-placeholder {
     /* Microsoft Edge */
-    color: ${Constants.semantic.textGray};
+    color: ${theme.semantic.textGray};
   }
 `;
 
@@ -61,7 +62,7 @@ const STYLES_INPUT_CONTAINER_FULL = css`
   min-width: 188px;
 `;
 
-const STYLES_INPUT = css`
+const STYLES_INPUT = (theme) => css`
   ${"" /* ${INPUT_STYLES} */}
   display: flex;
   width: 100%;
@@ -70,11 +71,11 @@ const STYLES_INPUT = css`
   height: 40px;
   border-radius: 12px;
   padding: 0px 12px;
-  background: ${Constants.system.white};
+  background: ${theme.system.white};
   text-overflow: ellipsis;
   white-space: nowrap;
   box-shadow: 0 0 0 1px ${Constants.semantic.borderGrayLight} inset;
-  color: ${Constants.system.black};
+  color: ${theme.semantic.textBlack};
 
   :focus {
     outline: 0;
@@ -82,18 +83,18 @@ const STYLES_INPUT = css`
 
   ::placeholder {
     /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: ${Constants.system.grayLight2};
+    color: ${theme.system.grayLight2};
     opacity: 1; /* Firefox */
   }
 
   :-ms-input-placeholder {
     /* Internet Explorer 10-11 */
-    color: ${Constants.system.grayLight2};
+    color: ${theme.system.grayLight2};
   }
 
   ::-ms-input-placeholder {
     /* Microsoft Edge */
-    color: ${Constants.system.grayLight2};
+    color: ${theme.system.grayLight2};
   }
 `;
 

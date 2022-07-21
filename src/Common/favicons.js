@@ -99,7 +99,7 @@ const FacebookFavicon = (props) => (
 
 const FigmaFavicon = (props) => (
   <svg
-    width={11}
+    width={16}
     height={16}
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
@@ -423,7 +423,7 @@ const NetflixFavicon = (props) => (
 
 const StackoverflowFavicon = (props) => (
   <svg
-    width={14}
+    width={16}
     height={16}
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
