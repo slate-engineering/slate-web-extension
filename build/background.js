@@ -1,177 +1,17 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ({
-
-/***/ 418:
-/***/ (function(module) {
-
-/*
-object-assign
-(c) Sindre Sorhus
-@license MIT
-*/
-
-
-/* eslint-disable no-unused-vars */
-var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-function toObject(val) {
-	if (val === null || val === undefined) {
-		throw new TypeError('Object.assign cannot be called with null or undefined');
-	}
-
-	return Object(val);
-}
-
-function shouldUseNative() {
-	try {
-		if (!Object.assign) {
-			return false;
-		}
-
-		// Detect buggy property enumeration order in older V8 versions.
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
-		test1[5] = 'de';
-		if (Object.getOwnPropertyNames(test1)[0] === '5') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test2 = {};
-		for (var i = 0; i < 10; i++) {
-			test2['_' + String.fromCharCode(i)] = i;
-		}
-		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
-			return test2[n];
-		});
-		if (order2.join('') !== '0123456789') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test3 = {};
-		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
-			test3[letter] = letter;
-		});
-		if (Object.keys(Object.assign({}, test3)).join('') !==
-				'abcdefghijklmnopqrst') {
-			return false;
-		}
-
-		return true;
-	} catch (err) {
-		// We don't expect any of the above to throw, but better to be safe.
-		return false;
-	}
-}
-
-module.exports = shouldUseNative() ? Object.assign : function (target, source) {
-	var from;
-	var to = toObject(target);
-	var symbols;
-
-	for (var s = 1; s < arguments.length; s++) {
-		from = Object(arguments[s]);
-
-		for (var key in from) {
-			if (hasOwnProperty.call(from, key)) {
-				to[key] = from[key];
-			}
-		}
-
-		if (getOwnPropertySymbols) {
-			symbols = getOwnPropertySymbols(from);
-			for (var i = 0; i < symbols.length; i++) {
-				if (propIsEnumerable.call(from, symbols[i])) {
-					to[symbols[i]] = from[symbols[i]];
-				}
-			}
-		}
-	}
-
-	return to;
-};
-
-
-/***/ }),
-
-/***/ 408:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-var __webpack_unused_export__;
-/** @license React v17.0.2
- * react.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-var l=__webpack_require__(418),n=60103,p=60106;__webpack_unused_export__=60107;__webpack_unused_export__=60108;__webpack_unused_export__=60114;var q=60109,r=60110,t=60112;__webpack_unused_export__=60113;var u=60115,v=60116;
-if("function"===typeof Symbol&&Symbol.for){var w=Symbol.for;n=w("react.element");p=w("react.portal");__webpack_unused_export__=w("react.fragment");__webpack_unused_export__=w("react.strict_mode");__webpack_unused_export__=w("react.profiler");q=w("react.provider");r=w("react.context");t=w("react.forward_ref");__webpack_unused_export__=w("react.suspense");u=w("react.memo");v=w("react.lazy")}var x="function"===typeof Symbol&&Symbol.iterator;
-function y(a){if(null===a||"object"!==typeof a)return null;a=x&&a[x]||a["@@iterator"];return"function"===typeof a?a:null}function z(a){for(var b="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=1;c<arguments.length;c++)b+="&args[]="+encodeURIComponent(arguments[c]);return"Minified React error #"+a+"; visit "+b+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}
-var A={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},B={};function C(a,b,c){this.props=a;this.context=b;this.refs=B;this.updater=c||A}C.prototype.isReactComponent={};C.prototype.setState=function(a,b){if("object"!==typeof a&&"function"!==typeof a&&null!=a)throw Error(z(85));this.updater.enqueueSetState(this,a,b,"setState")};C.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
-function D(){}D.prototype=C.prototype;function E(a,b,c){this.props=a;this.context=b;this.refs=B;this.updater=c||A}var F=E.prototype=new D;F.constructor=E;l(F,C.prototype);F.isPureReactComponent=!0;var G={current:null},H=Object.prototype.hasOwnProperty,I={key:!0,ref:!0,__self:!0,__source:!0};
-function J(a,b,c){var e,d={},k=null,h=null;if(null!=b)for(e in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(k=""+b.key),b)H.call(b,e)&&!I.hasOwnProperty(e)&&(d[e]=b[e]);var g=arguments.length-2;if(1===g)d.children=c;else if(1<g){for(var f=Array(g),m=0;m<g;m++)f[m]=arguments[m+2];d.children=f}if(a&&a.defaultProps)for(e in g=a.defaultProps,g)void 0===d[e]&&(d[e]=g[e]);return{$$typeof:n,type:a,key:k,ref:h,props:d,_owner:G.current}}
-function K(a,b){return{$$typeof:n,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}}function L(a){return"object"===typeof a&&null!==a&&a.$$typeof===n}function escape(a){var b={"=":"=0",":":"=2"};return"$"+a.replace(/[=:]/g,function(a){return b[a]})}var M=/\/+/g;function N(a,b){return"object"===typeof a&&null!==a&&null!=a.key?escape(""+a.key):b.toString(36)}
-function O(a,b,c,e,d){var k=typeof a;if("undefined"===k||"boolean"===k)a=null;var h=!1;if(null===a)h=!0;else switch(k){case "string":case "number":h=!0;break;case "object":switch(a.$$typeof){case n:case p:h=!0}}if(h)return h=a,d=d(h),a=""===e?"."+N(h,0):e,Array.isArray(d)?(c="",null!=a&&(c=a.replace(M,"$&/")+"/"),O(d,b,c,"",function(a){return a})):null!=d&&(L(d)&&(d=K(d,c+(!d.key||h&&h.key===d.key?"":(""+d.key).replace(M,"$&/")+"/")+a)),b.push(d)),1;h=0;e=""===e?".":e+":";if(Array.isArray(a))for(var g=
-0;g<a.length;g++){k=a[g];var f=e+N(k,g);h+=O(k,b,c,f,d)}else if(f=y(a),"function"===typeof f)for(a=f.call(a),g=0;!(k=a.next()).done;)k=k.value,f=e+N(k,g++),h+=O(k,b,c,f,d);else if("object"===k)throw b=""+a,Error(z(31,"[object Object]"===b?"object with keys {"+Object.keys(a).join(", ")+"}":b));return h}function P(a,b,c){if(null==a)return a;var e=[],d=0;O(a,e,"","",function(a){return b.call(c,a,d++)});return e}
-function Q(a){if(-1===a._status){var b=a._result;b=b();a._status=0;a._result=b;b.then(function(b){0===a._status&&(b=b.default,a._status=1,a._result=b)},function(b){0===a._status&&(a._status=2,a._result=b)})}if(1===a._status)return a._result;throw a._result;}var R={current:null};function S(){var a=R.current;if(null===a)throw Error(z(321));return a}var T={ReactCurrentDispatcher:R,ReactCurrentBatchConfig:{transition:0},ReactCurrentOwner:G,IsSomeRendererActing:{current:!1},assign:l};
-__webpack_unused_export__={map:P,forEach:function(a,b,c){P(a,function(){b.apply(this,arguments)},c)},count:function(a){var b=0;P(a,function(){b++});return b},toArray:function(a){return P(a,function(a){return a})||[]},only:function(a){if(!L(a))throw Error(z(143));return a}};__webpack_unused_export__=C;__webpack_unused_export__=E;__webpack_unused_export__=T;
-__webpack_unused_export__=function(a,b,c){if(null===a||void 0===a)throw Error(z(267,a));var e=l({},a.props),d=a.key,k=a.ref,h=a._owner;if(null!=b){void 0!==b.ref&&(k=b.ref,h=G.current);void 0!==b.key&&(d=""+b.key);if(a.type&&a.type.defaultProps)var g=a.type.defaultProps;for(f in b)H.call(b,f)&&!I.hasOwnProperty(f)&&(e[f]=void 0===b[f]&&void 0!==g?g[f]:b[f])}var f=arguments.length-2;if(1===f)e.children=c;else if(1<f){g=Array(f);for(var m=0;m<f;m++)g[m]=arguments[m+2];e.children=g}return{$$typeof:n,type:a.type,
-key:d,ref:k,props:e,_owner:h}};__webpack_unused_export__=function(a,b){void 0===b&&(b=null);a={$$typeof:r,_calculateChangedBits:b,_currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.Provider={$$typeof:q,_context:a};return a.Consumer=a};__webpack_unused_export__=J;__webpack_unused_export__=function(a){var b=J.bind(null,a);b.type=a;return b};__webpack_unused_export__=function(){return{current:null}};__webpack_unused_export__=function(a){return{$$typeof:t,render:a}};__webpack_unused_export__=L;
-__webpack_unused_export__=function(a){return{$$typeof:v,_payload:{_status:-1,_result:a},_init:Q}};__webpack_unused_export__=function(a,b){return{$$typeof:u,type:a,compare:void 0===b?null:b}};__webpack_unused_export__=function(a,b){return S().useCallback(a,b)};__webpack_unused_export__=function(a,b){return S().useContext(a,b)};__webpack_unused_export__=function(){};__webpack_unused_export__=function(a,b){return S().useEffect(a,b)};__webpack_unused_export__=function(a,b,c){return S().useImperativeHandle(a,b,c)};
-__webpack_unused_export__=function(a,b){return S().useLayoutEffect(a,b)};__webpack_unused_export__=function(a,b){return S().useMemo(a,b)};__webpack_unused_export__=function(a,b,c){return S().useReducer(a,b,c)};__webpack_unused_export__=function(a){return S().useRef(a)};__webpack_unused_export__=function(a){return S().useState(a)};__webpack_unused_export__="17.0.2";
-
-
-/***/ }),
-
-/***/ 294:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
-
-
-
-if (true) {
-  /* unused reexport */ __webpack_require__(408);
-} else {}
-
-
-/***/ })
-
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-!function() {
+
+;// CONCATENATED MODULE: ./src/Core/browser/index.js
+const messages = {
+  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
+  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
+
+  relatedLinksRequest: "RELATED_LINKS_REQUEST",
+  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
+
+  windowsUpdate: "WINDOWS_UPDATE",
+};
 
 ;// CONCATENATED MODULE: ./src/Common/constants.js
 // NOTE(amine): commands are defined in manifest.json
@@ -333,6 +173,7 @@ const zindex = {
   modal: 6,
   tooltip: 7,
   cta: 8,
+  extensionJumper: 2147483647,
 };
 
 const font = {
@@ -435,199 +276,6 @@ const profileDefaultPicture =
 
 const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
 
-// EXTERNAL MODULE: ./node_modules/react/index.js
-var react = __webpack_require__(294);
-;// CONCATENATED MODULE: ./src/Utilities/upload.js
-
-
-
-const messages = {
-  saveLink: "SAVE_LINK",
-  uploadStatus: "UPLOAD_STATUS",
-};
-
-// NOTE(amine): commands are defined in manifest.json
-const upload_commands = {
-  directSave: "direct-save",
-};
-
-const uploadStates = {
-  start: "start",
-  done: "done",
-  duplicate: "duplicate",
-  failed: "failed",
-};
-
-/* -------------------------------------------------------------------------------------------------
- * Upload status
- * -----------------------------------------------------------------------------------------------*/
-
-/** ------------ Background ------------- */
-
-const sendUploadStatusToContent = ({ tab, status, data }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: messages.uploadStatus,
-    status,
-    data,
-  });
-};
-
-/** ------------ Content------------- */
-
-const forwardUploadStatusToApp = ({ status, data }) => {
-  window.postMessage({ type: messages.uploadStatus, data, status }, "*");
-};
-
-/** ------------ App ------------- */
-
-const useUploadStatus = ({
-  onStart,
-  onDone,
-  onSuccess,
-  onDuplicate,
-  onError,
-}) => {
-  React.useEffect(() => {
-    let timer;
-    let handleMessage = (event) => {
-      let { data, type, status } = event.data;
-      if (type !== messages.uploadStatus) return;
-
-      if (status === uploadStates.start) {
-        onStart();
-      } else if (status === uploadStates.done) {
-        onSuccess(data);
-      } else if (status === uploadStates.duplicate) {
-        onDuplicate(data);
-      } else if (status === uploadStates.failed) {
-        onError();
-      } else {
-        return;
-      }
-      timer = setTimeout(() => onDone(), 10000);
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => (
-      window.removeEventListener("message", handleMessage), clearTimeout(timer)
-    );
-  }, []);
-};
-
-/* -------------------------------------------------------------------------------------------------
- * Upload requests
- * -----------------------------------------------------------------------------------------------*/
-
-/** ------------ App ------------- */
-
-const sendSaveLinkRequest = () => {
-  window.postMessage({ type: messages.saveLink }, "*");
-};
-
-/** ------------ Content------------- */
-
-const forwardSaveLinkRequestsToBackground = ({ url }) => {
-  chrome.runtime.sendMessage({ type: messages.saveLink, url });
-};
-
-/** ------------ Background ------------- */
-
-const handleSaveLinkRequests = async ({
-  apiKey,
-  tab,
-  url,
-  background,
-}) => {
-  let response;
-  try {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.start,
-    });
-
-    response = await fetch(`${uri.hostname}/api/v3/create-link`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: apiKey,
-      },
-      body: JSON.stringify({ data: { url: url } }),
-    });
-  } catch (e) {
-    console.log(e);
-  }
-
-  const json = await response.json();
-  console.log("upload data: ", json);
-
-  if (json.decorator === "LINK_DUPLICATE") {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.duplicate,
-      data: json.data[0],
-    });
-    return;
-  }
-
-  if (json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.failed,
-    });
-    return;
-  }
-
-  if (!background) {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.done,
-      data: json.data[0],
-    });
-  } else {
-    //If background upload, dont send a message to a tab
-    return;
-  }
-
-  return json.data[0];
-};
-
-// const handleSaveImage = async (props) => {
-//   const url = `${Constants.uri.upload}/api/v3/public/upload-by-url`;
-
-//   let response;
-//   try {
-//     response = await fetch(url, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: apiKey,
-//       },
-//       body: JSON.stringify({
-//         data: {
-//           url: props.url,
-//           filename: props.url,
-//         },
-//       }),
-//     });
-//   } catch (e) {
-//     console.log(e);
-//   }
-
-//   const json = await response.json();
-//   return json;
-// };
-
-;// CONCATENATED MODULE: ./src/Core/history/index.js
-const history_messages = {
-  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
-  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
-
-  relatedLinksRequest: "RELATED_LINKS_REQUEST",
-  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
-
-  windowsUpdate: "WINDOWS_UPDATE",
-};
-
 ;// CONCATENATED MODULE: ./src/Common/actions.js
 
 
@@ -660,7 +308,76 @@ const hydrateAuthenticatedUser = async () => {
   });
 };
 
-;// CONCATENATED MODULE: ./src/Core/auth/background.js
+const createLink = async (data, options) => {
+  return await returnJSON(`${uri.hostname}/api/data/create-link`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+    ...options,
+  });
+};
+
+;// CONCATENATED MODULE: ./src/Core/views/index.js
+const views_messages = {
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
+  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
+};
+
+const viewsType = {
+  currentWindow: "currentWindow",
+  allOpen: "allOpen",
+  recent: "recent",
+  savedFiles: "savedFiles",
+  relatedLinks: "relatedLinks",
+};
+
+const initialView = viewsType.currentWindow;
+
+;// CONCATENATED MODULE: ./src/Core/viewer/index.js
+
+
+const viewer_messages = {
+  loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
+  loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
+
+  saveLink: "SAVE_LINK",
+  savingStatus: "SAVING_STATUS",
+};
+
+// NOTE(amine): commands are defined in manifest.json
+const viewer_commands = {
+  directSave: "direct-save",
+};
+
+const savingStates = {
+  start: "start",
+  done: "done",
+  duplicate: "duplicate",
+  failed: "failed",
+};
+
+const savingSources = {
+  command: "command",
+  app: "app",
+};
+
+const viewerInitialState = {
+  isAuthenticated: false,
+  shouldSync: false,
+  initialView: initialView,
+  windows: {
+    data: { currentWindow: [], allOpen: [] },
+  },
+  // NOTE(amine):if there is one tab is open,populate the recent view
+};
+
+;// CONCATENATED MODULE: ./src/Core/viewer/background.js
+
+
+
+
 
 
 
@@ -679,7 +396,7 @@ const getRootDomain = (url) => {
 
 const VIEWER_INITIAL_STATE = {
   objects: [],
-  // NOTE(amine): { key: URL, value: id }
+  // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
   savedLinks: {},
   lastFetched: null,
   isAuthenticated: false,
@@ -700,6 +417,11 @@ class Viewer {
     });
   }
 
+  async _getObjectIdFromUrl(url) {
+    const viewer = await this.get();
+    return viewer.savedLinks[url];
+  }
+
   _serialize(viewer) {
     const serializedViewer = { objects: [], savedLinks: {} };
     serializedViewer.objects = viewer.library.map((object) => {
@@ -707,7 +429,6 @@ class Viewer {
         serializedViewer.savedLinks[object.url] = object.id;
 
         return {
-          id: object.id,
           title: object.linkName,
           favicon: object.linkFavicon,
           url: object.url,
@@ -716,11 +437,13 @@ class Viewer {
         };
       }
 
+      const fileUrl = `${gateways.ipfs}/${object.cid}`;
+      serializedViewer.savedLinks[fileUrl] = object.id;
+
       return {
-        id: object.id,
         title: object.name,
         rootDomain: uri.domain,
-        url: `${gateways.ipfs}/${object.cid}`,
+        url: fileUrl,
         isSaved: true,
       };
     });
@@ -817,11 +540,81 @@ class Viewer {
 
     this.reset(VIEWER_INITIAL_STATE);
   }
+
+  /**
+   * @description save a link and send saving status to new tab and the jumper
+   *
+   * @param {Object} Arguments
+   * @param {string} Arguments.url - the url to save
+   * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
+   * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
+   */
+
+  async saveLink({ url, title, favicon, tab, source = savingSources.app }) {
+    const viewer = await this.get();
+    if (viewer.savedLinks[url] === savingStates.start) return;
+
+    const sendStatusUpdate = (status) => {
+      chrome.tabs.sendMessage(parseInt(tab.id), {
+        type: viewer_messages.savingStatus,
+        data: { savingStatus: status, url, title, favicon, source },
+      });
+    };
+
+    sendStatusUpdate(savingStates.start);
+
+    if (!(url in viewer.savedLinks)) {
+      this._set({
+        ...viewer,
+        savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
+        objects: [
+          {
+            title,
+            url,
+            favicon,
+            rootDomain: getRootDomain(url),
+            isSaved: true,
+          },
+          ...viewer.objects,
+        ],
+      });
+    }
+
+    const response = await createLink({ url });
+
+    if (!response || response.error) {
+      sendStatusUpdate(savingStates.failed);
+      const viewer = await this.get();
+      const savedLinks = { ...viewer.savedLinks };
+      delete savedLinks[url];
+      const objects = objects.filter((object) => object.url !== url);
+
+      this._set({ ...viewer, savedLinks, objects });
+      return;
+    }
+
+    sendStatusUpdate(savingStates.done);
+    this.sync();
+  }
 }
 
 const viewer = new Viewer();
 
 /** ------------ Event listeners ------------- */
+
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command == viewer_commands.directSave) {
+    if (await viewer.checkIfAuthenticated()) {
+      viewer.saveLink({
+        url: tab.url,
+        title: tab.title,
+        favicon: tab.favIconUrl,
+        tab,
+        source: savingSources.command,
+      });
+    }
+  }
+});
 
 chrome.runtime.onInstalled.addListener(() => {
   viewer.lazySync();
@@ -837,6 +630,64 @@ chrome.cookies.onChanged.addListener((e) => {
 
   if (!e.removed && e.cause === "explicit") {
     viewer.sync();
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === viewer_messages.saveLink) {
+    viewer
+      .saveLink({
+        url: request.url,
+        title: request.title,
+        favicon: request.favicon,
+        tab: sender.tab,
+        source: request.source,
+      })
+      .then(sendResponse);
+  }
+
+  if (request.type === viewer_messages.loadViewerDataRequest) {
+    const getInitialData = async () => {
+      const isAuthenticated = await viewer.checkIfAuthenticated();
+      const shouldSync = await viewer.checkIfShouldSync();
+
+      if (shouldSync) viewer.lazySync();
+
+      if (!isAuthenticated) {
+        return { isAuthenticated };
+      }
+
+      const currentWindow = await Windows.getAllTabsInWindow(
+        sender.tab.windowId
+      );
+      const allOpen = await Windows.getAllTabs();
+      const totalWindows = new Set(allOpen.map((tab) => tab.windowId)).size;
+
+      const response = {
+        ...viewerInitialState,
+        isAuthenticated,
+        shouldSync,
+        windows: {
+          data: { currentWindow, allOpen },
+          params: {
+            windowId: sender.tab.windowId,
+            totalWindows,
+            activeTabId: sender.tab.id,
+          },
+        },
+      };
+
+      // NOTE(amine): if there is only one tab open, preload recent view
+      if (response.windows.data.allOpen.length === 1) {
+        response.recent = await browserHistory.getChunk();
+        response.initialView = viewsType.recent;
+      }
+
+      return response;
+    };
+
+    getInitialData().then(sendResponse);
+    return true;
   }
 });
 
@@ -2619,7 +2470,7 @@ Fuse.config = Config;
 
 
 
-;// CONCATENATED MODULE: ./src/Core/history/background.js
+;// CONCATENATED MODULE: ./src/Core/browser/background.js
 
 
 
@@ -2918,7 +2769,6 @@ class BrowserHistory {
       );
     }
 
-    console.log({ historyChunk });
     return {
       history: historyChunk,
       canFetchMore: startIndex + historyChunk.length !== history.length,
@@ -2997,9 +2847,12 @@ chrome.tabs.onRemoved.addListener(async () => {
   const activeTab = await Tabs.getActive();
 
   if (activeTab) {
+    const openTabs = await Windows.getAllTabs();
+    const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
+
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
-      type: history_messages.windowsUpdate,
-      data: { openTabs: await Windows.getAll() },
+      type: messages.windowsUpdate,
+      data: { openTabs, totalWindows, activeTabId: activeTab.id },
     });
   }
 });
@@ -3009,8 +2862,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
-        type: history_messages.windowsUpdate,
-        data: { openTabs: await Windows.getAll() },
+        type: messages.windowsUpdate,
+        data: { openTabs: await Windows.getAllTabs() },
       });
     }
 
@@ -3028,7 +2881,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === history_messages.historyChunkRequest) {
+  if (request.type === messages.historyChunkRequest) {
     browserHistory
       .getChunk(
         request.startIndex,
@@ -3039,7 +2892,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
-  if (request.type === history_messages.relatedLinksRequest) {
+  if (request.type === messages.relatedLinksRequest) {
     console.log(`RELATED LINKS FOR ${request.url}`);
     browserHistory.getRelatedLinks(request.url).then((result) => {
       sendResponse({
@@ -3057,9 +2910,14 @@ const navigation_messages = {
   closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
 
   openURLsRequest: "OPEN_URLS_REQUEST",
+
+  createGroup: "BROWSER_CREATE_GROUP",
+
+  closeTab: "CLOSE_TAB",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/navigation/background.js
+
 
 
 
@@ -3080,15 +2938,45 @@ const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   }
 };
 
+const createGroupFromUrls = async ({ urls, windowId, title }) => {
+  const createdTabs = await Promise.all(
+    urls.map(async (url) =>
+      chrome.tabs.create({ url, windowId, active: false })
+    )
+  );
+
+  const createdGroupId = await chrome.tabs.group({
+    createProperties: { windowId },
+    tabIds: createdTabs.map((tab) => tab.id),
+  });
+
+  chrome.tabGroups.update(createdGroupId, { title, collapsed: true });
+};
+
 /** ------------ Event Listeners ------------- */
 
-chrome.runtime.onMessage.addListener(async (request, sender) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.type === navigation_messages.closeTab) {
+    chrome.tabs.remove(request.tabId);
+    return true;
+  }
+
   if (request.type === navigation_messages.openURLsRequest) {
     await handleOpenUrlsRequests({
       urls: request.urls,
       query: request.query,
       sender,
     });
+    return true;
+  }
+
+  if (request.type === navigation_messages.createGroup) {
+    console.log(`Create tabs group with title: ${request.title}`);
+    createGroupFromUrls({
+      urls: request.urls,
+      windowId: sender.tab.windowId,
+      title: request.title,
+    }).then(sendResponse);
     return true;
   }
 });
@@ -3113,25 +3001,6 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Core/views/index.js
-const views_messages = {
-  searchQueryRequest: "SEARCH_QUERY_REQUEST",
-  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
-
-  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
-  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
-};
-
-const viewsType = {
-  currentWindow: "currentWindow",
-  allOpen: "allOpen",
-  recent: "recent",
-  savedFiles: "savedFiles",
-  relatedLinks: "relatedLinks",
-};
-
-const initialView = viewsType.currentWindow;
-
 ;// CONCATENATED MODULE: ./src/Core/views/background.js
 
 
@@ -3145,11 +3014,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.viewType === viewsType.savedFiles) {
       viewer.get().then((res) =>
         sendResponse({
-          result: {
-            objects: res.objects,
-            savedLinks: res.savedLinks,
-            isAuthenticated: res.isAuthenticated,
-          },
+          result: res.objects,
           viewType: request.viewType,
         })
       );
@@ -3205,306 +3070,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Core/initialLoad/index.js
-
-
-const initialLoad_messages = {
-  preloadInitialDataRequest: "PRELOAD_INITIAL_DATA_REQUEST",
-  preloadInitialDataResponse: "PRELOAD_INITIAL_DATA_RESPONSE",
-};
-
-const appInitialState = {
-  isAuthenticated: false,
-  shouldSync: false,
-  initialView: initialView,
-  windows: {
-    data: { currentWindow: [], allOpen: [] },
-  },
-  // NOTE(amine):if there is one tab is open,populate the recent view
-};
-
-;// CONCATENATED MODULE: ./src/Core/initialLoad/background.js
-
-
-
-
-
-/** ------------ Event listeners ------------- */
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === initialLoad_messages.preloadInitialDataRequest) {
-    const getInitialData = async () => {
-      const isAuthenticated = await viewer.checkIfAuthenticated();
-      const shouldSync = await viewer.checkIfShouldSync();
-
-      if (shouldSync) viewer.lazySync();
-
-      if (!isAuthenticated) {
-        return { isAuthenticated };
-      }
-
-      const response = {
-        ...appInitialState,
-        isAuthenticated,
-        shouldSync,
-        windows: {
-          data: {
-            currentWindow: await Windows.getAllTabsInWindow(
-              sender.tab.windowId
-            ),
-            allOpen: await Windows.getAllTabs(),
-          },
-          params: { windowId: sender.tab.windowId },
-        },
-      };
-
-      // NOTE(amine): if there is only one tab open, preload recent view
-      if (response.windows.data.allOpen.length === 1) {
-        response.recent = await browserHistory.getChunk();
-        response.initialView = viewsType.recent;
-      }
-
-      return response;
-    };
-
-    getInitialData().then(sendResponse);
-    return true;
-  }
-});
-
 ;// CONCATENATED MODULE: ./src/background.js
 
 
 
 
 
-
-
-
-const getSessionID = async () => {
-  return new Promise((resolve, reject) => {
-    chrome.cookies.get(
-      { url: uri.hostname, name: "WEB_SERVICE_SESSION_KEY" },
-      (cookie) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(cookie);
-        }
-      }
-    );
-  });
-};
-
-const deleteSessionID = async () => {
-  return new Promise((resolve, reject) => {
-    chrome.cookies.remove(
-      { url: uri.hostname, name: "WEB_SERVICE_SESSION_KEY" },
-      (cookie) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(cookie);
-        }
-      }
-    );
-  });
-};
-
-const getApiKey = async () => {
-  let session;
-  let response;
-  try {
-    session = await getSessionID();
-    if (!session) {
-      return;
-    }
-    response = await fetch(
-      `${uri.hostname}/api/extension/get-api-keys`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          data: {
-            token: session.value,
-          },
-        }),
-      }
-    );
-  } catch (e) {
-    return;
-  }
-  const json = await response.json();
-  let apiKey = json.data[0].key;
-  return apiKey;
-};
-
-const getUser = async (props) => {
-  let response;
-  try {
-    response = await fetch(`${uri.hostname}/api/v3/get`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: props.key,
-      },
-    });
-  } catch (e) {
-    console.log(e);
-  }
-
-  if (!response) {
-    return;
-  }
-  const json = await response.json();
-  if (json.error) {
-    console.log(json);
-  }
-  return json.user;
-};
-
-const checkLink = async (props) => {
-  let response;
-  try {
-    response = await fetch(
-      `${uri.hostname}/api/extension/check-link`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: props.apiKey,
-        },
-        body: JSON.stringify({
-          data: {
-            url: props.tab,
-          },
-        }),
-      }
-    );
-  } catch (e) {
-    console.log(e);
-  }
-  const json = await response.json();
-  return json;
-};
-
-// const checkMatch = (list, url) => {
-//   const matches = RegExp(list.join("|")).exec(url);
-//   return matches;
-// };
-
-const checkLoginData = async (tab) => {
-  let session;
-  try {
-    session = await getSessionID();
-  } catch (e) {
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tab.id, { run: "AUTH_REQ" });
-    }, 1000);
-    return;
-  }
-  if (session === null) {
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tab.id, { run: "AUTH_REQ" });
-    }, 1000);
-    return;
-  } else {
-    let api = await getApiKey();
-    let user = await getUser({ key: api });
-    let check = await checkLink({ apiKey: api, tab: tab.url });
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tab.id, {
-        run: "CHECK_LINK",
-        data: check,
-        user: user,
-      });
-    }, 1000);
-    let data = { data: check, user: user, tab: tab.id };
-    return data;
-  }
-};
-
-const checkLoginSession = async (tab) => {
-  if (tab) {
-    chrome.cookies.onChanged.addListener(async (changeInfo) => {
-      if (
-        changeInfo.cookie.domain === uri.domain &&
-        changeInfo.removed === false
-      ) {
-        await checkLoginData(tab);
-        chrome.tabs.update(tab.id, { highlighted: true });
-        tab = null;
-        return;
-      }
-    });
-  }
-};
-
-chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == upload_commands.directSave) {
-    let session = await checkLoginData(tab);
-
-    if (session && session.user) {
-      // NOTE(amine): update auth code
-      //   Navigation.sendOpenAppRequestToContent({ tab: tab.id });
-      //   const apiKey = await getApiKey();
-      //   await UploadUtilities.handleSaveLinkRequests({
-      //     url: tab.url,
-      //     tab: tab.id,
-      //     apiKey,
-      //   });
-      // } else {
-      //   Navigation.sendNavigationRequestToContent({
-      //     tab: tab.id,
-      //     search: `?${Constants.routes.modal.key}=${Constants.routes.modal.values.home}`,
-      //   });
-      // }
-    }
-  }
-});
-
-chrome.runtime.onMessage.addListener(async (request, sender) => {
-  if (request.type === messages.saveLink) {
-    const apiKey = await getApiKey();
-    await handleSaveLinkRequests({
-      url: sender.url,
-      tab: sender.tab.id,
-      apiKey,
-    });
-  }
-
-  if (request.type === "GO_BACK") {
-    chrome.tabs.update(parseInt(request.id), { highlighted: true });
-    chrome.tabs.remove(parseInt(sender.tab.id));
-  }
-
-  if (request.type === "CHECK_LOGIN") {
-    await checkLoginSession(sender.tab);
-    return;
-  }
-
-  if (request.type === "SIGN_OUT") {
-    await deleteSessionID();
-    return;
-  }
-});
-
-// chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-//   if (info.status == "complete") {
-//     const blacklist = ["chrome://", "localhost:", "cec.cx"];
-//     const isBlacklisted = checkMatch(blacklist, tab.url);
-
-//     // const domains = ["slate.host", "slate-dev.onrender.com"];
-//     // const isSlate = checkMatch(domains, tab.url);
-
-//     if (isBlacklisted) {
-//       return;
-//     }
-//   }
-// });
-
-}();
 /******/ })()
 ;

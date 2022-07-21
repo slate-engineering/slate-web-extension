@@ -27,7 +27,7 @@
   "chrome_url_overrides":{
     "newtab": "newTab.html"
   },
-  "permissions": ["tabs", "contextMenus", "cookies", "commands", "history", "storage", "unlimitedStorage" ],
+  "permissions": ["tabs", "contextMenus", "cookies", "commands", "history", "storage", "unlimitedStorage", "tabGroups" ],
   "host_permissions": [
     "https://slate.host/",
     "https://slate-dev.onrender.com/"
@@ -64,6 +64,7 @@
         "index.html",
         "/static/*",
         "/fonts/*",
+        "/images/*",
         "Inter-Regular.ttf",
         "../fonts/*"
       ],

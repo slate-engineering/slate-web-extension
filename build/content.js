@@ -1,177 +1,55 @@
 /******/ (function() { // webpackBootstrap
 /******/ 	"use strict";
-/******/ 	var __webpack_modules__ = ({
+var __webpack_exports__ = {};
 
-/***/ 418:
-/***/ (function(module) {
+;// CONCATENATED MODULE: ./src/Core/browser/index.js
+const messages = {
+  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
+  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
 
-/*
-object-assign
-(c) Sindre Sorhus
-@license MIT
-*/
+  relatedLinksRequest: "RELATED_LINKS_REQUEST",
+  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
 
-
-/* eslint-disable no-unused-vars */
-var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-var propIsEnumerable = Object.prototype.propertyIsEnumerable;
-
-function toObject(val) {
-	if (val === null || val === undefined) {
-		throw new TypeError('Object.assign cannot be called with null or undefined');
-	}
-
-	return Object(val);
-}
-
-function shouldUseNative() {
-	try {
-		if (!Object.assign) {
-			return false;
-		}
-
-		// Detect buggy property enumeration order in older V8 versions.
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-		var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
-		test1[5] = 'de';
-		if (Object.getOwnPropertyNames(test1)[0] === '5') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test2 = {};
-		for (var i = 0; i < 10; i++) {
-			test2['_' + String.fromCharCode(i)] = i;
-		}
-		var order2 = Object.getOwnPropertyNames(test2).map(function (n) {
-			return test2[n];
-		});
-		if (order2.join('') !== '0123456789') {
-			return false;
-		}
-
-		// https://bugs.chromium.org/p/v8/issues/detail?id=3056
-		var test3 = {};
-		'abcdefghijklmnopqrst'.split('').forEach(function (letter) {
-			test3[letter] = letter;
-		});
-		if (Object.keys(Object.assign({}, test3)).join('') !==
-				'abcdefghijklmnopqrst') {
-			return false;
-		}
-
-		return true;
-	} catch (err) {
-		// We don't expect any of the above to throw, but better to be safe.
-		return false;
-	}
-}
-
-module.exports = shouldUseNative() ? Object.assign : function (target, source) {
-	var from;
-	var to = toObject(target);
-	var symbols;
-
-	for (var s = 1; s < arguments.length; s++) {
-		from = Object(arguments[s]);
-
-		for (var key in from) {
-			if (hasOwnProperty.call(from, key)) {
-				to[key] = from[key];
-			}
-		}
-
-		if (getOwnPropertySymbols) {
-			symbols = getOwnPropertySymbols(from);
-			for (var i = 0; i < symbols.length; i++) {
-				if (propIsEnumerable.call(from, symbols[i])) {
-					to[symbols[i]] = from[symbols[i]];
-				}
-			}
-		}
-	}
-
-	return to;
+  windowsUpdate: "WINDOWS_UPDATE",
 };
 
-
-/***/ }),
-
-/***/ 408:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-var __webpack_unused_export__;
-/** @license React v17.0.2
- * react.production.min.js
- *
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-var l=__webpack_require__(418),n=60103,p=60106;__webpack_unused_export__=60107;__webpack_unused_export__=60108;__webpack_unused_export__=60114;var q=60109,r=60110,t=60112;__webpack_unused_export__=60113;var u=60115,v=60116;
-if("function"===typeof Symbol&&Symbol.for){var w=Symbol.for;n=w("react.element");p=w("react.portal");__webpack_unused_export__=w("react.fragment");__webpack_unused_export__=w("react.strict_mode");__webpack_unused_export__=w("react.profiler");q=w("react.provider");r=w("react.context");t=w("react.forward_ref");__webpack_unused_export__=w("react.suspense");u=w("react.memo");v=w("react.lazy")}var x="function"===typeof Symbol&&Symbol.iterator;
-function y(a){if(null===a||"object"!==typeof a)return null;a=x&&a[x]||a["@@iterator"];return"function"===typeof a?a:null}function z(a){for(var b="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=1;c<arguments.length;c++)b+="&args[]="+encodeURIComponent(arguments[c]);return"Minified React error #"+a+"; visit "+b+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings."}
-var A={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},B={};function C(a,b,c){this.props=a;this.context=b;this.refs=B;this.updater=c||A}C.prototype.isReactComponent={};C.prototype.setState=function(a,b){if("object"!==typeof a&&"function"!==typeof a&&null!=a)throw Error(z(85));this.updater.enqueueSetState(this,a,b,"setState")};C.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
-function D(){}D.prototype=C.prototype;function E(a,b,c){this.props=a;this.context=b;this.refs=B;this.updater=c||A}var F=E.prototype=new D;F.constructor=E;l(F,C.prototype);F.isPureReactComponent=!0;var G={current:null},H=Object.prototype.hasOwnProperty,I={key:!0,ref:!0,__self:!0,__source:!0};
-function J(a,b,c){var e,d={},k=null,h=null;if(null!=b)for(e in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(k=""+b.key),b)H.call(b,e)&&!I.hasOwnProperty(e)&&(d[e]=b[e]);var g=arguments.length-2;if(1===g)d.children=c;else if(1<g){for(var f=Array(g),m=0;m<g;m++)f[m]=arguments[m+2];d.children=f}if(a&&a.defaultProps)for(e in g=a.defaultProps,g)void 0===d[e]&&(d[e]=g[e]);return{$$typeof:n,type:a,key:k,ref:h,props:d,_owner:G.current}}
-function K(a,b){return{$$typeof:n,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}}function L(a){return"object"===typeof a&&null!==a&&a.$$typeof===n}function escape(a){var b={"=":"=0",":":"=2"};return"$"+a.replace(/[=:]/g,function(a){return b[a]})}var M=/\/+/g;function N(a,b){return"object"===typeof a&&null!==a&&null!=a.key?escape(""+a.key):b.toString(36)}
-function O(a,b,c,e,d){var k=typeof a;if("undefined"===k||"boolean"===k)a=null;var h=!1;if(null===a)h=!0;else switch(k){case "string":case "number":h=!0;break;case "object":switch(a.$$typeof){case n:case p:h=!0}}if(h)return h=a,d=d(h),a=""===e?"."+N(h,0):e,Array.isArray(d)?(c="",null!=a&&(c=a.replace(M,"$&/")+"/"),O(d,b,c,"",function(a){return a})):null!=d&&(L(d)&&(d=K(d,c+(!d.key||h&&h.key===d.key?"":(""+d.key).replace(M,"$&/")+"/")+a)),b.push(d)),1;h=0;e=""===e?".":e+":";if(Array.isArray(a))for(var g=
-0;g<a.length;g++){k=a[g];var f=e+N(k,g);h+=O(k,b,c,f,d)}else if(f=y(a),"function"===typeof f)for(a=f.call(a),g=0;!(k=a.next()).done;)k=k.value,f=e+N(k,g++),h+=O(k,b,c,f,d);else if("object"===k)throw b=""+a,Error(z(31,"[object Object]"===b?"object with keys {"+Object.keys(a).join(", ")+"}":b));return h}function P(a,b,c){if(null==a)return a;var e=[],d=0;O(a,e,"","",function(a){return b.call(c,a,d++)});return e}
-function Q(a){if(-1===a._status){var b=a._result;b=b();a._status=0;a._result=b;b.then(function(b){0===a._status&&(b=b.default,a._status=1,a._result=b)},function(b){0===a._status&&(a._status=2,a._result=b)})}if(1===a._status)return a._result;throw a._result;}var R={current:null};function S(){var a=R.current;if(null===a)throw Error(z(321));return a}var T={ReactCurrentDispatcher:R,ReactCurrentBatchConfig:{transition:0},ReactCurrentOwner:G,IsSomeRendererActing:{current:!1},assign:l};
-__webpack_unused_export__={map:P,forEach:function(a,b,c){P(a,function(){b.apply(this,arguments)},c)},count:function(a){var b=0;P(a,function(){b++});return b},toArray:function(a){return P(a,function(a){return a})||[]},only:function(a){if(!L(a))throw Error(z(143));return a}};__webpack_unused_export__=C;__webpack_unused_export__=E;__webpack_unused_export__=T;
-__webpack_unused_export__=function(a,b,c){if(null===a||void 0===a)throw Error(z(267,a));var e=l({},a.props),d=a.key,k=a.ref,h=a._owner;if(null!=b){void 0!==b.ref&&(k=b.ref,h=G.current);void 0!==b.key&&(d=""+b.key);if(a.type&&a.type.defaultProps)var g=a.type.defaultProps;for(f in b)H.call(b,f)&&!I.hasOwnProperty(f)&&(e[f]=void 0===b[f]&&void 0!==g?g[f]:b[f])}var f=arguments.length-2;if(1===f)e.children=c;else if(1<f){g=Array(f);for(var m=0;m<f;m++)g[m]=arguments[m+2];e.children=g}return{$$typeof:n,type:a.type,
-key:d,ref:k,props:e,_owner:h}};__webpack_unused_export__=function(a,b){void 0===b&&(b=null);a={$$typeof:r,_calculateChangedBits:b,_currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.Provider={$$typeof:q,_context:a};return a.Consumer=a};__webpack_unused_export__=J;__webpack_unused_export__=function(a){var b=J.bind(null,a);b.type=a;return b};__webpack_unused_export__=function(){return{current:null}};__webpack_unused_export__=function(a){return{$$typeof:t,render:a}};__webpack_unused_export__=L;
-__webpack_unused_export__=function(a){return{$$typeof:v,_payload:{_status:-1,_result:a},_init:Q}};__webpack_unused_export__=function(a,b){return{$$typeof:u,type:a,compare:void 0===b?null:b}};__webpack_unused_export__=function(a,b){return S().useCallback(a,b)};__webpack_unused_export__=function(a,b){return S().useContext(a,b)};__webpack_unused_export__=function(){};__webpack_unused_export__=function(a,b){return S().useEffect(a,b)};__webpack_unused_export__=function(a,b,c){return S().useImperativeHandle(a,b,c)};
-__webpack_unused_export__=function(a,b){return S().useLayoutEffect(a,b)};__webpack_unused_export__=function(a,b){return S().useMemo(a,b)};__webpack_unused_export__=function(a,b,c){return S().useReducer(a,b,c)};__webpack_unused_export__=function(a){return S().useRef(a)};__webpack_unused_export__=function(a){return S().useState(a)};__webpack_unused_export__="17.0.2";
+;// CONCATENATED MODULE: ./src/Core/browser/content.js
 
 
-/***/ }),
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === messages.windowsUpdate) {
+    window.postMessage(
+      { type: messages.windowsUpdate, data: request.data },
+      "*"
+    );
+  }
+});
 
-/***/ 294:
-/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+window.addEventListener("message", async function (event) {
+  if (event.data.type === messages.historyChunkRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.historyChunkRequest, startIndex: event.data.startIndex },
+      (response) =>
+        window.postMessage(
+          { type: messages.historyChunkResponse, data: response },
+          "*"
+        )
+    );
+    return;
+  }
 
-
-
-if (true) {
-  /* unused reexport */ __webpack_require__(408);
-} else {}
-
-
-/***/ })
-
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-!function() {
+  if (event.data.type === messages.relatedLinksRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.relatedLinksRequest, url: event.data.url },
+      (response) =>
+        window.postMessage(
+          { type: messages.relatedLinksResponse, data: response },
+          "*"
+        )
+    );
+    return;
+  }
+});
 
 ;// CONCATENATED MODULE: ./src/Common/constants.js
 // NOTE(amine): commands are defined in manifest.json
@@ -333,6 +211,7 @@ const zindex = {
   modal: 6,
   tooltip: 7,
   cta: 8,
+  extensionJumper: 2147483647,
 };
 
 const font = {
@@ -435,241 +314,16 @@ const profileDefaultPicture =
 
 const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
 
-// EXTERNAL MODULE: ./node_modules/react/index.js
-var react = __webpack_require__(294);
-;// CONCATENATED MODULE: ./src/Utilities/upload.js
-
-
-
-const messages = {
-  saveLink: "SAVE_LINK",
-  uploadStatus: "UPLOAD_STATUS",
-};
-
-// NOTE(amine): commands are defined in manifest.json
-const upload_commands = {
-  directSave: "direct-save",
-};
-
-const uploadStates = {
-  start: "start",
-  done: "done",
-  duplicate: "duplicate",
-  failed: "failed",
-};
-
-/* -------------------------------------------------------------------------------------------------
- * Upload status
- * -----------------------------------------------------------------------------------------------*/
-
-/** ------------ Background ------------- */
-
-const sendUploadStatusToContent = ({ tab, status, data }) => {
-  chrome.tabs.sendMessage(parseInt(tab), {
-    type: messages.uploadStatus,
-    status,
-    data,
-  });
-};
-
-/** ------------ Content------------- */
-
-const forwardUploadStatusToApp = ({ status, data }) => {
-  window.postMessage({ type: messages.uploadStatus, data, status }, "*");
-};
-
-/** ------------ App ------------- */
-
-const useUploadStatus = ({
-  onStart,
-  onDone,
-  onSuccess,
-  onDuplicate,
-  onError,
-}) => {
-  React.useEffect(() => {
-    let timer;
-    let handleMessage = (event) => {
-      let { data, type, status } = event.data;
-      if (type !== messages.uploadStatus) return;
-
-      if (status === uploadStates.start) {
-        onStart();
-      } else if (status === uploadStates.done) {
-        onSuccess(data);
-      } else if (status === uploadStates.duplicate) {
-        onDuplicate(data);
-      } else if (status === uploadStates.failed) {
-        onError();
-      } else {
-        return;
-      }
-      timer = setTimeout(() => onDone(), 10000);
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => (
-      window.removeEventListener("message", handleMessage), clearTimeout(timer)
-    );
-  }, []);
-};
-
-/* -------------------------------------------------------------------------------------------------
- * Upload requests
- * -----------------------------------------------------------------------------------------------*/
-
-/** ------------ App ------------- */
-
-const sendSaveLinkRequest = () => {
-  window.postMessage({ type: messages.saveLink }, "*");
-};
-
-/** ------------ Content------------- */
-
-const forwardSaveLinkRequestsToBackground = ({ url }) => {
-  chrome.runtime.sendMessage({ type: messages.saveLink, url });
-};
-
-/** ------------ Background ------------- */
-
-const handleSaveLinkRequests = async ({
-  apiKey,
-  tab,
-  url,
-  background,
-}) => {
-  let response;
-  try {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.start,
-    });
-
-    response = await fetch(`${Constants.uri.hostname}/api/v3/create-link`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: apiKey,
-      },
-      body: JSON.stringify({ data: { url: url } }),
-    });
-  } catch (e) {
-    console.log(e);
-  }
-
-  const json = await response.json();
-  console.log("upload data: ", json);
-
-  if (json.decorator === "LINK_DUPLICATE") {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.duplicate,
-      data: json.data[0],
-    });
-    return;
-  }
-
-  if (json.decorator === "SERVER_CREATE_LINK_FAILED" || json.error === true) {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.failed,
-    });
-    return;
-  }
-
-  if (!background) {
-    sendUploadStatusToContent({
-      tab: parseInt(tab),
-      status: uploadStates.done,
-      data: json.data[0],
-    });
-  } else {
-    //If background upload, dont send a message to a tab
-    return;
-  }
-
-  return json.data[0];
-};
-
-// const handleSaveImage = async (props) => {
-//   const url = `${Constants.uri.upload}/api/v3/public/upload-by-url`;
-
-//   let response;
-//   try {
-//     response = await fetch(url, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: apiKey,
-//       },
-//       body: JSON.stringify({
-//         data: {
-//           url: props.url,
-//           filename: props.url,
-//         },
-//       }),
-//     });
-//   } catch (e) {
-//     console.log(e);
-//   }
-
-//   const json = await response.json();
-//   return json;
-// };
-
-;// CONCATENATED MODULE: ./src/Core/history/index.js
-const history_messages = {
-  historyChunkRequest: "HISTORY_CHUNK_REQUEST",
-  historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
-
-  relatedLinksRequest: "RELATED_LINKS_REQUEST",
-  relatedLinksResponse: "RELATED_LINKS_RESPONSE",
-
-  windowsUpdate: "WINDOWS_UPDATE",
-};
-
-;// CONCATENATED MODULE: ./src/Core/history/content.js
-
-
-chrome.runtime.onMessage.addListener(function (request) {
-  if (request.type === history_messages.windowsUpdate) {
-    window.postMessage(
-      { type: history_messages.windowsUpdate, data: request.data },
-      "*"
-    );
-  }
-});
-
-window.addEventListener("message", async function (event) {
-  if (event.data.type === history_messages.historyChunkRequest) {
-    chrome.runtime.sendMessage(
-      { type: history_messages.historyChunkRequest, startIndex: event.data.startIndex },
-      (response) =>
-        window.postMessage(
-          { type: history_messages.historyChunkResponse, data: response },
-          "*"
-        )
-    );
-  }
-
-  if (event.data.type === history_messages.relatedLinksRequest) {
-    chrome.runtime.sendMessage(
-      { type: history_messages.relatedLinksRequest, url: event.data.url },
-      (response) =>
-        window.postMessage(
-          { type: history_messages.relatedLinksResponse, data: response },
-          "*"
-        )
-    );
-  }
-});
-
 ;// CONCATENATED MODULE: ./src/Core/navigation/index.js
 const navigation_messages = {
   openExtensionJumperRequest: "OPEN_EXTENSION_JUMPER_REQUEST",
   closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
 
   openURLsRequest: "OPEN_URLS_REQUEST",
+
+  createGroup: "BROWSER_CREATE_GROUP",
+
+  closeTab: "CLOSE_TAB",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/navigation/content.js
@@ -698,7 +352,7 @@ const createExtensionJumperWrapper = () => {
 
   const wrapper = document.createElement("div");
   wrapper.setAttribute("id", jumperSlateExtensionWrapper);
-  wrapper.setAttribute("data-url", chrome.runtime.getURL("/"));
+  wrapper.setAttribute("data-url", chrome.runtime.getURL("/").slice(0, -1));
   document.body.appendChild(wrapper);
 };
 
@@ -740,9 +394,28 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === navigation_messages.closeTab) {
+    chrome.runtime.sendMessage({
+      type: navigation_messages.closeTab,
+      tabId: event.data.tabId,
+    });
+    return;
+  }
+
   if (event.data.type === navigation_messages.closeExtensionJumperRequest) {
     if (activeElement) activeElement.focus();
     closeApp();
+    return;
+  }
+
+  if (event.data.type === navigation_messages.createGroup) {
+    chrome.runtime.sendMessage({
+      type: navigation_messages.createGroup,
+      urls: event.data.urls,
+      windowId: event.data.windowId,
+      title: event.data.title,
+    });
+    return;
   }
 
   if (event.data.type === navigation_messages.openURLsRequest) {
@@ -809,15 +482,35 @@ window.addEventListener("message", async function (event) {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Core/initialLoad/index.js
+;// CONCATENATED MODULE: ./src/Core/viewer/index.js
 
 
-const initialLoad_messages = {
-  preloadInitialDataRequest: "PRELOAD_INITIAL_DATA_REQUEST",
-  preloadInitialDataResponse: "PRELOAD_INITIAL_DATA_RESPONSE",
+const viewer_messages = {
+  loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
+  loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
+
+  saveLink: "SAVE_LINK",
+  savingStatus: "SAVING_STATUS",
 };
 
-const appInitialState = {
+// NOTE(amine): commands are defined in manifest.json
+const viewer_commands = {
+  directSave: "direct-save",
+};
+
+const savingStates = {
+  start: "start",
+  done: "done",
+  duplicate: "duplicate",
+  failed: "failed",
+};
+
+const savingSources = {
+  command: "command",
+  app: "app",
+};
+
+const viewerInitialState = {
   isAuthenticated: false,
   shouldSync: false,
   initialView: initialView,
@@ -827,20 +520,310 @@ const appInitialState = {
   // NOTE(amine):if there is one tab is open,populate the recent view
 };
 
-;// CONCATENATED MODULE: ./src/Core/initialLoad/content.js
+;// CONCATENATED MODULE: ./src/Core/viewer/content.js
 
+
+
+
+/* -------------------------------------------------------------------------------------------------
+ * Saving popup
+ * -----------------------------------------------------------------------------------------------*/
+
+const SAVING_POPUP_ID = "slate-extension-saving-popup";
+const SAVING_POPUP_REMOVAL_TIMEOUT = 2500;
+
+const STYLES_SAVING_POPUP_POSITION_FIXED = {
+  position: "fixed",
+  top: "16px",
+  right: "23px",
+  zIndex: zindex.extensionJumper,
+};
+
+const STYLES_SAVING_POPUP_H5 = {
+  boxSizing: "border-box",
+  padding: 0,
+  margin: 0,
+  overflowWrap: "break-word",
+  textAlign: "left",
+  fontWeight: "normal",
+  fontFamily: font.medium,
+  fontSize: "14px",
+  lineHeight: "20px",
+  letterSpacing: "-0.006px",
+};
+
+const STYLES_SAVING_POPUP_WRAPPER = {
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  padding: "8px 12px",
+  borderRadius: "16px",
+  backgroundColor: semantic.bgLight,
+  borderColor: semantic.borderGrayLight4,
+  boxShadow: shadow.jumperLight,
+};
+
+const STYLES_SAVING_POPUP_HEADING = {
+  ...STYLES_SAVING_POPUP_H5,
+  marginLeft: "8px",
+  color: semantic.textBlack,
+};
+
+const STYLES_SAVING_POPUP_LINK = {
+  ...STYLES_SAVING_POPUP_H5,
+  width: "131px",
+  maxWidth: "131px",
+  marginLeft: "4px",
+  color: semantic.textGray,
+
+  overflow: "hidden",
+  wordBreak: "break-all",
+  textOverflow: "ellipsis",
+  WebkitLineClamp: 1,
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+};
+
+const SavingPopupSuccessIcon = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8Z" fill="#34D159"/>
+<path d="M12 5L6.5 10.5L4 8" stroke="white" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+
+const SavingPopupFailureIcon = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M9.99935 18.3334C14.6017 18.3334 18.3327 14.6024 18.3327 10C18.3327 5.39765 14.6017 1.66669 9.99935 1.66669C5.39698 1.66669 1.66602 5.39765 1.66602 10C1.66602 14.6024 5.39698 18.3334 9.99935 18.3334Z" fill="#FFD5D5"/>
+  <path d="M10 6.66669V10" stroke="#FF4530" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 13.3333H10.0083" stroke="#FF4530" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+const SavingButtonDismissIcon = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 4L4 12" stroke="#48494A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4 4L12 12" stroke="#48494A" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+
+const loadFont = async () => {
+  const fontUrl = chrome.runtime.getURL("/fonts/inter-medium.ttf");
+  const slateMediumFont = new FontFace("inter-medium", `url(${fontUrl})`);
+  await slateMediumFont.load();
+};
+
+const createElement = ({ tag, innerHTML, attrs, styles }) => {
+  const appendStyles = (element, styles) => {
+    Object.keys(styles).forEach(
+      (property) => (element.style[property] = styles[property])
+    );
+  };
+  const appendAttrs = (element, attrs) => {
+    Object.keys(attrs).forEach((attr) => {
+      element.setAttribute(attr, attrs[attr]);
+    });
+  };
+
+  const element = document.createElement(tag);
+  if (styles) appendStyles(element, styles);
+  if (attrs) appendAttrs(element, attrs);
+  if (innerHTML) element.innerHTML = innerHTML;
+
+  return element;
+};
+
+const createSavingPopupSuccess = async () => {
+  const wrapper = createElement({
+    tag: "div",
+    innerHTML: SavingPopupSuccessIcon,
+    styles: {
+      ...STYLES_SAVING_POPUP_POSITION_FIXED,
+      ...STYLES_SAVING_POPUP_WRAPPER,
+    },
+    attrs: { id: SAVING_POPUP_ID },
+  });
+
+  const heading = createElement({
+    tag: "p",
+    innerHTML: "Saved!",
+    styles: STYLES_SAVING_POPUP_HEADING,
+  });
+  wrapper.appendChild(heading);
+
+  const link = createElement({
+    tag: "p",
+    innerHTML: document.location.host + document.location.pathname,
+    styles: STYLES_SAVING_POPUP_LINK,
+  });
+  wrapper.appendChild(link);
+
+  await loadFont();
+  document.body.appendChild(wrapper);
+};
+
+const STYLES_SAVING_POPUP_BUTTON_RESET = {
+  margin: 0,
+  backgroundColor: "unset",
+  border: "none",
+  cursor: "pointer",
+  outline: 0,
+};
+
+const STYLES_SAVING_POPUP_RETRY_BUTTON = {
+  ...STYLES_SAVING_POPUP_BUTTON_RESET,
+  boxSizing: "border-box",
+  overflowWrap: "break-word",
+  textAlign: "left",
+  fontFamily: font.medium,
+  fontSize: "0.875rem",
+  lineFeight: "20px",
+  letterSpacing: "-0.006px",
+
+  borderRadius: "8px",
+  backgroundColor: semantic.bgGrayLight,
+  padding: "1px 12px 3px",
+};
+
+const STYLES_SAVING_POPUP_DISMISS_BUTTON = {
+  ...STYLES_SAVING_POPUP_BUTTON_RESET,
+  marginRight: "8px",
+  padding: "4px",
+  borderRadius: "50%",
+  border: "1px solid",
+  backgroundColor: semantic.bgLight,
+  borderColor: semantic.borderGrayLight4,
+  boxShadow: shadow.jumperLight,
+};
+
+const createSavingPopupFailure = ({ onDismiss, onRetry }) => {
+  const wrapper = createElement({
+    tag: "div",
+    styles: {
+      ...STYLES_SAVING_POPUP_POSITION_FIXED,
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    attrs: { id: SAVING_POPUP_ID },
+  });
+
+  const dismissButton = createElement({
+    tag: "button",
+    innerHTML: SavingButtonDismissIcon,
+    styles: STYLES_SAVING_POPUP_DISMISS_BUTTON,
+  });
+  dismissButton.addEventListener("click", onDismiss);
+  wrapper.appendChild(dismissButton);
+
+  const alert = createElement({
+    tag: "div",
+    innerHTML: SavingPopupFailureIcon,
+    styles: STYLES_SAVING_POPUP_WRAPPER,
+  });
+  wrapper.appendChild(alert);
+
+  const heading = createElement({
+    tag: "p",
+    innerHTML: "Failed to save",
+    styles: STYLES_SAVING_POPUP_HEADING,
+  });
+  alert.appendChild(heading);
+
+  const link = createElement({
+    tag: "p",
+    innerHTML: document.location.host + document.location.pathname,
+    styles: { ...STYLES_SAVING_POPUP_LINK, maxWidth: 101 },
+  });
+  alert.appendChild(link);
+
+  const retryButton = createElement({
+    tag: "button",
+    innerHTML: "Retry",
+    styles: STYLES_SAVING_POPUP_RETRY_BUTTON,
+  });
+  retryButton.addEventListener("click", onRetry);
+
+  alert.appendChild(retryButton);
+
+  document.body.appendChild(wrapper);
+};
+
+const removeSavingPopup = () => {
+  const popup = document.getElementById(SAVING_POPUP_ID);
+  if (!popup) return;
+  popup.remove();
+};
+
+let timeout;
+const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
+  if (status === savingStates.start) {
+    removeSavingPopup();
+    await createSavingPopupSuccess();
+    timeout = setTimeout(removeSavingPopup, SAVING_POPUP_REMOVAL_TIMEOUT);
+  }
+  if (status === savingStates.failed) {
+    // NOTE(amine): clear popup's timeout before showing failure
+    clearTimeout(timeout);
+    removeSavingPopup();
+    await loadFont();
+    const handleOnRetry = () => {
+      console.log("retrying");
+      chrome.runtime.sendMessage({
+        type: viewer_messages.saveLink,
+        url,
+        title,
+        favicon,
+        source: savingSources.command,
+      });
+    };
+    createSavingPopupFailure({
+      onDismiss: removeSavingPopup,
+      onRetry: handleOnRetry,
+    });
+  }
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Event listeners
+ * -----------------------------------------------------------------------------------------------*/
+
+chrome.runtime.onMessage.addListener(async (request) => {
+  const { type, data } = request;
+  if (type === viewer_messages.savingStatus) {
+    // NOTE(amine): forward the saving status to the jumper and new tab
+    window.postMessage({ type: viewer_messages.savingStatus, data }, "*");
+
+    // NOTE(amine): show saving popup when saving through cmd+b
+    if (
+      data.url === window.location.href &&
+      data.source === savingSources.command
+    ) {
+      await showSavingStatusPopup({
+        status: request.data.savingStatus,
+        url: data.url,
+        title: data.title,
+        favicon: data.favicon,
+      });
+    }
+  }
+});
 
 window.addEventListener("message", async function (event) {
-  if (event.data.type === initialLoad_messages.preloadInitialDataRequest) {
+  if (event.data.type === viewer_messages.loadViewerDataRequest) {
     chrome.runtime.sendMessage(
-      { type: initialLoad_messages.preloadInitialDataRequest },
+      { type: viewer_messages.loadViewerDataRequest },
       (response) => {
         window.postMessage(
-          { type: initialLoad_messages.preloadInitialDataResponse, data: response },
+          { type: viewer_messages.loadViewerDataResponse, data: response },
           "*"
         );
       }
     );
+    return;
+  }
+
+  if (event.data.type === viewer_messages.saveLink) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.saveLink,
+      url: event.data.url,
+      title: event.data.title,
+    });
   }
 });
 
@@ -850,64 +833,5 @@ window.addEventListener("message", async function (event) {
 
 
 
-
-
-
-// eslint-disable-next-line no-redeclare
-/* global chrome */
-if (window.location.href.startsWith(uri.hostname)) {
-  if (window.location.href.includes("extension=true")) {
-    document.addEventListener("keydown", function () {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get("id");
-      chrome.runtime.sendMessage({
-        type: "GO_BACK",
-        id: id,
-      });
-    });
-  }
-  //TODO: Have the extension change the 'download chrome extension' button
-}
-
-chrome.runtime.onMessage.addListener(function (request) {
-  if (request.type === messages.uploadStatus) {
-    forwardUploadStatusToApp({
-      status: request.status,
-      data: request.data,
-    });
-  }
-
-  if (request.run === "AUTH_REQ") {
-    window.postMessage({ type: "AUTH_REQ" }, "*");
-    return true;
-  }
-
-  if (request.run === "CHECK_LINK") {
-    window.postMessage(
-      { type: "CHECK_LINK", data: request.data, user: request.user },
-      "*"
-    );
-    return true;
-  }
-});
-
-window.addEventListener("message", async function (event) {
-  if (event.data.type === messages.saveLink) {
-    forwardSaveLinkRequestsToBackground({
-      url: event.data.url,
-    });
-  }
-
-  if (event.data.run === "CHECK_LOGIN") {
-    chrome.runtime.sendMessage({ type: "CHECK_LOGIN" });
-    return true;
-  }
-
-  if (event.data.run === "SIGN_OUT") {
-    chrome.runtime.sendMessage({ type: "SIGN_OUT" });
-  }
-});
-
-}();
 /******/ })()
 ;
