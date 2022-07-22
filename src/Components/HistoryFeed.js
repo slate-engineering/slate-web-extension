@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ListView from "./ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
+import * as MultiSelection from "./MultiSelection";
 
 import { getFavicon } from "../Common/favicons";
 
@@ -65,46 +66,46 @@ const HistoryFeed = ({
   return (
     <RovingTabIndex.Provider isInfiniteList withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root
-          css={css}
-          onScroll={handleInfiniteScroll}
-          totalSelectableItems={sessionsFeedLength}
-          {...props}
-        >
-          {sessionsFeedKeys.map((key, feedIndex) => {
-            if (!sessionsFeed[key].length) return null;
+        <ListView.Root css={css} onScroll={handleInfiniteScroll} {...props}>
+          <MultiSelection.Provider totalSelectableItems={sessionsFeedLength}>
+            {sessionsFeedKeys.map((key, feedIndex) => {
+              if (!sessionsFeed[key].length) return null;
 
-            return (
-              <ListView.Section key={key}>
-                <ListView.Title>{key}</ListView.Title>
-                {sessionsFeed[key].map((visit, visitIndex) => {
-                  const comboxboxItemIndex = getVisitComoboboxIndex(
-                    feedIndex,
-                    visitIndex
-                  );
+              return (
+                <ListView.Section key={key}>
+                  <ListView.Title>{key}</ListView.Title>
+                  {sessionsFeed[key].map((visit, visitIndex) => {
+                    const comboxboxItemIndex = getVisitComoboboxIndex(
+                      feedIndex,
+                      visitIndex
+                    );
 
-                  return (
-                    <ListView.RovingTabIndexObject
-                      key={visit.url}
-                      withActions
-                      withMultiSelection
-                      index={comboxboxItemIndex}
-                      title={visit.title}
-                      url={visit.url}
-                      favicon={visit.favicon}
-                      relatedVisits={visit.relatedVisits}
-                      Favicon={getFavicon(visit.rootDomain)}
-                      isSaved={visit.isSaved}
-                      onClick={() => onOpenUrl({ urls: [visit.url] })}
-                      onMouseEnter={() =>
-                        onObjectHover?.({ url: visit.url, title: visit.title })
-                      }
-                    />
-                  );
-                })}
-              </ListView.Section>
-            );
-          })}
+                    return (
+                      <ListView.RovingTabIndexWithMultiSelectObject
+                        key={visit.url}
+                        withActions
+                        withMultiSelection
+                        index={comboxboxItemIndex}
+                        title={visit.title}
+                        url={visit.url}
+                        favicon={visit.favicon}
+                        relatedVisits={visit.relatedVisits}
+                        Favicon={getFavicon(visit.rootDomain)}
+                        isSaved={visit.isSaved}
+                        onClick={() => onOpenUrl({ urls: [visit.url] })}
+                        onMouseEnter={() =>
+                          onObjectHover?.({
+                            url: visit.url,
+                            title: visit.title,
+                          })
+                        }
+                      />
+                    );
+                  })}
+                </ListView.Section>
+              );
+            })}
+          </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>
     </RovingTabIndex.Provider>

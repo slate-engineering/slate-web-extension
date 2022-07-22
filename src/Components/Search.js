@@ -3,6 +3,7 @@ import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
+import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
@@ -146,8 +147,8 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
 
   const searchFeedLength = React.useMemo(() => {
     let length = 0;
-    for (let feed in feeds) {
-      length += feed.length;
+    for (let feed of feeds) {
+      length += feed.result.length;
     }
     return length;
   }, [feeds]);
@@ -155,61 +156,63 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
   return (
     <RovingTabIndex.Provider key={feeds} withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root totalSelectableItems={searchFeedLength} {...props}>
-          <div key={feeds}>
-            {feeds.map(({ title: view, result: feed }, feedIndex) => (
-              <>
-                <ListView.Title count={feed.length}>
-                  {getTitleFromView(view)}
-                </ListView.Title>
-                {feed.map((item, i) => {
-                  if (view === "currentWindow" || view === "allOpen") {
-                    const tab = item.item;
+        <ListView.Root {...props}>
+          <MultiSelection.Provider totalSelectableItems={searchFeedLength}>
+            <div>
+              {feeds.map(({ title: view, result: feed }, feedIndex) => (
+                <>
+                  <ListView.Title count={feed.length}>
+                    {getTitleFromView(view)}
+                  </ListView.Title>
+                  {feed.map((item, i) => {
+                    if (view === "currentWindow" || view === "allOpen") {
+                      const tab = item.item;
+                      return (
+                        <ListView.RovingTabIndexWithMultiSelectObject
+                          key={tab.id}
+                          withActions
+                          withMultiSelection
+                          index={i}
+                          title={tab.title}
+                          url={tab.url}
+                          favicon={tab.favicon}
+                          Favicon={getFavicon(getRootDomain(tab.url))}
+                          isSaved={tab.isSaved}
+                          onClick={() =>
+                            onOpenUrl({
+                              query: { tabId: tab.id, windowId: tab.windowId },
+                            })
+                          }
+                          onSubmit={() =>
+                            onOpenUrl({
+                              query: { tabId: tab.id, windowId: tab.windowId },
+                            })
+                          }
+                        />
+                      );
+                    }
+
+                    const visit = item;
                     return (
-                      <ListView.RovingTabIndexObject
-                        key={tab.id}
+                      <ListView.RovingTabIndexWithMultiSelectObject
+                        key={visit.url}
                         withActions
                         withMultiSelection
-                        index={i}
-                        title={tab.title}
-                        url={tab.url}
-                        favicon={tab.favicon}
-                        Favicon={getFavicon(getRootDomain(tab.url))}
-                        isSaved={tab.isSaved}
-                        onClick={() =>
-                          onOpenUrl({
-                            query: { tabId: tab.id, windowId: tab.windowId },
-                          })
-                        }
-                        onSubmit={() =>
-                          onOpenUrl({
-                            query: { tabId: tab.id, windowId: tab.windowId },
-                          })
-                        }
+                        index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
+                        title={visit.title}
+                        url={visit.url}
+                        relatedVisits={visit.relatedVisits}
+                        Favicon={getFavicon(visit.rootDomain)}
+                        isSaved={visit.isSaved}
+                        onClick={() => onOpenUrl({ urls: [visit.url] })}
+                        onSubmit={() => onOpenUrl({ urls: [visit.url] })}
                       />
                     );
-                  }
-
-                  const visit = item;
-                  return (
-                    <ListView.RovingTabIndexObject
-                      key={visit.url}
-                      withActions
-                      withMultiSelection
-                      index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
-                      title={visit.title}
-                      url={visit.url}
-                      relatedVisits={visit.relatedVisits}
-                      Favicon={getFavicon(visit.rootDomain)}
-                      isSaved={visit.isSaved}
-                      onClick={() => onOpenUrl({ urls: [visit.url] })}
-                      onSubmit={() => onOpenUrl({ urls: [visit.url] })}
-                    />
-                  );
-                })}
-              </>
-            ))}
-          </div>
+                  })}
+                </>
+              ))}
+            </div>
+          </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>
     </RovingTabIndex.Provider>

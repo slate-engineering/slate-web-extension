@@ -5,6 +5,7 @@ import * as ListView from "../Components/ListView";
 import * as SVG from "../Common/SVG";
 import * as Favicons from "../Common/favicons";
 import * as RovingTabIndex from "./RovingTabIndex";
+import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
@@ -609,29 +610,27 @@ function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
   return (
     <RovingTabIndex.Provider key={viewsFeed} withFocusOnHover>
       <RovingTabIndex.List>
-        <ListView.Root
-          style={{ paddingTop: 8, ...style }}
-          totalSelectableItems={viewsFeed.length}
-          {...props}
-        >
-          <div key={viewsFeed.length}>
-            {viewsFeed.map((visit, i) => (
-              <ListView.RovingTabIndexObject
-                key={visit.url}
-                withActions
-                withMultiSelection
-                index={i}
-                title={visit.title}
-                url={visit.url}
-                favicon={visit.favicon}
-                relatedVisits={visit.relatedVisits}
-                isSaved={visit.isSaved}
-                Favicon={getFavicon(visit.rootDomain)}
-                onClick={() => onOpenUrl({ urls: [visit.url] })}
-                onMouseEnter={() => onObjectHover?.({ url: visit.url })}
-              />
-            ))}
-          </div>
+        <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
+          <MultiSelection.Provider totalSelectableItems={viewsFeed.length}>
+            <div>
+              {viewsFeed.map((visit, i) => (
+                <ListView.RovingTabIndexWithMultiSelectObject
+                  key={visit.url}
+                  withActions
+                  withMultiSelection
+                  index={i}
+                  title={visit.title}
+                  url={visit.url}
+                  favicon={visit.favicon}
+                  relatedVisits={visit.relatedVisits}
+                  isSaved={visit.isSaved}
+                  Favicon={getFavicon(visit.rootDomain)}
+                  onClick={() => onOpenUrl({ urls: [visit.url] })}
+                  onMouseEnter={() => onObjectHover?.({ url: visit.url })}
+                />
+              ))}
+            </div>
+          </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>
     </RovingTabIndex.Provider>

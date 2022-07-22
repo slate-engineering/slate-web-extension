@@ -31,20 +31,13 @@ const STYLES_LIST_VIEW_ROOT = css`
   }
 `;
 
-const Root = React.forwardRef(
-  ({ children, css, totalSelectableItems, withSelectAll, ...props }, ref) => {
-    return (
-      <MultiSelection.Provider
-        withSelectAll={withSelectAll}
-        totalSelectableItems={totalSelectableItems}
-      >
-        <section ref={ref} css={[STYLES_LIST_VIEW_ROOT, css]} {...props}>
-          {children}
-        </section>
-      </MultiSelection.Provider>
-    );
-  }
-);
+const Root = React.forwardRef(({ children, css, ...props }, ref) => {
+  return (
+    <section ref={ref} css={[STYLES_LIST_VIEW_ROOT, css]} {...props}>
+      {children}
+    </section>
+  );
+});
 
 /* -------------------------------------------------------------------------------------------------
  * ListView Section
@@ -371,13 +364,13 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
 };
 
 /* -------------------------------------------------------------------------------------------------
- * ListView RovingTabIndexObject
+ * ListView RovingTabIndexWithMultiSelectObject
  * Supports for ./RovingTabIndex component
+ * Supports for ./MultiSelection component
  * -----------------------------------------------------------------------------------------------*/
 
-const RovingTabIndexObject = ({ index, ...props }) => {
+const RovingTabIndexWithMultiSelectObject = ({ index, ...props }) => {
   const {
-    isAllChecked,
     isIndexChecked,
 
     createHandleOnIndexCheckChange,
@@ -389,7 +382,7 @@ const RovingTabIndexObject = ({ index, ...props }) => {
       <Object
         index={index}
         withMultiSelection
-        isChecked={isAllChecked || isIndexChecked(index)}
+        isChecked={isIndexChecked(index)}
         onCheck={createHandleOnIndexCheckChange(index)}
         onKeyDown={createHandleKeyDownNavigation(index)}
         {...props}
@@ -398,4 +391,11 @@ const RovingTabIndexObject = ({ index, ...props }) => {
   );
 };
 
-export { Root, Section, Title, Object, ComboboxObject, RovingTabIndexObject };
+export {
+  Root,
+  Section,
+  Title,
+  Object,
+  ComboboxObject,
+  RovingTabIndexWithMultiSelectObject,
+};
