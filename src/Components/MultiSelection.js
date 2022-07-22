@@ -2,6 +2,7 @@ import { useEventListener } from "Common/hooks";
 import * as React from "react";
 
 import { isObjectEmpty, removeKeyFromObject } from "../Common/utilities";
+import { usePreviousValue } from "../Common/hooks";
 
 const multiSelectionContext = React.createContext({});
 
@@ -15,12 +16,10 @@ export const useMultiSelectionContext = () => {
 
 const useMultiSelectionState = ({ totalSelectableItems }) => {
   const [checkedIndexes, setCheckedIndexes] = React.useState({});
-  const isAllCheckedRef = React.useRef(false);
 
   const isIndexChecked = (index) => index in checkedIndexes;
 
   const toggleCheckIndex = (index) => {
-    isAllCheckedRef.current = false;
     setCheckedIndexes((prev) => {
       if (isIndexChecked(index)) return removeKeyFromObject(index, prev);
       return { ...prev, [index]: true };
@@ -28,7 +27,6 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
   };
 
   const checkIndexesInRange = (start, end) => {
-    isAllCheckedRef.current = false;
     const checkedIndexes = {};
     for (let i = start; i <= end; i++) {
       checkedIndexes[i] = true;
@@ -37,20 +35,30 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
   };
 
   const checkAll = () => {
-    isAllCheckedRef.current = true;
     checkIndexesInRange(0, totalSelectableItems - 1);
   };
 
+  const isAllChecked = React.useMemo(() => {
+    const checkedIndexesLength = Object.keys(checkedIndexes).length;
+    return checkedIndexesLength === totalSelectableItems;
+  }, [checkedIndexes, totalSelectableItems]);
+
   const toggleCheckAll = () => {
-    const nextState = !isAllCheckedRef.current;
+    const nextState = !isAllChecked;
     if (nextState) {
       checkIndexesInRange(0, totalSelectableItems - 1);
-      isAllCheckedRef.current = true;
       return;
     }
     setCheckedIndexes({});
-    isAllCheckedRef.current = false;
   };
+
+  const prevIsAllChecked = usePreviousValue(isAllChecked);
+
+  React.useLayoutEffect(() => {
+    if (prevIsAllChecked) {
+      checkAll();
+    }
+  }, [totalSelectableItems]);
 
   const [isMultiSelectMode, setMultiSelectionMode] = React.useState(false);
 
@@ -64,18 +72,12 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
     }
   }, [checkedIndexes]);
 
-  React.useLayoutEffect(() => {
-    if (isAllCheckedRef.current) {
-      checkAll();
-    }
-  }, [totalSelectableItems]);
-
   return {
     checkedIndexes,
     isIndexChecked,
     toggleCheckIndex,
     checkIndexesInRange,
-    isAllChecked: isAllCheckedRef.current,
+    isAllChecked,
 
     toggleCheckAll,
 
