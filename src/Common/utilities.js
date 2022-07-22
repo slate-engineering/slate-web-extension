@@ -102,3 +102,5 @@ export const removeKeyFromObject = (key, object) => {
   const { [key]: deletedKey, ...newObject } = object;
   return newObject;
 };
+
+export const last = (array) => array[array.length - 1];
