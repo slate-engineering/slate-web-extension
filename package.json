@@ -70,6 +70,7 @@
     "terser-webpack-plugin": "^5.2.5",
     "typeface-inter": "^3.18.1",
     "use-react-screenshot": "^1.0.2",
+    "uuid": "^8.3.2",
     "web-vitals": "^2.1.4",
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",
