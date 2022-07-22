@@ -1,6 +1,9 @@
 import * as React from "react";
 import * as Constants from "../Common/constants";
 
+import { last } from "../Common/utilities";
+import { v4 as uuid } from "uuid";
+
 export const useEventListener = (
   { type, handler, ref, options, enabled = true },
   dependencies
@@ -121,4 +124,26 @@ export const usePreviousValue = (value) => {
   }, [value]);
 
   return prevValue.current;
+};
+
+let layers = [];
+const removeLayer = (id) => (layers = layers.filter((layer) => layer !== id));
+const isDeepestLayer = (id) => last(layers) === id;
+
+export const useEscapeKey = (callback) => {
+  const layerIdRef = React.useRef();
+  React.useEffect(() => {
+    layerIdRef.current = uuid();
+    layers.push(layerIdRef.current);
+    return () => removeLayer(layerIdRef.current);
+  }, []);
+
+  const handleKeyUp = React.useCallback(
+    (e) => {
+      if (e.key === "Escape" && isDeepestLayer(layerIdRef.current))
+        callback?.(e);
+    },
+    [callback]
+  );
+  useEventListener({ type: "keyup", handler: handleKeyUp }, [handleKeyUp]);
 };
