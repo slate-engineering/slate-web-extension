@@ -112,3 +112,13 @@ export const useTrapFocusInShadowDom = ({ ref }) => {
 
   useEventListener({ type: "keydown", handler: handleFocus }, []);
 };
+
+export const usePreviousValue = (value) => {
+  const prevValue = React.useRef(value);
+
+  React.useEffect(() => {
+    prevValue.current = value;
+  }, [value]);
+
+  return prevValue.current;
+};
