@@ -3,6 +3,8 @@ import * as React from "react";
 import { messages, savingStates, viewerInitialState } from "..";
 import { useSavingState } from ".";
 
+import JumperAuth from "../../../scenes/jumperAuth";
+
 /* -------------------------------------------------------------------------------------------------
  * useSaving
  * -----------------------------------------------------------------------------------------------*/
@@ -93,7 +95,7 @@ export const ViewerProvider = ({ children }) => {
   if (!state.shouldRender) return null;
 
   //TODO(amine): change auth screen
-  if (!state.isAuthenticated) return <div>login</div>;
+  if (!state.isAuthenticated) return <JumperAuth />;
 
   return (
     <viewerContext.Provider value={contextValue}>
