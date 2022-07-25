@@ -3,7 +3,7 @@ import * as ReactDom from "react-dom";
 import * as Styles from "../Common/styles";
 
 import { css } from "@emotion/react";
-import { useTrapFocusInShadowDom } from "../Common/hooks";
+import { useEscapeKey, useTrapFocusInShadowDom } from "../Common/hooks";
 import { mergeRefs, getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
 
@@ -95,22 +95,11 @@ const STYLES_JUMPER_ROOT = (theme) => css`
   }
 `;
 
-const useCloseJumperOnEsc = ({ onClose }) => {
-  React.useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-};
-
 function Root({ children, onClose }) {
   const wrapperRef = React.useRef();
   useTrapFocusInShadowDom({ ref: wrapperRef });
 
-  useCloseJumperOnEsc({ onClose });
+  useEscapeKey(onClose);
 
   const [jumperNode, setJumperNode] = React.useState(null);
   const contextValue = React.useMemo(() => ({ jumperNode }), [jumperNode]);
@@ -173,7 +162,7 @@ const STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER = css`
   position: absolute;
   z-index: -1;
   left: 0%;
-  top: -17px;
+  top: -12px;
   transform: translateY(-100%);
 
   width: 100%;
@@ -222,6 +211,75 @@ const TopPanel = ({ children }) => {
 };
 
 /* -------------------------------------------------------------------------------------------------
+ *  Bottom panel
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_JUMPER_BOTTOM_PANEL_FADE_IN = css`
+  @keyframes views-menu-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(calc(100% + 12px));
+    }
+  }
+
+  animation: views-menu-fade-in 100ms ease;
+`;
+
+const STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER = css`
+  position: absolute;
+  left: 0%;
+  bottom: 0px;
+  transform: translateY(calc(100% + 12px));
+
+  width: 100%;
+
+  ${STYLES_JUMPER_BOTTOM_PANEL_FADE_IN};
+`;
+
+const STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND = css`
+  position: absolute;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+  background-image: url("${getExtensionURL(
+    "/images/bg-jumper-top-panel.png"
+  )}");
+  background-size: contain;
+`;
+
+const STYLES_JUMPER_BOTTOM_PANEL = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
+
+  border-radius: 16px;
+  background-color: white;
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+  box-shadow: ${theme.shadow.jumperLight};
+
+  @supports (
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
+  ) {
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
+    background-color: ${theme.semantic.bgBlurLight6};
+  }
+`;
+
+const BottomPanel = ({ children }) => {
+  return (
+    <JumperPanelsPortal>
+      <div css={STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER}>
+        <div css={STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND} />
+        <div css={STYLES_JUMPER_BOTTOM_PANEL}>{children}</div>
+      </div>
+    </JumperPanelsPortal>
+  );
+};
+/* -------------------------------------------------------------------------------------------------
  *  Right panel
  * -----------------------------------------------------------------------------------------------*/
 
@@ -260,4 +318,4 @@ const SidePanel = ({ children }) => {
   );
 };
 
-export { Root, Header, Body, Divider, TopPanel, SidePanel };
+export { Root, Header, Body, Divider, TopPanel, BottomPanel, SidePanel };
