@@ -4,10 +4,13 @@ import * as Typography from "./system/Typography";
 import * as SVG from "../Common/SVG";
 import * as Jumper from "./jumper";
 
+import NewTabActionsMenuPopup from "./newTab/ActionsMenuPopup";
+
 import {
   isObjectEmpty,
   removeKeyFromObject,
   isNewTab,
+  copyToClipboard,
 } from "../Common/utilities";
 import { css } from "@emotion/react";
 import { Checkbox } from "./system";
@@ -167,7 +170,12 @@ const useMultiSelectionHandlers = ({
 
 /* -----------------------------------------------------------------------------------------------*/
 
-function Provider({ children, totalSelectableItems, ...props }) {
+function Provider({
+  children,
+  totalSelectableItems,
+  onSubmitSelectedItem,
+  ...props
+}) {
   const {
     checkedIndexes,
     isIndexChecked,
@@ -189,6 +197,20 @@ function Provider({ children, totalSelectableItems, ...props }) {
       toggleCheckIndex,
     });
 
+  const constructSelectedItemsData = () => {
+    // if (isAllChecked) {
+    //   return { isAllChecked };
+    // }
+
+    const selectedItemsData = [];
+    for (let index in checkedIndexes) {
+      const dataForSelectedIndex = onSubmitSelectedItem(index);
+      selectedItemsData.push(dataForSelectedIndex);
+    }
+
+    return { isAllChecked, selectedItemsData };
+  };
+
   const value = React.useMemo(
     () => ({
       checkedIndexes,
@@ -201,6 +223,8 @@ function Provider({ children, totalSelectableItems, ...props }) {
       toggleCheckAll,
 
       existSelectionMode,
+
+      constructSelectedItemsData,
     }),
     [isAllChecked, checkedIndexes, isMultiSelectMode]
   );
@@ -228,24 +252,120 @@ const STYLES_ACTION_BUTTON = (theme) => css`
   }
 `;
 
-const GroupingAction = (props) => {
+const STYLES_ACTION_BUTTON_NEW_TAB = (theme) => css`
+  color: ${theme.semantic.textWhite};
+  &:hover,
+  &:focus {
+    color: ${theme.semantic.textWhite};
+    background-color: ${theme.semantic.bgLightDark};
+  }
+`;
+
+const GroupingAction = ({ css, onGroup, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+    onGroup(selectedItemsData.map(({ url }) => url));
+  };
+
   return (
-    <button css={STYLES_ACTION_BUTTON} {...props}>
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
       <SVG.SmileCircle height={16} width={16} />
-      <Typography.H5 style={{ marginLeft: 4 }} color="textGrayDark">
-        Group
-      </Typography.H5>
+      <Typography.H5 style={{ marginLeft: 4 }}>Group</Typography.H5>
     </button>
   );
 };
 
-const OpenLinksAction = (props) => {
-  <button css={STYLES_ACTION_BUTTON} {...props}>
-    <SVG.ExternalLink height={16} width={16} />
-    <Typography.H5 style={{ marginLeft: 4 }} color="textGrayDark">
-      Open
-    </Typography.H5>
-  </button>;
+const OpenURLsAction = ({ css, onOpenLinks, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+    onOpenLinks(selectedItemsData.map(({ url }) => url));
+  };
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      <SVG.ExternalLink height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }}>Open</Typography.H5>
+    </button>
+  );
+};
+
+const useCopyState = () => {
+  const [isCopied, setCopied] = React.useState(false);
+  React.useEffect(() => {
+    let timeout;
+    if (isCopied) {
+      timeout = setTimeout(() => setCopied(false), 2000);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [isCopied]);
+
+  const handleCopying = (string) => {
+    setCopied(true);
+    copyToClipboard(string);
+  };
+
+  return { isCopied, handleCopying };
+};
+
+const CopyURLsAction = ({ css, ...props }) => {
+  const { isCopied, handleCopying } = useCopyState();
+
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+    const linksAsString = selectedItemsData.map(({ url }) => url).join("\n");
+    handleCopying(linksAsString);
+  };
+
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      {isCopied ? (
+        <SVG.Check width={16} height={16} />
+      ) : (
+        <SVG.CopyAndPaste height={16} width={16} />
+      )}
+      <Typography.H5 style={{ marginLeft: 4 }}>Copy</Typography.H5>
+    </button>
+  );
+};
+
+const CloseTabsAction = ({ css, onCloseTabs, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+
+    const tabsId = selectedItemsData.map(({ id }) => id);
+    onCloseTabs(tabsId);
+  };
+
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      <SVG.XCircle height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }}>Close</Typography.H5>
+    </button>
+  );
 };
 
 /* -------------------------------------------------------------------------------------------------
@@ -273,40 +393,59 @@ const CloseOnEscape = ({ onClose, children }) => {
   return children;
 };
 
-function ActionsMenu({ children }) {
+function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
   const {
     toggleCheckAll,
     isAllChecked,
     isMultiSelectMode,
     existSelectionMode,
   } = useMultiSelectionContext();
-  console.log(isMultiSelectMode);
 
   if (!isMultiSelectMode) return null;
 
   if (isNewTab) {
     return (
       <CloseOnEscape onClose={existSelectionMode}>
-        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
-          <div css={Styles.HORIZONTAL_CONTAINER}>
-            <Checkbox
-              id="select_all_checkbox"
-              checked={isAllChecked}
-              onChange={toggleCheckAll}
-            />
-            <Typography.H5
-              as="label"
-              for="select_all_checkbox"
-              style={{ marginLeft: 12 }}
-              color="textGrayDark"
-            >
-              Select All
-            </Typography.H5>
+        <NewTabActionsMenuPopup>
+          <div css={STYLES_ACTIONS_MENU_WRAPPER}>
+            <div css={Styles.HORIZONTAL_CONTAINER}>
+              <Checkbox
+                id="select_all_checkbox"
+                checked={isAllChecked}
+                onChange={toggleCheckAll}
+              />
+              <Typography.H5
+                as="label"
+                for="select_all_checkbox"
+                style={{ marginLeft: 12 }}
+                color="textWhite"
+              >
+                Select All
+              </Typography.H5>
+            </div>
+            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+              {onOpenURLs && (
+                <OpenURLsAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onOpenLinks={onOpenURLs}
+                />
+              )}
+              {onCloseTabs && (
+                <CloseTabsAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onCloseTabs={onCloseTabs}
+                />
+              )}
+              <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
+              {onGroupURLs && (
+                <GroupingAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onGroup={onGroupURLs}
+                />
+              )}
+            </div>
           </div>
-          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-            {children}
-          </div>
-        </div>
+        </NewTabActionsMenuPopup>
       </CloseOnEscape>
     );
   }
@@ -331,7 +470,10 @@ function ActionsMenu({ children }) {
             </Typography.H5>
           </div>
           <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-            {children}
+            {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
+            {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
+            <CopyURLsAction />
+            {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
           </div>
         </div>
       </Jumper.BottomPanel>
@@ -339,10 +481,4 @@ function ActionsMenu({ children }) {
   );
 }
 
-export {
-  useMultiSelectionContext,
-  Provider,
-  ActionsMenu,
-  GroupingAction,
-  OpenLinksAction,
-};
+export { useMultiSelectionContext, Provider, ActionsMenu };

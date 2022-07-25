@@ -12,7 +12,7 @@ const WindowsFeed = React.forwardRef(
       activeTabId,
       onObjectHover,
       onOpenUrl,
-      onCloseTab,
+      onCloseTabs,
       css,
       style,
       ...props
@@ -20,6 +20,8 @@ const WindowsFeed = React.forwardRef(
     ref
   ) => {
     const rovingIndexRef = React.useRef();
+
+    const handleOnSubmitSelectedItem = (index) => windowsFeed[index];
 
     return (
       <RovingTabIndex.Provider
@@ -34,7 +36,10 @@ const WindowsFeed = React.forwardRef(
             css={css}
             {...props}
           >
-            <MultiSelection.Provider totalSelectableItems={windowsFeed.length}>
+            <MultiSelection.Provider
+              totalSelectableItems={windowsFeed.length}
+              onSubmitSelectedItem={handleOnSubmitSelectedItem}
+            >
               <ListView.Section>
                 {windowsFeed.map((tab, i) => (
                   <ListView.RovingTabIndexWithMultiSelectObject
@@ -48,7 +53,7 @@ const WindowsFeed = React.forwardRef(
                     url={tab.url}
                     Favicon={getFavicon(tab.rootDomain)}
                     isSaved={tab.isSaved}
-                    onCloseTab={() => onCloseTab(tab.id)}
+                    onCloseTab={() => onCloseTabs([tab.id])}
                     onClick={() =>
                       onOpenUrl({
                         query: { tabId: tab.id, windowId: tab.windowId },
@@ -60,6 +65,8 @@ const WindowsFeed = React.forwardRef(
                   />
                 ))}
               </ListView.Section>
+
+              <MultiSelection.ActionsMenu onCloseTabs={onCloseTabs} />
             </MultiSelection.Provider>
           </ListView.Root>
         </RovingTabIndex.List>

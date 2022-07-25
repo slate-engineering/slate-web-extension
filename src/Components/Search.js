@@ -140,9 +140,9 @@ const getTitleFromView = (view) => {
   return titles[view];
 };
 
-const Feed = React.memo(({ onOpenUrl, ...props }) => {
+const Feed = React.memo(({ onOpenUrl, onGroupURLs, ...props }) => {
   const {
-    search: { result: feeds },
+    search: { result: feeds, query: searchQuery },
   } = useSearchContext();
 
   const searchFeedLength = React.useMemo(() => {
@@ -153,11 +153,27 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
     return length;
   }, [feeds]);
 
+  const handleOnSubmitSelectedItem = (index) => {
+    let currentLength = 0;
+
+    for (let feed of feeds) {
+      const { result } = feed;
+      const nextLength = currentLength + result.length;
+      if (index < nextLength) {
+        return result[index - currentLength];
+      }
+      currentLength = nextLength;
+    }
+  };
+
   return (
     <RovingTabIndex.Provider key={feeds} withFocusOnHover>
       <RovingTabIndex.List>
         <ListView.Root {...props}>
-          <MultiSelection.Provider totalSelectableItems={searchFeedLength}>
+          <MultiSelection.Provider
+            totalSelectableItems={searchFeedLength}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
             <div>
               {feeds.map(({ title: view, result: feed }, feedIndex) => (
                 <>
@@ -212,6 +228,11 @@ const Feed = React.memo(({ onOpenUrl, ...props }) => {
                 </>
               ))}
             </div>
+
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+            />
           </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>

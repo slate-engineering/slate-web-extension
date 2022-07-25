@@ -34,6 +34,7 @@ const HistoryFeed = ({
   onLoadMore,
   onObjectHover,
   onOpenUrl,
+  onGroupURLs,
   css,
 
   ...props
@@ -63,11 +64,27 @@ const HistoryFeed = ({
     return length;
   }, [sessionsFeed, sessionsFeedKeys]);
 
+  const handleOnSubmitSelectedItem = (index) => {
+    let currentLength = 0;
+
+    for (let feedKey of sessionsFeedKeys) {
+      const feed = sessionsFeed[feedKey];
+      const nextLength = currentLength + feed.length;
+      if (index < nextLength) {
+        return feed[index - currentLength];
+      }
+      currentLength = nextLength;
+    }
+  };
+
   return (
     <RovingTabIndex.Provider isInfiniteList withFocusOnHover>
       <RovingTabIndex.List>
         <ListView.Root css={css} onScroll={handleInfiniteScroll} {...props}>
-          <MultiSelection.Provider totalSelectableItems={sessionsFeedLength}>
+          <MultiSelection.Provider
+            totalSelectableItems={sessionsFeedLength}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
             {sessionsFeedKeys.map((key, feedIndex) => {
               if (!sessionsFeed[key].length) return null;
 
@@ -105,6 +122,11 @@ const HistoryFeed = ({
                 </ListView.Section>
               );
             })}
+
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
+            />
           </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>

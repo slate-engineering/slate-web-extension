@@ -204,6 +204,7 @@ function Provider({
   children,
   viewsFeed,
   currentView,
+  currentViewLabel,
   currentViewQuery,
   viewsType,
   getViewsFeed,
@@ -227,6 +228,7 @@ function Provider({
     () => ({
       viewsFeed,
       currentView,
+      currentViewLabel,
       currentViewQuery,
       viewsType,
       getViewsFeed,
@@ -241,6 +243,7 @@ function Provider({
     [
       viewsFeed,
       currentView,
+      currentViewLabel,
       currentViewQuery,
       viewsType,
       onChange,
@@ -495,9 +498,9 @@ function Menu({ css, showAllOpenAction, ...props }) {
   React.useLayoutEffect(() => cleanupMenu, []);
 
   const createOnClickHandler =
-    ({ type, query }) =>
+    ({ type, label, query }) =>
     () =>
-      getViewsFeed({ type, query });
+      getViewsFeed({ type, label, query });
 
   const actionWrapperRef = React.useRef();
   const [isOverflowFrom, { scrollToLeft, scrollToRight }] =
@@ -527,9 +530,13 @@ function Menu({ css, showAllOpenAction, ...props }) {
                   key={viewAction.label}
                   isViewApplied={isApplied}
                   style={{ marginLeft: i > 0 ? 4 : 0 }}
-                  onClick={createOnClickHandler({ type: viewAction.data.type })}
+                  onClick={createOnClickHandler({
+                    type: viewAction.data.type,
+                    label: viewAction.label,
+                  })}
                   onSubmit={createOnClickHandler({
                     type: viewAction.data.type,
+                    label: viewAction.label,
                   })}
                   index={i}
                 >
@@ -557,10 +564,12 @@ function Menu({ css, showAllOpenAction, ...props }) {
                   style={{ marginLeft: 4 }}
                   onClick={createOnClickHandler({
                     type: viewAction.data.type,
+                    label: viewAction.label,
                     query: viewAction.data.query,
                   })}
                   onSubmit={createOnClickHandler({
                     type: viewAction.data.type,
+                    label: viewAction.label,
                     query: viewAction.data.query,
                   })}
                   index={FILTERED_VIEWS_ACTIONS.length + i}
@@ -605,13 +614,19 @@ function Menu({ css, showAllOpenAction, ...props }) {
  * Views Feed
  * -----------------------------------------------------------------------------------------------*/
 
-function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
-  const { viewsFeed } = useViewsContext();
+function Feed({ onObjectHover, onOpenUrl, onGroupURLs, style, ...props }) {
+  const { viewsFeed, currentViewLabel } = useViewsContext();
+
+  const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+
   return (
     <RovingTabIndex.Provider key={viewsFeed} withFocusOnHover>
       <RovingTabIndex.List>
         <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
-          <MultiSelection.Provider totalSelectableItems={viewsFeed.length}>
+          <MultiSelection.Provider
+            totalSelectableItems={viewsFeed.length}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
             <div>
               {viewsFeed.map((visit, i) => (
                 <ListView.RovingTabIndexWithMultiSelectObject
@@ -630,6 +645,13 @@ function Feed({ onObjectHover, onOpenUrl, style, ...props }) {
                 />
               ))}
             </div>
+
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) =>
+                onGroupURLs({ urls, title: currentViewLabel })
+              }
+            />
           </MultiSelection.Provider>
         </ListView.Root>
       </RovingTabIndex.List>
