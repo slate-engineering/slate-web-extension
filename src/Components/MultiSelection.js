@@ -1,12 +1,25 @@
-import { useEventListener } from "Common/hooks";
 import * as React from "react";
+import * as Styles from "../Common/styles";
+import * as Typography from "./system/Typography";
+import * as SVG from "../Common/SVG";
+import * as Jumper from "./jumper";
 
-import { isObjectEmpty, removeKeyFromObject } from "../Common/utilities";
-import { usePreviousValue } from "../Common/hooks";
+import {
+  isObjectEmpty,
+  removeKeyFromObject,
+  isNewTab,
+} from "../Common/utilities";
+import { css } from "@emotion/react";
+import { Checkbox } from "./system";
+import {
+  useEscapeKey,
+  useEventListener,
+  usePreviousValue,
+} from "../Common/hooks";
 
 const multiSelectionContext = React.createContext({});
 
-export const useMultiSelectionContext = () => {
+const useMultiSelectionContext = () => {
   return React.useContext(multiSelectionContext);
 };
 
@@ -67,7 +80,7 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
   );
 
   React.useLayoutEffect(() => {
-    if (isObjectEmpty(checkedIndexes)) {
+    if (!isObjectEmpty(checkedIndexes)) {
       setMultiSelectionMode(true);
     }
   }, [checkedIndexes]);
@@ -154,7 +167,7 @@ const useMultiSelectionHandlers = ({
 
 /* -----------------------------------------------------------------------------------------------*/
 
-export function Provider({ children, totalSelectableItems, ...props }) {
+function Provider({ children, totalSelectableItems, ...props }) {
   const {
     checkedIndexes,
     isIndexChecked,
@@ -181,6 +194,7 @@ export function Provider({ children, totalSelectableItems, ...props }) {
       checkedIndexes,
       isAllChecked,
       isIndexChecked,
+      isMultiSelectMode,
 
       createHandleOnIndexCheckChange,
       createHandleKeyDownNavigation,
@@ -197,3 +211,138 @@ export function Provider({ children, totalSelectableItems, ...props }) {
     </multiSelectionContext.Provider>
   );
 }
+
+/* -------------------------------------------------------------------------------------------------
+ *  Actions
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_ACTION_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  color: ${theme.semantic.textGrayDark};
+  border-radius: 12px;
+  padding: 5px 12px 7px;
+  &:hover,
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
+`;
+
+const GroupingAction = (props) => {
+  return (
+    <button css={STYLES_ACTION_BUTTON} {...props}>
+      <SVG.SmileCircle height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }} color="textGrayDark">
+        Group
+      </Typography.H5>
+    </button>
+  );
+};
+
+const OpenLinksAction = (props) => {
+  <button css={STYLES_ACTION_BUTTON} {...props}>
+    <SVG.ExternalLink height={16} width={16} />
+    <Typography.H5 style={{ marginLeft: 4 }} color="textGrayDark">
+      Open
+    </Typography.H5>
+  </button>;
+};
+
+/* -------------------------------------------------------------------------------------------------
+ *  ActionsMenu
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_ACTIONS_MENU_WRAPPER = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  width: 100%;
+  height: 48px;
+  border-radius: 16px;
+  padding: 0px 20px;
+`;
+
+const STYLES_ACTIONS_WRAPPER = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  & > * + * {
+    margin-left: 24px;
+  }
+`;
+
+const CloseOnEscape = ({ onClose, children }) => {
+  useEscapeKey(onClose);
+
+  return children;
+};
+
+function ActionsMenu({ children }) {
+  const {
+    toggleCheckAll,
+    isAllChecked,
+    isMultiSelectMode,
+    existSelectionMode,
+  } = useMultiSelectionContext();
+  console.log(isMultiSelectMode);
+
+  if (!isMultiSelectMode) return null;
+
+  if (isNewTab) {
+    return (
+      <CloseOnEscape onClose={existSelectionMode}>
+        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
+          <div css={Styles.HORIZONTAL_CONTAINER}>
+            <Checkbox
+              id="select_all_checkbox"
+              checked={isAllChecked}
+              onChange={toggleCheckAll}
+            />
+            <Typography.H5
+              as="label"
+              for="select_all_checkbox"
+              style={{ marginLeft: 12 }}
+              color="textGrayDark"
+            >
+              Select All
+            </Typography.H5>
+          </div>
+          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+            {children}
+          </div>
+        </div>
+      </CloseOnEscape>
+    );
+  }
+
+  return (
+    <CloseOnEscape onClose={existSelectionMode}>
+      <Jumper.BottomPanel>
+        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
+          <div css={Styles.HORIZONTAL_CONTAINER}>
+            <Checkbox
+              id="select_all_checkbox"
+              checked={isAllChecked}
+              onChange={toggleCheckAll}
+            />
+            <Typography.H5
+              as="label"
+              for="select_all_checkbox"
+              style={{ marginLeft: 12 }}
+              color="textGrayDark"
+            >
+              Select All
+            </Typography.H5>
+          </div>
+          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+            {children}
+          </div>
+        </div>
+      </Jumper.BottomPanel>
+    </CloseOnEscape>
+  );
+}
+
+export {
+  useMultiSelectionContext,
+  Provider,
+  ActionsMenu,
+  GroupingAction,
+  OpenLinksAction,
+};
