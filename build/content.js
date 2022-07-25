@@ -323,7 +323,7 @@ const navigation_messages = {
 
   createGroup: "BROWSER_CREATE_GROUP",
 
-  closeTab: "CLOSE_TAB",
+  closeTabs: "CLOSE_TABS",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/navigation/content.js
@@ -394,10 +394,10 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
-  if (event.data.type === navigation_messages.closeTab) {
+  if (event.data.type === navigation_messages.closeTabs) {
     chrome.runtime.sendMessage({
-      type: navigation_messages.closeTab,
-      tabId: event.data.tabId,
+      type: navigation_messages.closeTabs,
+      tabsId: event.data.tabsId,
     });
     return;
   }

@@ -2913,7 +2913,7 @@ const navigation_messages = {
 
   createGroup: "BROWSER_CREATE_GROUP",
 
-  closeTab: "CLOSE_TAB",
+  closeTabs: "CLOSE_TABS",
 };
 
 ;// CONCATENATED MODULE: ./src/Core/navigation/background.js
@@ -2956,8 +2956,10 @@ const createGroupFromUrls = async ({ urls, windowId, title }) => {
 /** ------------ Event Listeners ------------- */
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  if (request.type === navigation_messages.closeTab) {
-    chrome.tabs.remove(request.tabId);
+  if (request.type === navigation_messages.closeTabs) {
+    request.tabsId.forEach((tabId) => {
+      chrome.tabs.remove(tabId);
+    });
     return true;
   }
 
