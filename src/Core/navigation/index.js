@@ -6,5 +6,5 @@ export const messages = {
 
   createGroup: "BROWSER_CREATE_GROUP",
 
-  closeTab: "CLOSE_TAB",
+  closeTabs: "CLOSE_TABS",
 };

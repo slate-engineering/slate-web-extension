@@ -12,8 +12,8 @@ export const closeExtensionJumper = () => {
   window.postMessage({ type: messages.closeExtensionJumperRequest }, "*");
 };
 
-export const closeTab = (tabId) => {
-  window.postMessage({ type: messages.closeTab, tabId }, "*");
+export const closeTabs = (tabsId) => {
+  window.postMessage({ type: messages.closeTabs, tabsId }, "*");
 };
 
 /* -------------------------------------------------------------------------------------------------

@@ -65,10 +65,10 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 window.addEventListener("message", async function (event) {
-  if (event.data.type === messages.closeTab) {
+  if (event.data.type === messages.closeTabs) {
     chrome.runtime.sendMessage({
-      type: messages.closeTab,
-      tabId: event.data.tabId,
+      type: messages.closeTabs,
+      tabsId: event.data.tabsId,
     });
     return;
   }
