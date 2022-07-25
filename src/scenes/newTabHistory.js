@@ -125,8 +125,14 @@ export default function HistoryScene() {
 
   const { windowsFeed, totalWindows, activeTabId } = useWindows();
 
-  const { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed } =
-    useViews();
+  const {
+    viewsFeed,
+    currentView,
+    currentViewLabel,
+    currentViewQuery,
+    viewsType,
+    getViewsFeed,
+  } = useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -149,6 +155,7 @@ export default function HistoryScene() {
         <Views.Provider
           viewsFeed={viewsFeed}
           currentView={currentView}
+          currentViewLabel={currentViewLabel}
           currentViewQuery={currentViewQuery}
           viewsType={viewsType}
           getViewsFeed={getViewsFeed}
@@ -187,7 +194,12 @@ export default function HistoryScene() {
                 </section> */}
 
               <Switch css={STYLES_HISTORY_SCENE_FEED}>
-                <Match when={isSearching} component={Search.Feed} />
+                <Match
+                  when={isSearching}
+                  component={Search.Feed}
+                  onOpenUrl={Navigation.openUrls}
+                  onGroupURLs={Navigation.createGroupFromUrls}
+                />
                 <Match
                   when={currentView === viewsType.recent}
                   component={HistoryFeed}
@@ -195,13 +207,14 @@ export default function HistoryScene() {
                   sessionsFeedKeys={sessionsFeedKeys}
                   onLoadMore={loadMoreHistory}
                   onOpenUrl={Navigation.openUrls}
+                  onGroupURLs={Navigation.createGroupFromUrls}
                 />
                 <Match
                   when={currentView === viewsType.currentWindow}
                   component={WindowsFeed}
                   windowsFeed={windowsFeed.currentWindow}
                   activeTabId={activeTabId}
-                  onCloseTab={Navigation.closeTab}
+                  onCloseTabs={Navigation.closeTabs}
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match
@@ -209,7 +222,7 @@ export default function HistoryScene() {
                   component={WindowsFeed}
                   windowsFeed={windowsFeed.allOpen}
                   activeTabId={activeTabId}
-                  onCloseTab={Navigation.closeTab}
+                  onCloseTabs={Navigation.closeTabs}
                   onOpenUrl={Navigation.openUrls}
                 />
                 <Match
@@ -219,6 +232,7 @@ export default function HistoryScene() {
                   }
                   component={Views.Feed}
                   onOpenUrl={Navigation.openUrls}
+                  onGroupURLs={Navigation.createGroupFromUrls}
                 />
               </Switch>
             </div>

@@ -13,8 +13,8 @@ export const useViewsState = () => {
     query: undefined,
   });
 
-  const setViewsParams = ({ type, query }) => {
-    setViewsState((prev) => ({ ...prev, type, query }));
+  const setViewsParams = ({ type, query, label }) => {
+    setViewsState((prev) => ({ ...prev, type, query, label }));
   };
 
   const setViewsFeed = (result) => {
@@ -28,6 +28,7 @@ export const useViewsState = () => {
     {
       viewsFeed: views.feed,
       currentView: views.type,
+      currentViewLabel: views.label,
       currentViewQuery: views.query,
       viewsType,
     },

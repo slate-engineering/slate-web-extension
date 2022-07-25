@@ -8,12 +8,12 @@ import { messages } from "../";
 
 export const useViews = () => {
   const [
-    { viewsFeed, currentView, currentViewQuery, viewsType },
+    { viewsFeed, currentView, currentViewLabel, currentViewQuery, viewsType },
     { setViewsFeed, setViewsParams },
   ] = useViewsState();
 
-  const getViewsFeed = ({ type, query }) => {
-    setViewsParams({ type, query });
+  const getViewsFeed = ({ type, label, query }) => {
+    setViewsParams({ type, label, query });
     if (
       (type === viewsType.relatedLinks && query) ||
       type === viewsType.savedFiles
@@ -44,7 +44,14 @@ export const useViews = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  return { viewsFeed, currentView, currentViewQuery, viewsType, getViewsFeed };
+  return {
+    viewsFeed,
+    currentView,
+    currentViewLabel,
+    currentViewQuery,
+    viewsType,
+    getViewsFeed,
+  };
 };
 
 /* -------------------------------------------------------------------------------------------------

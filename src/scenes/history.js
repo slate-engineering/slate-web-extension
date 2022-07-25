@@ -48,8 +48,14 @@ const STYLES_JUMPER_INPUT_WRAPPER = css`
 `;
 
 export default function History() {
-  const { viewsFeed, currentViewQuery, viewsType, getViewsFeed, currentView } =
-    useViews();
+  const {
+    viewsFeed,
+    currentViewLabel,
+    currentViewQuery,
+    viewsType,
+    getViewsFeed,
+    currentView,
+  } = useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -95,6 +101,7 @@ export default function History() {
       <Views.Provider
         viewsFeed={viewsFeed}
         currentView={currentView}
+        currentViewLabel={currentViewLabel}
         currentViewQuery={currentViewQuery}
         viewsType={viewsType}
         getViewsFeed={getViewsFeed}
@@ -124,6 +131,7 @@ export default function History() {
                 when={search.isSearching}
                 component={Search.Feed}
                 onOpenUrl={Navigation.openUrls}
+                onGroupURLs={Navigation.createGroupFromUrls}
               />
               <Match
                 when={currentView === viewsType.recent}
@@ -133,6 +141,7 @@ export default function History() {
                 onLoadMore={loadMoreHistory}
                 // onObjectHover={handleOnObjectHover}
                 onOpenUrl={Navigation.openUrls}
+                onGroupURLs={Navigation.createGroupFromUrls}
               />
               <Match
                 when={currentView === viewsType.currentWindow}
@@ -140,7 +149,7 @@ export default function History() {
                 windowsFeed={windowsFeed.currentWindow}
                 activeTabId={activeTabId}
                 // onObjectHover={handleOnObjectHover}
-                onCloseTab={Navigation.closeTab}
+                onCloseTabs={Navigation.closeTabs}
                 onOpenUrl={Navigation.openUrls}
               />
               <Match
@@ -149,7 +158,7 @@ export default function History() {
                 windowsFeed={windowsFeed.allOpen}
                 activeTabId={activeTabId}
                 // onObjectHover={handleOnObjectHover}
-                onCloseTab={Navigation.closeTab}
+                onCloseTabs={Navigation.closeTabs}
                 onOpenUrl={Navigation.openUrls}
               />
               <Match
@@ -159,6 +168,7 @@ export default function History() {
                 }
                 component={Views.Feed}
                 onOpenUrl={Navigation.openUrls}
+                onGroupURLs={Navigation.createGroupFromUrls}
                 // onObjectHover={handleOnObjectHover}
               />
             </Switch>
