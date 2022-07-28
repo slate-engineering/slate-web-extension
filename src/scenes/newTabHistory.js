@@ -123,7 +123,7 @@ const STYLES_HISTORY_SCENE_FEED = css`
 export default function HistoryScene() {
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const { windowsFeed, totalWindows, activeTabId } = useWindows();
+  const { windowsFeeds, totalWindows, activeTabId } = useWindows();
 
   const {
     viewsFeed,
@@ -212,7 +212,8 @@ export default function HistoryScene() {
                 <Match
                   when={currentView === viewsType.currentWindow}
                   component={WindowsFeed}
-                  windowsFeed={windowsFeed.currentWindow}
+                  windowsFeed={windowsFeeds.currentWindowFeed}
+                  windowsFeedKeys={windowsFeeds.currentWindowFeedKeys}
                   activeTabId={activeTabId}
                   onCloseTabs={Navigation.closeTabs}
                   onOpenUrl={Navigation.openUrls}
@@ -220,7 +221,8 @@ export default function HistoryScene() {
                 <Match
                   when={currentView === viewsType.allOpen}
                   component={WindowsFeed}
-                  windowsFeed={windowsFeed.allOpen}
+                  windowsFeed={windowsFeeds.allOpenKeys}
+                  windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
                   activeTabId={activeTabId}
                   onCloseTabs={Navigation.closeTabs}
                   onOpenUrl={Navigation.openUrls}

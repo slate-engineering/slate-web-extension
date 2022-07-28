@@ -58,20 +58,22 @@ export const useWindows = () => {
 
   const paramsRef = React.useRef(preloadedWindowsData.params);
 
-  const { windowsFeed, setWindowsFeed } = useWindowsState({
+  const { windowsFeeds, setWindowsFeed } = useWindowsState({
     initialState,
-    // NOTE(amine): creating currentWindow view requires this current tab's windowId
-    activeWindowId: paramsRef.current.windowId,
   });
 
   React.useEffect(() => {
     const handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === messages.windowsUpdate) {
-        setWindowsFeed(data.openTabs);
-
         paramsRef.current.totalWindows = data.totalWindows;
         paramsRef.current.activeTabId = data.activeTabId;
+
+        setWindowsFeed({
+          tabs: data.openTabs,
+          activeWindowId: paramsRef.current.activeWindowId,
+          activeTabId: paramsRef.current.activeTabId,
+        });
       }
     };
     window.addEventListener("message", handleMessage);
@@ -80,7 +82,7 @@ export const useWindows = () => {
   }, []);
 
   return {
-    windowsFeed,
+    windowsFeeds,
     totalWindows: paramsRef.current.totalWindows,
     activeTabId: paramsRef.current.activeTabId,
   };

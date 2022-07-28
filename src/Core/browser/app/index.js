@@ -1,6 +1,11 @@
 import * as React from "react";
 
-import { isToday, isYesterday, getRootDomain } from "../../../Common/utilities";
+import {
+  isToday,
+  isYesterday,
+  getRootDomain,
+  constructWindowsFeed,
+} from "../../../Common/utilities";
 
 const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
@@ -129,21 +134,21 @@ const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
  * @param {string} Arguments.initialState - pass currentWindow and allOpen tabs if they're preloaded
  * @param {string} Arguments.activeWindowId - used to get active window's open tabs
  *
- * @returns {{ windows: {currentWindow:[], allOpen:[] }, setWindowsFeed: Function }
+ * @returns {{ currentWindowFeedKeys: [], currentWindowFeed: [], allOpenFeedKeys: [], allOpenFeed: []}, setWindowsFeed: Function }}
  */
 
-export const useWindowsState = ({
-  initialState = { currentWindow: [], allOpen: [] },
-  activeWindowId,
-}) => {
+export const useWindowsState = ({ initialState }) => {
   const [windows, setWindows] = React.useState(initialState);
-  const setWindowsFeed = (tabs) => {
-    const currentWindow = tabs.filter((tab) => tab.windowId === activeWindowId);
-
-    setWindows({ currentWindow, allOpen: windows });
+  const setWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
+    const windowsFeeds = constructWindowsFeed({
+      tabs,
+      activeWindowId,
+      activeTabId,
+    });
+    setWindows(windowsFeeds);
   };
 
-  return { windowsFeed: windows, setWindowsFeed };
+  return { windowsFeeds: windows, setWindowsFeed };
 };
 
 /* -------------------------------------------------------------------------------------------------
