@@ -4,10 +4,15 @@ import * as SVG from "../Common/SVG";
 import * as ListView from "../Components/ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
+import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { getRootDomain } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../Common/utilities";
+
+/* -------------------------------------------------------------------------------------------------
+ * Search Provider
+ * -----------------------------------------------------------------------------------------------*/
 
 const SearchContext = React.createContext();
 const useSearchContext = () => React.useContext(SearchContext);
@@ -28,7 +33,9 @@ function Provider({ onInputChange, clearSearch, search, feed, children }) {
   );
 }
 
-/* -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------------------------------
+ * Search Dismiss
+ * -----------------------------------------------------------------------------------------------*/
 
 const DISMISS_BUTTON_WIDTH = 16;
 const STYLES_DISMISS_BUTTON = (theme) => css`
@@ -66,7 +73,9 @@ function Dismiss({ css, ...props }) {
   );
 }
 
-/* -----------------------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------------------------------
+ * Search Input
+ * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_SEARCH_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
@@ -129,6 +138,106 @@ const Input = React.forwardRef(
   }
 );
 
+/* -------------------------------------------------------------------------------------------------
+ * Search Feed
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_SEARCH_FEED_ROW = {
+  width: "calc(100% - 16px)",
+  left: "8px",
+};
+
+const SearchFeedRow = ({ index, data, onOpenUrl, style }) => {
+  if (!data[index]) return null;
+
+  const { rovingTabIndex, title, viewType, item } = data[index];
+
+  if (title) {
+    return (
+      <ListView.Title style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}>
+        {title}
+      </ListView.Title>
+    );
+  }
+
+  if (viewType === "currentWindow" || viewType === "allOpen") {
+    return (
+      <ListView.RovingTabIndexWithMultiSelectObject
+        key={item.id}
+        withActions
+        withMultiSelection
+        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+        index={rovingTabIndex}
+        title={item.title}
+        url={item.url}
+        favicon={item.favicon}
+        Favicon={getFavicon(getRootDomain(item.url))}
+        isSaved={item.isSaved}
+        onClick={() =>
+          onOpenUrl({
+            query: { tabId: item.id, windowId: item.windowId },
+          })
+        }
+        onSubmit={() =>
+          onOpenUrl({
+            query: { tabId: item.id, windowId: item.windowId },
+          })
+        }
+      />
+    );
+  }
+
+  return (
+    <ListView.RovingTabIndexWithMultiSelectObject
+      key={item.url}
+      withActions
+      withMultiSelection
+      style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+      index={rovingTabIndex}
+      title={item.title}
+      url={item.url}
+      relatedVisits={item.relatedVisits}
+      Favicon={getFavicon(item.rootDomain)}
+      isSaved={item.isSaved}
+      onClick={() => onOpenUrl({ urls: [item.url] })}
+      onSubmit={() => onOpenUrl({ urls: [item.url] })}
+    />
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const SearchFeedList = React.forwardRef(
+  ({ children, ...props }, forwardedRef) => {
+    const [listHeight, setListHeight] = React.useState(
+      isNewTab ? null : Constants.sizes.jumperFeedWrapper
+    );
+
+    const ref = React.useRef();
+    React.useEffect(() => {
+      if (ref.current) {
+        setListHeight(ref.current.offsetHeight);
+      }
+    }, []);
+
+    if (!listHeight) {
+      return <div style={{ height: "100%" }} ref={ref} />;
+    }
+
+    return (
+      <RovingTabIndex.List>
+        <ListView.FixedSizeListRoot
+          height={listHeight}
+          ref={forwardedRef}
+          {...props}
+        >
+          {children}
+        </ListView.FixedSizeListRoot>
+      </RovingTabIndex.List>
+    );
+  }
+);
+
 /* -----------------------------------------------------------------------------------------------*/
 
 const getTitleFromView = (view) => {
@@ -153,6 +262,30 @@ const Feed = React.memo(({ onOpenUrl, onGroupURLs, ...props }) => {
     return length;
   }, [feeds]);
 
+  const virtualizedFeed = React.useMemo(() => {
+    let rovingTabIndex = 0;
+    let virtualizedFeed = [];
+
+    for (let feed of feeds) {
+      const { title: view, result } = feed;
+      result.forEach((item, index) => {
+        if (index === 0) {
+          virtualizedFeed.push({ title: getTitleFromView(view) });
+        }
+
+        virtualizedFeed.push({
+          rovingTabIndex,
+          viewType: view,
+          item,
+        });
+
+        rovingTabIndex++;
+      });
+    }
+
+    return virtualizedFeed;
+  }, [feeds]);
+
   const handleOnSubmitSelectedItem = (index) => {
     let currentLength = 0;
 
@@ -167,75 +300,25 @@ const Feed = React.memo(({ onOpenUrl, onGroupURLs, ...props }) => {
   };
 
   return (
-    <RovingTabIndex.Provider key={feeds} withFocusOnHover>
-      <RovingTabIndex.List>
-        <ListView.Root {...props}>
-          <MultiSelection.Provider
-            totalSelectableItems={searchFeedLength}
-            onSubmitSelectedItem={handleOnSubmitSelectedItem}
-          >
-            <div>
-              {feeds.map(({ title: view, result: feed }, feedIndex) => (
-                <>
-                  <ListView.Title count={feed.length}>
-                    {getTitleFromView(view)}
-                  </ListView.Title>
-                  {feed.map((item, i) => {
-                    if (view === "currentWindow" || view === "allOpen") {
-                      const tab = item.item;
-                      return (
-                        <ListView.RovingTabIndexWithMultiSelectObject
-                          key={tab.id}
-                          withActions
-                          withMultiSelection
-                          index={i}
-                          title={tab.title}
-                          url={tab.url}
-                          favicon={tab.favicon}
-                          Favicon={getFavicon(getRootDomain(tab.url))}
-                          isSaved={tab.isSaved}
-                          onClick={() =>
-                            onOpenUrl({
-                              query: { tabId: tab.id, windowId: tab.windowId },
-                            })
-                          }
-                          onSubmit={() =>
-                            onOpenUrl({
-                              query: { tabId: tab.id, windowId: tab.windowId },
-                            })
-                          }
-                        />
-                      );
-                    }
-
-                    const visit = item;
-                    return (
-                      <ListView.RovingTabIndexWithMultiSelectObject
-                        key={visit.url}
-                        withActions
-                        withMultiSelection
-                        index={i + (feeds[feedIndex - 1]?.result?.length || 0)}
-                        title={visit.title}
-                        url={visit.url}
-                        relatedVisits={visit.relatedVisits}
-                        Favicon={getFavicon(visit.rootDomain)}
-                        isSaved={visit.isSaved}
-                        onClick={() => onOpenUrl({ urls: [visit.url] })}
-                        onSubmit={() => onOpenUrl({ urls: [visit.url] })}
-                      />
-                    );
-                  })}
-                </>
-              ))}
-            </div>
-
-            <MultiSelection.ActionsMenu
-              onOpenURLs={(urls) => onOpenUrl({ urls })}
-              onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
-            />
-          </MultiSelection.Provider>
-        </ListView.Root>
-      </RovingTabIndex.List>
+    <RovingTabIndex.Provider key={feeds} isInfiniteList withFocusOnHover>
+      <MultiSelection.Provider
+        totalSelectableItems={searchFeedLength}
+        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+      >
+        <SearchFeedList
+          itemCount={virtualizedFeed.length}
+          itemData={virtualizedFeed}
+          itemSize={Constants.sizes.jumperFeedItem}
+          css={css}
+          {...props}
+        >
+          {(props) => SearchFeedRow({ ...props, onOpenUrl })}
+        </SearchFeedList>
+        <MultiSelection.ActionsMenu
+          onOpenURLs={(urls) => onOpenUrl({ urls })}
+          onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+        />
+      </MultiSelection.Provider>
     </RovingTabIndex.Provider>
   );
 });
