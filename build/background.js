@@ -375,7 +375,39 @@ const viewerInitialState = {
   // NOTE(amine):if there is one tab is open,populate the recent view
 };
 
+;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
+const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
+  const currentWindowFeedKeys = ["Current Tab", "Others"];
+  let currentWindowFeed = { ["Current Tab"]: [], ["Others"]: [] };
+
+  const allOpenFeedKeys = ["Current Window", "Others"];
+  let allOpenFeed = { ["Current Window"]: [], Others: [] };
+
+  tabs.forEach((tab) => {
+    if (tab.windowId === activeWindowId) {
+      if (tab.id === activeTabId) {
+        currentWindowFeed["Current Tab"].push(tab);
+      } else {
+        currentWindowFeed["Others"].push(tab);
+      }
+
+      allOpenFeed["Current Window"].push(tab);
+      return;
+    }
+
+    allOpenFeed["Others"].push(tab);
+  });
+
+  return {
+    currentWindowFeed,
+    currentWindowFeedKeys,
+    allOpenFeed,
+    allOpenFeedKeys,
+  };
+};
+
 ;// CONCATENATED MODULE: ./src/Core/viewer/background.js
+
 
 
 
@@ -659,20 +691,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return { isAuthenticated };
       }
 
-      const currentWindow = await Windows.getAllTabsInWindow(
-        sender.tab.windowId
-      );
-      const allOpen = await Windows.getAllTabs();
-      const totalWindows = new Set(allOpen.map((tab) => tab.windowId)).size;
+      const openTabs = await Windows.getAllTabs();
+      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
+
+      const {
+        currentWindowFeedKeys,
+        currentWindowFeed,
+        allOpenFeedKeys,
+        allOpenFeed,
+      } = constructWindowsFeed({
+        tabs: openTabs,
+        activeWindowId: sender.tab.windowId,
+        activeTabId: sender.tab.id,
+      });
 
       const response = {
         ...viewerInitialState,
         isAuthenticated,
         shouldSync,
         windows: {
-          data: { currentWindow, allOpen },
+          data: {
+            currentWindowFeedKeys,
+            currentWindowFeed,
+            allOpenFeedKeys,
+            allOpenFeed,
+          },
           params: {
-            windowId: sender.tab.windowId,
+            activeWindowId: sender.tab.windowId,
             totalWindows,
             activeTabId: sender.tab.id,
           },
@@ -680,10 +725,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       };
 
       // NOTE(amine): if there is only one tab open, preload recent view
-      if (response.windows.data.allOpen.length === 1) {
-        response.recent = await browserHistory.getChunk();
-        response.initialView = viewsType.recent;
-      }
+      // if (response.windows.data.allOpen.length === 1) {
+      //   response.recent = await browserHistory.getChunk();
+      //   response.initialView = viewsType.recent;
+      // }
 
       return response;
     };
@@ -2833,8 +2878,10 @@ const Windows = {
     }
 
     const fuse = new Fuse(tabs, options);
-
-    return fuse.search(query);
+    const searchResult = fuse.search(query);
+    return await Promise.all(
+      searchResult.map(async ({ item }) => await Tabs.create(item))
+    );
   },
 };
 
@@ -2863,9 +2910,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status == "complete") {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
+      const openTabs = await Windows.getAllTabs();
+      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
+
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
         type: messages.windowsUpdate,
-        data: { openTabs: await Windows.getAllTabs() },
+        data: { openTabs, totalWindows, activeTabId: activeTab.id },
       });
     }
 
