@@ -692,7 +692,7 @@ function Feed({ onObjectHover, onOpenUrl, onGroupURLs, ...props }) {
   const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
   return (
-    <RovingTabIndex.Provider key={viewsFeed} withFocusOnHover>
+    <RovingTabIndex.Provider key={viewsFeed} isInfiniteList withFocusOnHover>
       <MultiSelection.Provider
         totalSelectableItems={viewsFeed.length}
         onSubmitSelectedItem={handleOnSubmitSelectedItem}
