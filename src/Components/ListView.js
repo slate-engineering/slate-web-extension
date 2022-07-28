@@ -12,6 +12,7 @@ import {
 } from "./ComboboxNavigation";
 import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
 import { Checkbox } from "./system";
+import { FixedSizeList, VariableSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
@@ -38,6 +39,34 @@ const Root = React.forwardRef(({ children, css, ...props }, ref) => {
     </section>
   );
 });
+
+/* -------------------------------------------------------------------------------------------------
+ * ListView FixedSizeList Root
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_LIST_VIEW_FIXED_SIZE_ROOT = css`
+  height: 100%;
+  flex: 1;
+  padding: 0px 8px 8px;
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const FixedSizeListRoot = React.forwardRef(
+  ({ children, css, ...props }, ref) => {
+    return (
+      <FixedSizeList
+        outerRef={ref}
+        css={[STYLES_LIST_VIEW_FIXED_SIZE_ROOT, css]}
+        {...props}
+      >
+        {children}
+      </FixedSizeList>
+    );
+  }
+);
 
 /* -------------------------------------------------------------------------------------------------
  * ListView Section
@@ -393,6 +422,8 @@ const RovingTabIndexWithMultiSelectObject = ({ index, ...props }) => {
 
 export {
   Root,
+  FixedSizeListRoot,
+  VariableSizeListRoot,
   Section,
   Title,
   Object,
