@@ -358,8 +358,10 @@ export const Windows = {
     }
 
     const fuse = new Fuse(tabs, options);
-
-    return fuse.search(query);
+    const searchResult = fuse.search(query);
+    return await Promise.all(
+      searchResult.map(async ({ item }) => await Tabs.create(item))
+    );
   },
 };
 
