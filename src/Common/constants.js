@@ -17,6 +17,8 @@ export const sizes = {
   tablet: 960,
   desktop: 1024,
   desktopM: 1300,
+  jumperFeedItem: 40,
+  jumperFeedWrapper: 373,
   topOffset: 0, //NOTE(martina): Pushes UI down. 16 when there is a persistent announcement banner, 0 otherwise
 };
 
