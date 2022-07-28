@@ -1,228 +1,326 @@
-import React, { useState } from "react";
-import classes from "../App.module.css";
+import * as React from "react";
+import * as Styles from "../Common/styles";
+import * as SVG from "../Common/SVG";
+import * as ListView from "../Components/ListView";
+import * as RovingTabIndex from "./RovingTabIndex";
+import * as MultiSelection from "./MultiSelection";
+import * as Constants from "../Common/constants";
 
-import * as Constants from "Common/constants";
+import { css } from "@emotion/react";
+import { getFavicon } from "../Common/favicons";
+import { getRootDomain, isNewTab } from "../Common/utilities";
 
-const Tag = () => {
+/* -------------------------------------------------------------------------------------------------
+ * Search Provider
+ * -----------------------------------------------------------------------------------------------*/
+
+const SearchContext = React.createContext();
+const useSearchContext = () => React.useContext(SearchContext);
+
+function Provider({ onInputChange, clearSearch, search, feed, children }) {
+  const value = React.useMemo(
+    () => ({
+      onInputChange,
+      clearSearch,
+      search,
+      feed,
+    }),
+    [onInputChange, clearSearch, search, feed]
+  );
+
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 22 22"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ paddingTop: "4px" }}
-    >
-      <path
-        d="M19.59 12.41L12.42 19.58C12.2343 19.766 12.0137 19.9135 11.7709 20.0141C11.5281 20.1148 11.2678 20.1666 11.005 20.1666C10.7422 20.1666 10.4819 20.1148 10.2391 20.0141C9.99632 19.9135 9.77575 19.766 9.59 19.58L1 11V1H11L19.59 9.59C19.9625 9.96473 20.1716 10.4716 20.1716 11C20.1716 11.5284 19.9625 12.0353 19.59 12.41V12.41Z"
-        stroke="#8E8E93"
-        stroke-width="1.875"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+    <SearchContext.Provider value={value}>{children}</SearchContext.Provider>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Search Dismiss
+ * -----------------------------------------------------------------------------------------------*/
+
+const DISMISS_BUTTON_WIDTH = 16;
+const STYLES_DISMISS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  width: 32px;
+  padding: 8px;
+  border-radius: 8px;
+  color: ${theme.semantic.textGray};
+
+  &:hover {
+    background-color: ${theme.semantic.bgGrayLight};
+    color: ${theme.semantic.textBlack};
+  }
+
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+    color: ${theme.semantic.textBlack};
+  }
+`;
+
+function Dismiss({ css, ...props }) {
+  return (
+    <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
+      <SVG.Dismiss
+        style={{ display: "block" }}
+        height={DISMISS_BUTTON_WIDTH}
+        width={DISMISS_BUTTON_WIDTH}
       />
-    </svg>
+    </button>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * Search Input
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_SEARCH_WRAPPER = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  position: relative;
+  width: 100%;
+`;
+
+const STYLES_SEARCH_INPUT = (theme) => css`
+  ${Styles.H3};
+
+  font-family: ${theme.font.text};
+  -webkit-appearance: none;
+  width: 100%;
+  height: 56px;
+  padding-right: ${DISMISS_BUTTON_WIDTH + 24}px;
+  background-color: transparent;
+  outline: 0;
+  border: none;
+  box-sizing: border-box;
+  color: ${theme.semantic.textBlack};
+
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.semantic.textGrayLight};
+    opacity: 1; /* Firefox */
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: ${theme.semantic.textGrayLight};
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: ${theme.semantic.textGrayLight};
+  }
+`;
+
+const Input = React.forwardRef(
+  ({ css, containerCss, containerStyle, ...props }, ref) => {
+    const { onInputChange, clearSearch, search } = useSearchContext();
+    return (
+      <section
+        css={[STYLES_SEARCH_WRAPPER, containerCss]}
+        style={containerStyle}
+      >
+        <input
+          css={[STYLES_SEARCH_INPUT, css]}
+          ref={ref}
+          placeholder="Search by keywords, filters, tags"
+          name="search"
+          onChange={onInputChange}
+          autoComplete="off"
+          {...props}
+        />
+
+        {search.query.length > 0 ? <Dismiss onClick={clearSearch} /> : null}
+      </section>
+    );
+  }
+);
+
+/* -------------------------------------------------------------------------------------------------
+ * Search Feed
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_SEARCH_FEED_ROW = {
+  width: "calc(100% - 16px)",
+  left: "8px",
+};
+
+const SearchFeedRow = ({ index, data, onOpenUrl, style }) => {
+  if (!data[index]) return null;
+
+  const { rovingTabIndex, title, viewType, item } = data[index];
+
+  if (title) {
+    return (
+      <ListView.Title style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}>
+        {title}
+      </ListView.Title>
+    );
+  }
+
+  if (viewType === "currentWindow" || viewType === "allOpen") {
+    return (
+      <ListView.RovingTabIndexWithMultiSelectObject
+        key={item.id}
+        withActions
+        withMultiSelection
+        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+        index={rovingTabIndex}
+        title={item.title}
+        url={item.url}
+        favicon={item.favicon}
+        Favicon={getFavicon(getRootDomain(item.url))}
+        isSaved={item.isSaved}
+        onClick={() =>
+          onOpenUrl({
+            query: { tabId: item.id, windowId: item.windowId },
+          })
+        }
+        onSubmit={() =>
+          onOpenUrl({
+            query: { tabId: item.id, windowId: item.windowId },
+          })
+        }
+      />
+    );
+  }
+
+  return (
+    <ListView.RovingTabIndexWithMultiSelectObject
+      key={item.url}
+      withActions
+      withMultiSelection
+      style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+      index={rovingTabIndex}
+      title={item.title}
+      url={item.url}
+      relatedVisits={item.relatedVisits}
+      Favicon={getFavicon(item.rootDomain)}
+      isSaved={item.isSaved}
+      onClick={() => onOpenUrl({ urls: [item.url] })}
+      onSubmit={() => onOpenUrl({ urls: [item.url] })}
+    />
   );
 };
 
-const Search = (props) => {
-  const [search, setSearch] = useState({ query: null });
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState({ data: null });
+/* -----------------------------------------------------------------------------------------------*/
 
-  const handleGetCollections = async () => {
-    const response = await fetch(`${Constants.uri.hostname}/api/v3/get`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "SLA2a459dde-9433-43a5-966c-cf5603db59f7TE",
-      },
-    });
+const SearchFeedList = React.forwardRef(
+  ({ children, ...props }, forwardedRef) => {
+    const [listHeight, setListHeight] = React.useState(
+      isNewTab ? null : Constants.sizes.jumperFeedWrapper
+    );
 
-    if (!response) {
-      console.log("No response");
-      return;
+    const ref = React.useRef();
+    React.useEffect(() => {
+      if (ref.current) {
+        setListHeight(ref.current.offsetHeight);
+      }
+    }, []);
+
+    if (!listHeight) {
+      return <div style={{ height: "100%" }} ref={ref} />;
     }
 
-    const json = await response.json();
-    if (json.error) {
-      console.log(json);
-    } else {
-      const collections = json.collections;
-      const user = json.user;
-    }
+    return (
+      <RovingTabIndex.List>
+        <ListView.FixedSizeListRoot
+          height={listHeight}
+          ref={forwardedRef}
+          {...props}
+        >
+          {children}
+        </ListView.FixedSizeListRoot>
+      </RovingTabIndex.List>
+    );
+  }
+);
 
-    //setSearchResults({ data: json.collections })
-    //console.log('searchLL ', json.collections)
-    return json.collections;
+/* -----------------------------------------------------------------------------------------------*/
+
+const getTitleFromView = (view) => {
+  const titles = {
+    currentWindow: "Current Window",
+    allOpen: "All Open",
+    recent: "Recent",
   };
+  return titles[view];
+};
 
-  const handleSearchChange = async (e) => {
-    setSearch({ query: e.target.value });
+const Feed = React.memo(({ onOpenUrl, onGroupURLs, ...props }) => {
+  const {
+    search: { result: feeds, query: searchQuery },
+  } = useSearchContext();
 
-    let checkType = e.target.value.includes("†");
-    console.log("in the type 1", checkType);
-    if (checkType) {
-      console.log("in the type 2");
-      let final = e.target.value.replace("†", "type:");
-      setSearch({ query: final });
-      return;
+  const searchFeedLength = React.useMemo(() => {
+    let length = 0;
+    for (let feed of feeds) {
+      length += feed.result.length;
+    }
+    return length;
+  }, [feeds]);
+
+  const virtualizedFeed = React.useMemo(() => {
+    let rovingTabIndex = 0;
+    let virtualizedFeed = [];
+
+    for (let feed of feeds) {
+      const { title: view, result } = feed;
+      result.forEach((item, index) => {
+        if (index === 0) {
+          virtualizedFeed.push({ title: getTitleFromView(view) });
+        }
+
+        virtualizedFeed.push({
+          rovingTabIndex,
+          viewType: view,
+          item,
+        });
+
+        rovingTabIndex++;
+      });
     }
 
-    let checkFrom = e.target.value.includes("ƒ");
-    if (checkFrom) {
-      let final = e.target.value.replace("ƒ", "from:");
-      setSearch({ query: final });
-      return;
+    return virtualizedFeed;
+  }, [feeds]);
+
+  const handleOnSubmitSelectedItem = (index) => {
+    let currentLength = 0;
+
+    for (let feed of feeds) {
+      const { result } = feed;
+      const nextLength = currentLength + result.length;
+      if (index < nextLength) {
+        return result[index - currentLength];
+      }
+      currentLength = nextLength;
     }
-
-    let checkScreenshot = e.target.value.includes("å");
-    if (checkScreenshot) {
-      let final = e.target.value.replace("å", "");
-      setSearch({ query: final });
-      window.postMessage({ type: "OPEN_SCREENSHOT_SHORTCUT" }, "*");
-      return;
-    }
-
-    let checkBookmark = e.target.value.includes("∫");
-    if (checkBookmark) {
-      let final = e.target.value.replace("∫", " ");
-      setSearch({ query: final });
-      console.log("send message to bookmark");
-
-      window.postMessage(
-        {
-          type: "SAVE_LINK",
-          url: window.location.href,
-        },
-        "*"
-      );
-
-      return;
-    }
-
-    if (
-      e.target.value === null ||
-      e.target.value === "" ||
-      e.target.value === " "
-    ) {
-      console.log("target is empty");
-      setSearch({ query: null });
-      setSearchResults({ data: null });
-      setIsSearching(false);
-      return;
-    }
-
-    let results = await handleGetCollections();
-    let resultsArray = Array.from(results);
-    let filteredResults = resultsArray.filter(function (e) {
-      return e.slatename.includes(search.query);
-    });
-    setSearchResults({ data: filteredResults });
-    setIsSearching(true);
-  };
-
-  const handleSearch = (e) => {
-    console.log("event from the search compnent: ", e);
-    if (e.key === "Enter") {
-      window.postMessage(
-        {
-          type: "OPEN_SEARCH",
-          query: e.target.value,
-        },
-        "*"
-      );
-    }
-
-    if (e.key === "Escape") {
-      window.postMessage(
-        {
-          type: "CLOSE_APP",
-        },
-        "*"
-      );
-    }
-  };
-
-  const handleCloseModal = () => {
-    window.postMessage({ type: "CLOSE_APP" }, "*");
-  };
-
-  const handCloseSearch = () => {
-    setSearch({ query: "" });
-    setSearchResults({ data: null });
-    setIsSearching(false);
   };
 
   return (
-    <div>
-      <input
-        className={classes.modalSearchInput}
-        value={search.query}
-        ref={(input) => input && input.focus()}
-        autocomplete="off"
-        placeholder="Search your Slate..."
-        onKeyDown={(e) => {
-          handleSearch(e);
-        }}
-        onChange={(e) => {
-          handleSearchChange(e);
-        }}
-        autoFocus
-      />
-
-      {isSearching ? (
-        <div
-          className={classes.modalCloseButton}
-          style={{
-            position: "absolute",
-            right: "0px",
-            top: "14px",
-            color: "#C7C7CC",
-            cursor: "pointer",
-          }}
-          onClick={handCloseSearch}
+    <RovingTabIndex.Provider key={feeds} isInfiniteList withFocusOnHover>
+      <MultiSelection.Provider
+        totalSelectableItems={searchFeedLength}
+        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+      >
+        <SearchFeedList
+          itemCount={virtualizedFeed.length}
+          itemData={virtualizedFeed}
+          itemSize={Constants.sizes.jumperFeedItem}
+          css={css}
+          {...props}
         >
-          Clear
-        </div>
-      ) : (
-        <div
-          className={classes.modalCloseButton}
-          style={{
-            position: "absolute",
-            right: "0px",
-            top: "14px",
-            color: "#48494A",
-            cursor: "pointer",
-          }}
-          onClick={handleCloseModal}
-        >
-          X
-        </div>
-      )}
-
-      {isSearching && (
-        <div className={classes.modalSearchDropdown}>
-          <div>
-            <span
-              style={{ fontSize: "12px", color: "#C7C7CC", paddingLeft: "8px" }}
-            >
-              open a collection or tag
-            </span>
-          </div>
-          {searchResults.data.map((slate, index) => (
-            <div
-              className={classes.modalSearchItem}
-              onClick={() => window.open(slate.data.url, "_blank")}
-              key={index}
-            >
-              <Tag />{" "}
-              <span style={{ paddingLeft: "8px" }}>{slate.slatename}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+          {(props) => SearchFeedRow({ ...props, onOpenUrl })}
+        </SearchFeedList>
+        <MultiSelection.ActionsMenu
+          onOpenURLs={(urls) => onOpenUrl({ urls })}
+          onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+        />
+      </MultiSelection.Provider>
+    </RovingTabIndex.Provider>
   );
-};
+});
 
-export default Search;
+export { Provider, Input, Feed };

@@ -1,3 +1,9 @@
+// NOTE(amine): commands are defined in manifest.json
+export const commands = {
+  openApp: "open-app",
+  openSlate: "open-slate",
+};
+
 export const values = {
   version: "1.0.0",
   sds: "0.2.0",
@@ -10,6 +16,9 @@ export const sizes = {
   header: 56,
   tablet: 960,
   desktop: 1024,
+  desktopM: 1300,
+  jumperFeedItem: 40,
+  jumperFeedWrapper: 373,
   topOffset: 0, //NOTE(martina): Pushes UI down. 16 when there is a persistent announcement banner, 0 otherwise
 };
 
@@ -81,6 +90,8 @@ export const system = {
   redDark4: "#800E00",
   redDark5: "#550500",
   redDark6: "#2B0000",
+
+  twitterBlue: "1DA1F2",
 };
 
 export const semantic = {
@@ -92,10 +103,14 @@ export const semantic = {
   textBlack: system.black,
 
   bgLight: system.grayLight6,
+
   bgGrayLight: system.grayLight5,
+  bgGrayLight4: system.grayLight4,
   bgBlurWhite: "rgba(255, 255, 255, 0.7)",
   bgBlurWhiteOP: "rgba(255, 255, 255, 0.85)",
   bgBlurWhiteTRN: "rgba(255, 255, 255, 0.3)",
+  bgBlurLight: "rgba(247, 248, 249, 0.7)",
+  bgBlurLightOP: "rgba(247, 248, 249, 0.85)",
   bgBlurLight6: "rgba(247, 248, 249, 0.7)",
   bgBlurLight6OP: "rgba(247, 248, 249, 0.85)",
   bgBlurLight6TRN: "rgba(247, 248, 249, 0.3)",
@@ -111,14 +126,16 @@ export const semantic = {
   bgBlurDark6TRN: "rgba(28, 29, 30, 0.3)",
 
   borderLight: system.grayLight6,
-  borderGrayLight: system.grayLight5,
   borderDark: system.grayDark6,
+  borderGray: system.gray,
+  borderGrayLight: system.grayLight5,
   borderGrayDark: system.grayDark5,
   borderGrayLight4: system.grayLight4,
 
   bgBlue: system.blueLight6,
   bgGreen: system.greenLight6,
   bgYellow: system.yellowLight6,
+  bgWhite: system.white,
   bgRed: system.redLight6,
 };
 
@@ -129,6 +146,7 @@ export const shadow = {
   darkSmall: "0px 4px 16px 0 rgba(99, 101, 102, 0.1)",
   darkMedium: "0px 8px 32px 0 rgba(99, 101, 102, 0.2)",
   darkLarge: "0px 12px 64px 0 rgba(99, 101, 102, 0.3)",
+  jumperLight: "0px 20px 36px 0 rgba(99, 101, 102, 0.6)",
   card: "0px 0px 32px #E5E8EA;",
 };
 
@@ -141,6 +159,7 @@ export const zindex = {
   modal: 6,
   tooltip: 7,
   cta: 8,
+  extensionJumper: 2147483647,
 };
 
 export const font = {
@@ -241,13 +260,4 @@ export const grids = {
 export const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
 
-export const routes = {
-  modal: {
-    key: "modal",
-    values: {
-      home: "home",
-      shortcuts: "shortcuts",
-      account: "account",
-    },
-  },
-};
+export const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
