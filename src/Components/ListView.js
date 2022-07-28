@@ -216,7 +216,6 @@ const Object = React.forwardRef(
       relatedVisits,
       favicon,
 
-      isActiveTab,
       onCloseTab,
 
       withMultiSelection,
@@ -330,7 +329,7 @@ const Object = React.forwardRef(
                 >
                   <SVG.Trash width={16} height={16} />
                 </button>
-                {onCloseTab && !isActiveTab && (
+                {onCloseTab && (
                   <button
                     className="object_action_button"
                     css={STYLES_OBJECT_ACTION_BUTTON}
@@ -342,11 +341,7 @@ const Object = React.forwardRef(
                     <SVG.XCircle width={16} height={16} />
                   </button>
                 )}
-                {isActiveTab && (
-                  <div style={{ padding: 2 }}>
-                    <SVG.Star width={16} height={16} />
-                  </div>
-                )}
+
                 {!isSaved && (
                   <button
                     className="object_action_button"
