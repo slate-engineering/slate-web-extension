@@ -6,6 +6,7 @@ import * as SVG from "../Common/SVG";
 import * as Favicons from "../Common/favicons";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
+import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
@@ -13,7 +14,7 @@ import { viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import { useEventListener } from "Common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
-import { mergeRefs, mergeEvents } from "../Common/utilities";
+import { mergeRefs, mergeEvents, isNewTab } from "../Common/utilities";
 
 const VIEWS_ACTIONS = [
   { label: "Current Window", data: { type: viewsType.currentWindow } },
@@ -614,47 +615,102 @@ function Menu({ css, showAllOpenAction, ...props }) {
  * Views Feed
  * -----------------------------------------------------------------------------------------------*/
 
-function Feed({ onObjectHover, onOpenUrl, onGroupURLs, style, ...props }) {
+const STYLES_VIEWS_FEED_ROW = {
+  width: "calc(100% - 16px)",
+  left: "8px",
+  transform: "translateY(8px)",
+};
+
+const ViewsFeedRow = ({
+  index,
+  data,
+  style,
+  onOpenUrl,
+  onObjectHover,
+  ...props
+}) => {
+  const visit = data[index];
+
+  return (
+    <ListView.RovingTabIndexWithMultiSelectObject
+      key={visit.url}
+      withActions
+      withMultiSelection
+      style={{ ...style, ...STYLES_VIEWS_FEED_ROW }}
+      index={index}
+      title={visit.title}
+      url={visit.url}
+      favicon={visit.favicon}
+      relatedVisits={visit.relatedVisits}
+      isSaved={visit.isSaved}
+      Favicon={getFavicon(visit.rootDomain)}
+      onClick={() => onOpenUrl({ urls: [visit.url] })}
+      onMouseEnter={() => onObjectHover?.({ url: visit.url })}
+      {...props}
+    />
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const ViewsFeedList = React.forwardRef(
+  ({ children, ...props }, forwardedRef) => {
+    const [listHeight, setListHeight] = React.useState(
+      isNewTab ? null : Constants.sizes.jumperFeedWrapper
+    );
+
+    const ref = React.useRef();
+    React.useEffect(() => {
+      if (ref.current) {
+        setListHeight(ref.current.offsetHeight);
+      }
+    }, []);
+
+    if (!listHeight) {
+      return <div style={{ height: "100%" }} ref={ref} />;
+    }
+
+    return (
+      <RovingTabIndex.List>
+        <ListView.FixedSizeListRoot
+          height={listHeight}
+          ref={forwardedRef}
+          {...props}
+        >
+          {children}
+        </ListView.FixedSizeListRoot>
+      </RovingTabIndex.List>
+    );
+  }
+);
+
+/* -----------------------------------------------------------------------------------------------*/
+
+function Feed({ onObjectHover, onOpenUrl, onGroupURLs, ...props }) {
   const { viewsFeed, currentViewLabel } = useViewsContext();
 
   const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
   return (
     <RovingTabIndex.Provider key={viewsFeed} withFocusOnHover>
-      <RovingTabIndex.List>
-        <ListView.Root style={{ paddingTop: 8, ...style }} {...props}>
-          <MultiSelection.Provider
-            totalSelectableItems={viewsFeed.length}
-            onSubmitSelectedItem={handleOnSubmitSelectedItem}
-          >
-            <div>
-              {viewsFeed.map((visit, i) => (
-                <ListView.RovingTabIndexWithMultiSelectObject
-                  key={visit.url}
-                  withActions
-                  withMultiSelection
-                  index={i}
-                  title={visit.title}
-                  url={visit.url}
-                  favicon={visit.favicon}
-                  relatedVisits={visit.relatedVisits}
-                  isSaved={visit.isSaved}
-                  Favicon={getFavicon(visit.rootDomain)}
-                  onClick={() => onOpenUrl({ urls: [visit.url] })}
-                  onMouseEnter={() => onObjectHover?.({ url: visit.url })}
-                />
-              ))}
-            </div>
+      <MultiSelection.Provider
+        totalSelectableItems={viewsFeed.length}
+        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+      >
+        <ViewsFeedList
+          itemCount={viewsFeed.length}
+          itemData={viewsFeed}
+          itemSize={Constants.sizes.jumperFeedItem}
+          {...props}
+        >
+          {(props) => ViewsFeedRow({ ...props, onOpenUrl, onObjectHover })}
+        </ViewsFeedList>
 
-            <MultiSelection.ActionsMenu
-              onOpenURLs={(urls) => onOpenUrl({ urls })}
-              onGroupURLs={(urls) =>
-                onGroupURLs({ urls, title: currentViewLabel })
-              }
-            />
-          </MultiSelection.Provider>
-        </ListView.Root>
-      </RovingTabIndex.List>
+        <MultiSelection.ActionsMenu
+          onOpenURLs={(urls) => onOpenUrl({ urls })}
+          onGroupURLs={(urls) => onGroupURLs({ urls, title: currentViewLabel })}
+        />
+      </MultiSelection.Provider>
     </RovingTabIndex.Provider>
   );
 }

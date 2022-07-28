@@ -31,8 +31,8 @@ const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
 const STYLES_HISTORY_FEED_ROW = {
   width: "calc(100% - 16px)",
   left: "8px",
-  transform: "translateY(8px)",
 };
+
 const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
   if (!data[index]) return null;
 
@@ -73,7 +73,7 @@ const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
 /* -----------------------------------------------------------------------------------------------*/
 
 const HistoryFeedList = React.forwardRef(
-  ({ virtualizedFeed, children, css, ...props }, forwardedRef) => {
+  ({ children, ...props }, forwardedRef) => {
     const [listHeight, setListHeight] = React.useState(
       isNewTab ? null : Constants.sizes.jumperFeedWrapper
     );
@@ -93,11 +93,7 @@ const HistoryFeedList = React.forwardRef(
       <RovingTabIndex.List>
         <ListView.FixedSizeListRoot
           height={listHeight}
-          itemCount={virtualizedFeed.length + 1}
-          itemData={virtualizedFeed}
-          itemSize={Constants.sizes.jumperFeedItem}
           ref={forwardedRef}
-          css={css}
           {...props}
         >
           {children}
@@ -186,7 +182,9 @@ const HistoryFeed = ({
         >
           {({ onItemsRendered, ref }) => (
             <HistoryFeedList
-              virtualizedFeed={virtualizedFeed}
+              itemCount={virtualizedFeed.length + 1}
+              itemData={virtualizedFeed}
+              itemSize={Constants.sizes.jumperFeedItem}
               onItemsRendered={onItemsRendered}
               css={css}
               ref={ref}

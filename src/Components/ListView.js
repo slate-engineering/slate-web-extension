@@ -12,7 +12,7 @@ import {
 } from "./ComboboxNavigation";
 import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
 import { Checkbox } from "./system";
-import { FixedSizeList, VariableSizeList } from "react-window";
+import { FixedSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
@@ -423,7 +423,6 @@ const RovingTabIndexWithMultiSelectObject = ({ index, ...props }) => {
 export {
   Root,
   FixedSizeListRoot,
-  VariableSizeListRoot,
   Section,
   Title,
   Object,
