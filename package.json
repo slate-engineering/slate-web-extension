@@ -60,6 +60,8 @@
     "react-shadow": "^19.0.2",
     "react-shadow-root": "^6.1.0",
     "react-usestateref": "^1.0.8",
+    "react-window": "^1.8.7",
+    "react-window-infinite-loader": "^1.0.8",
     "resolve": "^1.20.0",
     "resolve-url-loader": "^4.0.0",
     "sass-loader": "^12.3.0",
