@@ -1,6 +1,7 @@
 import * as Constants from "../../Common/constants";
 
 import { messages } from "./";
+import { getRootDomain } from "../../Extension_common/utilities";
 
 export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   if (query?.newWindow) {
@@ -67,6 +68,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 chrome.action.onClicked.addListener(async (tab) => {
   chrome.tabs.sendMessage(parseInt(tab.id), {
     type: messages.openExtensionJumperRequest,
+    data: { url: "/" },
   });
 });
 
@@ -74,6 +76,15 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == Constants.commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: messages.openExtensionJumperRequest,
+      data: { url: "/" },
+    });
+  }
+
+  if (command == Constants.commands.openAppOnSlates) {
+    const urls = [{ url: tab.url, rootDomain: getRootDomain(tab.url) }];
+    chrome.tabs.sendMessage(parseInt(tab.id), {
+      type: messages.openExtensionJumperRequest,
+      data: { url: `/slates?urls=${JSON.stringify(urls)}` },
     });
   }
 
