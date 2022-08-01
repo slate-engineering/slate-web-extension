@@ -168,6 +168,7 @@ class Viewer {
       this._set({
         objects: serializedViewer.objects,
         savedLinks: serializedViewer.savedLinks,
+        slates: serializedViewer.slates,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
