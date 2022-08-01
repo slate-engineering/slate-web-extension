@@ -87,6 +87,7 @@ export const ViewerProvider = ({ children }) => {
     () => ({
       windows: state.windows,
       shouldSync: state.shouldSync,
+      slates: state.slates,
       savedObjects,
       saveLink,
     }),

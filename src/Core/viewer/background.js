@@ -1,8 +1,7 @@
 import * as Actions from "../../Common/actions";
 import * as Constants from "../../Common/constants";
 
-import { browserHistory, Windows } from "../browser/background";
-import { viewsType } from "../views";
+import { Windows } from "../browser/background";
 import {
   messages,
   commands,
@@ -29,6 +28,7 @@ const VIEWER_INITIAL_STATE = {
   objects: [],
   // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
   savedLinks: {},
+  slates: [],
   lastFetched: null,
   isAuthenticated: false,
 };
@@ -54,7 +54,11 @@ class Viewer {
   }
 
   _serialize(viewer) {
-    const serializedViewer = { objects: [], savedLinks: {} };
+    const serializedViewer = {
+      objects: [],
+      savedLinks: {},
+      slates: viewer.slates,
+    };
     serializedViewer.objects = viewer.library.map((object) => {
       if (object.isLink) {
         serializedViewer.savedLinks[object.url] = object.id;
@@ -137,11 +141,13 @@ class Viewer {
 
   async sync() {
     const viewer = await Actions.hydrateAuthenticatedUser();
+    console.log({ viewer });
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
         objects: serializedViewer.objects,
         savedLinks: serializedViewer.savedLinks,
+        slates: serializedViewer.slates,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -302,10 +308,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         activeTabId: sender.tab.id,
       });
 
+      const slates = (await viewer.get()).slates.map(({ name }) => name);
       const response = {
         ...viewerInitialState,
         isAuthenticated,
         shouldSync,
+        slates,
         windows: {
           data: {
             currentWindowFeedKeys,

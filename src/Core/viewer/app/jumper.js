@@ -85,6 +85,7 @@ export const ViewerProvider = ({ children }) => {
   const contextValue = React.useMemo(
     () => ({
       windows: state.windows,
+      slates: state.slates,
       shouldSync: state.shouldSync,
       savedObjects,
       saveLink,
