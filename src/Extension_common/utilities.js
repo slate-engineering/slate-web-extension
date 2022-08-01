@@ -27,3 +27,14 @@ export const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
     allOpenFeedKeys,
   };
 };
+
+export const getRootDomain = (url) => {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    hostname = "";
+  }
+  const hostnameParts = hostname.split(".");
+  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
