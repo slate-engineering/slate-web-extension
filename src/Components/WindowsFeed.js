@@ -5,7 +5,7 @@ import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { getFavicon } from "../Common/favicons";
-import { isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../Common/utilities";
 
 /* -----------------------------------------------------------------------------------------------*/
 
@@ -20,6 +20,7 @@ const WindowsFeedRow = ({
   onOpenUrl,
   onCloseTabs,
   onObjectHover,
+  onOpenSlatesJumper,
   style,
 }) => {
   if (!data[index]) return null;
@@ -50,6 +51,13 @@ const WindowsFeedRow = ({
       onClick={() =>
         onOpenUrl({
           query: { tabId: tab.id, windowId: tab.windowId },
+        })
+      }
+      onOpenSlatesJumper={() =>
+        onOpenSlatesJumper({
+          title: tab.title,
+          url: tab.url,
+          rootDomain: getRootDomain(tab.url),
         })
       }
       onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
@@ -102,6 +110,7 @@ const WindowsFeed = React.forwardRef(
       onObjectHover,
       onOpenUrl,
       onCloseTabs,
+      onOpenSlatesJumper,
       ...props
     },
     ref
@@ -167,12 +176,16 @@ const WindowsFeed = React.forwardRef(
                   ...props,
                   onCloseTabs,
                   onObjectHover,
+                  onOpenSlatesJumper,
                   onOpenUrl,
                 })
               }
             </WindowsFeedList>
 
-            <MultiSelection.ActionsMenu onCloseTabs={onCloseTabs} />
+            <MultiSelection.ActionsMenu
+              onCloseTabs={onCloseTabs}
+              onOpenSlatesJumper={onOpenSlatesJumper}
+            />
           </MultiSelection.Provider>
         </RovingTabIndex.List>
       </RovingTabIndex.Provider>

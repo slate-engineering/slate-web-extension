@@ -8,7 +8,7 @@ import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { getRootDomain, isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab, mergeRefs } from "../Common/utilities";
 
 /* -------------------------------------------------------------------------------------------------
  * Search Provider
@@ -115,8 +115,12 @@ const STYLES_SEARCH_INPUT = (theme) => css`
 `;
 
 const Input = React.forwardRef(
-  ({ css, containerCss, containerStyle, ...props }, ref) => {
+  ({ css, containerCss, containerStyle, ...props }, forwardedRef) => {
     const { onInputChange, clearSearch, search } = useSearchContext();
+
+    const inputRef = React.useRef();
+    const focusInput = () => inputRef.current.focus();
+
     return (
       <section
         css={[STYLES_SEARCH_WRAPPER, containerCss]}
@@ -124,7 +128,7 @@ const Input = React.forwardRef(
       >
         <input
           css={[STYLES_SEARCH_INPUT, css]}
-          ref={ref}
+          ref={mergeRefs([inputRef, forwardedRef])}
           placeholder="Search by keywords, filters, tags"
           name="search"
           onChange={onInputChange}
@@ -132,7 +136,9 @@ const Input = React.forwardRef(
           {...props}
         />
 
-        {search.query.length > 0 ? <Dismiss onClick={clearSearch} /> : null}
+        {search.query.length > 0 ? (
+          <Dismiss onClick={() => (focusInput(), clearSearch())} />
+        ) : null}
       </section>
     );
   }
@@ -147,10 +153,26 @@ const STYLES_SEARCH_FEED_ROW = {
   left: "8px",
 };
 
-const SearchFeedRow = ({ index, data, onOpenUrl, style }) => {
+const SearchFeedRow = ({
+  index,
+  data,
+  onOpenUrl,
+  onOpenSlatesJumper,
+  style,
+}) => {
   if (!data[index]) return null;
 
   const { rovingTabIndex, title, viewType, item } = data[index];
+
+  const createOnOpenSlatesHandler = (object) => () => {
+    onOpenSlatesJumper([
+      {
+        url: object.url,
+        title: object.title,
+        rootDomain: getRootDomain(object.url),
+      },
+    ]);
+  };
 
   if (title) {
     return (
@@ -183,6 +205,7 @@ const SearchFeedRow = ({ index, data, onOpenUrl, style }) => {
             query: { tabId: item.id, windowId: item.windowId },
           })
         }
+        onOpenSlatesJumper={createOnOpenSlatesHandler(item)}
       />
     );
   }
@@ -201,6 +224,7 @@ const SearchFeedRow = ({ index, data, onOpenUrl, style }) => {
       isSaved={item.isSaved}
       onClick={() => onOpenUrl({ urls: [item.url] })}
       onSubmit={() => onOpenUrl({ urls: [item.url] })}
+      onOpenSlatesJumper={createOnOpenSlatesHandler(item)}
     />
   );
 };
@@ -249,78 +273,83 @@ const getTitleFromView = (view) => {
   return titles[view];
 };
 
-const Feed = React.memo(({ onOpenUrl, onGroupURLs, ...props }) => {
-  const {
-    search: { result: feeds, query: searchQuery },
-  } = useSearchContext();
+const Feed = React.memo(
+  ({ onOpenUrl, onGroupURLs, onOpenSlatesJumper, ...props }) => {
+    const {
+      search: { result: feeds, query: searchQuery },
+    } = useSearchContext();
 
-  const searchFeedLength = React.useMemo(() => {
-    let length = 0;
-    for (let feed of feeds) {
-      length += feed.result.length;
-    }
-    return length;
-  }, [feeds]);
-
-  const virtualizedFeed = React.useMemo(() => {
-    let rovingTabIndex = 0;
-    let virtualizedFeed = [];
-
-    for (let feed of feeds) {
-      const { title: view, result } = feed;
-      result.forEach((item, index) => {
-        if (index === 0) {
-          virtualizedFeed.push({ title: getTitleFromView(view) });
-        }
-
-        virtualizedFeed.push({
-          rovingTabIndex,
-          viewType: view,
-          item,
-        });
-
-        rovingTabIndex++;
-      });
-    }
-
-    return virtualizedFeed;
-  }, [feeds]);
-
-  const handleOnSubmitSelectedItem = (index) => {
-    let currentLength = 0;
-
-    for (let feed of feeds) {
-      const { result } = feed;
-      const nextLength = currentLength + result.length;
-      if (index < nextLength) {
-        return result[index - currentLength];
+    const searchFeedLength = React.useMemo(() => {
+      let length = 0;
+      for (let feed of feeds) {
+        length += feed.result.length;
       }
-      currentLength = nextLength;
-    }
-  };
+      return length;
+    }, [feeds]);
 
-  return (
-    <RovingTabIndex.Provider key={feeds} isInfiniteList withFocusOnHover>
-      <MultiSelection.Provider
-        totalSelectableItems={searchFeedLength}
-        onSubmitSelectedItem={handleOnSubmitSelectedItem}
-      >
-        <SearchFeedList
-          itemCount={virtualizedFeed.length}
-          itemData={virtualizedFeed}
-          itemSize={Constants.sizes.jumperFeedItem}
-          css={css}
-          {...props}
+    const virtualizedFeed = React.useMemo(() => {
+      let rovingTabIndex = 0;
+      let virtualizedFeed = [];
+
+      for (let feed of feeds) {
+        const { title: view, result } = feed;
+        result.forEach((item, index) => {
+          if (index === 0) {
+            virtualizedFeed.push({ title: getTitleFromView(view) });
+          }
+
+          virtualizedFeed.push({
+            rovingTabIndex,
+            viewType: view,
+            item,
+          });
+
+          rovingTabIndex++;
+        });
+      }
+
+      return virtualizedFeed;
+    }, [feeds]);
+
+    const handleOnSubmitSelectedItem = (index) => {
+      let currentLength = 0;
+
+      for (let feed of feeds) {
+        const { result } = feed;
+        const nextLength = currentLength + result.length;
+        if (index < nextLength) {
+          return result[index - currentLength];
+        }
+        currentLength = nextLength;
+      }
+    };
+
+    return (
+      <RovingTabIndex.Provider key={feeds} isInfiniteList withFocusOnHover>
+        <MultiSelection.Provider
+          totalSelectableItems={searchFeedLength}
+          onSubmitSelectedItem={handleOnSubmitSelectedItem}
         >
-          {(props) => SearchFeedRow({ ...props, onOpenUrl })}
-        </SearchFeedList>
-        <MultiSelection.ActionsMenu
-          onOpenURLs={(urls) => onOpenUrl({ urls })}
-          onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
-        />
-      </MultiSelection.Provider>
-    </RovingTabIndex.Provider>
-  );
-});
+          <SearchFeedList
+            itemCount={virtualizedFeed.length}
+            itemData={virtualizedFeed}
+            itemSize={Constants.sizes.jumperFeedItem}
+            css={css}
+            {...props}
+          >
+            {(props) =>
+              SearchFeedRow({ ...props, onOpenUrl, onOpenSlatesJumper })
+            }
+          </SearchFeedList>
+          <MultiSelection.ActionsMenu
+            onOpenURLs={(urls) => onOpenUrl({ urls })}
+            onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+          />
+        </MultiSelection.Provider>
+      </RovingTabIndex.Provider>
+    );
+  }
+);
 
 export { Provider, Input, Feed };

@@ -14,7 +14,12 @@ import { viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import { useEventListener } from "Common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
-import { mergeRefs, mergeEvents, isNewTab } from "../Common/utilities";
+import {
+  mergeRefs,
+  mergeEvents,
+  isNewTab,
+  getRootDomain,
+} from "../Common/utilities";
 
 const VIEWS_ACTIONS = [
   { label: "Current Window", data: { type: viewsType.currentWindow } },
@@ -628,6 +633,7 @@ const ViewsFeedRow = ({
   style,
   onOpenUrl,
   onObjectHover,
+  onOpenSlatesJumper,
   ...props
 }) => {
   const visit = data[index];
@@ -647,6 +653,13 @@ const ViewsFeedRow = ({
       Favicon={getFavicon(visit.rootDomain)}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
       onMouseEnter={() => onObjectHover?.({ url: visit.url })}
+      onOpenSlatesJumper={() =>
+        onOpenSlatesJumper({
+          title: visit.title,
+          url: visit.url,
+          rootDomain: getRootDomain(visit.url),
+        })
+      }
       {...props}
     />
   );
@@ -687,7 +700,13 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-function Feed({ onObjectHover, onOpenUrl, onGroupURLs, ...props }) {
+function Feed({
+  onObjectHover,
+  onOpenUrl,
+  onOpenSlatesJumper,
+  onGroupURLs,
+  ...props
+}) {
   const { viewsFeed, currentViewLabel } = useViewsContext();
 
   const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
@@ -704,12 +723,20 @@ function Feed({ onObjectHover, onOpenUrl, onGroupURLs, ...props }) {
           itemSize={Constants.sizes.jumperFeedItem}
           {...props}
         >
-          {(props) => ViewsFeedRow({ ...props, onOpenUrl, onObjectHover })}
+          {(props) =>
+            ViewsFeedRow({
+              ...props,
+              onOpenUrl,
+              onOpenSlatesJumper,
+              onObjectHover,
+            })
+          }
         </ViewsFeedList>
 
         <MultiSelection.ActionsMenu
           onOpenURLs={(urls) => onOpenUrl({ urls })}
           onGroupURLs={(urls) => onGroupURLs({ urls, title: currentViewLabel })}
+          onOpenSlatesJumper={onOpenSlatesJumper}
         />
       </MultiSelection.Provider>
     </RovingTabIndex.Provider>

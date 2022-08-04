@@ -6,10 +6,7 @@ import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
-import {
-  ComboboxNavigation,
-  useComboboxNavigation,
-} from "./ComboboxNavigation";
+import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
 import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
 import { Checkbox } from "./system";
 import { FixedSizeList } from "react-window";
@@ -218,6 +215,8 @@ const Object = React.forwardRef(
 
       onCloseTab,
 
+      onOpenSlatesJumper,
+
       withMultiSelection,
       isChecked,
       onCheck,
@@ -235,6 +234,7 @@ const Object = React.forwardRef(
     const handleLinkSaving = (e) => (
       e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
     );
+
     const handleOnChecking = (e) => onCheck(e.target.checked);
 
     const { isCopied, handleCopying } = useCopyState(url);
@@ -310,6 +310,11 @@ const Object = React.forwardRef(
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}
                   onMouseDown={preventFocus}
+                  onClick={(e) => (
+                    e.stopPropagation(),
+                    e.preventDefault(),
+                    onOpenSlatesJumper()
+                  )}
                 >
                   <SVG.Hash width={16} height={16} />
                 </button>
@@ -376,14 +381,14 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
   const { checkIfIndexSelected } = useComboboxNavigation();
 
   return (
-    <ComboboxNavigation.MenuButton
+    <Combobox.MenuButton
       key={key}
       index={index}
       onSelect={onSelect}
       onSubmit={onSubmit}
     >
       <Object isSelected={checkIfIndexSelected(index)} {...props} />
-    </ComboboxNavigation.MenuButton>
+    </Combobox.MenuButton>
   );
 };
 

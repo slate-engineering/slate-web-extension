@@ -7,7 +7,7 @@ import * as Constants from "../Common/constants";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import { getFavicon } from "../Common/favicons";
-import { isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../Common/utilities";
 
 const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
   const shouldFetchMore = React.useRef(true);
@@ -33,7 +33,14 @@ const STYLES_HISTORY_FEED_ROW = {
   left: "8px",
 };
 
-const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
+const HistoryFeedRow = ({
+  index,
+  data,
+  onOpenUrl,
+  onOpenSlatesJumper,
+  onObjectHover,
+  style,
+}) => {
   if (!data[index]) return null;
 
   const { rovingTabIndex, title, visit } = data[index];
@@ -64,6 +71,13 @@ const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
         onObjectHover?.({
           url: visit.url,
           title: visit.title,
+        })
+      }
+      onOpenSlatesJumper={() =>
+        onOpenSlatesJumper({
+          title: visit.title,
+          url: visit.url,
+          rootDomain: getRootDomain(visit.url),
         })
       }
     />
@@ -113,6 +127,7 @@ const HistoryFeed = ({
   onLoadMore,
   onObjectHover,
   onOpenUrl,
+  onOpenSlatesJumper,
   onGroupURLs,
   css,
   ...props
@@ -191,7 +206,12 @@ const HistoryFeed = ({
               {...props}
             >
               {(props) =>
-                HistoryFeedRow({ ...props, onOpenUrl, onObjectHover })
+                HistoryFeedRow({
+                  ...props,
+                  onOpenUrl,
+                  onOpenSlatesJumper,
+                  onObjectHover,
+                })
               }
             </HistoryFeedList>
           )}
@@ -199,6 +219,7 @@ const HistoryFeed = ({
         <MultiSelection.ActionsMenu
           onOpenURLs={(urls) => onOpenUrl({ urls })}
           onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
+          onOpenSlatesJumper={onOpenSlatesJumper}
         />
       </MultiSelection.Provider>
     </RovingTabIndex.Provider>
