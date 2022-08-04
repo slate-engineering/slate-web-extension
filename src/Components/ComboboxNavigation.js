@@ -279,7 +279,7 @@ const ComboboxMenu = React.forwardRef(({ children, ...props }, ref) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-export const ComboboxNavigation = {
+export const Combobox = {
   Provider: ComboboxProvider,
   Input: ComboboxInput,
   Menu: ComboboxMenu,
