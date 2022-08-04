@@ -11,6 +11,7 @@ import {
   removeKeyFromObject,
   isNewTab,
   copyToClipboard,
+  getRootDomain,
 } from "../Common/utilities";
 import { css } from "@emotion/react";
 import { Checkbox } from "./system";
@@ -368,6 +369,32 @@ const CloseTabsAction = ({ css, onCloseTabs, ...props }) => {
   );
 };
 
+const OpenSlatesJumperAction = ({ css, onOpenSlatesJumper, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+
+    const objects = selectedItemsData.map(({ url, title }) => ({
+      url,
+      title,
+      rootDomain: getRootDomain(url),
+    }));
+    onOpenSlatesJumper(objects);
+  };
+
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      <SVG.Hash height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }}>Tag</Typography.H5>
+    </button>
+  );
+};
+
 /* -------------------------------------------------------------------------------------------------
  *  ActionsMenu
  * -----------------------------------------------------------------------------------------------*/
@@ -393,7 +420,12 @@ const CloseOnEscape = ({ onClose, children }) => {
   return children;
 };
 
-function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
+function ActionsMenu({
+  onGroupURLs,
+  onOpenSlatesJumper,
+  onCloseTabs,
+  onOpenURLs,
+}) {
   const {
     toggleCheckAll,
     isAllChecked,
@@ -437,6 +469,12 @@ function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
                 />
               )}
               <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
+              {onOpenSlatesJumper && (
+                <OpenSlatesJumperAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onOpenSlatesJumper={onOpenSlatesJumper}
+                />
+              )}
               {onGroupURLs && (
                 <GroupingAction
                   css={STYLES_ACTION_BUTTON_NEW_TAB}
@@ -472,6 +510,9 @@ function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
           <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
             {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
             {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
+            {onOpenSlatesJumper && (
+              <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
+            )}
             <CopyURLsAction />
             {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
           </div>
