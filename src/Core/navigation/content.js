@@ -31,8 +31,6 @@ const createExtensionJumperWrapper = () => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-/* -----------------------------------------------------------------------------------------------*/
-
 export const openApp = (url) => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
 

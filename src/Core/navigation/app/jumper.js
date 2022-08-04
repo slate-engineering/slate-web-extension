@@ -28,10 +28,6 @@ export const closeTabs = (tabsId) => {
  * before removing the jumper node from the dom
  * -----------------------------------------------------------------------------------------------*/
 
-const NavigationContext = React.createContext({ open: true });
-
-export const useNavigation = () => React.useContext(NavigationContext);
-
 export const useHandleJumperNavigation = () => {
   const _getUrlPathnameAndSearchParams = (url) => {
     //NOTE(amine): using http://example as a workaround to get pathname using URL api.
@@ -78,19 +74,30 @@ export const useHandleJumperNavigation = () => {
   return { navigationState, navigate: updateAddressBarUrl };
 };
 
-export const NavigationProvider = ({ children }) => {
-  const { navigationState, navigate } = useHandleJumperNavigation();
+/* -----------------------------------------------------------------------------------------------*/
 
-  console.log(navigationState);
+const NavigationContext = React.createContext({ open: true });
+
+export const useNavigation = () => React.useContext(NavigationContext);
+
+export const NavigationProvider = ({ children }) => {
   const [isOpen, setIsOpen] = React.useState(true);
   React.useEffect(() => {
     if (!isOpen) closeExtensionJumper();
   }, [isOpen]);
 
+  const { navigationState, navigate } = useHandleJumperNavigation();
+  const navigateToHomeJumper = () => navigate("/");
+  const navigateToSlatesJumper = (objects) => {
+    const urlsQuery = JSON.stringify(objects);
+    navigate(`/slates?urls=${urlsQuery}`);
+  };
+
   const value = React.useMemo(
     () => ({
       navigationState,
-      navigate,
+      navigateToHomeJumper,
+      navigateToSlatesJumper,
       isOpen: isOpen,
       closeTheJumper: () => setIsOpen(false),
     }),
@@ -105,4 +112,17 @@ export const NavigationProvider = ({ children }) => {
       {children}
     </NavigationContext.Provider>
   );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Route
+ * -----------------------------------------------------------------------------------------------*/
+
+export const Route = ({ path, component }) => {
+  const { navigationState } = useNavigation();
+
+  if (path !== navigationState.pathname) return null;
+
+  const Component = component;
+  return <Component />;
 };
