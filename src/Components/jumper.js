@@ -3,7 +3,7 @@ import * as ReactDom from "react-dom";
 import * as Styles from "../Common/styles";
 
 import { css } from "@emotion/react";
-import { useEscapeKey, useTrapFocusInShadowDom } from "../Common/hooks";
+import { useEscapeKey, useTrapFocus } from "../Common/hooks";
 import { mergeRefs, getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
 
@@ -97,7 +97,7 @@ const STYLES_JUMPER_ROOT = (theme) => css`
 
 function Root({ children, onClose }) {
   const wrapperRef = React.useRef();
-  useTrapFocusInShadowDom({ ref: wrapperRef });
+  useTrapFocus({ ref: wrapperRef });
 
   useEscapeKey(onClose);
 
@@ -134,9 +134,16 @@ function Header({ children, style, ...props }) {
 /* -------------------------------------------------------------------------------------------------
  *  Body
  * -----------------------------------------------------------------------------------------------*/
+const STYLES_BODY_WRAPPER = (theme) => css`
+  height: ${theme.sizes.jumperFeedWrapper}px;
+`;
 
-function Body({ children, ...props }) {
-  return <div {...props}>{children}</div>;
+function Body({ children, css, ...props }) {
+  return (
+    <div css={[STYLES_BODY_WRAPPER, css]} {...props}>
+      {children}
+    </div>
+  );
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -164,8 +171,6 @@ const STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER = css`
   left: 0%;
   top: -12px;
   transform: translateY(-100%);
-
-  width: 100%;
 
   ${STYLES_JUMPER_TOP_PANEL_FADE_IN};
 `;
@@ -199,10 +204,13 @@ const STYLES_JUMPER_TOP_PANEL = (theme) => css`
   }
 `;
 
-const TopPanel = ({ children }) => {
+const TopPanel = ({ children, containerStyle }) => {
   return (
     <JumperPanelsPortal>
-      <div css={STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER}>
+      <div
+        style={containerStyle}
+        css={STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER}
+      >
         <div css={STYLES_JUMPER_TOP_PANEL_BACKGROUND} />
         <div css={STYLES_JUMPER_TOP_PANEL}>{children}</div>
       </div>
