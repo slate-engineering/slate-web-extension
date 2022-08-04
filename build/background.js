@@ -18,6 +18,7 @@ const messages = {
 const commands = {
   openApp: "open-app",
   openSlate: "open-slate",
+  openAppOnSlates: "open-app-on-slates",
 };
 
 const values = {
@@ -406,6 +407,17 @@ const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
   };
 };
 
+const getRootDomain = (url) => {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    hostname = "";
+  }
+  const hostnameParts = hostname.split(".");
+  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
 ;// CONCATENATED MODULE: ./src/Core/viewer/background.js
 
 
@@ -414,8 +426,7 @@ const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
 
 
 
-
-const getRootDomain = (url) => {
+const background_getRootDomain = (url) => {
   let hostname;
   try {
     hostname = new URL(url).hostname;
@@ -432,6 +443,7 @@ const VIEWER_INITIAL_STATE = {
   objects: [],
   // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
   savedLinks: {},
+  slates: [],
   lastFetched: null,
   isAuthenticated: false,
 };
@@ -457,7 +469,11 @@ class Viewer {
   }
 
   _serialize(viewer) {
-    const serializedViewer = { objects: [], savedLinks: {} };
+    const serializedViewer = {
+      objects: [],
+      savedLinks: {},
+      slates: viewer.slates,
+    };
     serializedViewer.objects = viewer.library.map((object) => {
       if (object.isLink) {
         serializedViewer.savedLinks[object.url] = object.id;
@@ -466,7 +482,7 @@ class Viewer {
           title: object.linkName,
           favicon: object.linkFavicon,
           url: object.url,
-          rootDomain: getRootDomain(object.url),
+          rootDomain: background_getRootDomain(object.url),
           isSaved: true,
         };
       }
@@ -540,11 +556,13 @@ class Viewer {
 
   async sync() {
     const viewer = await hydrateAuthenticatedUser();
+    console.log({ viewer });
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
         objects: serializedViewer.objects,
         savedLinks: serializedViewer.savedLinks,
+        slates: serializedViewer.slates,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -565,6 +583,7 @@ class Viewer {
       this._set({
         objects: serializedViewer.objects,
         savedLinks: serializedViewer.savedLinks,
+        slates: serializedViewer.slates,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -606,7 +625,7 @@ class Viewer {
             title,
             url,
             favicon,
-            rootDomain: getRootDomain(url),
+            rootDomain: background_getRootDomain(url),
             isSaved: true,
           },
           ...viewer.objects,
@@ -705,10 +724,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         activeTabId: sender.tab.id,
       });
 
+      const slates = (await viewer.get()).slates.map(({ name }) => name);
       const response = {
         ...viewerInitialState,
         isAuthenticated,
         shouldSync,
+        slates,
         windows: {
           data: {
             currentWindowFeedKeys,
@@ -2523,7 +2544,7 @@ Fuse.config = Config;
 
 
 
-const background_getRootDomain = (url) => {
+const browser_background_getRootDomain = (url) => {
   let hostname;
   try {
     hostname = new URL(url).hostname;
@@ -2539,14 +2560,14 @@ const removeDuplicatesFromSearchResults = (result) => {
 
   const visitWithSameTitle = {};
   const doesVisitExistWithSameTitle = (visit) =>
-    `${background_getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
+    `${browser_background_getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
   const addVisitToDuplicateList = (visit) =>
-    visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`].push(
+    visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`].push(
       visit
     );
   const createVisitDuplicate = (visit) => {
-    visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`] = [];
-    return visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`];
+    visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`] = [];
+    return visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`];
   };
 
   const MAX_SEARCH_RESULT = 300;
@@ -2582,7 +2603,7 @@ const Session = {
     ...visit,
     title: historyItem.title,
     url: historyItem.url,
-    rootDomain: background_getRootDomain(historyItem.url),
+    rootDomain: browser_background_getRootDomain(historyItem.url),
     favicon:
       "https://s2.googleusercontent.com/s2/favicons?domain_url=" +
       historyItem.url,
@@ -2834,7 +2855,7 @@ const Tabs = {
     title: tab.title,
     favicon: tab.favIconUrl,
     url: tab.url,
-    rootDomain: background_getRootDomain(tab.url),
+    rootDomain: browser_background_getRootDomain(tab.url),
     isSaved: await viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
@@ -2968,7 +2989,31 @@ const navigation_messages = {
   closeTabs: "CLOSE_TABS",
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
+
+const ADDRESS_BAR_CURRENT_URL_ATTRIBUTE = "data-current-url";
+
+const createAddressBarElement = () => {
+  const element = document.createElement("div");
+  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
+  document.body.appendChild(element);
+};
+const getAddressBarElement = () =>
+  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+
+const getAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  return element.getAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE) || "/";
+};
+const updateAddressBarUrl = (url) => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
+};
+
 ;// CONCATENATED MODULE: ./src/Core/navigation/background.js
+
 
 
 
@@ -3038,6 +3083,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 chrome.action.onClicked.addListener(async (tab) => {
   chrome.tabs.sendMessage(parseInt(tab.id), {
     type: navigation_messages.openExtensionJumperRequest,
+    data: { url: "/" },
   });
 });
 
@@ -3045,6 +3091,15 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
+      data: { url: "/" },
+    });
+  }
+
+  if (command == commands.openAppOnSlates) {
+    const urls = [{ url: tab.url, rootDomain: getRootDomain(tab.url) }];
+    chrome.tabs.sendMessage(parseInt(tab.id), {
+      type: navigation_messages.openExtensionJumperRequest,
+      data: { url: `/slates?urls=${JSON.stringify(urls)}` },
     });
   }
 

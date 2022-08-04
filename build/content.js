@@ -56,6 +56,7 @@ window.addEventListener("message", async function (event) {
 const commands = {
   openApp: "open-app",
   openSlate: "open-slate",
+  openAppOnSlates: "open-app-on-slates",
 };
 
 const values = {
@@ -328,6 +329,29 @@ const navigation_messages = {
   closeTabs: "CLOSE_TABS",
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
+
+const ADDRESS_BAR_CURRENT_URL_ATTRIBUTE = "data-current-url";
+
+const createAddressBarElement = () => {
+  const element = document.createElement("div");
+  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
+  document.body.appendChild(element);
+};
+const getAddressBarElement = () =>
+  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+
+const getAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  return element.getAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE) || "/";
+};
+const updateAddressBarUrl = (url) => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
+};
+
 ;// CONCATENATED MODULE: ./src/Core/navigation/content.js
 
 
@@ -346,6 +370,8 @@ const setInnerHTML = (element, html) => {
   });
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
 const getExtensionJumperWrapper = () =>
   document.getElementById(jumperSlateExtensionWrapper);
 
@@ -358,11 +384,18 @@ const createExtensionJumperWrapper = () => {
   document.body.appendChild(wrapper);
 };
 
-const openApp = () => {
+/* -----------------------------------------------------------------------------------------------*/
+
+const openApp = (url) => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
 
   const isAppOpen = document.getElementById("modal-window-slate-extension");
-  if (isAppOpen) return;
+  if (isAppOpen) {
+    updateAddressBarUrl(url);
+    return;
+  }
+  createAddressBarElement();
+  updateAddressBarUrl(url);
 
   createExtensionJumperWrapper();
   // Fetch the local React index.html page
@@ -391,7 +424,7 @@ let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === navigation_messages.openExtensionJumperRequest) {
     activeElement = document.activeElement;
-    openApp();
+    openApp(request.data.url);
   }
 });
 
