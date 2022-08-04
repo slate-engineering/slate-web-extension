@@ -1,10 +1,10 @@
 import * as React from "react";
 import * as Styles from "../Common/styles";
-// import * as SVG from "../Common/SVG";
-// import * as Typography from "../Components/system/Typography";
 import * as Views from "../Components/Views";
 import * as Navigation from "../Core/navigation/app/newTab";
 import * as Search from "../Components/Search";
+import * as Jumper from "../Components/jumper";
+import * as EditSlates from "../Components/EditSlates";
 
 import HistoryFeed from "../Components/HistoryFeed";
 import WindowsFeed from "../Components/WindowsFeed";
@@ -15,7 +15,37 @@ import { useViews, useHistorySearch } from "../Core/views/app/newTab";
 import { Divider } from "../Components/Divider";
 import { Switch, Match } from "../Components/Switch";
 import { getExtensionURL } from "../Common/utilities";
+import { useViewer } from "../Core/viewer/app/newTab";
 import { css } from "@emotion/react";
+
+const useSlatesJumper = () => {
+  const [slatesJumperState, setSlatesJumperState] = React.useState({
+    isOpen: false,
+  });
+
+  const closeSlatesJumper = () => setSlatesJumperState({ isOpen: false });
+  const openSlatesJumper = (objects) =>
+    setSlatesJumperState({ isOpen: true, objects });
+
+  return { slatesJumperState, closeSlatesJumper, openSlatesJumper };
+};
+
+function EditSlatesJumper({ slatesJumperState, onClose }) {
+  const { slates } = useViewer();
+  return (
+    <Jumper.Root onClose={onClose}>
+      <EditSlates.Provider slates={slates}>
+        <Jumper.Header style={{ paddingLeft: "20px" }}>
+          <EditSlates.Input />
+        </Jumper.Header>
+        <Jumper.Divider />
+        <Jumper.Body>
+          <EditSlates.Body />
+        </Jumper.Body>
+      </EditSlates.Provider>
+    </Jumper.Root>
+  );
+}
 
 /* -------------------------------------------------------------------------------------------------
  * History Scene
@@ -143,104 +173,111 @@ export default function HistoryScene() {
 
   const focusSearchInput = () => inputRef.current.focus();
 
+  const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
+    useSlatesJumper();
+
   return (
-    <div css={STYLES_HISTORY_SCENE_WRAPPER}>
-      <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
+    <>
+      {slatesJumperState.isOpen && (
+        <EditSlatesJumper onClose={closeSlatesJumper} />
+      )}
+      <div css={STYLES_HISTORY_SCENE_WRAPPER}>
+        <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
 
-      <Search.Provider
-        onInputChange={handleInputChange}
-        search={search}
-        clearSearch={clearSearch}
-      >
-        <Views.Provider
-          viewsFeed={viewsFeed}
-          currentView={currentView}
-          currentViewLabel={currentViewLabel}
-          currentViewQuery={currentViewQuery}
-          viewsType={viewsType}
-          getViewsFeed={getViewsFeed}
-          onChange={() => (clearSearch(), focusSearchInput())}
+        <Search.Provider
+          onInputChange={handleInputChange}
+          search={search}
+          clearSearch={clearSearch}
         >
-          <section css={STYLES_HISTORY_TOP_POPUP}>
-            <Views.Menu
-              showAllOpenAction={totalWindows > 1}
-              css={STYLES_HISTORY_SCENE_VIEWS_MENU}
-            />
-            <Divider style={{ width: "100%" }} color="borderGrayLight" />
-            <Logo
-              style={{
-                width: "24.78px",
-                height: "24px",
-                marginTop: 48,
-                marginBottom: 24,
-              }}
-            />
-            <Search.Input
-              ref={inputRef}
-              containerCss={STYLES_HISTORY_SCENE_INPUT}
-            />
-          </section>
-
-          <section
-            css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
-            style={{ height: "100%", flex: 1, overflow: "hidden" }}
+          <Views.Provider
+            viewsFeed={viewsFeed}
+            currentView={currentView}
+            currentViewLabel={currentViewLabel}
+            currentViewQuery={currentViewQuery}
+            viewsType={viewsType}
+            getViewsFeed={getViewsFeed}
+            onChange={() => (clearSearch(), focusSearchInput())}
           >
-            <div style={{ flexGrow: 1 }}>
-              {/* <section css={STYLES_FILTERS_MENU}>
+            <section css={STYLES_HISTORY_TOP_POPUP}>
+              <Views.Menu
+                showAllOpenAction={totalWindows > 1}
+                css={STYLES_HISTORY_SCENE_VIEWS_MENU}
+              />
+              <Divider style={{ width: "100%" }} color="borderGrayLight" />
+              <Logo
+                style={{
+                  width: "24.78px",
+                  height: "24px",
+                  marginTop: 48,
+                  marginBottom: 24,
+                }}
+              />
+              <Search.Input
+                ref={inputRef}
+                containerCss={STYLES_HISTORY_SCENE_INPUT}
+              />
+            </section>
+
+            <section
+              css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
+              style={{ height: "100%", flex: 1, overflow: "hidden" }}
+            >
+              <div style={{ flexGrow: 1 }}>
+                {/* <section css={STYLES_FILTERS_MENU}>
                   <button css={STYLES_FILTER_BUTTON}>
                     <SVG.Plus width={16} height={16} />
                     <Typography.H5 as="span">Filter</Typography.H5>
                   </button>
                 </section> */}
 
-              <Switch css={STYLES_HISTORY_SCENE_FEED}>
-                <Match
-                  when={isSearching}
-                  component={Search.Feed}
+                <Switch
+                  onOpenSlatesJumper={openSlatesJumper}
                   onOpenUrl={Navigation.openUrls}
-                  onGroupURLs={Navigation.createGroupFromUrls}
-                />
-                <Match
-                  when={currentView === viewsType.recent}
-                  component={HistoryFeed}
-                  sessionsFeed={sessionsFeed}
-                  sessionsFeedKeys={sessionsFeedKeys}
-                  onLoadMore={loadMoreHistory}
-                  onOpenUrl={Navigation.openUrls}
-                  onGroupURLs={Navigation.createGroupFromUrls}
-                />
-                <Match
-                  when={currentView === viewsType.currentWindow}
-                  component={WindowsFeed}
-                  windowsFeed={windowsFeeds.currentWindowFeed}
-                  windowsFeedKeys={windowsFeeds.currentWindowFeedKeys}
-                  activeTabId={activeTabId}
-                  onCloseTabs={Navigation.closeTabs}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={currentView === viewsType.allOpen}
-                  component={WindowsFeed}
-                  windowsFeed={windowsFeeds.allOpenKeys}
-                  windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
-                  activeTabId={activeTabId}
-                  onCloseTabs={Navigation.closeTabs}
-                  onOpenUrl={Navigation.openUrls}
-                />
-                <Match
-                  when={
-                    currentView === viewsType.relatedLinks ||
-                    currentView === viewsType.savedFiles
-                  }
-                  component={Views.Feed}
-                  onOpenUrl={Navigation.openUrls}
-                  onGroupURLs={Navigation.createGroupFromUrls}
-                />
-              </Switch>
-            </div>
-          </section>
-        </Views.Provider>
-      </Search.Provider>
-    </div>
+                  css={STYLES_HISTORY_SCENE_FEED}
+                >
+                  <Match
+                    when={isSearching}
+                    component={Search.Feed}
+                    onGroupURLs={Navigation.createGroupFromUrls}
+                  />
+                  <Match
+                    when={currentView === viewsType.recent}
+                    component={HistoryFeed}
+                    sessionsFeed={sessionsFeed}
+                    sessionsFeedKeys={sessionsFeedKeys}
+                    onLoadMore={loadMoreHistory}
+                    onGroupURLs={Navigation.createGroupFromUrls}
+                  />
+                  <Match
+                    when={currentView === viewsType.currentWindow}
+                    component={WindowsFeed}
+                    windowsFeed={windowsFeeds.currentWindowFeed}
+                    windowsFeedKeys={windowsFeeds.currentWindowFeedKeys}
+                    activeTabId={activeTabId}
+                    onCloseTabs={Navigation.closeTabs}
+                  />
+                  <Match
+                    when={currentView === viewsType.allOpen}
+                    component={WindowsFeed}
+                    windowsFeed={windowsFeeds.allOpenKeys}
+                    windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
+                    activeTabId={activeTabId}
+                    onCloseTabs={Navigation.closeTabs}
+                  />
+                  <Match
+                    when={
+                      currentView === viewsType.relatedLinks ||
+                      currentView === viewsType.savedFiles
+                    }
+                    component={Views.Feed}
+                    onGroupURLs={Navigation.createGroupFromUrls}
+                  />
+                </Switch>
+              </div>
+            </section>
+          </Views.Provider>
+        </Search.Provider>
+      </div>
+    </>
   );
 }
