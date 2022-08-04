@@ -2,10 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 
+import { NavigationProvider } from "./Core/navigation/app/jumper";
+
 ReactDOM.render(
   <>
     <React.StrictMode>
-      <App />
+      <NavigationProvider>
+        <App />
+      </NavigationProvider>
     </React.StrictMode>
   </>,
   document.getElementById("modal-window-slate-extension")
