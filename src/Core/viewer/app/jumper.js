@@ -65,6 +65,7 @@ export const ViewerProvider = ({ children }) => {
     const handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === messages.loadViewerDataResponse) {
+        console.log(data);
         setState((prev) => ({
           ...prev,
           ...data,
@@ -84,9 +85,7 @@ export const ViewerProvider = ({ children }) => {
 
   const contextValue = React.useMemo(
     () => ({
-      windows: state.windows,
-      slates: state.slates,
-      shouldSync: state.shouldSync,
+      ...state,
       savedObjects,
       saveLink,
     }),

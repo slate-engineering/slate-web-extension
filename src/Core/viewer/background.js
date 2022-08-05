@@ -26,9 +26,14 @@ const getRootDomain = (url) => {
 
 const VIEWER_INITIAL_STATE = {
   objects: [],
+  objectsIds: {},
   // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
-  savedLinks: {},
+  savedObjectsLookup: {},
+
+  savedObjectsSlates: {},
+  slatesLookup: {},
   slates: [],
+
   lastFetched: null,
   isAuthenticated: false,
 };
@@ -50,18 +55,28 @@ class Viewer {
 
   async _getObjectIdFromUrl(url) {
     const viewer = await this.get();
-    return viewer.savedLinks[url];
+    return viewer.savedObjectsLookup[url];
   }
 
   _serialize(viewer) {
     const serializedViewer = {
       objects: [],
-      savedLinks: {},
+      objectsIds: {},
+      savedObjectsLookup: {},
+
+      savedObjectsSlates: {},
+      slatesLookup: {},
       slates: viewer.slates,
     };
+
+    const getFileUrl = (object) =>
+      object.isLink ? object.url : `${Constants.gateways.ipfs}/${object.cid}`;
+
     serializedViewer.objects = viewer.library.map((object) => {
+      serializedViewer.objectsIds[getFileUrl(object)] = object.id;
+
       if (object.isLink) {
-        serializedViewer.savedLinks[object.url] = object.id;
+        serializedViewer.savedObjectsLookup[object.url] = true;
 
         return {
           title: object.linkName,
@@ -72,8 +87,8 @@ class Viewer {
         };
       }
 
-      const fileUrl = `${Constants.gateways.ipfs}/${object.cid}`;
-      serializedViewer.savedLinks[fileUrl] = object.id;
+      const fileUrl = getFileUrl(object);
+      serializedViewer.savedObjectsLookup[fileUrl] = true;
 
       return {
         title: object.name,
@@ -82,6 +97,20 @@ class Viewer {
         isSaved: true,
       };
     });
+
+    viewer.slates.forEach((slate) => {
+      const { savedObjectsSlates, slatesLookup } = serializedViewer;
+      if (!slatesLookup[slate.name]) slatesLookup[slate.name] = {};
+
+      slate.objects.forEach((object) => {
+        const objectUrl = getFileUrl(object);
+        slatesLookup[slate.name][objectUrl] = true;
+
+        if (!savedObjectsSlates[objectUrl]) savedObjectsSlates[objectUrl] = [];
+        savedObjectsSlates[objectUrl].push(slate.name);
+      });
+    });
+
     return serializedViewer;
   }
 
@@ -132,7 +161,7 @@ class Viewer {
 
   async checkIfLinkIsSaved(url) {
     const viewer = await this.get();
-    return !!viewer.savedLinks[url];
+    return !!viewer.savedObjectsLookup[url];
   }
 
   async reset() {
@@ -141,13 +170,10 @@ class Viewer {
 
   async sync() {
     const viewer = await Actions.hydrateAuthenticatedUser();
-    console.log({ viewer });
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
-        objects: serializedViewer.objects,
-        savedLinks: serializedViewer.savedLinks,
-        slates: serializedViewer.slates,
+        ...serializedViewer,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -166,9 +192,7 @@ class Viewer {
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
-        objects: serializedViewer.objects,
-        savedLinks: serializedViewer.savedLinks,
-        slates: serializedViewer.slates,
+        ...serializedViewer,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -190,7 +214,7 @@ class Viewer {
 
   async saveLink({ url, title, favicon, tab, source = savingSources.app }) {
     const viewer = await this.get();
-    if (viewer.savedLinks[url] === savingStates.start) return;
+    if (viewer.savedObjectsLookup[url] === savingStates.start) return;
 
     const sendStatusUpdate = (status) => {
       chrome.tabs.sendMessage(parseInt(tab.id), {
@@ -201,10 +225,13 @@ class Viewer {
 
     sendStatusUpdate(savingStates.start);
 
-    if (!(url in viewer.savedLinks)) {
+    if (!(url in viewer.savedObjectsLookup)) {
       this._set({
         ...viewer,
-        savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
+        savedObjectsLookup: {
+          ...viewer.savedObjectsLookup,
+          [url]: savingStates.start,
+        },
         objects: [
           {
             title,
@@ -223,11 +250,11 @@ class Viewer {
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
       const viewer = await this.get();
-      const savedLinks = { ...viewer.savedLinks };
-      delete savedLinks[url];
+      const savedObjectsLookup = { ...viewer.savedObjectsLookup };
+      delete savedObjectsLookup[url];
       const objects = objects.filter((object) => object.url !== url);
 
-      this._set({ ...viewer, savedLinks, objects });
+      this._set({ ...viewer, savedObjectsLookup, objects });
       return;
     }
 
@@ -309,12 +336,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         activeTabId: sender.tab.id,
       });
 
-      const slates = (await viewer.get()).slates.map(({ name }) => name);
+      const viewerData = await viewer.get();
+
+      const slates = viewerData.slates.map(({ name }) => name);
+      const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
+        viewerData;
+
       const response = {
         ...viewerInitialState,
         isAuthenticated,
         shouldSync,
+
         slates,
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+
         windows: {
           data: {
             currentWindowFeedKeys,
