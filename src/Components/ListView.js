@@ -202,6 +202,33 @@ const CopyAction = ({ isCopied, ...props }) => {
   );
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const SLATE_WRAPPER = (theme) => css`
+  border-radius: 8px;
+  padding: 2px 8px;
+  max-width: 150px;
+  background-color: ${theme.semantic.bgWhite};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  box-shadow: ${theme.shadow.lightSmall};
+`;
+
+const Slate = ({ children, ...props }) => {
+  return (
+    <Typography.H6
+      as="span"
+      nbrOflines={1}
+      css={SLATE_WRAPPER}
+      color="textBlack"
+      {...props}
+    >
+      {children}
+    </Typography.H6>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
 const Object = React.forwardRef(
   (
     {
@@ -228,7 +255,7 @@ const Object = React.forwardRef(
     },
     ref
   ) => {
-    const { savedObjects, saveLink } = useViewer();
+    const { savedObjects, saveLink, savedObjectsSlates } = useViewer();
     const isSaved = url in savedObjects || isSavedProp;
 
     const handleLinkSaving = (e) => (
@@ -247,6 +274,11 @@ const Object = React.forwardRef(
         return;
       }
 
+      if (e.code === "KeyT") {
+        onOpenSlatesJumper();
+        return;
+      }
+
       if (e.code === "KeyC") {
         handleCopying();
         return;
@@ -257,6 +289,8 @@ const Object = React.forwardRef(
         return;
       }
     };
+
+    const firstAppliedSlate = savedObjectsSlates[url]?.[0];
 
     return (
       <button
@@ -269,7 +303,7 @@ const Object = React.forwardRef(
             STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
         ]}
-        onKeyDown={mergeEvents(handleKeyboardActions, onKeyDown)}
+        onKeyUp={mergeEvents(handleKeyboardActions, onKeyDown)}
         {...props}
       >
         {withMultiSelection && (
@@ -287,13 +321,21 @@ const Object = React.forwardRef(
           css={STYLES_TEXT_BLACK}
           style={{ margin: 2, flexShrink: 0, display: isChecked && "none" }}
         />
-        <Typography.H5
-          style={{ maxWidth: 384, marginLeft: 12 }}
-          color="textBlack"
-          nbrOflines={1}
+        <div
+          css={Styles.HORIZONTAL_CONTAINER_CENTERED}
+          style={{ marginLeft: 12, maxWidth: 384 }}
         >
-          {title}
-        </Typography.H5>
+          {firstAppliedSlate && (
+            <Slate style={{ flexShrink: 0 }}>{firstAppliedSlate}</Slate>
+          )}
+          <Typography.H5
+            style={{ marginLeft: 6 }}
+            color="textBlack"
+            nbrOflines={1}
+          >
+            {title}
+          </Typography.H5>
+        </div>
         {relatedVisits?.length ? (
           <Typography.H5 color="textGray" style={{ marginLeft: 12 }}>
             {relatedVisits.length + 1}
