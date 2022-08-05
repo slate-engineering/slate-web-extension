@@ -654,11 +654,13 @@ const ViewsFeedRow = ({
       onClick={() => onOpenUrl({ urls: [visit.url] })}
       onMouseEnter={() => onObjectHover?.({ url: visit.url })}
       onOpenSlatesJumper={() =>
-        onOpenSlatesJumper({
-          title: visit.title,
-          url: visit.url,
-          rootDomain: getRootDomain(visit.url),
-        })
+        onOpenSlatesJumper([
+          {
+            title: visit.title,
+            url: visit.url,
+            rootDomain: getRootDomain(visit.url),
+          },
+        ])
       }
       {...props}
     />

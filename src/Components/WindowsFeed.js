@@ -54,11 +54,13 @@ const WindowsFeedRow = ({
         })
       }
       onOpenSlatesJumper={() =>
-        onOpenSlatesJumper({
-          title: tab.title,
-          url: tab.url,
-          rootDomain: getRootDomain(tab.url),
-        })
+        onOpenSlatesJumper([
+          {
+            title: tab.title,
+            url: tab.url,
+            rootDomain: getRootDomain(tab.url),
+          },
+        ])
       }
       onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
     />

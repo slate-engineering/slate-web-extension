@@ -74,11 +74,13 @@ const HistoryFeedRow = ({
         })
       }
       onOpenSlatesJumper={() =>
-        onOpenSlatesJumper({
-          title: visit.title,
-          url: visit.url,
-          rootDomain: getRootDomain(visit.url),
-        })
+        onOpenSlatesJumper([
+          {
+            title: visit.title,
+            url: visit.url,
+            rootDomain: getRootDomain(visit.url),
+          },
+        ])
       }
     />
   );
