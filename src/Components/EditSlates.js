@@ -19,7 +19,7 @@ const useEditSlatesContext = () => React.useContext(EditSlatesContext);
 
 const Provider = ({
   children,
-  slates: slatesProp,
+  viewer,
   objects,
   onCreateSlate,
   onApplySlateToObject,
@@ -28,13 +28,13 @@ const Provider = ({
   const [searchValue, setSearchValue] = React.useState("");
 
   const slates = React.useMemo(() => {
-    if (searchValue === "") return slatesProp;
+    if (searchValue === "") return viewer.slates;
 
     const searchRegex = new RegExp(searchValue, "gi");
-    return slatesProp.filter((slate) => {
+    return viewer.slates.filter((slate) => {
       return searchRegex.test(slate);
     });
-  }, [slatesProp, searchValue]);
+  }, [viewer.slates, searchValue]);
 
   const canCreateSlate = React.useMemo(() => {
     if (searchValue === "") return false;
@@ -52,6 +52,7 @@ const Provider = ({
       onCreateSlate,
       onApplySlateToObject,
       onRemoveSlateFromObject,
+      viewer,
     }),
     [
       searchValue,
@@ -62,6 +63,7 @@ const Provider = ({
       onCreateSlate,
       onApplySlateToObject,
       onRemoveSlateFromObject,
+      viewer,
     ]
   );
 
@@ -285,14 +287,20 @@ const STYLES_OBJECT_SELECTED = (theme) => css`
 `;
 
 const Body = ({ ...props }) => {
-  const { slates, searchValue, canCreateSlate } = useEditSlatesContext();
+  const { viewer, objects, slates, searchValue, canCreateSlate } =
+    useEditSlatesContext();
   const { checkIfIndexSelected } = useComboboxNavigation();
+
+  const checkIfSlateApplied = (slate) => {
+    return objects.every((object) => object.url in viewer.slatesLookup[slate]);
+  };
 
   return (
     <Combobox.Menu>
       <div css={STYLES_BODY_WRAPPER} {...props}>
         {slates.map((slate, index) => {
           const isButtonSelected = checkIfIndexSelected(index);
+          const isSlateApplied = checkIfSlateApplied(slate);
 
           return (
             <Combobox.MenuButton key={slate} index={index}>
@@ -310,11 +318,21 @@ const Body = ({ ...props }) => {
                 >
                   {slate}
                 </Typography.H5>
-                {isButtonSelected && (
-                  <KeyboardInteractionHint style={{ marginLeft: "auto" }}>
-                    apply tag
-                  </KeyboardInteractionHint>
-                )}
+                <div
+                  css={Styles.HORIZONTAL_CONTAINER_CENTERED}
+                  style={{ marginLeft: "auto" }}
+                >
+                  {isButtonSelected && (
+                    <KeyboardInteractionHint>
+                      {isSlateApplied ? "remove tag" : "apply tag"}
+                    </KeyboardInteractionHint>
+                  )}
+                  {isSlateApplied && (
+                    <div style={{ marginLeft: 8, padding: 2 }}>
+                      <SVG.CheckCircle />
+                    </div>
+                  )}
+                </div>
               </button>
             </Combobox.MenuButton>
           );
