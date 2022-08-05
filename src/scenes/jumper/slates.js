@@ -17,7 +17,7 @@ const STYLES_BACK_BUTTON = (theme) => css`
 `;
 
 export default function Slates() {
-  const { slates } = useViewer();
+  const viewer = useViewer();
   const { navigateToHomeJumper, navigationState } = useNavigation();
 
   const { searchParams } = navigationState;
@@ -25,7 +25,7 @@ export default function Slates() {
   const objects = JSON.parse(searchParams.get("urls"));
 
   return (
-    <EditSlates.Provider objects={objects} slates={slates}>
+    <EditSlates.Provider objects={objects} viewer={viewer}>
       <Jumper.TopPanel>
         <EditSlates.TopPanel />
       </Jumper.TopPanel>

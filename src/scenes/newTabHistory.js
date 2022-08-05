@@ -21,20 +21,24 @@ import { css } from "@emotion/react";
 const useSlatesJumper = () => {
   const [slatesJumperState, setSlatesJumperState] = React.useState({
     isOpen: false,
+    objects: undefined,
   });
 
   const closeSlatesJumper = () => setSlatesJumperState({ isOpen: false });
-  const openSlatesJumper = (objects) =>
+  const openSlatesJumper = (objects) => {
     setSlatesJumperState({ isOpen: true, objects });
+  };
 
   return { slatesJumperState, closeSlatesJumper, openSlatesJumper };
 };
 
-function EditSlatesJumper({ slatesJumperState, onClose }) {
-  const { slates } = useViewer();
+function EditSlatesJumper({ onClose }) {
+  const viewer = useViewer();
+  const { slatesJumperState } = useSlatesJumper();
+
   return (
     <Jumper.Root onClose={onClose}>
-      <EditSlates.Provider slates={slates}>
+      <EditSlates.Provider objects={slatesJumperState.objects} viewer={viewer}>
         <Jumper.Header style={{ paddingLeft: "20px" }}>
           <EditSlates.Input />
         </Jumper.Header>
