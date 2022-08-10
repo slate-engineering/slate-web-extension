@@ -19,22 +19,24 @@ const useEditSlatesContext = () => React.useContext(EditSlatesContext);
 
 const Provider = ({
   children,
-  viewer,
   objects,
+  slates: slatesProp,
+  checkIfSlateIsApplied,
+
   onCreateSlate,
-  onApplySlateToObject,
-  onRemoveSlateFromObject,
+  onAddObjectsToSlate,
+  onRemoveObjectsFromSlate,
 }) => {
   const [searchValue, setSearchValue] = React.useState("");
 
   const slates = React.useMemo(() => {
-    if (searchValue === "") return viewer.slates;
+    if (searchValue === "") return slatesProp;
 
     const searchRegex = new RegExp(searchValue, "gi");
-    return viewer.slates.filter((slate) => {
+    return slatesProp.filter((slate) => {
       return searchRegex.test(slate);
     });
-  }, [viewer.slates, searchValue]);
+  }, [slatesProp, searchValue]);
 
   const canCreateSlate = React.useMemo(() => {
     if (searchValue === "") return false;
@@ -50,9 +52,9 @@ const Provider = ({
       objects,
       canCreateSlate,
       onCreateSlate,
-      onApplySlateToObject,
-      onRemoveSlateFromObject,
-      viewer,
+      onAddObjectsToSlate,
+      onRemoveObjectsFromSlate,
+      checkIfSlateIsApplied,
     }),
     [
       searchValue,
@@ -61,9 +63,9 @@ const Provider = ({
       slates,
       objects,
       onCreateSlate,
-      onApplySlateToObject,
-      onRemoveSlateFromObject,
-      viewer,
+      onAddObjectsToSlate,
+      onRemoveObjectsFromSlate,
+      checkIfSlateIsApplied,
     ]
   );
 
@@ -287,12 +289,34 @@ const STYLES_OBJECT_SELECTED = (theme) => css`
 `;
 
 const Body = ({ ...props }) => {
-  const { viewer, objects, slates, searchValue, canCreateSlate } =
-    useEditSlatesContext();
+  const {
+    slates,
+    objects,
+    searchValue,
+    setSearchValue,
+    canCreateSlate,
+
+    checkIfSlateIsApplied,
+    onCreateSlate,
+    onAddObjectsToSlate,
+    onRemoveObjectsFromSlate,
+  } = useEditSlatesContext();
   const { checkIfIndexSelected } = useComboboxNavigation();
 
-  const checkIfSlateApplied = (slate) => {
-    return objects.every((object) => object.url in viewer.slatesLookup[slate]);
+  const createSlateActionHandler =
+    ({ slateName, isApplied }) =>
+    () => {
+      if (isApplied) {
+        onRemoveObjectsFromSlate({ slateName, objects });
+      } else {
+        onAddObjectsToSlate({ slateName, objects });
+      }
+      setSearchValue("");
+    };
+
+  const handleCreateSlate = () => {
+    onCreateSlate({ slateName: searchValue, objects });
+    setSearchValue("");
   };
 
   return (
@@ -300,10 +324,21 @@ const Body = ({ ...props }) => {
       <div css={STYLES_BODY_WRAPPER} {...props}>
         {slates.map((slate, index) => {
           const isButtonSelected = checkIfIndexSelected(index);
-          const isSlateApplied = checkIfSlateApplied(slate);
+          const isSlateApplied = checkIfSlateIsApplied(slate);
 
           return (
-            <Combobox.MenuButton key={slate} index={index}>
+            <Combobox.MenuButton
+              onSubmit={createSlateActionHandler({
+                slateName: slate,
+                isApplied: isSlateApplied,
+              })}
+              onClick={createSlateActionHandler({
+                slateName: slate,
+                isApplied: isSlateApplied,
+              })}
+              key={slate}
+              index={index}
+            >
               <button
                 css={[
                   STYLES_OBJECT,
@@ -338,7 +373,11 @@ const Body = ({ ...props }) => {
           );
         })}
         {canCreateSlate && (
-          <Combobox.MenuButton index={slates.length}>
+          <Combobox.MenuButton
+            index={slates.length}
+            onClick={handleCreateSlate}
+            onSubmit={handleCreateSlate}
+          >
             <button
               css={[
                 STYLES_SLATES_MENU_BUTTON_BLUE,
