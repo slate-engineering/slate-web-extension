@@ -524,8 +524,14 @@ const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
 
+  updateViewer: "UPDATE_VIEWER",
+
   saveLink: "SAVE_LINK",
   savingStatus: "SAVING_STATUS",
+
+  addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
+  removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
+  createSlate: "CREATE_SLATE",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -547,7 +553,6 @@ const savingSources = {
 
 const viewerInitialState = {
   isAuthenticated: false,
-  shouldSync: false,
   initialView: initialView,
   windows: {
     data: { currentWindow: [], allOpen: [] },
@@ -798,7 +803,6 @@ const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
     removeSavingPopup();
     await loadFont();
     const handleOnRetry = () => {
-      console.log("retrying");
       chrome.runtime.sendMessage({
         type: viewer_messages.saveLink,
         url,
@@ -820,6 +824,12 @@ const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
 
 chrome.runtime.onMessage.addListener(async (request) => {
   const { type, data } = request;
+  if (type === viewer_messages.updateViewer) {
+    // TODO(amine): check if jumper is open
+    window.postMessage({ type: viewer_messages.updateViewer, data }, "*");
+    return;
+  }
+
   if (type === viewer_messages.savingStatus) {
     // NOTE(amine): forward the saving status to the jumper and new tab
     window.postMessage({ type: viewer_messages.savingStatus, data }, "*");
@@ -850,6 +860,33 @@ window.addEventListener("message", async function (event) {
         );
       }
     );
+    return;
+  }
+
+  if (event.data.type === viewer_messages.createSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.createSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
+    return;
+  }
+
+  if (event.data.type === viewer_messages.addObjectsToSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.addObjectsToSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
+    return;
+  }
+
+  if (event.data.type === viewer_messages.removeObjectsFromSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.removeObjectsFromSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
     return;
   }
 
