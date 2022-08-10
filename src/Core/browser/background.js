@@ -307,7 +307,7 @@ export const browserHistory = new BrowserHistory();
 
 /** ----------------------------------------- */
 
-const Tabs = {
+export const Tabs = {
   create: async (tab) => ({
     id: tab.id,
     windowId: tab.windowId,
