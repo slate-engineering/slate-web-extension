@@ -249,14 +249,13 @@ const Object = React.forwardRef(
       onCheck,
 
       url,
-      isSaved: isSavedProp,
       onKeyDown,
       ...props
     },
     ref
   ) => {
-    const { savedObjects, saveLink, savedObjectsSlates } = useViewer();
-    const isSaved = url in savedObjects || isSavedProp;
+    const { savedObjectsLookup, saveLink, savedObjectsSlates } = useViewer();
+    const isSaved = url in savedObjectsLookup;
 
     const handleLinkSaving = (e) => (
       e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })

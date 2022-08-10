@@ -1,53 +1,8 @@
 import * as React from "react";
 
-import { messages, savingStates, viewerInitialState } from "..";
-import { useSavingState } from ".";
+import { messages, viewerInitialState } from "..";
 
 import JumperAuth from "../../../scenes/jumperAuth";
-
-/* -------------------------------------------------------------------------------------------------
- * useSaving
- * -----------------------------------------------------------------------------------------------*/
-
-const useSaving = () => {
-  // NOTE(amine): optimistically update UI when saving new objects
-  const { savedObjects, addToSavedObjects, removeFromSavedObjects } =
-    useSavingState();
-
-  React.useEffect(() => {
-    const handleMessage = (request) => {
-      let { data, type } = request;
-      if (type === messages.savingStatus) {
-        if (
-          data.savingStatus === savingStates.start ||
-          data.savingStatus === savingStates.done
-        ) {
-          addToSavedObjects(data.url);
-          return;
-        }
-
-        if (data.savingStatus === savingStates.failed) {
-          removeFromSavedObjects(data.url);
-        }
-        return;
-      }
-    };
-    chrome.runtime.onMessage.addListener(handleMessage);
-
-    return () => chrome.runtime.onMessage.removeListener(handleMessage);
-  }, []);
-
-  const sendSaveLinkRequest = ({ url, title, favicon }) => {
-    chrome.runtime.sendMessage({
-      type: messages.saveLink,
-      url,
-      title,
-      favicon,
-    });
-  };
-
-  return { savedObjects, saveLink: sendSaveLinkRequest };
-};
 
 /* -------------------------------------------------------------------------------------------------
  * Viewer Provider
@@ -81,15 +36,60 @@ export const ViewerProvider = ({ children }) => {
     fetchInitialData();
   }, []);
 
-  const { savedObjects, saveLink } = useSaving();
+  React.useEffect(() => {
+    const handleMessage = (request) => {
+      let { data, type } = request;
+      if (type === messages.updateViewer) {
+        setState((prev) => ({ ...prev, ...data }));
+      }
+    };
+
+    chrome.runtime.onMessage.addListener(handleMessage);
+    return () => chrome.runtime.onMessage.removeListener(handleMessage);
+  }, []);
+
+  const createSlate = ({ objects, slateName }) => {
+    chrome.runtime.sendMessage({
+      type: messages.createSlate,
+      objects,
+      slateName,
+    });
+  };
+
+  const addObjectsToSlate = ({ objects, slateName }) => {
+    chrome.runtime.sendMessage({
+      type: messages.addObjectsToSlate,
+      objects,
+      slateName,
+    });
+  };
+
+  const removeObjectsFromSlate = ({ objects, slateName }) => {
+    chrome.runtime.sendMessage({
+      type: messages.removeObjectsFromSlate,
+      objects,
+      slateName,
+    });
+  };
+
+  const saveLink = ({ url, title, favicon }) => {
+    chrome.runtime.sendMessage({
+      type: messages.saveLink,
+      url,
+      title,
+      favicon,
+    });
+  };
 
   const contextValue = React.useMemo(
     () => ({
       ...state,
-      savedObjects,
       saveLink,
+      createSlate,
+      addObjectsToSlate,
+      removeObjectsFromSlate,
     }),
-    [state, savedObjects]
+    [state]
   );
 
   if (!state.shouldRender) return null;
