@@ -25,20 +25,34 @@ const useSlatesJumper = () => {
   });
 
   const closeSlatesJumper = () => setSlatesJumperState({ isOpen: false });
+
   const openSlatesJumper = (objects) => {
-    setSlatesJumperState({ isOpen: true, objects });
+    setSlatesJumperState({ isOpen: true, objects: [...objects] });
   };
 
   return { slatesJumperState, closeSlatesJumper, openSlatesJumper };
 };
 
-function EditSlatesJumper({ onClose }) {
+function EditSlatesJumper({ objects, onClose }) {
   const viewer = useViewer();
-  const { slatesJumperState } = useSlatesJumper();
+
+  const checkIfSlateIsApplied = (slate) => {
+    return objects.every((object) => object.url in viewer.slatesLookup[slate]);
+  };
 
   return (
     <Jumper.Root onClose={onClose}>
-      <EditSlates.Provider objects={slatesJumperState.objects} viewer={viewer}>
+      <EditSlates.Provider
+        objects={objects}
+        slates={viewer.slates}
+        checkIfSlateIsApplied={checkIfSlateIsApplied}
+        onCreateSlate={viewer.createSlate}
+        onAddObjectsToSlate={viewer.addObjectsToSlate}
+        onRemoveObjectsFromSlate={viewer.removeObjectsFromSlate}
+      >
+        <Jumper.TopPanel>
+          <EditSlates.TopPanel />
+        </Jumper.TopPanel>
         <Jumper.Header style={{ paddingLeft: "20px" }}>
           <EditSlates.Input />
         </Jumper.Header>
@@ -183,7 +197,10 @@ export default function HistoryScene() {
   return (
     <>
       {slatesJumperState.isOpen && (
-        <EditSlatesJumper onClose={closeSlatesJumper} />
+        <EditSlatesJumper
+          objects={slatesJumperState.objects}
+          onClose={closeSlatesJumper}
+        />
       )}
       <div css={STYLES_HISTORY_SCENE_WRAPPER}>
         <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
@@ -200,7 +217,9 @@ export default function HistoryScene() {
             currentViewQuery={currentViewQuery}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
-            onChange={() => (clearSearch(), focusSearchInput())}
+            onChange={() => (
+              clearSearch(), focusSearchInput(), closeSlatesJumper()
+            )}
           >
             <section css={STYLES_HISTORY_TOP_POPUP}>
               <Views.Menu
