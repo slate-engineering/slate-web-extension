@@ -89,7 +89,7 @@ export const NavigationProvider = ({ children }) => {
   const { navigationState, navigate } = useHandleJumperNavigation();
   const navigateToHomeJumper = () => navigate("/");
   const navigateToSlatesJumper = (objects) => {
-    const urlsQuery = JSON.stringify(objects);
+    const urlsQuery = encodeURIComponent(JSON.stringify(objects));
     navigate(`/slates?urls=${urlsQuery}`);
   };
 

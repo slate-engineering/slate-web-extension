@@ -22,10 +22,22 @@ export default function Slates() {
 
   const { searchParams } = navigationState;
 
-  const objects = JSON.parse(searchParams.get("urls"));
+  const urlsQuery = decodeURIComponent(searchParams.get("urls"));
+  const objects = JSON.parse(urlsQuery);
+
+  const checkIfSlateIsApplied = (slate) => {
+    return objects.every((object) => object.url in viewer.slatesLookup[slate]);
+  };
 
   return (
-    <EditSlates.Provider objects={objects} viewer={viewer}>
+    <EditSlates.Provider
+      objects={objects}
+      onCreateSlate={viewer.createSlate}
+      onAddObjectsToSlate={viewer.addObjectsToSlate}
+      onRemoveObjectsFromSlate={viewer.removeObjectsFromSlate}
+      slates={viewer.slates}
+      checkIfSlateIsApplied={checkIfSlateIsApplied}
+    >
       <Jumper.TopPanel>
         <EditSlates.TopPanel />
       </Jumper.TopPanel>

@@ -82,9 +82,10 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
   if (command == Constants.commands.openAppOnSlates) {
     const urls = [{ url: tab.url, rootDomain: getRootDomain(tab.url) }];
+    const urlsQuery = encodeURIComponent(JSON.stringify(urls));
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: messages.openExtensionJumperRequest,
-      data: { url: `/slates?urls=${JSON.stringify(urls)}` },
+      data: { url: `/slates?urls=${urlsQuery}` },
     });
   }
 
