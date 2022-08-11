@@ -242,9 +242,7 @@ const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
     const handleOnRetry = () => {
       chrome.runtime.sendMessage({
         type: messages.saveLink,
-        url,
-        title,
-        favicon,
+        objects: [{ url, title, favicon }],
         source: savingSources.command,
       });
     };
@@ -330,8 +328,7 @@ window.addEventListener("message", async function (event) {
   if (event.data.type === messages.saveLink) {
     chrome.runtime.sendMessage({
       type: messages.saveLink,
-      url: event.data.url,
-      title: event.data.title,
+      objects: event.data.objects,
     });
   }
 });

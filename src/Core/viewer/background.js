@@ -195,7 +195,7 @@ class ViewerActionsHandler {
   }
 
   _registerRunningAction() {
-    this.runningActions.push();
+    this.runningActions.push("");
   }
 
   _cleanupCleanupAction() {
@@ -205,48 +205,40 @@ class ViewerActionsHandler {
     }, 200);
   }
 
-  async _addFileToViewer({ viewer, url, title, favicon }) {
-    let newObjects;
-    if (url in viewer.savedObjectsLookup) {
-      newObjects = viewer.objects;
-    } else {
-      newObjects = [
-        { title, url, favicon, rootDomain: getRootDomain(url), isSaved: true },
-        ...viewer.objects,
-      ];
-    }
-
-    return {
-      ...viewer,
-      savedObjectsLookup: {
-        ...viewer.savedObjectsLookup,
-        [url]: savingStates.start,
-      },
-      objects: newObjects,
-    };
+  _addObjectsToViewer({ viewer, objects }) {
+    objects.forEach((object) => {
+      if (object.url in viewer.savedObjectsLookup) {
+        return;
+      }
+      viewer.savedObjectsLookup[object.url] = savingStates.start;
+      viewer.objects.push({
+        title: object.title,
+        url: object.title,
+        favicon: object.favicon,
+        rootDomain: getRootDomain(object.url),
+        isSaved: true,
+      });
+    });
+    return viewer;
   }
 
-  async _removeFileFromViewer({ viewer, url }) {
-    const savedObjectsLookup = { ...viewer.savedObjectsLookup };
-    delete savedObjectsLookup[url];
-    const objects = objects.filter((object) => object.url !== url);
+  async _removeObjectsFromViewer({ viewer, objects }) {
+    objects.forEach(({ url }) => {
+      delete viewer.savedObjectsLookup[url];
+      viewer.objects = objects.filter((object) => object.url !== url);
+    });
 
-    return { ...viewer, savedObjectsLookup, objects };
+    return viewer;
   }
 
-  async _addSlateToViewer({ viewer, slateName }) {
-    return {
-      ...viewer,
-      slatesLookup: { ...viewer.slatesLookup, [slateName]: {} },
-      slates: [
-        {
-          slatename: slateName,
-          name: slateName,
-          createAt: new Date().toDateString(),
-        },
-        ...viewer.slates,
-      ],
-    };
+  _addSlateToViewer({ viewer, slateName }) {
+    viewer.slatesLookup[slateName] = {};
+    viewer.slates.push({
+      slatename: slateName,
+      name: slateName,
+      createAt: new Date().toDateString(),
+    });
+    return viewer;
   }
 
   _removeSlateFromViewer({ viewer, slateName }) {
@@ -292,24 +284,25 @@ class ViewerActionsHandler {
    * @description save a link and send saving status to new tab and the jumper
    *
    * @param {Object} Arguments
-   * @param {string} Arguments.url - the url to save
+   * @param {string} Arguments.objects - objects to save
    * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
    * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
    */
 
-  async saveLink({
-    url,
-    title,
-    favicon,
-    tab,
-    slateName,
-    source = savingSources.app,
-  }) {
-    const viewer = await Viewer.get();
-    if (viewer.savedObjectsLookup[url] === savingStates.start) return;
+  async saveLink({ objects, slateName, tab, source = savingSources.app }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+    const areObjectsBeingSaved = objects.every(
+      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
+    );
+
+    if (areObjectsBeingSaved) return;
 
     const sendStatusUpdate = (status) => {
       if (source === savingSources.command) {
+        // NOTE(amine): you can only save one object via command
+        const { url, title, favicon } = objects[0];
         chrome.tabs.sendMessage(parseInt(tab.id), {
           type: messages.savingStatus,
           data: { savingStatus: status, url, title, favicon, source },
@@ -319,24 +312,26 @@ class ViewerActionsHandler {
 
     sendStatusUpdate(savingStates.start);
 
-    if (!(url in viewer.savedObjectsLookup)) {
-      let newViewer = await this._addFileToViewer({
-        viewer,
-        url,
-        title,
-        favicon,
-      });
-      if (slateName) {
-        newViewer = await this._addObjectsToViewerSlate({
-          viewer: newViewer,
-          objects: [{ url, title, favicon }],
-          slateName,
-        });
-      }
-      Viewer._set(newViewer);
-    }
+    const objectsToBeSaved = objects.filter(
+      ({ url }) => !(url in viewer.savedObjectsLookup)
+    );
 
-    let payload = { url };
+    viewer = this._addObjectsToViewer({
+      viewer,
+      objects: objectsToBeSaved,
+    });
+
+    if (slateName) {
+      viewer = this._addObjectsToViewerSlate({
+        viewer,
+        objects: objectsToBeSaved,
+        slateName,
+      });
+    }
+    Viewer._set(viewer);
+
+    let payload = {};
+    payload.urls = objectsToBeSaved.map(({ url }) => url);
     if (slateName) {
       const slatePayload = viewer.slates.find(
         (slate) => slate.name === slateName
@@ -348,21 +343,25 @@ class ViewerActionsHandler {
 
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
-      const viewer = await Viewer.get();
-      let newViewer = viewer;
+      let viewer = await Viewer.get();
       if (slateName) {
-        newViewer = this._removeObjectsFromViewerSlate({
+        viewer = this._removeObjectsFromViewerSlate({
           viewer,
-          objects: [{ url, title, favicon }],
+          objects: objectsToBeSaved,
           slateName,
         });
       }
-      newViewer = this._removeFileFromViewer({ viewer: newViewer, url });
-      Viewer._set(newViewer);
+      viewer = this._removeObjectsFromViewer({
+        viewer: viewer,
+        objects: objectsToBeSaved,
+      });
+      Viewer._set(viewer);
       return;
     }
 
     sendStatusUpdate(savingStates.done);
+
+    this._cleanupCleanupAction();
   }
 
   async addObjectsToSlate({ slateName, objects }) {
@@ -462,60 +461,65 @@ class ViewerActionsHandler {
   }
 
   async createSlate({ slateName, objects }) {
-    const viewer = await Viewer.get();
+    let viewer = await Viewer.get();
     if (slateName in viewer.slatesLookup) return;
 
-    let newViewer = await this._addSlateToViewer({ viewer, slateName });
-    newViewer = await this._addObjectsToViewerSlate({
-      viewer: newViewer,
+    this._registerRunningAction();
+
+    viewer = this._addSlateToViewer({ viewer, slateName });
+    viewer = this._addObjectsToViewerSlate({
+      viewer,
       objects,
       slateName,
     });
-    Viewer._set(newViewer);
+    Viewer._set(viewer);
 
     const response = await Actions.createSlate({
       name: slateName,
       isPublic: false,
     });
 
-    console.log("create slate", response);
-
     if (!response || response.error) {
-      const viewer = await Viewer.get();
-      let newViewer = this._removeObjectsFromViewerSlate({
+      let viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
         viewer,
         objects,
         slateName,
       });
-      newViewer = this._removeSlateFromViewer({ viewer: newViewer, slateName });
-      Viewer._set(newViewer);
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+      Viewer._set(viewer);
       return;
     } else {
       const viewer = await Viewer.get();
-      const newSlates = viewer.slates.filter(
+      viewer.slates = viewer.slates.filter(
         (slate) => slate.slatename !== slateName
       );
-      newSlates.unshift(response.slate);
-      Viewer._set({ ...viewer, slates: newSlates });
+      viewer.slates.unshift(response.slate);
+      Viewer._set(viewer);
     }
 
-    const object = objects[0];
-    const isObjectSaved = await Viewer.checkIfLinkIsSaved(object.url);
-    if (isObjectSaved) {
-      if (isObjectSaved) {
-        await this.addObjectsToSlate({
-          objects: objects,
-          slateName: slateName,
-        });
-      } else {
-        await this.saveLink({
-          url: object.url,
-          title: object.title,
-          favicon: object.favicon,
-          slateName,
-        });
+    const savedObjects = [];
+    const unsavedObjects = [];
+    for (let object of objects) {
+      if (await Viewer.checkIfLinkIsSaved(object.url)) {
+        savedObjects.push(object);
+        continue;
       }
+      unsavedObjects.push(object);
     }
+
+    this._cleanupCleanupAction();
+
+    Promise.all([
+      ViewerActions.addObjectsToSlate({
+        objects: savedObjects,
+        slateName: slateName,
+      }),
+      ViewerActions.saveLink({
+        objects: unsavedObjects,
+        slateName,
+      }),
+    ]);
   }
 }
 
@@ -539,9 +543,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.directSave) {
     if (await Viewer.checkIfAuthenticated()) {
       Viewer.saveLink({
-        url: tab.url,
-        title: tab.title,
-        favicon: tab.favIconUrl,
+        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
         tab,
         source: savingSources.command,
       });
@@ -568,9 +570,7 @@ chrome.cookies.onChanged.addListener((e) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.saveLink) {
     ViewerActions.saveLink({
-      url: request.url,
-      title: request.title,
-      favicon: request.favicon,
+      objects: request.objects,
       tab: sender.tab,
       source: request.source,
     }).then(sendResponse);
@@ -589,21 +589,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         unsavedObjects.push(object);
       }
 
-      if (savedObjects.length) {
-        await ViewerActions.addObjectsToSlate({
+      Promise.all([
+        ViewerActions.addObjectsToSlate({
           objects: savedObjects,
           slateName: slateName,
-        });
-      }
-
-      // if (unsavedObjects.length) {
-      //   await viewer.saveLink({
-      //     url: object.url,
-      //     title: object.title,
-      //     favicon: object.favicon,
-      //     slateName,
-      //   });
-      // }
+        }),
+        ViewerActions.saveLink({
+          objects: unsavedObjects,
+          slateName,
+        }),
+      ]);
     };
 
     handleAddObjectsToSlate({

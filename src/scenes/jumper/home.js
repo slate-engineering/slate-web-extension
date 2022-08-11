@@ -14,6 +14,7 @@ import { useViews, useHistorySearch } from "../../Core/views/app/jumper";
 import { Switch, Match } from "../../Components/Switch";
 import { css } from "@emotion/react";
 import { useNavigation } from "../../Core/navigation/app/jumper";
+import { useViewer } from "../../Core/viewer/app/jumper";
 
 /* -------------------------------------------------------------------------------------------------
  * History Scene
@@ -39,6 +40,7 @@ export default function Home() {
     inputRef,
     viewType: currentView,
   });
+  const viewer = useViewer();
 
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
@@ -87,6 +89,7 @@ export default function Home() {
           <Switch
             onOpenUrl={Navigation.openUrls}
             onOpenSlatesJumper={navigateToSlatesJumper}
+            onSaveObjects={viewer.saveLink}
             ref={feedRef}
           >
             <Match

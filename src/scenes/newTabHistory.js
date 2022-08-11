@@ -191,6 +191,8 @@ export default function HistoryScene() {
 
   const focusSearchInput = () => inputRef.current.focus();
 
+  const viewer = useViewer();
+
   const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
     useSlatesJumper();
 
@@ -256,6 +258,7 @@ export default function HistoryScene() {
                 <Switch
                   onOpenSlatesJumper={openSlatesJumper}
                   onOpenUrl={Navigation.openUrls}
+                  onSaveObjects={viewer.saveLink}
                   css={STYLES_HISTORY_SCENE_FEED}
                 >
                   <Match
