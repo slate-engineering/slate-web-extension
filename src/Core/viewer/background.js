@@ -22,6 +22,9 @@ const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+const getFileUrl = (object) =>
+  object.isLink ? object.url : `${Constants.gateways.ipfs}/${object.cid}`;
+
 /** ----------------------------------------- */
 
 const VIEWER_INITIAL_STATE = {
@@ -41,9 +44,10 @@ const VIEWER_INITIAL_STATE = {
 let VIEWER_INTERNAL_STORAGE;
 const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
 
-class Viewer {
+class ViewerHandler {
   constructor() {
     this.observers = [];
+    this.runningActions = [];
   }
 
   onChange(callback) {
@@ -82,9 +86,6 @@ class Viewer {
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       ),
     };
-
-    const getFileUrl = (object) =>
-      object.isLink ? object.url : `${Constants.gateways.ipfs}/${object.cid}`;
 
     serializedViewer.objects = viewer.library.map((object) => {
       serializedViewer.objectsMetadata[getFileUrl(object)] = {
@@ -168,7 +169,10 @@ class Viewer {
   }
 
   async sync() {
+    //NOTE(amine): only sync when there are no running actions
+
     const viewer = await Actions.hydrateAuthenticatedUser();
+
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
@@ -176,11 +180,29 @@ class Viewer {
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
-
       return;
     }
 
     this.reset(VIEWER_INITIAL_STATE);
+  }
+}
+
+export const Viewer = new ViewerHandler();
+
+class ViewerActionsHandler {
+  constructor() {
+    this.runningActions = [];
+  }
+
+  _registerRunningAction() {
+    this.runningActions.push();
+  }
+
+  _cleanupCleanupAction() {
+    this.runningActions.pop();
+    setTimeout(() => {
+      if (!this.runningActions.length) Viewer.sync();
+    }, 200);
   }
 
   async _addFileToViewer({ viewer, url, title, favicon }) {
@@ -227,55 +249,43 @@ class Viewer {
     };
   }
 
-  async _removeSlateFromViewer({ viewer, slateName }) {
-    const newSlatesLookup = { ...viewer.slatesLookup };
-    delete newSlatesLookup[slateName];
+  _removeSlateFromViewer({ viewer, slateName }) {
+    delete viewer.slatesLookup[slateName];
 
-    const newSlates = viewer.slates.filter(
+    viewer.slates = viewer.slates.filter(
       (slate) => slate.slatename !== slateName
     );
-    return { ...viewer, slatesLookup: newSlatesLookup, slates: newSlates };
+    return viewer;
   }
 
-  async _addObjectsToViewerSlate({ viewer, objects, slateName }) {
-    const newSlatesLookup = { ...viewer.slatesLookup };
+  _addObjectsToViewerSlate({ viewer, objects, slateName }) {
     objects.forEach(({ url }) => {
-      newSlatesLookup[slateName][url] = true;
+      viewer.slatesLookup[slateName][url] = true;
     });
 
-    const newSavedObjectsSlates = { ...viewer.savedObjectsSlates };
     objects.forEach(({ url }) => {
-      if (!(url in newSavedObjectsSlates)) newSavedObjectsSlates[url] = [];
-      newSavedObjectsSlates[url].push(slateName);
+      if (!(url in viewer.savedObjectsSlates))
+        viewer.savedObjectsSlates[url] = [];
+      viewer.savedObjectsSlates[url].push(slateName);
     });
 
-    return {
-      ...viewer,
-      slatesLookup: newSlatesLookup,
-      savedObjectsSlates: newSavedObjectsSlates,
-    };
+    return viewer;
   }
 
-  async _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
-    const newSlatesLookup = { ...viewer.slatesLookup };
+  _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
     objects.forEach(({ url }) => {
-      if (slateName in newSlatesLookup) {
-        delete newSlatesLookup[slateName][url];
+      if (slateName in viewer.slatesLookup) {
+        delete viewer.slatesLookup[slateName][url];
       }
     });
 
-    const newSavedObjectsSlates = { ...viewer.savedObjectsSlates };
     objects.forEach(({ url }) => {
       const filterOutSlateName = (slate) => slate !== slateName;
-      newSavedObjectsSlates[url] =
-        newSavedObjectsSlates[url].filter(filterOutSlateName);
+      viewer.savedObjectsSlates[url] =
+        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
     });
 
-    return {
-      ...viewer,
-      slatesLookup: newSlatesLookup,
-      savedObjectsSlates: newSavedObjectsSlates,
-    };
+    return viewer;
   }
 
   /**
@@ -295,7 +305,7 @@ class Viewer {
     slateName,
     source = savingSources.app,
   }) {
-    const viewer = await this.get();
+    const viewer = await Viewer.get();
     if (viewer.savedObjectsLookup[url] === savingStates.start) return;
 
     const sendStatusUpdate = (status) => {
@@ -323,7 +333,7 @@ class Viewer {
           slateName,
         });
       }
-      this._set(newViewer);
+      Viewer._set(newViewer);
     }
 
     let payload = { url };
@@ -338,7 +348,7 @@ class Viewer {
 
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
-      const viewer = await this.get();
+      const viewer = await Viewer.get();
       let newViewer = viewer;
       if (slateName) {
         newViewer = this._removeObjectsFromViewerSlate({
@@ -348,26 +358,25 @@ class Viewer {
         });
       }
       newViewer = this._removeFileFromViewer({ viewer: newViewer, url });
-      this._set(newViewer);
+      Viewer._set(newViewer);
       return;
     }
 
     sendStatusUpdate(savingStates.done);
-    this.sync();
   }
 
   async addObjectsToSlate({ slateName, objects }) {
-    const viewer = await this.get();
+    let viewer = await Viewer.get();
     if (!(slateName in viewer.slatesLookup)) {
       return;
     }
 
-    const newViewer = await this._addObjectsToViewerSlate({
+    viewer = this._addObjectsToViewerSlate({
       viewer,
       objects,
       slateName,
     });
-    this._set(newViewer);
+    Viewer._set(viewer);
 
     const filesPayload = objects.map(({ url }) => ({
       id: viewer.objectsMetadata[url].id,
@@ -383,35 +392,24 @@ class Viewer {
       slate: slatePayload,
     });
 
-    console.log({ response });
-
     if (!response || response.error) {
-      const viewer = await this.get();
-      const newViewer = await this._removeObjectsFromViewerSlate({
+      viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
         viewer,
         objects,
         slateName,
       });
-      this._set(newViewer);
+      Viewer._set(viewer);
     }
-
-    this.sync();
 
     return;
   }
 
-  async removeObjectFromSlate({ slateName, objects }) {
-    const viewer = await this.get();
+  async removeObjectsFromSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
     if (!(slateName in viewer.slatesLookup)) {
       return;
     }
-
-    const newViewer = await this._removeObjectsFromViewerSlate({
-      viewer,
-      objects,
-      slateName,
-    });
-    this._set(newViewer);
 
     const filesIdsPayload = objects.map(
       ({ url }) => viewer.objectsMetadata[url].id
@@ -421,30 +419,50 @@ class Viewer {
       (slate) => slate.name === slateName
     );
 
+    viewer = await this._removeObjectsFromViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+
+    const isSlateEmpty =
+      Object.keys(viewer.slatesLookup[slateName]).length === 0;
+    // NOTE(amine): if the request fails, we'll use oldSlate to add that slate back
+    let oldSlate;
+    if (isSlateEmpty) {
+      oldSlate = viewer.slates.find((slate) => slate.slatename === slateName);
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+    }
+
+    Viewer._set(viewer);
+
     const response = await Actions.removeFileFromSlate({
       ids: filesIdsPayload,
       slateId: slatePayload.id,
     });
 
-    console.log({ response });
-
     if (!response || response.error) {
-      const viewer = await this.get();
-      const newViewer = await this._addObjectsToViewerSlate({
+      viewer = await this.get();
+      if (isSlateEmpty) {
+        viewer.slates.push(oldSlate);
+        oldSlate.objects.forEach((object) => {
+          const objectUrl = getFileUrl(object);
+          viewer.slatesLookup[slateName][objectUrl] = true;
+        });
+      }
+      viewer = this._addObjectsToViewerSlate({
         viewer,
         objects,
         slateName,
       });
-      this._set(newViewer);
+      Viewer._set(viewer);
     }
-
-    this.sync();
 
     return;
   }
 
   async createSlate({ slateName, objects }) {
-    const viewer = await this.get();
+    const viewer = await Viewer.get();
     if (slateName in viewer.slatesLookup) return;
 
     let newViewer = await this._addSlateToViewer({ viewer, slateName });
@@ -453,7 +471,7 @@ class Viewer {
       objects,
       slateName,
     });
-    this._set(newViewer);
+    Viewer._set(newViewer);
 
     const response = await Actions.createSlate({
       name: slateName,
@@ -463,26 +481,26 @@ class Viewer {
     console.log("create slate", response);
 
     if (!response || response.error) {
-      const viewer = await this.get();
+      const viewer = await Viewer.get();
       let newViewer = this._removeObjectsFromViewerSlate({
         viewer,
         objects,
         slateName,
       });
       newViewer = this._removeSlateFromViewer({ viewer: newViewer, slateName });
-      this._set(newViewer);
+      Viewer._set(newViewer);
       return;
     } else {
-      const viewer = await this.get();
+      const viewer = await Viewer.get();
       const newSlates = viewer.slates.filter(
         (slate) => slate.slatename !== slateName
       );
       newSlates.unshift(response.slate);
-      this._set({ ...viewer, slates: newSlates });
+      Viewer._set({ ...viewer, slates: newSlates });
     }
 
     const object = objects[0];
-    const isObjectSaved = await this.checkIfLinkIsSaved(object.url);
+    const isObjectSaved = await Viewer.checkIfLinkIsSaved(object.url);
     if (isObjectSaved) {
       if (isObjectSaved) {
         await this.addObjectsToSlate({
@@ -501,11 +519,11 @@ class Viewer {
   }
 }
 
-export const viewer = new Viewer();
+export const ViewerActions = new ViewerActionsHandler();
 
 /** ------------ Event listeners ------------- */
 
-viewer.onChange(async (viewerData) => {
+Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ name }) => name);
@@ -519,8 +537,8 @@ viewer.onChange(async (viewerData) => {
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.directSave) {
-    if (await viewer.checkIfAuthenticated()) {
-      viewer.saveLink({
+    if (await Viewer.checkIfAuthenticated()) {
+      Viewer.saveLink({
         url: tab.url,
         title: tab.title,
         favicon: tab.favIconUrl,
@@ -532,61 +550,60 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  viewer.sync();
+  Viewer.sync();
 });
 
 chrome.cookies.onChanged.addListener((e) => {
   if (e.cookie.domain !== Constants.uri.domain) return;
 
   if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {
-    viewer.reset();
+    Viewer.reset();
   }
 
   if (!e.removed && e.cause === "explicit") {
-    viewer.sync();
+    Viewer.sync();
   }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.saveLink) {
-    viewer
-      .saveLink({
-        url: request.url,
-        title: request.title,
-        favicon: request.favicon,
-        tab: sender.tab,
-        source: request.source,
-      })
-      .then(sendResponse);
+    ViewerActions.saveLink({
+      url: request.url,
+      title: request.title,
+      favicon: request.favicon,
+      tab: sender.tab,
+      source: request.source,
+    }).then(sendResponse);
     return true;
   }
 
   if (request.type === messages.addObjectsToSlate) {
     const handleAddObjectsToSlate = async ({ objects, slateName }) => {
-      // let savedObjects = [];
-      // let unsavedObjects = [];
-      // for (let object of objects) {
-      //   if (await viewer.checkIfLinkIsSaved(object.url)) {
-      //     savedObjects.push(object);
-      //     continue;
-      //   }
-      //   unsavedObjects.push(object);
-      // }
-      const object = objects[0];
-      const isObjectSaved = await viewer.checkIfLinkIsSaved(object.url);
-      if (isObjectSaved) {
-        await viewer.addObjectsToSlate({
-          objects: request.objects,
-          slateName: request.slateName,
-        });
-      } else {
-        await viewer.saveLink({
-          url: object.url,
-          title: object.title,
-          favicon: object.favicon,
-          slateName,
+      const savedObjects = [];
+      const unsavedObjects = [];
+      for (let object of objects) {
+        if (await Viewer.checkIfLinkIsSaved(object.url)) {
+          savedObjects.push(object);
+          continue;
+        }
+        unsavedObjects.push(object);
+      }
+
+      if (savedObjects.length) {
+        await ViewerActions.addObjectsToSlate({
+          objects: savedObjects,
+          slateName: slateName,
         });
       }
+
+      // if (unsavedObjects.length) {
+      //   await viewer.saveLink({
+      //     url: object.url,
+      //     title: object.title,
+      //     favicon: object.favicon,
+      //     slateName,
+      //   });
+      // }
     };
 
     handleAddObjectsToSlate({
@@ -598,30 +615,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === messages.createSlate) {
-    viewer
-      .createSlate({
-        objects: request.objects,
-        slateName: request.slateName,
-      })
-      .then(sendResponse);
+    ViewerActions.createSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
     return true;
   }
 
   if (request.type === messages.removeObjectsFromSlate) {
-    viewer
-      .removeObjectFromSlate({
-        objects: request.objects,
-        slateName: request.slateName,
-      })
-      .then(sendResponse);
+    ViewerActions.removeObjectsFromSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
     return true;
   }
 
   if (request.type === messages.loadViewerDataRequest) {
     const getInitialData = async () => {
-      const isAuthenticated = await viewer.checkIfAuthenticated();
-
-      viewer.sync();
+      const isAuthenticated = await Viewer.checkIfAuthenticated();
 
       if (!isAuthenticated) {
         return { isAuthenticated };
@@ -641,11 +652,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         activeTabId: sender.tab.id,
       });
 
-      const viewerData = await viewer.get();
+      const viewerData = await Viewer.get();
 
       const slates = viewerData.slates.map(({ name }) => name);
       const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
         viewerData;
+
+      Viewer.sync();
 
       const response = {
         ...viewerInitialState,
@@ -676,8 +689,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       //   response.recent = await browserHistory.getChunk();
       //   response.initialView = viewsType.recent;
       // }
-
-      viewer.sync();
 
       return response;
     };
