@@ -226,9 +226,19 @@ const TopPanel = () => {
           <Favicon key={index} />
         ))}
       </div>
-      <Typography.H5 color="textBlack" style={{ marginLeft: 12 }}>
-        Concrete Architecture (@architeg) / Twitter, Nils Frams and 2 more
-      </Typography.H5>
+      <div
+        css={Styles.HORIZONTAL_CONTAINER_CENTERED}
+        style={{ marginLeft: 12 }}
+      >
+        <Typography.H5 color="textBlack" nbrOflines={1}>
+          {objects[0].title}
+        </Typography.H5>
+        {objects.length > 1 && (
+          <Typography.H5 color="textBlack" style={{ flexShrink: 0 }}>
+            {" and" + ` ${objects.length - 1} more`}
+          </Typography.H5>
+        )}
+      </div>
     </div>
   );
 };
