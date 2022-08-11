@@ -131,6 +131,7 @@ const HistoryFeed = ({
   onOpenUrl,
   onOpenSlatesJumper,
   onGroupURLs,
+  onSaveObjects,
   css,
   ...props
 }) => {
@@ -221,6 +222,7 @@ const HistoryFeed = ({
         <MultiSelection.ActionsMenu
           onOpenURLs={(urls) => onOpenUrl({ urls })}
           onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
+          onSaveObjects={onSaveObjects}
           onOpenSlatesJumper={onOpenSlatesJumper}
         />
       </MultiSelection.Provider>

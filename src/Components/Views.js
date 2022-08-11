@@ -707,6 +707,7 @@ function Feed({
   onOpenUrl,
   onOpenSlatesJumper,
   onGroupURLs,
+  onSaveObjects,
   ...props
 }) {
   const { viewsFeed, currentViewLabel } = useViewsContext();
@@ -739,6 +740,7 @@ function Feed({
           onOpenURLs={(urls) => onOpenUrl({ urls })}
           onGroupURLs={(urls) => onGroupURLs({ urls, title: currentViewLabel })}
           onOpenSlatesJumper={onOpenSlatesJumper}
+          onSaveObjects={onSaveObjects}
         />
       </MultiSelection.Provider>
     </RovingTabIndex.Provider>

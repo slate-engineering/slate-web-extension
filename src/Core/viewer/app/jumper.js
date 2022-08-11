@@ -64,8 +64,8 @@ export const ViewerProvider = ({ children }) => {
     );
   };
 
-  const saveLink = ({ url, title, favicon }) => {
-    window.postMessage({ type: messages.saveLink, url, title, favicon }, "*");
+  const saveLink = ({ objects }) => {
+    window.postMessage({ type: messages.saveLink, objects }, "*");
   };
 
   const contextValue = React.useMemo(

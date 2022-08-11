@@ -72,12 +72,10 @@ export const ViewerProvider = ({ children }) => {
     });
   };
 
-  const saveLink = ({ url, title, favicon }) => {
+  const saveLink = ({ objects }) => {
     chrome.runtime.sendMessage({
       type: messages.saveLink,
-      url,
-      title,
-      favicon,
+      objects,
     });
   };
 

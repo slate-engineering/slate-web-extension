@@ -258,7 +258,9 @@ const Object = React.forwardRef(
     const isSaved = url in savedObjectsLookup;
 
     const handleLinkSaving = (e) => (
-      e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
+      e.stopPropagation(),
+      e.preventDefault(),
+      saveLink({ objects: [{ url, title, favicon }] })
     );
 
     const handleOnChecking = (e) => onCheck(e.target.checked);

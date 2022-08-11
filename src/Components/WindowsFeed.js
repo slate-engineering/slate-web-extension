@@ -113,6 +113,7 @@ const WindowsFeed = React.forwardRef(
       onOpenUrl,
       onCloseTabs,
       onOpenSlatesJumper,
+      onSaveObjects,
       ...props
     },
     ref
@@ -187,6 +188,7 @@ const WindowsFeed = React.forwardRef(
             <MultiSelection.ActionsMenu
               onCloseTabs={onCloseTabs}
               onOpenSlatesJumper={onOpenSlatesJumper}
+              onSaveObjects={onSaveObjects}
             />
           </MultiSelection.Provider>
         </RovingTabIndex.List>

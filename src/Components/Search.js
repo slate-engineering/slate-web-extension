@@ -274,7 +274,7 @@ const getTitleFromView = (view) => {
 };
 
 const Feed = React.memo(
-  ({ onOpenUrl, onGroupURLs, onOpenSlatesJumper, ...props }) => {
+  ({ onOpenUrl, onGroupURLs, onOpenSlatesJumper, onSaveObjects, ...props }) => {
     const {
       search: { result: feeds, query: searchQuery },
     } = useSearchContext();
@@ -344,6 +344,7 @@ const Feed = React.memo(
           <MultiSelection.ActionsMenu
             onOpenURLs={(urls) => onOpenUrl({ urls })}
             onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+            onSaveObjects={onSaveObjects}
             onOpenSlatesJumper={onOpenSlatesJumper}
           />
         </MultiSelection.Provider>
