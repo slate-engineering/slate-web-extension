@@ -1,5 +1,5 @@
 import { messages } from ".";
-import { viewer } from "../viewer/background";
+import { Viewer } from "../viewer/background";
 
 import Fuse from "fuse.js";
 
@@ -258,7 +258,7 @@ class BrowserHistory {
     return await Promise.all(
       cleanedResult.map(async (item) => ({
         ...item,
-        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
       }))
     );
   }
@@ -277,7 +277,7 @@ class BrowserHistory {
     return await Promise.all(
       cleanedResult.map(async (item) => ({
         ...item,
-        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
       }))
     );
   }
@@ -291,7 +291,7 @@ class BrowserHistory {
       session.visits = await Promise.all(
         session.visits.map(async (visit) => ({
           ...visit,
-          isSaved: await viewer.checkIfLinkIsSaved(visit.url),
+          isSaved: await Viewer.checkIfLinkIsSaved(visit.url),
         }))
       );
     }
@@ -307,7 +307,7 @@ export const browserHistory = new BrowserHistory();
 
 /** ----------------------------------------- */
 
-const Tabs = {
+export const Tabs = {
   create: async (tab) => ({
     id: tab.id,
     windowId: tab.windowId,
@@ -315,7 +315,7 @@ const Tabs = {
     favicon: tab.favIconUrl,
     url: tab.url,
     rootDomain: getRootDomain(tab.url),
-    isSaved: await viewer.checkIfLinkIsSaved(tab.url),
+    isSaved: await Viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -377,11 +377,10 @@ chrome.tabs.onRemoved.addListener(async () => {
 
   if (activeTab) {
     const openTabs = await Windows.getAllTabs();
-    const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
-      data: { openTabs, totalWindows, activeTabId: activeTab.id },
+      data: { openTabs, activeTabId: activeTab.id },
     });
   }
 });
@@ -391,11 +390,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
         type: messages.windowsUpdate,
-        data: { openTabs, totalWindows, activeTabId: activeTab.id },
+        data: { openTabs, activeTabId: activeTab.id },
       });
     }
 

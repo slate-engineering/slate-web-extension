@@ -1,6 +1,6 @@
 import * as Constants from "../../Common/constants";
 
-import { messages } from "./";
+import { messages, updateAddressBarUrl, createAddressBarElement } from "./";
 
 // SOURCE(amine): https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
 const setInnerHTML = (element, html) => {
@@ -15,6 +15,8 @@ const setInnerHTML = (element, html) => {
   });
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
 const getExtensionJumperWrapper = () =>
   document.getElementById(Constants.jumperSlateExtensionWrapper);
 
@@ -27,11 +29,18 @@ const createExtensionJumperWrapper = () => {
   document.body.appendChild(wrapper);
 };
 
-export const openApp = () => {
+/* -----------------------------------------------------------------------------------------------*/
+
+export const openApp = (url) => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
 
   const isAppOpen = document.getElementById("modal-window-slate-extension");
-  if (isAppOpen) return;
+  if (isAppOpen) {
+    updateAddressBarUrl(url);
+    return;
+  }
+  createAddressBarElement();
+  updateAddressBarUrl(url);
 
   createExtensionJumperWrapper();
   // Fetch the local React index.html page
@@ -60,7 +69,7 @@ let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === messages.openExtensionJumperRequest) {
     activeElement = document.activeElement;
-    openApp();
+    openApp(request.data.url);
   }
 });
 

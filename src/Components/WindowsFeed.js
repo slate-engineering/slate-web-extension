@@ -5,7 +5,7 @@ import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { getFavicon } from "../Common/favicons";
-import { isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../Common/utilities";
 
 /* -----------------------------------------------------------------------------------------------*/
 
@@ -20,11 +20,12 @@ const WindowsFeedRow = ({
   onOpenUrl,
   onCloseTabs,
   onObjectHover,
+  onOpenSlatesJumper,
   style,
 }) => {
   if (!data[index]) return null;
 
-  const { rovingTabIndex, title, tab } = data[index];
+  const { rovingTabIndex, title, tab, isTabActive } = data[index];
 
   if (title) {
     return (
@@ -35,25 +36,36 @@ const WindowsFeedRow = ({
   }
 
   return (
-    <ListView.RovingTabIndexWithMultiSelectObject
-      key={tab.id}
-      isTab
-      withActions
-      withMultiSelection
-      style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}
-      index={rovingTabIndex}
-      title={tab.title}
-      url={tab.url}
-      Favicon={getFavicon(tab.rootDomain)}
-      isSaved={tab.isSaved}
-      onCloseTab={() => onCloseTabs([tab.id])}
-      onClick={() =>
-        onOpenUrl({
-          query: { tabId: tab.id, windowId: tab.windowId },
-        })
-      }
-      onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
-    />
+    <div style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}>
+      <ListView.RovingTabIndexWithMultiSelectObject
+        key={tab.id}
+        isTab
+        isTabActive={isTabActive}
+        withActions
+        withMultiSelection
+        index={rovingTabIndex}
+        title={tab.title}
+        url={tab.url}
+        Favicon={getFavicon(tab.rootDomain)}
+        isSaved={tab.isSaved}
+        onCloseTab={() => onCloseTabs([tab.id])}
+        onClick={() =>
+          onOpenUrl({
+            query: { tabId: tab.id, windowId: tab.windowId },
+          })
+        }
+        onOpenSlatesJumper={() =>
+          onOpenSlatesJumper([
+            {
+              title: tab.title,
+              url: tab.url,
+              rootDomain: getRootDomain(tab.url),
+            },
+          ])
+        }
+        onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
+      />
+    </div>
   );
 };
 
@@ -102,12 +114,13 @@ const WindowsFeed = React.forwardRef(
       onObjectHover,
       onOpenUrl,
       onCloseTabs,
+      onOpenSlatesJumper,
+      onSaveObjects,
+      activeTabId,
       ...props
     },
     ref
   ) => {
-    const rovingIndexRef = React.useRef();
-
     const virtualizedFeed = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
@@ -120,6 +133,7 @@ const WindowsFeed = React.forwardRef(
 
           virtualizedFeed.push({
             rovingTabIndex,
+            isTabActive: activeTabId === tab.id,
             tab,
           });
 
@@ -128,7 +142,7 @@ const WindowsFeed = React.forwardRef(
       }
 
       return virtualizedFeed;
-    }, [windowsFeed, windowsFeedKeys]);
+    }, [windowsFeed, windowsFeedKeys, activeTabId]);
 
     const handleOnSubmitSelectedItem = (index) => {
       let currentLength = 0;
@@ -146,7 +160,7 @@ const WindowsFeed = React.forwardRef(
     return (
       <RovingTabIndex.Provider
         key={windowsFeed}
-        ref={rovingIndexRef}
+        ref={(node) => (ref.rovingTabIndexRef = node)}
         isInfiniteList
         withFocusOnHover
       >
@@ -167,12 +181,17 @@ const WindowsFeed = React.forwardRef(
                   ...props,
                   onCloseTabs,
                   onObjectHover,
+                  onOpenSlatesJumper,
                   onOpenUrl,
                 })
               }
             </WindowsFeedList>
 
-            <MultiSelection.ActionsMenu onCloseTabs={onCloseTabs} />
+            <MultiSelection.ActionsMenu
+              onCloseTabs={onCloseTabs}
+              onOpenSlatesJumper={onOpenSlatesJumper}
+              onSaveObjects={onSaveObjects}
+            />
           </MultiSelection.Provider>
         </RovingTabIndex.List>
       </RovingTabIndex.Provider>

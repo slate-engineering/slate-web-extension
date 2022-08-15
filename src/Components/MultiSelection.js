@@ -11,6 +11,7 @@ import {
   removeKeyFromObject,
   isNewTab,
   copyToClipboard,
+  getRootDomain,
 } from "../Common/utilities";
 import { css } from "@emotion/react";
 import { Checkbox } from "./system";
@@ -281,6 +282,29 @@ const GroupingAction = ({ css, onGroup, ...props }) => {
   );
 };
 
+const SavingAction = ({ css, onSaveObjects, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+    const selectedObjects = selectedItemsData.map(
+      ({ url, title, favicon }) => ({ url, title, favicon })
+    );
+    onSaveObjects({ objects: selectedObjects });
+  };
+
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      <SVG.Plus height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }}>Save</Typography.H5>
+    </button>
+  );
+};
+
 const OpenURLsAction = ({ css, onOpenLinks, ...props }) => {
   const { constructSelectedItemsData } = useMultiSelectionContext();
 
@@ -368,6 +392,32 @@ const CloseTabsAction = ({ css, onCloseTabs, ...props }) => {
   );
 };
 
+const OpenSlatesJumperAction = ({ css, onOpenSlatesJumper, ...props }) => {
+  const { constructSelectedItemsData } = useMultiSelectionContext();
+
+  const handleOnClick = () => {
+    const { selectedItemsData } = constructSelectedItemsData();
+
+    const objects = selectedItemsData.map(({ url, title }) => ({
+      url,
+      title,
+      rootDomain: getRootDomain(url),
+    }));
+    onOpenSlatesJumper(objects);
+  };
+
+  return (
+    <button
+      css={[STYLES_ACTION_BUTTON, css]}
+      onClick={handleOnClick}
+      {...props}
+    >
+      <SVG.Hash height={16} width={16} />
+      <Typography.H5 style={{ marginLeft: 4 }}>Tag</Typography.H5>
+    </button>
+  );
+};
+
 /* -------------------------------------------------------------------------------------------------
  *  ActionsMenu
  * -----------------------------------------------------------------------------------------------*/
@@ -393,62 +443,87 @@ const CloseOnEscape = ({ onClose, children }) => {
   return children;
 };
 
-function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
-  const {
-    toggleCheckAll,
-    isAllChecked,
-    isMultiSelectMode,
-    existSelectionMode,
-  } = useMultiSelectionContext();
+/* -----------------------------------------------------------------------------------------------*/
 
-  if (!isMultiSelectMode) return null;
+const NewTabActionsMenu = ({
+  onOpenURLs,
+  onCloseTabs,
+  onOpenSlatesJumper,
+  onGroupURLs,
+  onSaveObjects,
+}) => {
+  const { toggleCheckAll, isAllChecked, existSelectionMode } =
+    useMultiSelectionContext();
 
-  if (isNewTab) {
-    return (
-      <CloseOnEscape onClose={existSelectionMode}>
-        <NewTabActionsMenuPopup>
-          <div css={STYLES_ACTIONS_MENU_WRAPPER}>
-            <div css={Styles.HORIZONTAL_CONTAINER}>
-              <Checkbox
-                id="select_all_checkbox"
-                checked={isAllChecked}
-                onChange={toggleCheckAll}
-              />
-              <Typography.H5
-                as="label"
-                for="select_all_checkbox"
-                style={{ marginLeft: 12 }}
-                color="textWhite"
-              >
-                Select All
-              </Typography.H5>
-            </div>
-            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-              {onOpenURLs && (
-                <OpenURLsAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onOpenLinks={onOpenURLs}
-                />
-              )}
-              {onCloseTabs && (
-                <CloseTabsAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onCloseTabs={onCloseTabs}
-                />
-              )}
-              <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
-              {onGroupURLs && (
-                <GroupingAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onGroup={onGroupURLs}
-                />
-              )}
-            </div>
+  return (
+    <CloseOnEscape onClose={existSelectionMode}>
+      <NewTabActionsMenuPopup>
+        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
+          <div css={Styles.HORIZONTAL_CONTAINER}>
+            <Checkbox
+              id="select_all_checkbox"
+              checked={isAllChecked}
+              onChange={toggleCheckAll}
+            />
+            <Typography.H5
+              as="label"
+              for="select_all_checkbox"
+              style={{ marginLeft: 12 }}
+              color="textWhite"
+            >
+              Select All
+            </Typography.H5>
           </div>
-        </NewTabActionsMenuPopup>
-      </CloseOnEscape>
-    );
-  }
+          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+            {onOpenURLs && (
+              <OpenURLsAction
+                css={STYLES_ACTION_BUTTON_NEW_TAB}
+                onOpenLinks={onOpenURLs}
+              />
+            )}
+            {onCloseTabs && (
+              <CloseTabsAction
+                css={STYLES_ACTION_BUTTON_NEW_TAB}
+                onCloseTabs={onCloseTabs}
+              />
+            )}
+            <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
+            {onOpenSlatesJumper && (
+              <OpenSlatesJumperAction
+                css={STYLES_ACTION_BUTTON_NEW_TAB}
+                onOpenSlatesJumper={onOpenSlatesJumper}
+              />
+            )}
+            {onGroupURLs && (
+              <GroupingAction
+                css={STYLES_ACTION_BUTTON_NEW_TAB}
+                onGroup={onGroupURLs}
+              />
+            )}
+            {onSaveObjects && (
+              <SavingAction
+                css={STYLES_ACTION_BUTTON_NEW_TAB}
+                onSaveObjects={onSaveObjects}
+              />
+            )}
+          </div>
+        </div>
+      </NewTabActionsMenuPopup>
+    </CloseOnEscape>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const JumperActionMenu = ({
+  onOpenURLs,
+  onCloseTabs,
+  onOpenSlatesJumper,
+  onGroupURLs,
+  onSaveObjects,
+}) => {
+  const { toggleCheckAll, isAllChecked, existSelectionMode } =
+    useMultiSelectionContext();
 
   return (
     <CloseOnEscape onClose={existSelectionMode}>
@@ -472,12 +547,52 @@ function ActionsMenu({ onGroupURLs, onCloseTabs, onOpenURLs }) {
           <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
             {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
             {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
+            {onOpenSlatesJumper && (
+              <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
+            )}
             <CopyURLsAction />
             {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
+            {onSaveObjects && <SavingAction onSaveObjects={onSaveObjects} />}
           </div>
         </div>
       </Jumper.BottomPanel>
     </CloseOnEscape>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+function ActionsMenu({
+  onGroupURLs,
+  onOpenSlatesJumper,
+  onCloseTabs,
+  onOpenURLs,
+  onSaveObjects,
+}) {
+  const { isMultiSelectMode } = useMultiSelectionContext();
+
+  if (!isMultiSelectMode) return null;
+
+  if (isNewTab) {
+    return (
+      <NewTabActionsMenu
+        onOpenURLs={onOpenURLs}
+        onCloseTabs={onCloseTabs}
+        onOpenSlatesJumper={onOpenSlatesJumper}
+        onGroupURLs={onGroupURLs}
+        onSaveObjects={onSaveObjects}
+      />
+    );
+  }
+
+  return (
+    <JumperActionMenu
+      onOpenURLs={onOpenURLs}
+      onCloseTabs={onCloseTabs}
+      onOpenSlatesJumper={onOpenSlatesJumper}
+      onGroupURLs={onGroupURLs}
+      onSaveObjects={onSaveObjects}
+    />
   );
 }
 

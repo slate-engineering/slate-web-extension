@@ -9,7 +9,7 @@ import { viewsType } from "../";
 export const useViewsState = () => {
   const [views, setViewsState] = React.useState({
     feed: [],
-    type: viewsType.currentWindow,
+    type: viewsType.allOpen,
     query: undefined,
   });
 
@@ -23,6 +23,15 @@ export const useViewsState = () => {
       feed: result,
     }));
   };
+
+  React.useEffect(() => {
+    if (
+      views.type !== viewsType.relatedLinks &&
+      views.type !== viewsType.savedFiles
+    ) {
+      setViewsFeed([]);
+    }
+  }, [views.type]);
 
   return [
     {

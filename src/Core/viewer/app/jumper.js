@@ -1,48 +1,8 @@
 import * as React from "react";
 
-import { messages, savingStates, viewerInitialState } from "..";
-import { useSavingState } from ".";
+import { messages, viewerInitialState } from "..";
 
 import JumperAuth from "../../../scenes/jumperAuth";
-
-/* -------------------------------------------------------------------------------------------------
- * useSaving
- * -----------------------------------------------------------------------------------------------*/
-
-const useSaving = () => {
-  // NOTE(amine): optimistically update UI when saving new objects
-  const { savedObjects, addToSavedObjects, removeFromSavedObjects } =
-    useSavingState();
-
-  React.useEffect(() => {
-    const handleMessage = (event) => {
-      let { data, type } = event.data;
-      if (type === messages.savingStatus) {
-        if (
-          data.savingStatus === savingStates.start ||
-          data.savingStatus === savingStates.done
-        ) {
-          addToSavedObjects(data.url);
-          return;
-        }
-
-        if (data.savingStatus === savingStates.failed) {
-          removeFromSavedObjects(data.url);
-        }
-        return;
-      }
-    };
-    window.addEventListener("message", handleMessage);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
-
-  const sendSaveLinkRequest = ({ url, title, favicon }) => {
-    window.postMessage({ type: messages.saveLink, url, title, favicon }, "*");
-  };
-
-  return { savedObjects, saveLink: sendSaveLinkRequest };
-};
 
 /* -------------------------------------------------------------------------------------------------
  * Viewer Provider
@@ -61,6 +21,7 @@ export const ViewerProvider = ({ children }) => {
   const fetchInitialData = () => {
     window.postMessage({ type: messages.loadViewerDataRequest }, "*");
   };
+
   React.useEffect(() => {
     const handleMessage = (event) => {
       let { data, type } = event.data;
@@ -68,9 +29,14 @@ export const ViewerProvider = ({ children }) => {
         setState((prev) => ({
           ...prev,
           ...data,
-          //NOTE(amine): don't render the app till we recieve the viewer's initial data
+          //NOTE(amine): don't render the app till we receive the viewer's initial data
           shouldRender: true,
         }));
+        return;
+      }
+
+      if (type === messages.updateViewer) {
+        setState((prev) => ({ ...prev, ...data }));
         return;
       }
     };
@@ -80,16 +46,37 @@ export const ViewerProvider = ({ children }) => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const { savedObjects, saveLink } = useSaving();
+  const createSlate = ({ objects, slateName }) => {
+    window.postMessage({ type: messages.createSlate, objects, slateName }, "*");
+  };
+
+  const addObjectsToSlate = ({ objects, slateName }) => {
+    window.postMessage(
+      { type: messages.addObjectsToSlate, objects, slateName },
+      "*"
+    );
+  };
+
+  const removeObjectsFromSlate = ({ objects, slateName }) => {
+    window.postMessage(
+      { type: messages.removeObjectsFromSlate, objects, slateName },
+      "*"
+    );
+  };
+
+  const saveLink = ({ objects }) => {
+    window.postMessage({ type: messages.saveLink, objects }, "*");
+  };
 
   const contextValue = React.useMemo(
     () => ({
-      windows: state.windows,
-      shouldSync: state.shouldSync,
-      savedObjects,
+      ...state,
       saveLink,
+      createSlate,
+      addObjectsToSlate,
+      removeObjectsFromSlate,
     }),
-    [state, savedObjects]
+    [state]
   );
 
   if (!state.shouldRender) return null;

@@ -2,6 +2,7 @@
 export const commands = {
   openApp: "open-app",
   openSlate: "open-slate",
+  openAppOnSlates: "open-app-on-slates",
 };
 
 export const values = {

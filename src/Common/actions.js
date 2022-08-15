@@ -36,3 +36,25 @@ export const createLink = async (data, options) => {
     ...options,
   });
 };
+
+export const saveCopy = async (data, options) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/data/save-copy`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+    ...options,
+  });
+};
+
+export const createSlate = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/slates/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const removeFileFromSlate = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/slates/remove-file`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};

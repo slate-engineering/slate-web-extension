@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { mergeEvents, mergeRefs } from "../Common/utilities";
+import { mergeRefs } from "../Common/utilities";
 import { useEventListener, useIsomorphicLayoutEffect } from "../Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
@@ -163,9 +163,18 @@ const Provider = React.forwardRef(
 
     React.useImperativeHandle(
       ref,
-      () => ({
-        focusSelectedElement: () => focusElement(focusedIndex),
-      }),
+      () => {
+        const focus = (fallback) => {
+          const isFeedEmpty = !focusedElementsRefs.current[initialIndex];
+          if (isFeedEmpty) {
+            fallback?.();
+            return;
+          }
+          focusElement(focusedIndex);
+        };
+
+        return { focus };
+      },
       [focusedIndex]
     );
 

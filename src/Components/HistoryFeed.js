@@ -7,7 +7,7 @@ import * as Constants from "../Common/constants";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import { getFavicon } from "../Common/favicons";
-import { isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../Common/utilities";
 
 const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
   const shouldFetchMore = React.useRef(true);
@@ -33,7 +33,14 @@ const STYLES_HISTORY_FEED_ROW = {
   left: "8px",
 };
 
-const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
+const HistoryFeedRow = ({
+  index,
+  data,
+  onOpenUrl,
+  onOpenSlatesJumper,
+  onObjectHover,
+  style,
+}) => {
   if (!data[index]) return null;
 
   const { rovingTabIndex, title, visit } = data[index];
@@ -65,6 +72,15 @@ const HistoryFeedRow = ({ index, data, onOpenUrl, onObjectHover, style }) => {
           url: visit.url,
           title: visit.title,
         })
+      }
+      onOpenSlatesJumper={() =>
+        onOpenSlatesJumper([
+          {
+            title: visit.title,
+            url: visit.url,
+            rootDomain: getRootDomain(visit.url),
+          },
+        ])
       }
     />
   );
@@ -107,102 +123,120 @@ const HistoryFeedList = React.forwardRef(
  * HistoryFeed
  * -----------------------------------------------------------------------------------------------*/
 
-const HistoryFeed = ({
-  sessionsFeed,
-  sessionsFeedKeys,
-  onLoadMore,
-  onObjectHover,
-  onOpenUrl,
-  onGroupURLs,
-  css,
-  ...props
-}) => {
-  const historyWrapperRef = React.useRef();
-  const handleInfiniteScroll = useHistoryInfiniteScroll({
-    onLoadMore,
-    historyWrapperRef,
-    sessionsFeed,
-  });
-
-  const sessionsFeedLength = React.useMemo(() => {
-    let length = 0;
-    sessionsFeedKeys.forEach((key) => {
-      length += sessionsFeed[key].length;
+const HistoryFeed = React.forwardRef(
+  (
+    {
+      sessionsFeed,
+      sessionsFeedKeys,
+      onLoadMore,
+      onObjectHover,
+      onOpenUrl,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+      css,
+      ...props
+    },
+    ref
+  ) => {
+    const historyWrapperRef = React.useRef();
+    const handleInfiniteScroll = useHistoryInfiniteScroll({
+      onLoadMore,
+      historyWrapperRef,
+      sessionsFeed,
     });
-    return length;
-  }, [sessionsFeed, sessionsFeedKeys]);
 
-  const virtualizedFeed = React.useMemo(() => {
-    let rovingTabIndex = 0;
-    let virtualizedFeed = [];
-
-    for (let key of sessionsFeedKeys) {
-      sessionsFeed[key].forEach((visit, index) => {
-        if (index === 0) {
-          virtualizedFeed.push({ title: key });
-        }
-
-        virtualizedFeed.push({
-          rovingTabIndex,
-          visit,
-        });
-
-        rovingTabIndex++;
+    const sessionsFeedLength = React.useMemo(() => {
+      let length = 0;
+      sessionsFeedKeys.forEach((key) => {
+        length += sessionsFeed[key].length;
       });
-    }
+      return length;
+    }, [sessionsFeed, sessionsFeedKeys]);
 
-    return virtualizedFeed;
-  }, [sessionsFeed, sessionsFeedKeys]);
+    const virtualizedFeed = React.useMemo(() => {
+      let rovingTabIndex = 0;
+      let virtualizedFeed = [];
 
-  const isItemLoaded = (index) => index < virtualizedFeed.length;
+      for (let key of sessionsFeedKeys) {
+        sessionsFeed[key].forEach((visit, index) => {
+          if (index === 0) {
+            virtualizedFeed.push({ title: key });
+          }
 
-  const handleOnSubmitSelectedItem = (index) => {
-    let currentLength = 0;
+          virtualizedFeed.push({
+            rovingTabIndex,
+            visit,
+          });
 
-    for (let feedKey of sessionsFeedKeys) {
-      const feed = sessionsFeed[feedKey];
-      const nextLength = currentLength + feed.length;
-      if (index < nextLength) {
-        return feed[index - currentLength];
+          rovingTabIndex++;
+        });
       }
-      currentLength = nextLength;
-    }
-  };
 
-  return (
-    <RovingTabIndex.Provider isInfiniteList withFocusOnHover>
-      <MultiSelection.Provider
-        totalSelectableItems={sessionsFeedLength}
-        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+      return virtualizedFeed;
+    }, [sessionsFeed, sessionsFeedKeys]);
+
+    const isItemLoaded = (index) => index < virtualizedFeed.length;
+
+    const handleOnSubmitSelectedItem = (index) => {
+      let currentLength = 0;
+
+      for (let feedKey of sessionsFeedKeys) {
+        const feed = sessionsFeed[feedKey];
+        const nextLength = currentLength + feed.length;
+        if (index < nextLength) {
+          return feed[index - currentLength];
+        }
+        currentLength = nextLength;
+      }
+    };
+
+    return (
+      <RovingTabIndex.Provider
+        ref={(node) => (ref.rovingTabIndexRef = node)}
+        isInfiniteList
+        withFocusOnHover
       >
-        <InfiniteLoader
-          isItemLoaded={isItemLoaded}
-          itemCount={virtualizedFeed.length + 1}
-          loadMoreItems={handleInfiniteScroll}
+        <MultiSelection.Provider
+          totalSelectableItems={sessionsFeedLength}
+          onSubmitSelectedItem={handleOnSubmitSelectedItem}
         >
-          {({ onItemsRendered, ref }) => (
-            <HistoryFeedList
-              itemCount={virtualizedFeed.length + 1}
-              itemData={virtualizedFeed}
-              itemSize={Constants.sizes.jumperFeedItem}
-              onItemsRendered={onItemsRendered}
-              css={css}
-              ref={ref}
-              {...props}
-            >
-              {(props) =>
-                HistoryFeedRow({ ...props, onOpenUrl, onObjectHover })
-              }
-            </HistoryFeedList>
-          )}
-        </InfiniteLoader>
-        <MultiSelection.ActionsMenu
-          onOpenURLs={(urls) => onOpenUrl({ urls })}
-          onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
-        />
-      </MultiSelection.Provider>
-    </RovingTabIndex.Provider>
-  );
-};
+          <InfiniteLoader
+            isItemLoaded={isItemLoaded}
+            itemCount={virtualizedFeed.length + 1}
+            loadMoreItems={handleInfiniteScroll}
+          >
+            {({ onItemsRendered, ref }) => (
+              <HistoryFeedList
+                itemCount={virtualizedFeed.length + 1}
+                itemData={virtualizedFeed}
+                itemSize={Constants.sizes.jumperFeedItem}
+                onItemsRendered={onItemsRendered}
+                css={css}
+                ref={ref}
+                {...props}
+              >
+                {(props) =>
+                  HistoryFeedRow({
+                    ...props,
+                    onOpenUrl,
+                    onOpenSlatesJumper,
+                    onObjectHover,
+                  })
+                }
+              </HistoryFeedList>
+            )}
+          </InfiniteLoader>
+          <MultiSelection.ActionsMenu
+            onOpenURLs={(urls) => onOpenUrl({ urls })}
+            onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
+            onSaveObjects={onSaveObjects}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+          />
+        </MultiSelection.Provider>
+      </RovingTabIndex.Provider>
+    );
+  }
+);
 
 export default React.memo(HistoryFeed);

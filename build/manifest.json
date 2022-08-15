@@ -47,6 +47,13 @@
       },
       "description": "Open the slate web app"
     },
+    "open-app-on-slates":{
+      "suggested_key": {
+        "default": "Alt+T",
+        "mac": "Alt+T"
+      },
+      "description": "Open the slate extension" 
+    },
     "direct-save": {
       "suggested_key": {
         "default": "Alt+B",

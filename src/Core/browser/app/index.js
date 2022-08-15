@@ -134,16 +134,15 @@ const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
  * @param {string} Arguments.initialState - pass currentWindow and allOpen tabs if they're preloaded
  * @param {string} Arguments.activeWindowId - used to get active window's open tabs
  *
- * @returns {{ currentWindowFeedKeys: [], currentWindowFeed: [], allOpenFeedKeys: [], allOpenFeed: []}, setWindowsFeed: Function }}
+ * @returns {{ allOpenFeedKeys: [], allOpenFeed: []}, setWindowsFeed: Function }}
  */
 
 export const useWindowsState = ({ initialState }) => {
   const [windows, setWindows] = React.useState(initialState);
-  const setWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
+  const setWindowsFeed = ({ tabs, activeWindowId }) => {
     const windowsFeeds = constructWindowsFeed({
       tabs,
       activeWindowId,
-      activeTabId,
     });
     setWindows(windowsFeeds);
   };

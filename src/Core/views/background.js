@@ -1,5 +1,5 @@
 import { messages, viewsType } from "./";
-import { viewer } from "../viewer/background";
+import { Viewer } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
 
 /** ------------ Event listeners ------------- */
@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.viewByTypeRequest) {
     console.log(`VIEW FOR ${request.viewType} ${request.query}`);
     if (request.viewType === viewsType.savedFiles) {
-      viewer.get().then((res) =>
+      Viewer.get().then((res) =>
         sendResponse({
           result: res.objects,
           viewType: request.viewType,
@@ -30,13 +30,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === messages.searchQueryRequest) {
     const searchHandlers = [];
-    if (
-      request.viewType === viewsType.allOpen ||
-      request.viewType === viewsType.currentWindow
-    ) {
+    if (request.viewType === viewsType.allOpen) {
       const searchOptions = {};
-      if (request.viewType === viewsType.currentWindow)
-        searchOptions.windowId = sender.tab.windowId;
 
       searchHandlers.push({
         handler: Windows.search(request.query, searchOptions),

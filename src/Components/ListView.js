@@ -6,10 +6,7 @@ import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
-import {
-  ComboboxNavigation,
-  useComboboxNavigation,
-} from "./ComboboxNavigation";
+import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
 import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
 import { Checkbox } from "./system";
 import { FixedSizeList } from "react-window";
@@ -153,6 +150,7 @@ const STYLES_COLOR_SYSTEM_GREEN = (theme) => css`
 `;
 
 const STYLES_OBJECT = css`
+  position: relative;
   ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   width: 100%;
@@ -165,13 +163,6 @@ const STYLES_OBJECT_ACTION_BUTTON = (theme) => css`
   padding: 2px;
   border-radius: 6px;
   color: ${theme.semantic.textBlack};
-`;
-
-const STYLES_OBJECT_ACTIONS_WRAPPER = css`
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  & > * + * {
-    margin-left: 8px !important;
-  }
 `;
 
 const useCopyState = (url) => {
@@ -205,6 +196,69 @@ const CopyAction = ({ isCopied, ...props }) => {
   );
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const SLATE_WRAPPER = (theme) => css`
+  border-radius: 8px;
+  padding: 2px 8px;
+  max-width: 150px;
+  background-color: ${theme.semantic.bgWhite};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  box-shadow: ${theme.shadow.lightSmall};
+`;
+
+const Slate = ({ children, ...props }) => {
+  return (
+    <Typography.H6
+      as="span"
+      nbrOflines={1}
+      css={SLATE_WRAPPER}
+      color="textBlack"
+      {...props}
+    >
+      {children}
+    </Typography.H6>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+const OBJECT_ACTION_SIZE = 20;
+
+const STYLES_ACTIONS_WRAPPER = (theme) => css`
+  position: absolute;
+  top: 10px;
+  // NOTE(amine): saving action's width + object's right padding
+  right: calc(${OBJECT_ACTION_SIZE}px + 12px);
+
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  padding-left: calc(${OBJECT_ACTION_SIZE}px + 8px);
+  padding-right: 8px;
+  background: linear-gradient(
+    269.88deg,
+    ${theme.system.grayLight5} 84.95%,
+    rgba(229, 232, 234, 0) 103.84%
+  );
+
+  & > * + * {
+    margin-left: 8px !important;
+  }
+`;
+
+const STYLES_TAB_INDICATOR = (theme) => css`
+  position: absolute;
+  top: 17px;
+  left: 4px;
+
+  border-radius: 50%;
+  height: 6px;
+  width: 6px;
+  background-color: ${theme.semantic.bgGrayLight4};
+`;
+
+const STYLES_SYSTEM_GREEN = (theme) => css`
+  background-color: ${theme.system.green};
+`;
+
 const Object = React.forwardRef(
   (
     {
@@ -218,23 +272,30 @@ const Object = React.forwardRef(
 
       onCloseTab,
 
+      onOpenSlatesJumper,
+
       withMultiSelection,
       isChecked,
       onCheck,
 
+      isTab,
+      isTabActive,
+
       url,
-      isSaved: isSavedProp,
       onKeyDown,
       ...props
     },
     ref
   ) => {
-    const { savedObjects, saveLink } = useViewer();
-    const isSaved = url in savedObjects || isSavedProp;
+    const { savedObjectsLookup, saveLink, savedObjectsSlates } = useViewer();
+    const isSaved = url in savedObjectsLookup;
 
     const handleLinkSaving = (e) => (
-      e.stopPropagation(), e.preventDefault(), saveLink({ url, title, favicon })
+      e.stopPropagation(),
+      e.preventDefault(),
+      saveLink({ objects: [{ url, title, favicon }] })
     );
+
     const handleOnChecking = (e) => onCheck(e.target.checked);
 
     const { isCopied, handleCopying } = useCopyState(url);
@@ -244,6 +305,11 @@ const Object = React.forwardRef(
     const handleKeyboardActions = (e) => {
       if (e.code === "KeyS") {
         handleLinkSaving(e);
+        return;
+      }
+
+      if (e.code === "KeyT") {
+        onOpenSlatesJumper();
         return;
       }
 
@@ -258,6 +324,8 @@ const Object = React.forwardRef(
       }
     };
 
+    const firstAppliedSlate = savedObjectsSlates[url]?.[0];
+
     return (
       <button
         ref={ref}
@@ -269,15 +337,20 @@ const Object = React.forwardRef(
             STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
         ]}
-        onKeyDown={mergeEvents(handleKeyboardActions, onKeyDown)}
+        onKeyUp={mergeEvents(handleKeyboardActions, onKeyDown)}
         {...props}
       >
+        {isTab && (
+          <div
+            css={[STYLES_TAB_INDICATOR, isTabActive && STYLES_SYSTEM_GREEN]}
+          />
+        )}
         {withMultiSelection && (
           <Checkbox
             className="object_checkbox"
             checked={isChecked}
             onChange={handleOnChecking}
-            style={{ display: isChecked && "block" }}
+            style={{ display: isChecked && "block", flexShrink: 0 }}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.preventDefault()}
           />
@@ -287,81 +360,95 @@ const Object = React.forwardRef(
           css={STYLES_TEXT_BLACK}
           style={{ margin: 2, flexShrink: 0, display: isChecked && "none" }}
         />
-        <Typography.H5
-          style={{ maxWidth: 384, marginLeft: 12 }}
-          color="textBlack"
-          nbrOflines={1}
+        <div
+          css={Styles.HORIZONTAL_CONTAINER_CENTERED}
+          style={{ marginLeft: 12 }}
         >
-          {title}
-        </Typography.H5>
+          {firstAppliedSlate && (
+            <Slate style={{ flexShrink: 0 }}>{firstAppliedSlate}</Slate>
+          )}
+          <Typography.H5
+            style={{ marginLeft: 6 }}
+            color="textBlack"
+            nbrOflines={1}
+          >
+            {title}
+          </Typography.H5>
+        </div>
         {relatedVisits?.length ? (
           <Typography.H5 color="textGray" style={{ marginLeft: 12 }}>
             {relatedVisits.length + 1}
           </Typography.H5>
         ) : null}
-        {withActions && (
-          <div
-            css={STYLES_OBJECT_ACTIONS_WRAPPER}
-            style={{ marginLeft: "auto" }}
-          >
-            {(typeof isSelected === "undefined" || isSelected) && (
-              <>
-                <button
-                  className="object_action_button"
-                  css={STYLES_OBJECT_ACTION_BUTTON}
-                  onMouseDown={preventFocus}
-                >
-                  <SVG.Hash width={16} height={16} />
-                </button>
-                <CopyAction
-                  className="object_action_button"
-                  isCopied={isCopied}
-                  onClick={(e) => (
-                    e.stopPropagation(), e.preventDefault(), handleCopying()
-                  )}
-                  onMouseDown={preventFocus}
-                  url={url}
-                />
-                <button
-                  className="object_action_button"
-                  css={STYLES_OBJECT_ACTION_BUTTON}
-                  onMouseDown={preventFocus}
-                >
-                  <SVG.Trash width={16} height={16} />
-                </button>
-                {onCloseTab && (
-                  <button
-                    className="object_action_button"
-                    css={STYLES_OBJECT_ACTION_BUTTON}
-                    onClick={(e) => (
-                      e.stopPropagation(), e.preventDefault(), onCloseTab()
-                    )}
-                    onMouseDown={preventFocus}
-                  >
-                    <SVG.XCircle width={16} height={16} />
-                  </button>
-                )}
 
-                {!isSaved && (
-                  <button
-                    className="object_action_button"
-                    css={STYLES_OBJECT_ACTION_BUTTON}
-                    onClick={handleLinkSaving}
-                    onMouseDown={preventFocus}
-                  >
-                    <SVG.Plus width={16} height={16} />
-                  </button>
+        {withActions && (typeof isSelected === "undefined" || isSelected) && (
+          <div css={STYLES_ACTIONS_WRAPPER}>
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onMouseDown={preventFocus}
+              onClick={(e) => (
+                e.stopPropagation(), e.preventDefault(), onOpenSlatesJumper()
+              )}
+            >
+              <SVG.Hash width={16} height={16} />
+            </button>
+            <CopyAction
+              className="object_action_button"
+              isCopied={isCopied}
+              onClick={(e) => (
+                e.stopPropagation(), e.preventDefault(), handleCopying()
+              )}
+              onMouseDown={preventFocus}
+              url={url}
+            />
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onMouseDown={preventFocus}
+            >
+              <SVG.Trash width={16} height={16} />
+            </button>
+            {onCloseTab && (
+              <button
+                className="object_action_button"
+                css={STYLES_OBJECT_ACTION_BUTTON}
+                onClick={(e) => (
+                  e.stopPropagation(), e.preventDefault(), onCloseTab()
                 )}
-              </>
-            )}
-
-            {isSaved && (
-              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
-                <SVG.CheckCircle />
-              </div>
+                onMouseDown={preventFocus}
+              >
+                <SVG.XCircle width={16} height={16} />
+              </button>
             )}
           </div>
         )}
+
+        <div
+          style={{
+            height: OBJECT_ACTION_SIZE,
+            width: OBJECT_ACTION_SIZE,
+            marginLeft: "auto",
+            flexShrink: 0,
+          }}
+        >
+          {(typeof isSelected === "undefined" || isSelected) && !isSaved && (
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onClick={handleLinkSaving}
+              onMouseDown={preventFocus}
+            >
+              <SVG.Plus width={16} height={16} />
+            </button>
+          )}
+
+          {isSaved && (
+            <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
+              <SVG.CheckCircle />
+            </div>
+          )}
+        </div>
       </button>
     );
   }
@@ -376,14 +463,14 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
   const { checkIfIndexSelected } = useComboboxNavigation();
 
   return (
-    <ComboboxNavigation.MenuButton
+    <Combobox.MenuButton
       key={key}
       index={index}
       onSelect={onSelect}
       onSubmit={onSubmit}
     >
       <Object isSelected={checkIfIndexSelected(index)} {...props} />
-    </ComboboxNavigation.MenuButton>
+    </Combobox.MenuButton>
   );
 };
 

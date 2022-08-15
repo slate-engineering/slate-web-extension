@@ -18,6 +18,7 @@ const messages = {
 const commands = {
   openApp: "open-app",
   openSlate: "open-slate",
+  openAppOnSlates: "open-app-on-slates",
 };
 
 const values = {
@@ -318,6 +319,28 @@ const createLink = async (data, options) => {
   });
 };
 
+const saveCopy = async (data, options) => {
+  return await returnJSON(`${uri.hostname}/api/data/save-copy`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+    ...options,
+  });
+};
+
+const createSlate = async (data) => {
+  return await returnJSON(`${uri.hostname}/api/slates/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+const removeFileFromSlate = async (data) => {
+  return await returnJSON(`${uri.hostname}/api/slates/remove-file`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
 ;// CONCATENATED MODULE: ./src/Core/views/index.js
 const views_messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
@@ -328,14 +351,13 @@ const views_messages = {
 };
 
 const viewsType = {
-  currentWindow: "currentWindow",
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
   relatedLinks: "relatedLinks",
 };
 
-const initialView = viewsType.currentWindow;
+const initialView = viewsType.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/viewer/index.js
 
@@ -344,8 +366,14 @@ const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
 
+  updateViewer: "UPDATE_VIEWER",
+
   saveLink: "SAVE_LINK",
   savingStatus: "SAVING_STATUS",
+
+  addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
+  removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
+  createSlate: "CREATE_SLATE",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -367,7 +395,6 @@ const savingSources = {
 
 const viewerInitialState = {
   isAuthenticated: false,
-  shouldSync: false,
   initialView: initialView,
   windows: {
     data: { currentWindow: [], allOpen: [] },
@@ -376,21 +403,12 @@ const viewerInitialState = {
 };
 
 ;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
-const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
-  const currentWindowFeedKeys = ["Current Tab", "Others"];
-  let currentWindowFeed = { ["Current Tab"]: [], ["Others"]: [] };
-
+const constructWindowsFeed = ({ tabs, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Others"];
   let allOpenFeed = { ["Current Window"]: [], Others: [] };
 
   tabs.forEach((tab) => {
     if (tab.windowId === activeWindowId) {
-      if (tab.id === activeTabId) {
-        currentWindowFeed["Current Tab"].push(tab);
-      } else {
-        currentWindowFeed["Others"].push(tab);
-      }
-
       allOpenFeed["Current Window"].push(tab);
       return;
     }
@@ -399,21 +417,10 @@ const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
   });
 
   return {
-    currentWindowFeed,
-    currentWindowFeedKeys,
     allOpenFeed,
     allOpenFeedKeys,
   };
 };
-
-;// CONCATENATED MODULE: ./src/Core/viewer/background.js
-
-
-
-
-
-
-
 
 const getRootDomain = (url) => {
   let hostname;
@@ -426,12 +433,40 @@ const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+;// CONCATENATED MODULE: ./src/Core/viewer/background.js
+
+
+
+
+
+
+
+const background_getRootDomain = (url) => {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    hostname = "";
+  }
+  const hostnameParts = hostname.split(".");
+  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
+const getFileUrl = (object) =>
+  object.isLink ? object.url : `${gateways.ipfs}/${object.cid}`;
+
 /** ----------------------------------------- */
 
 const VIEWER_INITIAL_STATE = {
   objects: [],
+  objectsMetadata: {},
   // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
-  savedLinks: {},
+  savedObjectsLookup: {},
+
+  savedObjectsSlates: {},
+  slatesLookup: {},
+  slates: [],
+
   lastFetched: null,
   isAuthenticated: false,
 };
@@ -439,7 +474,20 @@ const VIEWER_INITIAL_STATE = {
 let VIEWER_INTERNAL_STORAGE;
 const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
 
-class Viewer {
+class ViewerHandler {
+  constructor() {
+    this.observers = [];
+    this.runningActions = [];
+  }
+
+  onChange(callback) {
+    this.observers.push(callback);
+  }
+
+  notifyChange(viewer) {
+    this.observers.forEach((callback) => callback(viewer));
+  }
+
   async _getFromLocalStorage() {
     const result = await chrome.storage.local.get([VIEWER_LOCAL_STORAGE_KEY]);
     return result[VIEWER_LOCAL_STORAGE_KEY];
@@ -453,40 +501,74 @@ class Viewer {
 
   async _getObjectIdFromUrl(url) {
     const viewer = await this.get();
-    return viewer.savedLinks[url];
+    return viewer.savedObjectsLookup[url];
   }
 
   _serialize(viewer) {
-    const serializedViewer = { objects: [], savedLinks: {} };
+    const serializedViewer = {
+      objects: [],
+      objectsMetadata: {},
+      savedObjectsLookup: {},
+
+      savedObjectsSlates: {},
+      slatesLookup: {},
+      slates: viewer.slates.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      ),
+    };
+
     serializedViewer.objects = viewer.library.map((object) => {
+      serializedViewer.objectsMetadata[getFileUrl(object)] = {
+        id: object.id,
+        cid: object.cid,
+      };
+
       if (object.isLink) {
-        serializedViewer.savedLinks[object.url] = object.id;
+        serializedViewer.savedObjectsLookup[object.url] = true;
 
         return {
           title: object.linkName,
           favicon: object.linkFavicon,
           url: object.url,
-          rootDomain: getRootDomain(object.url),
+          rootDomain: background_getRootDomain(object.url),
+          cid: object.cid,
           isSaved: true,
         };
       }
 
-      const fileUrl = `${gateways.ipfs}/${object.cid}`;
-      serializedViewer.savedLinks[fileUrl] = object.id;
+      const fileUrl = getFileUrl(object);
+      serializedViewer.savedObjectsLookup[fileUrl] = true;
 
       return {
         title: object.name,
         rootDomain: uri.domain,
         url: fileUrl,
+        cid: object.cid,
         isSaved: true,
       };
     });
+
+    viewer.slates.forEach((slate) => {
+      const { savedObjectsSlates, slatesLookup } = serializedViewer;
+      if (!slatesLookup[slate.name]) slatesLookup[slate.name] = {};
+
+      slate.objects.forEach((object) => {
+        const objectUrl = getFileUrl(object);
+        slatesLookup[slate.name][objectUrl] = true;
+
+        if (!savedObjectsSlates[objectUrl]) savedObjectsSlates[objectUrl] = [];
+        savedObjectsSlates[objectUrl].push(slate.name);
+      });
+    });
+
     return serializedViewer;
   }
 
   _set(viewer) {
     this._updateStorage(viewer);
     VIEWER_INTERNAL_STORAGE = viewer;
+
+    this.notifyChange(viewer);
     return VIEWER_INTERNAL_STORAGE;
   }
 
@@ -503,35 +585,13 @@ class Viewer {
     return VIEWER_INTERNAL_STORAGE;
   }
 
-  async checkIfShouldSync() {
-    // NOTE(amine): if the session cookie is not set, don't sync
-    const SLATE_COOKIE_NAME = "WEB_SERVICE_SESSION_KEY";
-    const cookie = await chrome.cookies.get({
-      name: SLATE_COOKIE_NAME,
-      url: uri.hostname,
-    });
-
-    if (!cookie) return false;
-
-    // NOTE(amine): if 10 mins is passed since last update return true (should sync)
-    const viewer = await this.get();
-    const lastUpdated = viewer.lastFetched;
-    if (!lastUpdated) return true;
-
-    const TEN_MINUTES_IN_MS = 10 * 60 * 1000;
-    const lastUpdatedInMs = new Date(lastUpdated).getTime();
-    const nowInMs = new Date().getTime();
-
-    return nowInMs > lastUpdatedInMs + TEN_MINUTES_IN_MS;
-  }
-
   async checkIfAuthenticated() {
     return (await this.get()).isAuthenticated;
   }
 
   async checkIfLinkIsSaved(url) {
     const viewer = await this.get();
-    return !!viewer.savedLinks[url];
+    return !!viewer.savedObjectsLookup[url];
   }
 
   async reset() {
@@ -539,110 +599,381 @@ class Viewer {
   }
 
   async sync() {
+    //NOTE(amine): only sync when there are no running actions
+
     const viewer = await hydrateAuthenticatedUser();
+
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
       this._set({
-        objects: serializedViewer.objects,
-        savedLinks: serializedViewer.savedLinks,
+        ...serializedViewer,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
-
       return;
     }
 
     this.reset(VIEWER_INITIAL_STATE);
   }
+}
 
-  async lazySync() {
-    const shouldSync = await this.checkIfShouldSync();
-    if (!shouldSync) return;
+const Viewer = new ViewerHandler();
 
-    const viewer = await hydrateAuthenticatedUser();
-    if (viewer.data) {
-      const serializedViewer = this._serialize(viewer.data);
-      this._set({
-        objects: serializedViewer.objects,
-        savedLinks: serializedViewer.savedLinks,
-        lastFetched: new Date().toString(),
-        isAuthenticated: true,
+class ViewerActionsHandler {
+  constructor() {
+    this.runningActions = [];
+  }
+
+  _registerRunningAction() {
+    this.runningActions.push("");
+  }
+
+  _cleanupCleanupAction() {
+    this.runningActions.pop();
+    setTimeout(() => {
+      if (!this.runningActions.length) Viewer.sync();
+    }, 200);
+  }
+
+  _addObjectsToViewer({ viewer, objects }) {
+    objects.forEach((object) => {
+      if (object.url in viewer.savedObjectsLookup) {
+        return;
+      }
+      viewer.savedObjectsLookup[object.url] = savingStates.start;
+      viewer.objects.push({
+        title: object.title,
+        url: object.title,
+        favicon: object.favicon,
+        rootDomain: background_getRootDomain(object.url),
+        isSaved: true,
       });
+    });
+    return viewer;
+  }
 
-      return;
-    }
+  async _removeObjectsFromViewer({ viewer, objects }) {
+    objects.forEach(({ url }) => {
+      delete viewer.savedObjectsLookup[url];
+      viewer.objects = objects.filter((object) => object.url !== url);
+    });
 
-    this.reset(VIEWER_INITIAL_STATE);
+    return viewer;
+  }
+
+  _addSlateToViewer({ viewer, slateName }) {
+    viewer.slatesLookup[slateName] = {};
+    viewer.slates.push({
+      slatename: slateName,
+      name: slateName,
+      createAt: new Date().toDateString(),
+    });
+    return viewer;
+  }
+
+  _removeSlateFromViewer({ viewer, slateName }) {
+    delete viewer.slatesLookup[slateName];
+
+    viewer.slates = viewer.slates.filter(
+      (slate) => slate.slatename !== slateName
+    );
+    return viewer;
+  }
+
+  _addObjectsToViewerSlate({ viewer, objects, slateName }) {
+    objects.forEach(({ url }) => {
+      viewer.slatesLookup[slateName][url] = true;
+    });
+
+    objects.forEach(({ url }) => {
+      if (!(url in viewer.savedObjectsSlates))
+        viewer.savedObjectsSlates[url] = [];
+      viewer.savedObjectsSlates[url].push(slateName);
+    });
+
+    return viewer;
+  }
+
+  _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
+    objects.forEach(({ url }) => {
+      if (slateName in viewer.slatesLookup) {
+        delete viewer.slatesLookup[slateName][url];
+      }
+    });
+
+    objects.forEach(({ url }) => {
+      const filterOutSlateName = (slate) => slate !== slateName;
+      viewer.savedObjectsSlates[url] =
+        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
+    });
+
+    return viewer;
   }
 
   /**
    * @description save a link and send saving status to new tab and the jumper
    *
    * @param {Object} Arguments
-   * @param {string} Arguments.url - the url to save
+   * @param {string} Arguments.objects - objects to save
    * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
    * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
    */
 
-  async saveLink({ url, title, favicon, tab, source = savingSources.app }) {
-    const viewer = await this.get();
-    if (viewer.savedLinks[url] === savingStates.start) return;
+  async saveLink({ objects, slateName, tab, source = savingSources.app }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+    const areObjectsBeingSaved = objects.every(
+      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
+    );
+
+    if (areObjectsBeingSaved) return;
 
     const sendStatusUpdate = (status) => {
-      chrome.tabs.sendMessage(parseInt(tab.id), {
-        type: viewer_messages.savingStatus,
-        data: { savingStatus: status, url, title, favicon, source },
-      });
+      if (source === savingSources.command) {
+        // NOTE(amine): you can only save one object via command
+        const { url, title, favicon } = objects[0];
+        chrome.tabs.sendMessage(parseInt(tab.id), {
+          type: viewer_messages.savingStatus,
+          data: { savingStatus: status, url, title, favicon, source },
+        });
+      }
     };
 
     sendStatusUpdate(savingStates.start);
 
-    if (!(url in viewer.savedLinks)) {
-      this._set({
-        ...viewer,
-        savedLinks: { ...viewer.savedLinks, [url]: savingStates.start },
-        objects: [
-          {
-            title,
-            url,
-            favicon,
-            rootDomain: getRootDomain(url),
-            isSaved: true,
-          },
-          ...viewer.objects,
-        ],
+    const objectsToBeSaved = objects.filter(
+      ({ url }) => !(url in viewer.savedObjectsLookup)
+    );
+
+    viewer = this._addObjectsToViewer({
+      viewer,
+      objects: objectsToBeSaved,
+    });
+
+    if (slateName) {
+      viewer = this._addObjectsToViewerSlate({
+        viewer,
+        objects: objectsToBeSaved,
+        slateName,
       });
     }
+    Viewer._set(viewer);
 
-    const response = await createLink({ url });
+    let payload = {};
+    payload.urls = objectsToBeSaved.map(({ url }) => url);
+    if (slateName) {
+      const slatePayload = viewer.slates.find(
+        (slate) => slate.name === slateName
+      );
+      payload.slate = slatePayload;
+    }
+
+    const response = await createLink(payload);
 
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
-      const viewer = await this.get();
-      const savedLinks = { ...viewer.savedLinks };
-      delete savedLinks[url];
-      const objects = objects.filter((object) => object.url !== url);
-
-      this._set({ ...viewer, savedLinks, objects });
+      let viewer = await Viewer.get();
+      if (slateName) {
+        viewer = this._removeObjectsFromViewerSlate({
+          viewer,
+          objects: objectsToBeSaved,
+          slateName,
+        });
+      }
+      viewer = this._removeObjectsFromViewer({
+        viewer: viewer,
+        objects: objectsToBeSaved,
+      });
+      Viewer._set(viewer);
       return;
     }
 
     sendStatusUpdate(savingStates.done);
-    this.sync();
+
+    this._cleanupCleanupAction();
+  }
+
+  async addObjectsToSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (!(slateName in viewer.slatesLookup)) {
+      return;
+    }
+
+    viewer = this._addObjectsToViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+    Viewer._set(viewer);
+
+    const filesPayload = objects.map(({ url }) => ({
+      id: viewer.objectsMetadata[url].id,
+      cid: viewer.objectsMetadata[url].cid,
+    }));
+
+    const slatePayload = viewer.slates.find(
+      (slate) => slate.name === slateName
+    );
+
+    const response = await saveCopy({
+      files: filesPayload,
+      slate: slatePayload,
+    });
+
+    if (!response || response.error) {
+      viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      Viewer._set(viewer);
+    }
+
+    return;
+  }
+
+  async removeObjectsFromSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (!(slateName in viewer.slatesLookup)) {
+      return;
+    }
+
+    const filesIdsPayload = objects.map(
+      ({ url }) => viewer.objectsMetadata[url].id
+    );
+
+    const slatePayload = viewer.slates.find(
+      (slate) => slate.name === slateName
+    );
+
+    viewer = await this._removeObjectsFromViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+
+    const isSlateEmpty =
+      Object.keys(viewer.slatesLookup[slateName]).length === 0;
+    // NOTE(amine): if the request fails, we'll use oldSlate to add that slate back
+    let oldSlate;
+    if (isSlateEmpty) {
+      oldSlate = viewer.slates.find((slate) => slate.slatename === slateName);
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+    }
+
+    Viewer._set(viewer);
+
+    const response = await removeFileFromSlate({
+      ids: filesIdsPayload,
+      slateId: slatePayload.id,
+    });
+
+    if (!response || response.error) {
+      viewer = await this.get();
+      if (isSlateEmpty) {
+        viewer.slates.push(oldSlate);
+        oldSlate.objects.forEach((object) => {
+          const objectUrl = getFileUrl(object);
+          viewer.slatesLookup[slateName][objectUrl] = true;
+        });
+      }
+      viewer = this._addObjectsToViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      Viewer._set(viewer);
+    }
+
+    return;
+  }
+
+  async createSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (slateName in viewer.slatesLookup) return;
+
+    this._registerRunningAction();
+
+    viewer = this._addSlateToViewer({ viewer, slateName });
+    viewer = this._addObjectsToViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+    Viewer._set(viewer);
+
+    const response = await createSlate({
+      name: slateName,
+      isPublic: false,
+    });
+
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+      Viewer._set(viewer);
+      return;
+    } else {
+      const viewer = await Viewer.get();
+      viewer.slates = viewer.slates.filter(
+        (slate) => slate.slatename !== slateName
+      );
+      viewer.slates.unshift(response.slate);
+      Viewer._set(viewer);
+    }
+
+    const savedObjects = [];
+    const unsavedObjects = [];
+    for (let object of objects) {
+      if (await Viewer.checkIfLinkIsSaved(object.url)) {
+        savedObjects.push(object);
+        continue;
+      }
+      unsavedObjects.push(object);
+    }
+
+    this._cleanupCleanupAction();
+
+    Promise.all([
+      ViewerActions.addObjectsToSlate({
+        objects: savedObjects,
+        slateName: slateName,
+      }),
+      ViewerActions.saveLink({
+        objects: unsavedObjects,
+        slateName,
+      }),
+    ]);
   }
 }
 
-const viewer = new Viewer();
+const ViewerActions = new ViewerActionsHandler();
 
 /** ------------ Event listeners ------------- */
 
+Viewer.onChange(async (viewerData) => {
+  const activeTab = await Tabs.getActive();
+  if (!activeTab) return;
+  const slates = viewerData.slates.map(({ name }) => name);
+  const { savedObjectsLookup, savedObjectsSlates, slatesLookup } = viewerData;
+
+  chrome.tabs.sendMessage(parseInt(activeTab.id), {
+    type: viewer_messages.updateViewer,
+    data: { slates, savedObjectsLookup, savedObjectsSlates, slatesLookup },
+  });
+});
+
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == viewer_commands.directSave) {
-    if (await viewer.checkIfAuthenticated()) {
-      viewer.saveLink({
-        url: tab.url,
-        title: tab.title,
-        favicon: tab.favIconUrl,
+    if (await Viewer.checkIfAuthenticated()) {
+      Viewer.saveLink({
+        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
         tab,
         source: savingSources.command,
       });
@@ -651,74 +982,118 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  viewer.lazySync();
+  Viewer.sync();
 });
 
 chrome.cookies.onChanged.addListener((e) => {
-  viewer.checkIfShouldSync();
   if (e.cookie.domain !== uri.domain) return;
 
   if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {
-    viewer.reset();
+    Viewer.reset();
   }
 
   if (!e.removed && e.cause === "explicit") {
-    viewer.sync();
+    Viewer.sync();
   }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === viewer_messages.saveLink) {
-    viewer
-      .saveLink({
-        url: request.url,
-        title: request.title,
-        favicon: request.favicon,
-        tab: sender.tab,
-        source: request.source,
-      })
-      .then(sendResponse);
+    ViewerActions.saveLink({
+      objects: request.objects,
+      tab: sender.tab,
+      source: request.source,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.addObjectsToSlate) {
+    const handleAddObjectsToSlate = async ({ objects, slateName }) => {
+      const savedObjects = [];
+      const unsavedObjects = [];
+      for (let object of objects) {
+        if (await Viewer.checkIfLinkIsSaved(object.url)) {
+          savedObjects.push(object);
+          continue;
+        }
+        unsavedObjects.push(object);
+      }
+
+      Promise.all([
+        ViewerActions.addObjectsToSlate({
+          objects: savedObjects,
+          slateName: slateName,
+        }),
+        ViewerActions.saveLink({
+          objects: unsavedObjects,
+          slateName,
+        }),
+      ]);
+    };
+
+    handleAddObjectsToSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+
+    return true;
+  }
+
+  if (request.type === viewer_messages.createSlate) {
+    ViewerActions.createSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.removeObjectsFromSlate) {
+    ViewerActions.removeObjectsFromSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+    return true;
   }
 
   if (request.type === viewer_messages.loadViewerDataRequest) {
     const getInitialData = async () => {
-      const isAuthenticated = await viewer.checkIfAuthenticated();
-      const shouldSync = await viewer.checkIfShouldSync();
-
-      if (shouldSync) viewer.lazySync();
+      const isAuthenticated = await Viewer.checkIfAuthenticated();
 
       if (!isAuthenticated) {
         return { isAuthenticated };
       }
 
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
-      const {
-        currentWindowFeedKeys,
-        currentWindowFeed,
-        allOpenFeedKeys,
-        allOpenFeed,
-      } = constructWindowsFeed({
+      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
         tabs: openTabs,
         activeWindowId: sender.tab.windowId,
-        activeTabId: sender.tab.id,
       });
+
+      const viewerData = await Viewer.get();
+
+      const slates = viewerData.slates.map(({ name }) => name);
+      const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
+        viewerData;
+
+      Viewer.sync();
 
       const response = {
         ...viewerInitialState,
         isAuthenticated,
-        shouldSync,
+
+        slates,
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+
         windows: {
           data: {
-            currentWindowFeedKeys,
-            currentWindowFeed,
             allOpenFeedKeys,
             allOpenFeed,
           },
           params: {
             activeWindowId: sender.tab.windowId,
-            totalWindows,
             activeTabId: sender.tab.id,
           },
         },
@@ -2523,7 +2898,7 @@ Fuse.config = Config;
 
 
 
-const background_getRootDomain = (url) => {
+const browser_background_getRootDomain = (url) => {
   let hostname;
   try {
     hostname = new URL(url).hostname;
@@ -2539,14 +2914,14 @@ const removeDuplicatesFromSearchResults = (result) => {
 
   const visitWithSameTitle = {};
   const doesVisitExistWithSameTitle = (visit) =>
-    `${background_getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
+    `${browser_background_getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
   const addVisitToDuplicateList = (visit) =>
-    visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`].push(
+    visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`].push(
       visit
     );
   const createVisitDuplicate = (visit) => {
-    visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`] = [];
-    return visitWithSameTitle[`${background_getRootDomain(visit.url)}-${visit.title}`];
+    visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`] = [];
+    return visitWithSameTitle[`${browser_background_getRootDomain(visit.url)}-${visit.title}`];
   };
 
   const MAX_SEARCH_RESULT = 300;
@@ -2582,7 +2957,7 @@ const Session = {
     ...visit,
     title: historyItem.title,
     url: historyItem.url,
-    rootDomain: background_getRootDomain(historyItem.url),
+    rootDomain: browser_background_getRootDomain(historyItem.url),
     favicon:
       "https://s2.googleusercontent.com/s2/favicons?domain_url=" +
       historyItem.url,
@@ -2778,7 +3153,7 @@ class BrowserHistory {
     return await Promise.all(
       cleanedResult.map(async (item) => ({
         ...item,
-        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
       }))
     );
   }
@@ -2797,7 +3172,7 @@ class BrowserHistory {
     return await Promise.all(
       cleanedResult.map(async (item) => ({
         ...item,
-        isSaved: await viewer.checkIfLinkIsSaved(item.url),
+        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
       }))
     );
   }
@@ -2811,7 +3186,7 @@ class BrowserHistory {
       session.visits = await Promise.all(
         session.visits.map(async (visit) => ({
           ...visit,
-          isSaved: await viewer.checkIfLinkIsSaved(visit.url),
+          isSaved: await Viewer.checkIfLinkIsSaved(visit.url),
         }))
       );
     }
@@ -2834,8 +3209,8 @@ const Tabs = {
     title: tab.title,
     favicon: tab.favIconUrl,
     url: tab.url,
-    rootDomain: background_getRootDomain(tab.url),
-    isSaved: await viewer.checkIfLinkIsSaved(tab.url),
+    rootDomain: browser_background_getRootDomain(tab.url),
+    isSaved: await Viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -2897,11 +3272,10 @@ chrome.tabs.onRemoved.addListener(async () => {
 
   if (activeTab) {
     const openTabs = await Windows.getAllTabs();
-    const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
-      data: { openTabs, totalWindows, activeTabId: activeTab.id },
+      data: { openTabs, activeTabId: activeTab.id },
     });
   }
 });
@@ -2911,11 +3285,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
         type: messages.windowsUpdate,
-        data: { openTabs, totalWindows, activeTabId: activeTab.id },
+        data: { openTabs, activeTabId: activeTab.id },
       });
     }
 
@@ -2968,7 +3341,31 @@ const navigation_messages = {
   closeTabs: "CLOSE_TABS",
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
+
+const ADDRESS_BAR_CURRENT_URL_ATTRIBUTE = "data-current-url";
+
+const createAddressBarElement = () => {
+  const element = document.createElement("div");
+  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
+  document.body.appendChild(element);
+};
+const getAddressBarElement = () =>
+  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+
+const getAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  return element.getAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE) || "/";
+};
+const updateAddressBarUrl = (url) => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
+};
+
 ;// CONCATENATED MODULE: ./src/Core/navigation/background.js
+
 
 
 
@@ -3038,6 +3435,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 chrome.action.onClicked.addListener(async (tab) => {
   chrome.tabs.sendMessage(parseInt(tab.id), {
     type: navigation_messages.openExtensionJumperRequest,
+    data: { url: "/" },
   });
 });
 
@@ -3045,6 +3443,18 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
+      data: { url: "/" },
+    });
+  }
+
+  if (command == commands.openAppOnSlates) {
+    const urls = [
+      { url: tab.url, title: tab.title, rootDomain: getRootDomain(tab.url) },
+    ];
+    const urlsQuery = encodeURIComponent(JSON.stringify(urls));
+    chrome.tabs.sendMessage(parseInt(tab.id), {
+      type: navigation_messages.openExtensionJumperRequest,
+      data: { url: `/slates?urls=${urlsQuery}` },
     });
   }
 
@@ -3066,7 +3476,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === views_messages.viewByTypeRequest) {
     console.log(`VIEW FOR ${request.viewType} ${request.query}`);
     if (request.viewType === viewsType.savedFiles) {
-      viewer.get().then((res) =>
+      Viewer.get().then((res) =>
         sendResponse({
           result: res.objects,
           viewType: request.viewType,
@@ -3088,13 +3498,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === views_messages.searchQueryRequest) {
     const searchHandlers = [];
-    if (
-      request.viewType === viewsType.allOpen ||
-      request.viewType === viewsType.currentWindow
-    ) {
+    if (request.viewType === viewsType.allOpen) {
       const searchOptions = {};
-      if (request.viewType === viewsType.currentWindow)
-        searchOptions.windowId = sender.tab.windowId;
 
       searchHandlers.push({
         handler: Windows.search(request.query, searchOptions),

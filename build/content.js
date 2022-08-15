@@ -56,6 +56,7 @@ window.addEventListener("message", async function (event) {
 const commands = {
   openApp: "open-app",
   openSlate: "open-slate",
+  openAppOnSlates: "open-app-on-slates",
 };
 
 const values = {
@@ -328,6 +329,29 @@ const navigation_messages = {
   closeTabs: "CLOSE_TABS",
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const ADDRESS_BAR_ELEMENT_ID = "slate-extension-address-bar";
+
+const ADDRESS_BAR_CURRENT_URL_ATTRIBUTE = "data-current-url";
+
+const createAddressBarElement = () => {
+  const element = document.createElement("div");
+  element.setAttribute("id", ADDRESS_BAR_ELEMENT_ID);
+  document.body.appendChild(element);
+};
+const getAddressBarElement = () =>
+  document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+
+const getAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  return element.getAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE) || "/";
+};
+const updateAddressBarUrl = (url) => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
+};
+
 ;// CONCATENATED MODULE: ./src/Core/navigation/content.js
 
 
@@ -346,6 +370,8 @@ const setInnerHTML = (element, html) => {
   });
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
 const getExtensionJumperWrapper = () =>
   document.getElementById(jumperSlateExtensionWrapper);
 
@@ -358,11 +384,18 @@ const createExtensionJumperWrapper = () => {
   document.body.appendChild(wrapper);
 };
 
-const openApp = () => {
+/* -----------------------------------------------------------------------------------------------*/
+
+const openApp = (url) => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
 
   const isAppOpen = document.getElementById("modal-window-slate-extension");
-  if (isAppOpen) return;
+  if (isAppOpen) {
+    updateAddressBarUrl(url);
+    return;
+  }
+  createAddressBarElement();
+  updateAddressBarUrl(url);
 
   createExtensionJumperWrapper();
   // Fetch the local React index.html page
@@ -391,7 +424,7 @@ let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === navigation_messages.openExtensionJumperRequest) {
     activeElement = document.activeElement;
-    openApp();
+    openApp(request.data.url);
   }
 });
 
@@ -440,14 +473,13 @@ const views_messages = {
 };
 
 const viewsType = {
-  currentWindow: "currentWindow",
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
   relatedLinks: "relatedLinks",
 };
 
-const initialView = viewsType.currentWindow;
+const initialView = viewsType.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/views/content.js
 
@@ -491,8 +523,14 @@ const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
 
+  updateViewer: "UPDATE_VIEWER",
+
   saveLink: "SAVE_LINK",
   savingStatus: "SAVING_STATUS",
+
+  addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
+  removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
+  createSlate: "CREATE_SLATE",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -514,7 +552,6 @@ const savingSources = {
 
 const viewerInitialState = {
   isAuthenticated: false,
-  shouldSync: false,
   initialView: initialView,
   windows: {
     data: { currentWindow: [], allOpen: [] },
@@ -765,12 +802,9 @@ const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
     removeSavingPopup();
     await loadFont();
     const handleOnRetry = () => {
-      console.log("retrying");
       chrome.runtime.sendMessage({
         type: viewer_messages.saveLink,
-        url,
-        title,
-        favicon,
+        objects: [{ url, title, favicon }],
         source: savingSources.command,
       });
     };
@@ -787,6 +821,12 @@ const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
 
 chrome.runtime.onMessage.addListener(async (request) => {
   const { type, data } = request;
+  if (type === viewer_messages.updateViewer) {
+    // TODO(amine): check if jumper is open
+    window.postMessage({ type: viewer_messages.updateViewer, data }, "*");
+    return;
+  }
+
   if (type === viewer_messages.savingStatus) {
     // NOTE(amine): forward the saving status to the jumper and new tab
     window.postMessage({ type: viewer_messages.savingStatus, data }, "*");
@@ -820,11 +860,37 @@ window.addEventListener("message", async function (event) {
     return;
   }
 
+  if (event.data.type === viewer_messages.createSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.createSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
+    return;
+  }
+
+  if (event.data.type === viewer_messages.addObjectsToSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.addObjectsToSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
+    return;
+  }
+
+  if (event.data.type === viewer_messages.removeObjectsFromSlate) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.removeObjectsFromSlate,
+      objects: event.data.objects,
+      slateName: event.data.slateName,
+    });
+    return;
+  }
+
   if (event.data.type === viewer_messages.saveLink) {
     chrome.runtime.sendMessage({
       type: viewer_messages.saveLink,
-      url: event.data.url,
-      title: event.data.title,
+      objects: event.data.objects,
     });
   }
 });

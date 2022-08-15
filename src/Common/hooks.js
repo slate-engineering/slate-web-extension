@@ -87,7 +87,7 @@ const getFocusableElements = (element = document) =>
     );
 
 /* NOTE(amine): used to trap focus inside a component. **/
-export const useTrapFocusInShadowDom = ({ ref }) => {
+export const useTrapFocus = ({ ref }) => {
   const handleFocus = (e) => {
     if (!ref.current) return;
     const elements = getFocusableElements(ref.current);

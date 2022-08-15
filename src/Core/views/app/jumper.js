@@ -36,7 +36,9 @@ export const useViews = () => {
           setViewsFeed(data.result);
           return;
         }
-        if (data.query === paramsRef.current.query) setViewsFeed(data.result);
+        if (data.query === paramsRef.current.query) {
+          setViewsFeed(data.result);
+        }
       }
     };
     window.addEventListener("message", handleMessage);

@@ -66,7 +66,6 @@ export const useWindows = () => {
     const handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === messages.windowsUpdate) {
-        paramsRef.current.totalWindows = data.totalWindows;
         paramsRef.current.activeTabId = data.activeTabId;
 
         setWindowsFeed({
@@ -83,7 +82,6 @@ export const useWindows = () => {
 
   return {
     windowsFeeds,
-    totalWindows: paramsRef.current.totalWindows,
     activeTabId: paramsRef.current.activeTabId,
   };
 };
