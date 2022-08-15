@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useViewsState, useHistorySearchState } from "./";
-import { messages } from "../";
+import { messages, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
@@ -36,13 +36,24 @@ export const useViews = () => {
           setViewsFeed(data.result);
           return;
         }
-        if (data.query === paramsRef.current.query) setViewsFeed(data.result);
+        if (data.query === paramsRef.current.query) {
+          setViewsFeed(data.result);
+        }
       }
     };
     window.addEventListener("message", handleMessage);
 
     return () => window.removeEventListener("message", handleMessage);
   }, []);
+
+  React.useEffect(() => {
+    if (
+      currentView !== viewsType.relatedLinks &&
+      currentView !== viewsType.savedFiles
+    ) {
+      setViewsFeed([]);
+    }
+  }, [currentView]);
 
   return {
     viewsFeed,
