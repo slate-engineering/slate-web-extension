@@ -150,6 +150,7 @@ const STYLES_COLOR_SYSTEM_GREEN = (theme) => css`
 `;
 
 const STYLES_OBJECT = css`
+  position: relative;
   ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   width: 100%;
@@ -162,13 +163,6 @@ const STYLES_OBJECT_ACTION_BUTTON = (theme) => css`
   padding: 2px;
   border-radius: 6px;
   color: ${theme.semantic.textBlack};
-`;
-
-const STYLES_OBJECT_ACTIONS_WRAPPER = css`
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  & > * + * {
-    margin-left: 8px !important;
-  }
 `;
 
 const useCopyState = (url) => {
@@ -228,6 +222,27 @@ const Slate = ({ children, ...props }) => {
 };
 
 /* -----------------------------------------------------------------------------------------------*/
+const OBJECT_ACTION_SIZE = 20;
+
+const STYLES_ACTIONS_WRAPPER = (theme) => css`
+  position: absolute;
+  top: 10px;
+  // NOTE(amine): saving action's width + object's right padding
+  right: calc(${OBJECT_ACTION_SIZE}px + 12px);
+
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  padding-left: calc(${OBJECT_ACTION_SIZE}px + 8px);
+  padding-right: 8px;
+  background: linear-gradient(
+    269.88deg,
+    ${theme.system.grayLight5} 84.95%,
+    rgba(229, 232, 234, 0) 103.84%
+  );
+
+  & > * + * {
+    margin-left: 8px !important;
+  }
+`;
 
 const Object = React.forwardRef(
   (
@@ -312,7 +327,7 @@ const Object = React.forwardRef(
             className="object_checkbox"
             checked={isChecked}
             onChange={handleOnChecking}
-            style={{ display: isChecked && "block" }}
+            style={{ display: isChecked && "block", flexShrink: 0 }}
             onClick={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.preventDefault()}
           />
@@ -324,7 +339,7 @@ const Object = React.forwardRef(
         />
         <div
           css={Styles.HORIZONTAL_CONTAINER_CENTERED}
-          style={{ marginLeft: 12, maxWidth: 384 }}
+          style={{ marginLeft: 12 }}
         >
           {firstAppliedSlate && (
             <Slate style={{ flexShrink: 0 }}>{firstAppliedSlate}</Slate>
@@ -342,74 +357,75 @@ const Object = React.forwardRef(
             {relatedVisits.length + 1}
           </Typography.H5>
         ) : null}
-        {withActions && (
-          <div
-            css={STYLES_OBJECT_ACTIONS_WRAPPER}
-            style={{ marginLeft: "auto" }}
-          >
-            {(typeof isSelected === "undefined" || isSelected) && (
-              <>
-                <button
-                  className="object_action_button"
-                  css={STYLES_OBJECT_ACTION_BUTTON}
-                  onMouseDown={preventFocus}
-                  onClick={(e) => (
-                    e.stopPropagation(),
-                    e.preventDefault(),
-                    onOpenSlatesJumper()
-                  )}
-                >
-                  <SVG.Hash width={16} height={16} />
-                </button>
-                <CopyAction
-                  className="object_action_button"
-                  isCopied={isCopied}
-                  onClick={(e) => (
-                    e.stopPropagation(), e.preventDefault(), handleCopying()
-                  )}
-                  onMouseDown={preventFocus}
-                  url={url}
-                />
-                <button
-                  className="object_action_button"
-                  css={STYLES_OBJECT_ACTION_BUTTON}
-                  onMouseDown={preventFocus}
-                >
-                  <SVG.Trash width={16} height={16} />
-                </button>
-                {onCloseTab && (
-                  <button
-                    className="object_action_button"
-                    css={STYLES_OBJECT_ACTION_BUTTON}
-                    onClick={(e) => (
-                      e.stopPropagation(), e.preventDefault(), onCloseTab()
-                    )}
-                    onMouseDown={preventFocus}
-                  >
-                    <SVG.XCircle width={16} height={16} />
-                  </button>
-                )}
 
-                {!isSaved && (
-                  <button
-                    className="object_action_button"
-                    css={STYLES_OBJECT_ACTION_BUTTON}
-                    onClick={handleLinkSaving}
-                    onMouseDown={preventFocus}
-                  >
-                    <SVG.Plus width={16} height={16} />
-                  </button>
+        {withActions && (typeof isSelected === "undefined" || isSelected) && (
+          <div css={STYLES_ACTIONS_WRAPPER}>
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onMouseDown={preventFocus}
+              onClick={(e) => (
+                e.stopPropagation(), e.preventDefault(), onOpenSlatesJumper()
+              )}
+            >
+              <SVG.Hash width={16} height={16} />
+            </button>
+            <CopyAction
+              className="object_action_button"
+              isCopied={isCopied}
+              onClick={(e) => (
+                e.stopPropagation(), e.preventDefault(), handleCopying()
+              )}
+              onMouseDown={preventFocus}
+              url={url}
+            />
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onMouseDown={preventFocus}
+            >
+              <SVG.Trash width={16} height={16} />
+            </button>
+            {onCloseTab && (
+              <button
+                className="object_action_button"
+                css={STYLES_OBJECT_ACTION_BUTTON}
+                onClick={(e) => (
+                  e.stopPropagation(), e.preventDefault(), onCloseTab()
                 )}
-              </>
-            )}
-
-            {isSaved && (
-              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
-                <SVG.CheckCircle />
-              </div>
+                onMouseDown={preventFocus}
+              >
+                <SVG.XCircle width={16} height={16} />
+              </button>
             )}
           </div>
         )}
+
+        <div
+          style={{
+            height: OBJECT_ACTION_SIZE,
+            width: OBJECT_ACTION_SIZE,
+            marginLeft: "auto",
+            flexShrink: 0,
+          }}
+        >
+          {(typeof isSelected === "undefined" || isSelected) && !isSaved && (
+            <button
+              className="object_action_button"
+              css={STYLES_OBJECT_ACTION_BUTTON}
+              onClick={handleLinkSaving}
+              onMouseDown={preventFocus}
+            >
+              <SVG.Plus width={16} height={16} />
+            </button>
+          )}
+
+          {isSaved && (
+            <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
+              <SVG.CheckCircle />
+            </div>
+          )}
+        </div>
       </button>
     );
   }
