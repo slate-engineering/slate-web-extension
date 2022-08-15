@@ -121,6 +121,21 @@ const Input = React.forwardRef(
     const inputRef = React.useRef();
     const focusInput = () => inputRef.current.focus();
 
+    React.useEffect(() => {
+      const inputElement = inputRef.current;
+      if (!inputElement) return;
+
+      const rootNode = inputElement.getRootNode();
+      const handleFocusWhenPressingSlash = (e) => {
+        if (e.key === "/") {
+          inputElement.focus();
+        }
+      };
+      rootNode.addEventListener("keyup", handleFocusWhenPressingSlash);
+      return () =>
+        rootNode.removeEventListener("keyup", handleFocusWhenPressingSlash);
+    }, []);
+
     return (
       <section
         css={[STYLES_SEARCH_WRAPPER, containerCss]}
@@ -182,7 +197,7 @@ const SearchFeedRow = ({
     );
   }
 
-  if (viewType === "currentWindow" || viewType === "allOpen") {
+  if (viewType === "allOpen") {
     return (
       <ListView.RovingTabIndexWithMultiSelectObject
         key={item.id}
@@ -266,7 +281,6 @@ const SearchFeedList = React.forwardRef(
 
 const getTitleFromView = (view) => {
   const titles = {
-    currentWindow: "Current Window",
     allOpen: "All Open",
     recent: "Recent",
   };
