@@ -351,14 +351,13 @@ const views_messages = {
 };
 
 const viewsType = {
-  currentWindow: "currentWindow",
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
   relatedLinks: "relatedLinks",
 };
 
-const initialView = viewsType.currentWindow;
+const initialView = viewsType.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/viewer/index.js
 
@@ -404,21 +403,12 @@ const viewerInitialState = {
 };
 
 ;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
-const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
-  const currentWindowFeedKeys = ["Current Tab", "Others"];
-  let currentWindowFeed = { ["Current Tab"]: [], ["Others"]: [] };
-
+const constructWindowsFeed = ({ tabs, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Others"];
   let allOpenFeed = { ["Current Window"]: [], Others: [] };
 
   tabs.forEach((tab) => {
     if (tab.windowId === activeWindowId) {
-      if (tab.id === activeTabId) {
-        currentWindowFeed["Current Tab"].push(tab);
-      } else {
-        currentWindowFeed["Others"].push(tab);
-      }
-
       allOpenFeed["Current Window"].push(tab);
       return;
     }
@@ -427,8 +417,6 @@ const constructWindowsFeed = ({ tabs, activeWindowId, activeTabId }) => {
   });
 
   return {
-    currentWindowFeed,
-    currentWindowFeedKeys,
     allOpenFeed,
     allOpenFeedKeys,
   };
@@ -1076,17 +1064,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
-      const {
-        currentWindowFeedKeys,
-        currentWindowFeed,
-        allOpenFeedKeys,
-        allOpenFeed,
-      } = constructWindowsFeed({
+      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
         tabs: openTabs,
         activeWindowId: sender.tab.windowId,
-        activeTabId: sender.tab.id,
       });
 
       const viewerData = await Viewer.get();
@@ -1108,14 +1089,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         windows: {
           data: {
-            currentWindowFeedKeys,
-            currentWindowFeed,
             allOpenFeedKeys,
             allOpenFeed,
           },
           params: {
             activeWindowId: sender.tab.windowId,
-            totalWindows,
             activeTabId: sender.tab.id,
           },
         },
@@ -3294,11 +3272,10 @@ chrome.tabs.onRemoved.addListener(async () => {
 
   if (activeTab) {
     const openTabs = await Windows.getAllTabs();
-    const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
     chrome.tabs.sendMessage(parseInt(activeTab.id), {
       type: messages.windowsUpdate,
-      data: { openTabs, totalWindows, activeTabId: activeTab.id },
+      data: { openTabs, activeTabId: activeTab.id },
     });
   }
 });
@@ -3308,11 +3285,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const activeTab = await Tabs.getActive();
     if (activeTab) {
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
       chrome.tabs.sendMessage(parseInt(activeTab.id), {
         type: messages.windowsUpdate,
-        data: { openTabs, totalWindows, activeTabId: activeTab.id },
+        data: { openTabs, activeTabId: activeTab.id },
       });
     }
 
@@ -3472,7 +3448,9 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 
   if (command == commands.openAppOnSlates) {
-    const urls = [{ url: tab.url, rootDomain: getRootDomain(tab.url) }];
+    const urls = [
+      { url: tab.url, title: tab.title, rootDomain: getRootDomain(tab.url) },
+    ];
     const urlsQuery = encodeURIComponent(JSON.stringify(urls));
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
@@ -3520,13 +3498,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === views_messages.searchQueryRequest) {
     const searchHandlers = [];
-    if (
-      request.viewType === viewsType.allOpen ||
-      request.viewType === viewsType.currentWindow
-    ) {
+    if (request.viewType === viewsType.allOpen) {
       const searchOptions = {};
-      if (request.viewType === viewsType.currentWindow)
-        searchOptions.windowId = sender.tab.windowId;
 
       searchHandlers.push({
         handler: Windows.search(request.query, searchOptions),

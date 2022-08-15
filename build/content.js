@@ -473,14 +473,13 @@ const views_messages = {
 };
 
 const viewsType = {
-  currentWindow: "currentWindow",
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
   relatedLinks: "relatedLinks",
 };
 
-const initialView = viewsType.currentWindow;
+const initialView = viewsType.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/views/content.js
 
