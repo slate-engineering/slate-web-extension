@@ -214,12 +214,7 @@ function Provider({
   currentViewQuery,
   viewsType,
   getViewsFeed,
-  onChange,
 }) {
-  React.useLayoutEffect(() => {
-    if (onChange) onChange();
-  }, [currentView, currentViewQuery]);
-
   const {
     registerMenuItem,
     cleanupMenuItem,
@@ -238,7 +233,6 @@ function Provider({
       currentViewQuery,
       viewsType,
       getViewsFeed,
-      onChange,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -252,7 +246,6 @@ function Provider({
       currentViewLabel,
       currentViewQuery,
       viewsType,
-      onChange,
       getViewsFeed,
 
       registerMenuItem,
@@ -702,49 +695,61 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-function Feed({
-  onObjectHover,
-  onOpenUrl,
-  onOpenSlatesJumper,
-  onGroupURLs,
-  onSaveObjects,
-  ...props
-}) {
-  const { viewsFeed, currentViewLabel } = useViewsContext();
+const Feed = React.forwardRef(
+  (
+    {
+      onObjectHover,
+      onOpenUrl,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+      ...props
+    },
+    ref
+  ) => {
+    const { viewsFeed, currentViewLabel } = useViewsContext();
 
-  const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+    const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
-  return (
-    <RovingTabIndex.Provider key={viewsFeed} isInfiniteList withFocusOnHover>
-      <MultiSelection.Provider
-        totalSelectableItems={viewsFeed.length}
-        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+    return (
+      <RovingTabIndex.Provider
+        key={viewsFeed}
+        ref={(node) => (ref.rovingTabIndexRef = node)}
+        isInfiniteList
+        withFocusOnHover
       >
-        <ViewsFeedList
-          itemCount={viewsFeed.length}
-          itemData={viewsFeed}
-          itemSize={Constants.sizes.jumperFeedItem}
-          {...props}
+        <MultiSelection.Provider
+          totalSelectableItems={viewsFeed.length}
+          onSubmitSelectedItem={handleOnSubmitSelectedItem}
         >
-          {(props) =>
-            ViewsFeedRow({
-              ...props,
-              onOpenUrl,
-              onOpenSlatesJumper,
-              onObjectHover,
-            })
-          }
-        </ViewsFeedList>
+          <ViewsFeedList
+            itemCount={viewsFeed.length}
+            itemData={viewsFeed}
+            itemSize={Constants.sizes.jumperFeedItem}
+            {...props}
+          >
+            {(props) =>
+              ViewsFeedRow({
+                ...props,
+                onOpenUrl,
+                onOpenSlatesJumper,
+                onObjectHover,
+              })
+            }
+          </ViewsFeedList>
 
-        <MultiSelection.ActionsMenu
-          onOpenURLs={(urls) => onOpenUrl({ urls })}
-          onGroupURLs={(urls) => onGroupURLs({ urls, title: currentViewLabel })}
-          onOpenSlatesJumper={onOpenSlatesJumper}
-          onSaveObjects={onSaveObjects}
-        />
-      </MultiSelection.Provider>
-    </RovingTabIndex.Provider>
-  );
-}
+          <MultiSelection.ActionsMenu
+            onOpenURLs={(urls) => onOpenUrl({ urls })}
+            onGroupURLs={(urls) =>
+              onGroupURLs({ urls, title: currentViewLabel })
+            }
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onSaveObjects={onSaveObjects}
+          />
+        </MultiSelection.Provider>
+      </RovingTabIndex.Provider>
+    );
+  }
+);
 
 export { Provider, Menu, Feed };

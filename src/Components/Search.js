@@ -274,83 +274,93 @@ const getTitleFromView = (view) => {
 };
 
 const Feed = React.memo(
-  ({ onOpenUrl, onGroupURLs, onOpenSlatesJumper, onSaveObjects, ...props }) => {
-    const {
-      search: { result: feeds, query: searchQuery },
-    } = useSearchContext();
+  React.forwardRef(
+    (
+      { onOpenUrl, onGroupURLs, onOpenSlatesJumper, onSaveObjects, ...props },
+      ref
+    ) => {
+      const {
+        search: { result: feeds, query: searchQuery },
+      } = useSearchContext();
 
-    const searchFeedLength = React.useMemo(() => {
-      let length = 0;
-      for (let feed of feeds) {
-        length += feed.result.length;
-      }
-      return length;
-    }, [feeds]);
-
-    const virtualizedFeed = React.useMemo(() => {
-      let rovingTabIndex = 0;
-      let virtualizedFeed = [];
-
-      for (let feed of feeds) {
-        const { title: view, result } = feed;
-        result.forEach((item, index) => {
-          if (index === 0) {
-            virtualizedFeed.push({ title: getTitleFromView(view) });
-          }
-
-          virtualizedFeed.push({
-            rovingTabIndex,
-            viewType: view,
-            item,
-          });
-
-          rovingTabIndex++;
-        });
-      }
-
-      return virtualizedFeed;
-    }, [feeds]);
-
-    const handleOnSubmitSelectedItem = (index) => {
-      let currentLength = 0;
-
-      for (let feed of feeds) {
-        const { result } = feed;
-        const nextLength = currentLength + result.length;
-        if (index < nextLength) {
-          return result[index - currentLength];
+      const searchFeedLength = React.useMemo(() => {
+        let length = 0;
+        for (let feed of feeds) {
+          length += feed.result.length;
         }
-        currentLength = nextLength;
-      }
-    };
+        return length;
+      }, [feeds]);
 
-    return (
-      <RovingTabIndex.Provider key={feeds} isInfiniteList withFocusOnHover>
-        <MultiSelection.Provider
-          totalSelectableItems={searchFeedLength}
-          onSubmitSelectedItem={handleOnSubmitSelectedItem}
-        >
-          <SearchFeedList
-            itemCount={virtualizedFeed.length}
-            itemData={virtualizedFeed}
-            itemSize={Constants.sizes.jumperFeedItem}
-            css={css}
-            {...props}
-          >
-            {(props) =>
-              SearchFeedRow({ ...props, onOpenUrl, onOpenSlatesJumper })
+      const virtualizedFeed = React.useMemo(() => {
+        let rovingTabIndex = 0;
+        let virtualizedFeed = [];
+
+        for (let feed of feeds) {
+          const { title: view, result } = feed;
+          result.forEach((item, index) => {
+            if (index === 0) {
+              virtualizedFeed.push({ title: getTitleFromView(view) });
             }
-          </SearchFeedList>
-          <MultiSelection.ActionsMenu
-            onOpenURLs={(urls) => onOpenUrl({ urls })}
-            onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
-            onSaveObjects={onSaveObjects}
-            onOpenSlatesJumper={onOpenSlatesJumper}
-          />
-        </MultiSelection.Provider>
-      </RovingTabIndex.Provider>
-    );
-  }
+
+            virtualizedFeed.push({
+              rovingTabIndex,
+              viewType: view,
+              item,
+            });
+
+            rovingTabIndex++;
+          });
+        }
+
+        return virtualizedFeed;
+      }, [feeds]);
+
+      const handleOnSubmitSelectedItem = (index) => {
+        let currentLength = 0;
+
+        for (let feed of feeds) {
+          const { result } = feed;
+          const nextLength = currentLength + result.length;
+          if (index < nextLength) {
+            return result[index - currentLength];
+          }
+          currentLength = nextLength;
+        }
+      };
+
+      return (
+        <RovingTabIndex.Provider
+          key={feeds}
+          ref={(node) => (ref.rovingTabIndexRef = node)}
+          isInfiniteList
+          withFocusOnHover
+        >
+          <MultiSelection.Provider
+            totalSelectableItems={searchFeedLength}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
+            <SearchFeedList
+              itemCount={virtualizedFeed.length}
+              itemData={virtualizedFeed}
+              itemSize={Constants.sizes.jumperFeedItem}
+              css={css}
+              {...props}
+            >
+              {(props) =>
+                SearchFeedRow({ ...props, onOpenUrl, onOpenSlatesJumper })
+              }
+            </SearchFeedList>
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
+              onSaveObjects={onSaveObjects}
+              onOpenSlatesJumper={onOpenSlatesJumper}
+            />
+          </MultiSelection.Provider>
+        </RovingTabIndex.Provider>
+      );
+    }
+  )
 );
 
 export { Provider, Input, Feed };

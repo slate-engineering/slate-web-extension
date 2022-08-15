@@ -118,8 +118,6 @@ const WindowsFeed = React.forwardRef(
     },
     ref
   ) => {
-    const rovingIndexRef = React.useRef();
-
     const virtualizedFeed = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
@@ -158,7 +156,7 @@ const WindowsFeed = React.forwardRef(
     return (
       <RovingTabIndex.Provider
         key={windowsFeed}
-        ref={rovingIndexRef}
+        ref={(node) => (ref.rovingTabIndexRef = node)}
         isInfiniteList
         withFocusOnHover
       >
