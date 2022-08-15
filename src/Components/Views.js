@@ -22,7 +22,6 @@ import {
 } from "../Common/utilities";
 
 const VIEWS_ACTIONS = [
-  { label: "Current Window", data: { type: viewsType.currentWindow } },
   { label: "All Open", data: { type: viewsType.allOpen } },
   { label: "Recent", data: { type: viewsType.recent } },
   { label: "Saved Files", data: { type: viewsType.savedFiles } },
@@ -483,7 +482,7 @@ const useHandleScrollNavigation = ({ containerRef }) => {
   return [isOverflowFrom, { scrollToLeft, scrollToRight }];
 };
 
-function Menu({ css, showAllOpenAction, ...props }) {
+function Menu({ css, ...props }) {
   const {
     currentView,
     currentViewQuery,
@@ -506,14 +505,6 @@ function Menu({ css, showAllOpenAction, ...props }) {
   const [isOverflowFrom, { scrollToLeft, scrollToRight }] =
     useHandleScrollNavigation({ containerRef: actionWrapperRef });
 
-  // NOTE(amine): remove All Open action if only one window is open
-  const FILTERED_VIEWS_ACTIONS = React.useMemo(() => {
-    const filterOutAllOpenIfOneWindowIsOpen = (viewAction) =>
-      !(viewAction.data.type === viewsType.allOpen && !showAllOpenAction);
-
-    return VIEWS_ACTIONS.filter(filterOutAllOpenIfOneWindowIsOpen);
-  }, [showAllOpenAction]);
-
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
       <div style={{ position: "relative", overflow: "hidden" }}>
@@ -523,7 +514,7 @@ function Menu({ css, showAllOpenAction, ...props }) {
           style={{ paddingRight: 132 }}
         >
           <AnimateSharedLayout>
-            {FILTERED_VIEWS_ACTIONS.map((viewAction, i) => {
+            {VIEWS_ACTIONS.map((viewAction, i) => {
               const isApplied = currentView === viewAction.data.type;
               return (
                 <MenuItem
@@ -572,7 +563,7 @@ function Menu({ css, showAllOpenAction, ...props }) {
                     label: viewAction.label,
                     query: viewAction.data.query,
                   })}
-                  index={FILTERED_VIEWS_ACTIONS.length + i}
+                  index={VIEWS_ACTIONS.length + i}
                   Favicon={Favicon}
                 >
                   {viewAction.label}

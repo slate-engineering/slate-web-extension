@@ -244,6 +244,21 @@ const STYLES_ACTIONS_WRAPPER = (theme) => css`
   }
 `;
 
+const STYLES_TAB_INDICATOR = (theme) => css`
+  position: absolute;
+  top: 17px;
+  left: 4px;
+
+  border-radius: 50%;
+  height: 6px;
+  width: 6px;
+  background-color: ${theme.semantic.bgGrayLight4};
+`;
+
+const STYLES_SYSTEM_GREEN = (theme) => css`
+  background-color: ${theme.system.green};
+`;
+
 const Object = React.forwardRef(
   (
     {
@@ -262,6 +277,9 @@ const Object = React.forwardRef(
       withMultiSelection,
       isChecked,
       onCheck,
+
+      isTab,
+      isTabActive,
 
       url,
       onKeyDown,
@@ -322,6 +340,11 @@ const Object = React.forwardRef(
         onKeyUp={mergeEvents(handleKeyboardActions, onKeyDown)}
         {...props}
       >
+        {isTab && (
+          <div
+            css={[STYLES_TAB_INDICATOR, isTabActive && STYLES_SYSTEM_GREEN]}
+          />
+        )}
         {withMultiSelection && (
           <Checkbox
             className="object_checkbox"

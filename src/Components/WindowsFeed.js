@@ -25,7 +25,7 @@ const WindowsFeedRow = ({
 }) => {
   if (!data[index]) return null;
 
-  const { rovingTabIndex, title, tab } = data[index];
+  const { rovingTabIndex, title, tab, isTabActive } = data[index];
 
   if (title) {
     return (
@@ -36,34 +36,36 @@ const WindowsFeedRow = ({
   }
 
   return (
-    <ListView.RovingTabIndexWithMultiSelectObject
-      key={tab.id}
-      isTab
-      withActions
-      withMultiSelection
-      style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}
-      index={rovingTabIndex}
-      title={tab.title}
-      url={tab.url}
-      Favicon={getFavicon(tab.rootDomain)}
-      isSaved={tab.isSaved}
-      onCloseTab={() => onCloseTabs([tab.id])}
-      onClick={() =>
-        onOpenUrl({
-          query: { tabId: tab.id, windowId: tab.windowId },
-        })
-      }
-      onOpenSlatesJumper={() =>
-        onOpenSlatesJumper([
-          {
-            title: tab.title,
-            url: tab.url,
-            rootDomain: getRootDomain(tab.url),
-          },
-        ])
-      }
-      onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
-    />
+    <div style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}>
+      <ListView.RovingTabIndexWithMultiSelectObject
+        key={tab.id}
+        isTab
+        isTabActive={isTabActive}
+        withActions
+        withMultiSelection
+        index={rovingTabIndex}
+        title={tab.title}
+        url={tab.url}
+        Favicon={getFavicon(tab.rootDomain)}
+        isSaved={tab.isSaved}
+        onCloseTab={() => onCloseTabs([tab.id])}
+        onClick={() =>
+          onOpenUrl({
+            query: { tabId: tab.id, windowId: tab.windowId },
+          })
+        }
+        onOpenSlatesJumper={() =>
+          onOpenSlatesJumper([
+            {
+              title: tab.title,
+              url: tab.url,
+              rootDomain: getRootDomain(tab.url),
+            },
+          ])
+        }
+        onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
+      />
+    </div>
   );
 };
 
@@ -114,6 +116,7 @@ const WindowsFeed = React.forwardRef(
       onCloseTabs,
       onOpenSlatesJumper,
       onSaveObjects,
+      activeTabId,
       ...props
     },
     ref
@@ -130,6 +133,7 @@ const WindowsFeed = React.forwardRef(
 
           virtualizedFeed.push({
             rovingTabIndex,
+            isTabActive: activeTabId === tab.id,
             tab,
           });
 
@@ -138,7 +142,7 @@ const WindowsFeed = React.forwardRef(
       }
 
       return virtualizedFeed;
-    }, [windowsFeed, windowsFeedKeys]);
+    }, [windowsFeed, windowsFeedKeys, activeTabId]);
 
     const handleOnSubmitSelectedItem = (index) => {
       let currentLength = 0;
