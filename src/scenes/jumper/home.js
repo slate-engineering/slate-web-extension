@@ -44,14 +44,26 @@ export default function Home() {
 
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const { windowsFeeds, totalWindows, activeTabId } = useWindows();
+  const { windowsFeeds, activeTabId } = useWindows();
 
   const feedRef = React.useRef();
 
   const focusSearchInput = () => inputRef.current.focus();
-  const onInputKeyDownHandler = (e) => {
-    if (e.key === "ArrowDown") {
-      console.log("down", feedRef);
+
+  const focusFirstItemInFeedOrInputIfEmpty = () => {
+    clearSearch();
+    feedRef.rovingTabIndexRef.focus(focusSearchInput);
+  };
+
+  React.useLayoutEffect(focusFirstItemInFeedOrInputIfEmpty, [
+    currentView,
+    currentViewQuery,
+    viewsFeed,
+  ]);
+
+  const handleOnInputKeyUp = (e) => {
+    if (e.code === "ArrowDown") {
+      feedRef.rovingTabIndexRef.focus();
     }
   };
 
@@ -65,10 +77,9 @@ export default function Home() {
       currentViewQuery={currentViewQuery}
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
-      onChange={() => (clearSearch(), focusSearchInput())}
     >
       <Jumper.TopPanel containerStyle={{ width: "100%" }}>
-        <Views.Menu showAllOpenAction={totalWindows > 1} />
+        <Views.Menu />
       </Jumper.TopPanel>
 
       <Search.Provider
@@ -78,7 +89,7 @@ export default function Home() {
       >
         <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
           <Logo width={20} height={20} style={{ marginRight: 12 }} />
-          <Search.Input onKeyDown={onInputKeyDownHandler} ref={inputRef} />
+          <Search.Input ref={inputRef} onKeyDown={handleOnInputKeyUp} />
         </Jumper.Header>
 
         <Jumper.Divider color="borderGrayLight" />
@@ -105,15 +116,6 @@ export default function Home() {
               onLoadMore={loadMoreHistory}
               // onObjectHover={handleOnObjectHover}
               onGroupURLs={Navigation.createGroupFromUrls}
-            />
-            <Match
-              when={currentView === viewsType.currentWindow}
-              component={WindowsFeed}
-              windowsFeed={windowsFeeds.currentWindowFeed}
-              windowsFeedKeys={windowsFeeds.currentWindowFeedKeys}
-              activeTabId={activeTabId}
-              // onObjectHover={handleOnObjectHover}
-              onCloseTabs={Navigation.closeTabs}
             />
             <Match
               when={currentView === viewsType.allOpen}

@@ -171,7 +171,7 @@ const STYLES_HISTORY_SCENE_FEED = css`
 export default function HistoryScene() {
   const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
 
-  const { windowsFeeds, totalWindows, activeTabId } = useWindows();
+  const { windowsFeeds, activeTabId } = useWindows();
 
   const {
     viewsFeed,
@@ -190,6 +190,28 @@ export default function HistoryScene() {
   const isSearching = search.query.length > 0 && search.result;
 
   const focusSearchInput = () => inputRef.current.focus();
+
+  const feedRef = React.useRef();
+
+  const focusFirstItemInFeedOrInputIfEmpty = () => {
+    closeSlatesJumper();
+    clearSearch();
+    feedRef.rovingTabIndexRef.focus(focusSearchInput);
+  };
+
+  React.useEffect(() => {
+    if (
+      [viewsType.allOpen, viewsType.recent].some((view) => view === currentView)
+    ) {
+      focusFirstItemInFeedOrInputIfEmpty();
+      return;
+    }
+
+    if (viewsFeed.length) {
+      focusFirstItemInFeedOrInputIfEmpty();
+      return;
+    }
+  }, [currentView, currentViewQuery, viewsFeed]);
 
   const viewer = useViewer();
 
@@ -219,15 +241,9 @@ export default function HistoryScene() {
             currentViewQuery={currentViewQuery}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
-            onChange={() => (
-              clearSearch(), focusSearchInput(), closeSlatesJumper()
-            )}
           >
             <section css={STYLES_HISTORY_TOP_POPUP}>
-              <Views.Menu
-                showAllOpenAction={totalWindows > 1}
-                css={STYLES_HISTORY_SCENE_VIEWS_MENU}
-              />
+              <Views.Menu css={STYLES_HISTORY_SCENE_VIEWS_MENU} />
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
               <Logo
                 style={{
@@ -259,6 +275,7 @@ export default function HistoryScene() {
                   onOpenSlatesJumper={openSlatesJumper}
                   onOpenUrl={Navigation.openUrls}
                   onSaveObjects={viewer.saveLink}
+                  ref={feedRef}
                   css={STYLES_HISTORY_SCENE_FEED}
                 >
                   <Match
@@ -275,17 +292,9 @@ export default function HistoryScene() {
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                   <Match
-                    when={currentView === viewsType.currentWindow}
-                    component={WindowsFeed}
-                    windowsFeed={windowsFeeds.currentWindowFeed}
-                    windowsFeedKeys={windowsFeeds.currentWindowFeedKeys}
-                    activeTabId={activeTabId}
-                    onCloseTabs={Navigation.closeTabs}
-                  />
-                  <Match
                     when={currentView === viewsType.allOpen}
                     component={WindowsFeed}
-                    windowsFeed={windowsFeeds.allOpenKeys}
+                    windowsFeed={windowsFeeds.allOpenFeed}
                     windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
                     activeTabId={activeTabId}
                     onCloseTabs={Navigation.closeTabs}
