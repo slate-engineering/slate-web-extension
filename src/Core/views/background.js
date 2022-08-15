@@ -30,13 +30,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === messages.searchQueryRequest) {
     const searchHandlers = [];
-    if (
-      request.viewType === viewsType.allOpen ||
-      request.viewType === viewsType.currentWindow
-    ) {
+    if (request.viewType === viewsType.allOpen) {
       const searchOptions = {};
-      if (request.viewType === viewsType.currentWindow)
-        searchOptions.windowId = sender.tab.windowId;
 
       searchHandlers.push({
         handler: Windows.search(request.query, searchOptions),

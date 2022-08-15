@@ -634,17 +634,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
       const openTabs = await Windows.getAllTabs();
-      const totalWindows = new Set(openTabs.map((tab) => tab.windowId)).size;
 
-      const {
-        currentWindowFeedKeys,
-        currentWindowFeed,
-        allOpenFeedKeys,
-        allOpenFeed,
-      } = constructWindowsFeed({
+      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
         tabs: openTabs,
         activeWindowId: sender.tab.windowId,
-        activeTabId: sender.tab.id,
       });
 
       const viewerData = await Viewer.get();
@@ -666,14 +659,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         windows: {
           data: {
-            currentWindowFeedKeys,
-            currentWindowFeed,
             allOpenFeedKeys,
             allOpenFeed,
           },
           params: {
             activeWindowId: sender.tab.windowId,
-            totalWindows,
             activeTabId: sender.tab.id,
           },
         },

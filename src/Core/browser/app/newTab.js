@@ -9,7 +9,7 @@ import { messages } from "..";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useWindows = () => {
-  // NOTE(amine): currentWindow and allOpen are created in the background (We can access the sender's window id)
+  // NOTE(amine): allOpen is created in the background (We can access the sender's window id)
   const preloadedWindowsData = useViewer().windows;
   const initialState = preloadedWindowsData.data;
 
@@ -23,7 +23,6 @@ export const useWindows = () => {
     const handleMessage = (request) => {
       let { data, type } = request;
       if (type === messages.windowsUpdate) {
-        paramsRef.current.totalWindows = data.totalWindows;
         paramsRef.current.activeTabId = data.activeTabId;
 
         setWindowsFeed({
@@ -39,7 +38,6 @@ export const useWindows = () => {
   }, []);
   return {
     windowsFeeds,
-    totalWindows: paramsRef.current.totalWindows,
     activeTabId: paramsRef.current.activeTabId,
   };
 };

@@ -7,11 +7,10 @@ export const messages = {
 };
 
 export const viewsType = {
-  currentWindow: "currentWindow",
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
   relatedLinks: "relatedLinks",
 };
 
-export const initialView = viewsType.currentWindow;
+export const initialView = viewsType.allOpen;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useViewsState, useHistorySearchState } from "./";
-import { messages, viewsType } from "../";
+import { messages } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
@@ -45,15 +45,6 @@ export const useViews = () => {
 
     return () => window.removeEventListener("message", handleMessage);
   }, []);
-
-  React.useEffect(() => {
-    if (
-      currentView !== viewsType.relatedLinks &&
-      currentView !== viewsType.savedFiles
-    ) {
-      setViewsFeed([]);
-    }
-  }, [currentView]);
 
   return {
     viewsFeed,
