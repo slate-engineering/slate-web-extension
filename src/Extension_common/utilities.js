@@ -1,10 +1,14 @@
-export const constructWindowsFeed = ({ tabs, activeWindowId }) => {
+export const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Others"];
   let allOpenFeed = { ["Current Window"]: [], Others: [] };
 
   tabs.forEach((tab) => {
     if (tab.windowId === activeWindowId) {
-      allOpenFeed["Current Window"].push(tab);
+      if (tab.id === activeTabId) {
+        allOpenFeed["Current Window"].unshift(tab);
+      } else {
+        allOpenFeed["Current Window"].push(tab);
+      }
       return;
     }
 

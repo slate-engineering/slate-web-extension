@@ -637,6 +637,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
         tabs: openTabs,
+        activeTabId: sender.tab.id,
         activeWindowId: sender.tab.windowId,
       });
 

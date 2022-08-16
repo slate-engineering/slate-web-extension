@@ -139,9 +139,10 @@ const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
 
 export const useWindowsState = ({ initialState }) => {
   const [windows, setWindows] = React.useState(initialState);
-  const setWindowsFeed = ({ tabs, activeWindowId }) => {
+  const setWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
     const windowsFeeds = constructWindowsFeed({
       tabs,
+      activeTabId,
       activeWindowId,
     });
     setWindows(windowsFeeds);
