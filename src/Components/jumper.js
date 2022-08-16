@@ -185,6 +185,7 @@ const STYLES_JUMPER_TOP_PANEL_BACKGROUND = css`
     "/images/bg-jumper-top-panel.png"
   )}");
   background-size: contain;
+  border-radius: 16px;
 `;
 
 const STYLES_JUMPER_TOP_PANEL = (theme) => css`
