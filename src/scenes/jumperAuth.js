@@ -108,6 +108,13 @@ export default function JumperAuth() {
 
   const { closeTheJumper } = Navigation.useNavigation();
 
+  // NOTE(amine): to prevent conflicts with global hotkeys
+  const preventPropagation = (e) => {
+    if (e.keyCode > 46 && !(e.shiftKey || e.altKey)) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <Jumper.Root onClose={closeTheJumper}>
       <Jumper.Body>
@@ -164,6 +171,8 @@ export default function JumperAuth() {
             icon={ArrowButton}
             onChange={handleInputChange}
             onSubmit={handleSubmit}
+            onKeyDown={preventPropagation}
+            onKeyUp={preventPropagation}
           />
         </section>
       </Jumper.Body>

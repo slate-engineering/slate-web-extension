@@ -63,6 +63,8 @@ export default function Home() {
 
   const handleOnInputKeyUp = (e) => {
     if (e.code === "ArrowDown") {
+      e.preventDefault();
+      e.stopPropagation();
       feedRef.rovingTabIndexRef.focus();
     }
   };

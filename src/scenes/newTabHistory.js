@@ -218,6 +218,14 @@ export default function HistoryScene() {
   const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
     useSlatesJumper();
 
+  const handleOnInputKeyUp = (e) => {
+    if (e.code === "ArrowDown") {
+      e.preventDefault();
+      e.stopPropagation();
+      feedRef.rovingTabIndexRef.focus();
+    }
+  };
+
   return (
     <>
       {slatesJumperState.isOpen && (
@@ -256,6 +264,7 @@ export default function HistoryScene() {
               <Search.Input
                 ref={inputRef}
                 containerCss={STYLES_HISTORY_SCENE_INPUT}
+                onKeyDown={handleOnInputKeyUp}
               />
             </section>
 

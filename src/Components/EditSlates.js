@@ -172,6 +172,13 @@ const Input = ({ ...props }) => {
   const inputRef = React.useRef();
   const focusInput = () => inputRef.current.focus();
 
+  // NOTE(amine): to prevent conflicts with global hotkeys
+  const preventPropagation = (e) => {
+    if (e.keyCode > 46 && !(e.shiftKey || e.altKey)) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <section css={STYLES_SEARCH_WRAPPER}>
       <Combobox.Input>
@@ -185,6 +192,8 @@ const Input = ({ ...props }) => {
           autoComplete="off"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
+          onKeyDown={preventPropagation}
+          onKeyUp={preventPropagation}
           {...props}
         />
       </Combobox.Input>

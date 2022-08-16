@@ -136,16 +136,19 @@ const useMultiSelectionHandlers = ({
 
     switch (true) {
       case e.ctrlKey && e.code === "KeyA":
+        e.stopPropagation();
         toggleCheckAll();
         break;
 
       case e.shiftKey && e.code === "Space":
         e.preventDefault();
+        e.stopPropagation();
         checkIndexesInRange(findRecentlySelectedIndex(index), index);
         break;
 
       case e.code === "Space":
         e.preventDefault();
+        e.stopPropagation();
         toggleCheckIndex(index);
         break;
     }
@@ -445,120 +448,120 @@ const CloseOnEscape = ({ onClose, children }) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const NewTabActionsMenu = ({
-  onOpenURLs,
-  onCloseTabs,
-  onOpenSlatesJumper,
-  onGroupURLs,
-  onSaveObjects,
-}) => {
-  const { toggleCheckAll, isAllChecked, existSelectionMode } =
-    useMultiSelectionContext();
+const NewTabActionsMenu = React.forwardRef(
+  (
+    { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
+    forwardedRef
+  ) => {
+    const { toggleCheckAll, isAllChecked, existSelectionMode } =
+      useMultiSelectionContext();
 
-  return (
-    <CloseOnEscape onClose={existSelectionMode}>
-      <NewTabActionsMenuPopup>
-        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
-          <div css={Styles.HORIZONTAL_CONTAINER}>
-            <Checkbox
-              id="select_all_checkbox"
-              checked={isAllChecked}
-              onChange={toggleCheckAll}
-            />
-            <Typography.H5
-              as="label"
-              for="select_all_checkbox"
-              style={{ marginLeft: 12 }}
-              color="textWhite"
-            >
-              Select All
-            </Typography.H5>
+    return (
+      <CloseOnEscape onClose={existSelectionMode}>
+        <NewTabActionsMenuPopup>
+          <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
+            <div css={Styles.HORIZONTAL_CONTAINER}>
+              <Checkbox
+                id="select_all_checkbox"
+                checked={isAllChecked}
+                onChange={toggleCheckAll}
+              />
+              <Typography.H5
+                as="label"
+                for="select_all_checkbox"
+                style={{ marginLeft: 12 }}
+                color="textWhite"
+              >
+                Select All
+              </Typography.H5>
+            </div>
+            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+              {onOpenURLs && (
+                <OpenURLsAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onOpenLinks={onOpenURLs}
+                />
+              )}
+              {onCloseTabs && (
+                <CloseTabsAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onCloseTabs={onCloseTabs}
+                />
+              )}
+              <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
+              {onOpenSlatesJumper && (
+                <OpenSlatesJumperAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onOpenSlatesJumper={onOpenSlatesJumper}
+                />
+              )}
+              {onGroupURLs && (
+                <GroupingAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onGroup={onGroupURLs}
+                />
+              )}
+              {onSaveObjects && (
+                <SavingAction
+                  css={STYLES_ACTION_BUTTON_NEW_TAB}
+                  onSaveObjects={onSaveObjects}
+                />
+              )}
+            </div>
           </div>
-          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-            {onOpenURLs && (
-              <OpenURLsAction
-                css={STYLES_ACTION_BUTTON_NEW_TAB}
-                onOpenLinks={onOpenURLs}
-              />
-            )}
-            {onCloseTabs && (
-              <CloseTabsAction
-                css={STYLES_ACTION_BUTTON_NEW_TAB}
-                onCloseTabs={onCloseTabs}
-              />
-            )}
-            <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
-            {onOpenSlatesJumper && (
-              <OpenSlatesJumperAction
-                css={STYLES_ACTION_BUTTON_NEW_TAB}
-                onOpenSlatesJumper={onOpenSlatesJumper}
-              />
-            )}
-            {onGroupURLs && (
-              <GroupingAction
-                css={STYLES_ACTION_BUTTON_NEW_TAB}
-                onGroup={onGroupURLs}
-              />
-            )}
-            {onSaveObjects && (
-              <SavingAction
-                css={STYLES_ACTION_BUTTON_NEW_TAB}
-                onSaveObjects={onSaveObjects}
-              />
-            )}
-          </div>
-        </div>
-      </NewTabActionsMenuPopup>
-    </CloseOnEscape>
-  );
-};
+        </NewTabActionsMenuPopup>
+      </CloseOnEscape>
+    );
+  }
+);
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const JumperActionMenu = ({
-  onOpenURLs,
-  onCloseTabs,
-  onOpenSlatesJumper,
-  onGroupURLs,
-  onSaveObjects,
-}) => {
-  const { toggleCheckAll, isAllChecked, existSelectionMode } =
-    useMultiSelectionContext();
+const JumperActionMenu = React.forwardRef(
+  (
+    { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
+    forwardedRef
+  ) => {
+    const { toggleCheckAll, isAllChecked, existSelectionMode } =
+      useMultiSelectionContext();
 
-  return (
-    <CloseOnEscape onClose={existSelectionMode}>
-      <Jumper.BottomPanel>
-        <div css={STYLES_ACTIONS_MENU_WRAPPER}>
-          <div css={Styles.HORIZONTAL_CONTAINER}>
-            <Checkbox
-              id="select_all_checkbox"
-              checked={isAllChecked}
-              onChange={toggleCheckAll}
-            />
-            <Typography.H5
-              as="label"
-              for="select_all_checkbox"
-              style={{ marginLeft: 12 }}
-              color="textGrayDark"
-            >
-              Select All
-            </Typography.H5>
+    return (
+      <CloseOnEscape onClose={existSelectionMode}>
+        <Jumper.BottomPanel>
+          <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
+            <div css={Styles.HORIZONTAL_CONTAINER}>
+              <Checkbox
+                id="select_all_checkbox"
+                checked={isAllChecked}
+                onChange={toggleCheckAll}
+              />
+              <Typography.H5
+                as="label"
+                for="select_all_checkbox"
+                style={{ marginLeft: 12 }}
+                color="textGrayDark"
+              >
+                Select All
+              </Typography.H5>
+            </div>
+            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+              {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
+              {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
+              {onOpenSlatesJumper && (
+                <OpenSlatesJumperAction
+                  onOpenSlatesJumper={onOpenSlatesJumper}
+                />
+              )}
+              <CopyURLsAction />
+              {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
+              {onSaveObjects && <SavingAction onSaveObjects={onSaveObjects} />}
+            </div>
           </div>
-          <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-            {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
-            {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
-            {onOpenSlatesJumper && (
-              <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
-            )}
-            <CopyURLsAction />
-            {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
-            {onSaveObjects && <SavingAction onSaveObjects={onSaveObjects} />}
-          </div>
-        </div>
-      </Jumper.BottomPanel>
-    </CloseOnEscape>
-  );
-};
+        </Jumper.BottomPanel>
+      </CloseOnEscape>
+    );
+  }
+);
 
 /* -----------------------------------------------------------------------------------------------*/
 

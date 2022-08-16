@@ -8,7 +8,12 @@ import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { getRootDomain, isNewTab, mergeRefs } from "../Common/utilities";
+import {
+  getRootDomain,
+  isNewTab,
+  mergeRefs,
+  mergeEvents,
+} from "../Common/utilities";
 
 /* -------------------------------------------------------------------------------------------------
  * Search Provider
@@ -115,7 +120,10 @@ const STYLES_SEARCH_INPUT = (theme) => css`
 `;
 
 const Input = React.forwardRef(
-  ({ css, containerCss, containerStyle, ...props }, forwardedRef) => {
+  (
+    { css, containerCss, containerStyle, onKeyDown, onKeyUp, ...props },
+    forwardedRef
+  ) => {
     const { onInputChange, clearSearch, search } = useSearchContext();
 
     const inputRef = React.useRef();
@@ -126,15 +134,31 @@ const Input = React.forwardRef(
       if (!inputElement) return;
 
       const rootNode = inputElement.getRootNode();
-      const handleFocusWhenPressingSlash = (e) => {
+      const handleFocusWhenSlashUp = (e) => {
         if (e.key === "/") {
+          e.stopPropagation();
           inputElement.focus();
         }
       };
-      rootNode.addEventListener("keyup", handleFocusWhenPressingSlash);
-      return () =>
-        rootNode.removeEventListener("keyup", handleFocusWhenPressingSlash);
+      const handleFocusWhenSlashDown = (e) => {
+        if (e.key === "/") {
+          e.stopPropagation();
+        }
+      };
+      rootNode.addEventListener("keyup", handleFocusWhenSlashUp);
+      rootNode.addEventListener("keydown", handleFocusWhenSlashDown);
+      return () => {
+        rootNode.removeEventListener("keyup", handleFocusWhenSlashUp);
+        rootNode.addEventListener("keydown", handleFocusWhenSlashDown);
+      };
     }, []);
+
+    // NOTE(amine): to prevent conflicts with global hotkeys
+    const preventPropagation = (e) => {
+      if (e.keyCode > 46 && !(e.shiftKey || e.altKey)) {
+        e.stopPropagation();
+      }
+    };
 
     return (
       <section
@@ -148,6 +172,8 @@ const Input = React.forwardRef(
           name="search"
           onChange={onInputChange}
           autoComplete="off"
+          onKeyDown={mergeEvents(preventPropagation, onKeyDown)}
+          onKeyUp={mergeEvents(preventPropagation, onKeyUp)}
           {...props}
         />
 

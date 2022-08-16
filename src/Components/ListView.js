@@ -283,6 +283,7 @@ const Object = React.forwardRef(
 
       url,
       onKeyDown,
+      onKeyUp,
       ...props
     },
     ref
@@ -304,22 +305,38 @@ const Object = React.forwardRef(
 
     const handleKeyboardActions = (e) => {
       if (e.code === "KeyS") {
+        e.stopPropagation();
         handleLinkSaving(e);
         return;
       }
 
       if (e.code === "KeyT") {
+        e.stopPropagation();
         onOpenSlatesJumper();
         return;
       }
 
       if (e.code === "KeyC") {
+        e.stopPropagation();
         handleCopying();
         return;
       }
 
       if (onCloseTab && e.code === "KeyX") {
+        e.stopPropagation();
         onCloseTab();
+        return;
+      }
+    };
+
+    const preventKeyboardActionsPropagation = (e) => {
+      if (
+        e.code === "KeyS" ||
+        e.code === "KeyT" ||
+        e.code === "KeyC" ||
+        (onCloseTab && e.code === "KeyX")
+      ) {
+        e.stopPropagation();
         return;
       }
     };
@@ -337,7 +354,12 @@ const Object = React.forwardRef(
             STYLES_OBJECT_HOVER_AND_FOCUS_STATE,
           css,
         ]}
-        onKeyUp={mergeEvents(handleKeyboardActions, onKeyDown)}
+        onKeyUp={mergeEvents(
+          handleKeyboardActions,
+          preventKeyboardActionsPropagation,
+          onKeyUp
+        )}
+        onKeyDown={mergeEvents(preventKeyboardActionsPropagation, onKeyDown)}
         {...props}
       >
         {isTab && (
