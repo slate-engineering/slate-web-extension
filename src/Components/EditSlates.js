@@ -206,8 +206,9 @@ const STYLES_TOP_PANEL_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
 `;
 
-const STYLES_FAVICONS_WRAPPER = css`
+const STYLES_FAVICONS_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  color: ${theme.semantic.textBlack};
   & > * + * {
     margin-left: 8px;
   }
@@ -278,16 +279,20 @@ const STYLES_BODY_WRAPPER = css`
   }
 `;
 
-const STYLES_OBJECT = css`
+const STYLES_OBJECT = (theme) => css`
   ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   width: 100%;
   padding: 10px 12px;
   border-radius: 12px;
+  color: ${theme.semantic.textBlack};
+  &:hover {
+    color: ${theme.semantic.textBlack};
+  }
 `;
 
 const STYLES_SLATES_MENU_BUTTON_BLUE = (theme) => css`
-  ${STYLES_OBJECT};
+  ${STYLES_OBJECT(theme)};
   color: ${theme.system.blue};
   &:hover {
     color: ${theme.system.blue};
@@ -359,6 +364,7 @@ const Body = ({ ...props }) => {
                 <Typography.H5
                   as="span"
                   nbrOflines={1}
+                  color="textBlack"
                   style={{ marginLeft: 12 }}
                 >
                   {slate}
