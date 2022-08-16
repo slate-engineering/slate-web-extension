@@ -200,7 +200,7 @@ const CopyAction = ({ isCopied, ...props }) => {
 
 const SLATE_WRAPPER = (theme) => css`
   border-radius: 8px;
-  padding: 2px 8px;
+  padding: 1px 8px;
   max-width: 150px;
   background-color: ${theme.semantic.bgWhite};
   border: 1px solid ${theme.semantic.borderGrayLight};
@@ -226,7 +226,7 @@ const OBJECT_ACTION_SIZE = 20;
 
 const STYLES_ACTIONS_WRAPPER = (theme) => css`
   position: absolute;
-  top: 10px;
+  top: 12px;
   // NOTE(amine): saving action's width + object's right padding
   right: calc(${OBJECT_ACTION_SIZE}px + 12px);
 
@@ -246,7 +246,7 @@ const STYLES_ACTIONS_WRAPPER = (theme) => css`
 
 const STYLES_TAB_INDICATOR = (theme) => css`
   position: absolute;
-  top: 17px;
+  top: 19px;
   left: 4px;
 
   border-radius: 50%;
@@ -362,13 +362,13 @@ const Object = React.forwardRef(
         />
         <div
           css={Styles.HORIZONTAL_CONTAINER_CENTERED}
-          style={{ marginLeft: 12 }}
+          style={{ marginLeft: 6 }}
         >
           {firstAppliedSlate && (
             <Slate style={{ flexShrink: 0 }}>{firstAppliedSlate}</Slate>
           )}
           <Typography.H5
-            style={{ marginLeft: 6 }}
+            style={{ marginLeft: 6, padding: "3px 0px 1px" }}
             color="textBlack"
             nbrOflines={1}
           >
