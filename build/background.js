@@ -34,7 +34,7 @@ const sizes = {
   tablet: 960,
   desktop: 1024,
   desktopM: 1300,
-  jumperFeedItem: 40,
+  jumperFeedItem: 44,
   jumperFeedWrapper: 373,
   topOffset: 0, //NOTE(martina): Pushes UI down. 16 when there is a persistent announcement banner, 0 otherwise
 };
@@ -403,13 +403,17 @@ const viewerInitialState = {
 };
 
 ;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
-const constructWindowsFeed = ({ tabs, activeWindowId }) => {
+const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Others"];
   let allOpenFeed = { ["Current Window"]: [], Others: [] };
 
   tabs.forEach((tab) => {
     if (tab.windowId === activeWindowId) {
-      allOpenFeed["Current Window"].push(tab);
+      if (tab.id === activeTabId) {
+        allOpenFeed["Current Window"].unshift(tab);
+      } else {
+        allOpenFeed["Current Window"].push(tab);
+      }
       return;
     }
 
@@ -1067,6 +1071,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
         tabs: openTabs,
+        activeTabId: sender.tab.id,
         activeWindowId: sender.tab.windowId,
       });
 
