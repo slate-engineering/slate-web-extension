@@ -255,12 +255,12 @@ class BrowserHistory {
 
     const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
 
-    return await Promise.all(
-      cleanedResult.map(async (item) => ({
-        ...item,
-        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
-      }))
-    );
+    return cleanedResult.map((item) => ({
+      title: item.title,
+      favicon: item.favIconUrl,
+      url: item.url,
+      rootDomain: item.rootDomain,
+    }));
   }
 
   async getRelatedLinks(url) {
@@ -274,12 +274,12 @@ class BrowserHistory {
     const fuse = new Fuse(history, options);
 
     const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(url));
-    return await Promise.all(
-      cleanedResult.map(async (item) => ({
-        ...item,
-        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
-      }))
-    );
+    return cleanedResult.map((item) => ({
+      title: item.title,
+      favicon: item.favIconUrl,
+      url: item.url,
+      rootDomain: item.rootDomain,
+    }));
   }
 
   async getChunk(startIndex = 0, endIndex) {
@@ -308,14 +308,13 @@ export const browserHistory = new BrowserHistory();
 /** ----------------------------------------- */
 
 export const Tabs = {
-  create: async (tab) => ({
+  create: (tab) => ({
     id: tab.id,
     windowId: tab.windowId,
     title: tab.title,
     favicon: tab.favIconUrl,
     url: tab.url,
     rootDomain: getRootDomain(tab.url),
-    isSaved: await Viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -326,24 +325,22 @@ export const Tabs = {
 export const Windows = {
   getAllTabsInWindow: async (windowId) => {
     const window = await chrome.windows.get(windowId, { populate: true });
-    const tabs = await Promise.all(window.tabs.map(Tabs.create));
+    const tabs = window.tabs.map(Tabs.create);
     return tabs;
   },
   getAllTabs: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
     const tabs = windows.flatMap((window) => window.tabs.map(Tabs.create));
-    return await Promise.all(tabs);
+    return tabs;
   },
   getAll: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
-    return await Promise.all(
-      windows.map(async (window) => ({
-        id: window.id,
-        tabs: await Promise.all(window.tabs.map(Tabs.create)),
-      }))
-    );
+    return windows.map((window) => ({
+      id: window.id,
+      tabs: window.tabs.map(Tabs.create),
+    }));
   },
-  search: async (query, { windowId }) => {
+  search: async (query, { windowId } = {}) => {
     const options = {
       findAllMatches: true,
       includeMatches: true,
@@ -359,9 +356,7 @@ export const Windows = {
 
     const fuse = new Fuse(tabs, options);
     const searchResult = fuse.search(query);
-    return await Promise.all(
-      searchResult.map(async ({ item }) => await Tabs.create(item))
-    );
+    return searchResult.map(({ item }) => Tabs.create(item));
   },
 };
 
