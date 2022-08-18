@@ -305,46 +305,44 @@ const SearchFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const getTitleFromView = (view) => {
-  const titles = {
-    allOpen: "All Open",
-    recent: "Recent",
-  };
-  return titles[view];
-};
-
 const Feed = React.memo(
   React.forwardRef(
     (
-      { onOpenUrl, onGroupURLs, onOpenSlatesJumper, onSaveObjects, ...props },
+      {
+        onOpenUrl,
+        onGroupURLs,
+        onOpenSlatesJumper,
+        onSaveObjects,
+        searchFeed,
+        searchFeedKeys,
+        ...props
+      },
       ref
     ) => {
       const {
-        search: { result: feeds, query: searchQuery },
+        search: { query: searchQuery },
       } = useSearchContext();
 
       const searchFeedLength = React.useMemo(() => {
         let length = 0;
-        for (let feed of feeds) {
-          length += feed.result.length;
-        }
+        searchFeedKeys.forEach((key) => {
+          length += searchFeed[key].length;
+        });
         return length;
-      }, [feeds]);
+      }, [searchFeed, searchFeedKeys]);
 
       const virtualizedFeed = React.useMemo(() => {
         let rovingTabIndex = 0;
         let virtualizedFeed = [];
 
-        for (let feed of feeds) {
-          const { title: view, result } = feed;
-          result.forEach((item, index) => {
+        for (let key of searchFeedKeys) {
+          searchFeed[key].forEach((item, index) => {
             if (index === 0) {
-              virtualizedFeed.push({ title: getTitleFromView(view) });
+              virtualizedFeed.push({ title: key });
             }
 
             virtualizedFeed.push({
               rovingTabIndex,
-              viewType: view,
               item,
             });
 
@@ -353,16 +351,16 @@ const Feed = React.memo(
         }
 
         return virtualizedFeed;
-      }, [feeds]);
+      }, [searchFeed, searchFeedKeys]);
 
       const handleOnSubmitSelectedItem = (index) => {
         let currentLength = 0;
 
-        for (let feed of feeds) {
-          const { result } = feed;
-          const nextLength = currentLength + result.length;
+        for (let feedKey of searchFeedKeys) {
+          const feed = searchFeed[feedKey];
+          const nextLength = currentLength + feed.length;
           if (index < nextLength) {
-            return result[index - currentLength];
+            return feed[index - currentLength];
           }
           currentLength = nextLength;
         }
@@ -370,7 +368,7 @@ const Feed = React.memo(
 
       return (
         <RovingTabIndex.Provider
-          key={feeds}
+          key={searchFeed}
           ref={(node) => (ref.rovingTabIndexRef = node)}
           isInfiniteList
           withFocusOnHover
