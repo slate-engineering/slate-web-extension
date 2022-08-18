@@ -39,6 +39,8 @@ export default function Home() {
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
     viewType: currentView,
+    viewQuery: currentViewQuery,
+    viewLabel: currentViewLabel,
   });
   const viewer = useViewer();
 
@@ -108,6 +110,8 @@ export default function Home() {
             <Match
               when={search.isSearching}
               component={Search.Feed}
+              searchFeed={search.searchFeed}
+              searchFeedKeys={search.searchFeedKeys}
               onGroupURLs={Navigation.createGroupFromUrls}
             />
             <Match

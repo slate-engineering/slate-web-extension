@@ -186,8 +186,9 @@ export default function HistoryScene() {
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
     viewType: currentView,
+    viewQuery: currentViewQuery,
+    viewLabel: currentViewLabel,
   });
-  const isSearching = search.query.length > 0 && search.result;
 
   const focusSearchInput = () => inputRef.current.focus();
 
@@ -278,8 +279,8 @@ export default function HistoryScene() {
                     <SVG.Plus width={16} height={16} />
                     <Typography.H5 as="span">Filter</Typography.H5>
                   </button>
-                </section> */}
 
+              </section> */}
                 <Switch
                   onOpenSlatesJumper={openSlatesJumper}
                   onOpenUrl={Navigation.openUrls}
@@ -288,8 +289,10 @@ export default function HistoryScene() {
                   css={STYLES_HISTORY_SCENE_FEED}
                 >
                   <Match
-                    when={isSearching}
+                    when={search.isSearching}
                     component={Search.Feed}
+                    searchFeed={search.searchFeed}
+                    searchFeedKeys={search.searchFeedKeys}
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                   <Match
