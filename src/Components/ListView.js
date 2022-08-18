@@ -135,6 +135,56 @@ const Title = ({ children, count, css, ...props }) => {
 };
 
 /* -------------------------------------------------------------------------------------------------
+ * ListView SlatesItem
+ * -----------------------------------------------------------------------------------------------*/
+
+const SLATE_WRAPPER = (theme) => css`
+  border-radius: 8px;
+  padding: 1px 8px;
+  max-width: 150px;
+  background-color: ${theme.semantic.bgWhite};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  box-shadow: ${theme.shadow.lightSmall};
+`;
+
+const Slate = ({ children, as = "span", ...props }) => {
+  return (
+    <Typography.H6
+      as={as}
+      nbrOflines={1}
+      css={SLATE_WRAPPER}
+      color="textBlack"
+      {...props}
+    >
+      {children}
+    </Typography.H6>
+  );
+};
+
+const STYLES_SLATES_ITEM_WRAPPER = (theme) => css`
+  position: relative;
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  height: ${theme.sizes.jumperFeedItem};
+
+  & > * + * {
+    margin-left: 6px;
+  }
+`;
+
+const SlatesItem = ({ slates, ...props }) => {
+  return (
+    <div css={STYLES_SLATES_ITEM_WRAPPER} {...props}>
+      {slates.map((slate) => (
+        <Slate key={slate}>{slate}</Slate>
+      ))}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
  * ListView Object
  * -----------------------------------------------------------------------------------------------*/
 
@@ -226,30 +276,6 @@ const CopyAction = ({ isCopied, ...props }) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const SLATE_WRAPPER = (theme) => css`
-  border-radius: 8px;
-  padding: 1px 8px;
-  max-width: 150px;
-  background-color: ${theme.semantic.bgWhite};
-  border: 1px solid ${theme.semantic.borderGrayLight};
-  box-shadow: ${theme.shadow.lightSmall};
-`;
-
-const Slate = ({ children, ...props }) => {
-  return (
-    <Typography.H6
-      as="span"
-      nbrOflines={1}
-      css={SLATE_WRAPPER}
-      color="textBlack"
-      {...props}
-    >
-      {children}
-    </Typography.H6>
-  );
-};
-
-/* -----------------------------------------------------------------------------------------------*/
 const OBJECT_ACTION_SIZE = 20;
 
 const STYLES_ACTIONS_WRAPPER = (theme) => css`
@@ -561,4 +587,5 @@ export {
   Object,
   ComboboxObject,
   RovingTabIndexWithMultiSelectObject,
+  SlatesItem,
 };

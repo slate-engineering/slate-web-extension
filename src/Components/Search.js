@@ -203,7 +203,7 @@ const SearchFeedRow = ({
 }) => {
   if (!data[index]) return null;
 
-  const { rovingTabIndex, title, viewType, item } = data[index];
+  const { rovingTabIndex, title, slates, viewType, item } = data[index];
 
   const createOnOpenSlatesHandler = (object) => () => {
     onOpenSlatesJumper([
@@ -214,6 +214,15 @@ const SearchFeedRow = ({
       },
     ]);
   };
+
+  if (slates) {
+    return (
+      <ListView.SlatesItem
+        slates={slates}
+        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+      />
+    );
+  }
 
   if (title) {
     return (
@@ -315,6 +324,7 @@ const Feed = React.memo(
         onSaveObjects,
         searchFeed,
         searchFeedKeys,
+        slates,
         ...props
       },
       ref
@@ -335,6 +345,13 @@ const Feed = React.memo(
         let rovingTabIndex = 0;
         let virtualizedFeed = [];
 
+        if (slates?.length) {
+          virtualizedFeed.push({
+            slates,
+            height: Constants.sizes.jumperFeedItem,
+          });
+        }
+
         for (let key of searchFeedKeys) {
           searchFeed[key].forEach((item, index) => {
             if (index === 0) {
@@ -352,7 +369,7 @@ const Feed = React.memo(
         }
 
         return virtualizedFeed;
-      }, [searchFeed, searchFeedKeys]);
+      }, [slates, searchFeed, searchFeedKeys]);
 
       const handleOnSubmitSelectedItem = (index) => {
         let currentLength = 0;

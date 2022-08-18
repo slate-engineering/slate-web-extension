@@ -11,6 +11,8 @@ import {
 } from ".";
 import { constructWindowsFeed } from "../../Extension_common/utilities";
 
+import Fuse from "fuse.js";
+
 const getRootDomain = (url) => {
   let hostname;
   try {
@@ -557,6 +559,21 @@ class ViewerActionsHandler {
       serializedObjects.push(Viewer._serializeObject(object));
     }
     return { slates: slates || [], files: serializedObjects };
+  }
+
+  async searchSlates(query) {
+    const viewer = await Viewer.get(query);
+    const options = {
+      findAllMatches: true,
+      shouldSort: true,
+      threshold: 0.5,
+      keys: ["slatename", "name"],
+    };
+
+    const fuse = new Fuse(viewer.slates, options);
+    const results = fuse.search(query);
+
+    return results.map(({ item: { slatename, name } }) => name || slatename);
   }
 }
 

@@ -112,6 +112,7 @@ export default function Home() {
               component={Search.Feed}
               searchFeed={search.searchFeed}
               searchFeedKeys={search.searchFeedKeys}
+              slates={search.slates}
               onGroupURLs={Navigation.createGroupFromUrls}
             />
             <Match

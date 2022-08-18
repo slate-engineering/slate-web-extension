@@ -65,9 +65,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const searchFeedKeys = ["Saved"];
       const searchFeed = {};
 
+      const handleSlatesSearch = async () => {
+        slates = await ViewerActions.searchSlates(query);
+      };
+
       const handleSavedFilesSearch = async () => {
         const savedSearchResult = await ViewerActions.search(query);
-        slates = savedSearchResult.slates;
         searchFeed["Saved"] = savedSearchResult.files;
       };
 
@@ -83,7 +86,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
       };
 
-      await Promise.all([handleSavedFilesSearch(), handleViewsSearch()]);
+      await Promise.all([
+        handleSavedFilesSearch(),
+        handleSlatesSearch(),
+        handleViewsSearch(),
+      ]);
 
       return { query, slates, searchFeedKeys, searchFeed };
     };
