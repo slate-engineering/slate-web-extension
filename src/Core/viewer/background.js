@@ -95,27 +95,12 @@ class ViewerHandler {
 
       if (object.isLink) {
         serializedViewer.savedObjectsLookup[object.url] = true;
-
-        return {
-          title: object.linkName,
-          favicon: object.linkFavicon,
-          url: object.url,
-          rootDomain: getRootDomain(object.url),
-          cid: object.cid,
-          isSaved: true,
-        };
       }
 
       const fileUrl = getFileUrl(object);
       serializedViewer.savedObjectsLookup[fileUrl] = true;
 
-      return {
-        title: object.name,
-        rootDomain: Constants.uri.domain,
-        url: fileUrl,
-        cid: object.cid,
-        isSaved: true,
-      };
+      return this._serializeObject(object);
     });
 
     viewer.slates.forEach((slate) => {
@@ -132,6 +117,29 @@ class ViewerHandler {
     });
 
     return serializedViewer;
+  }
+
+  _serializeObject(object) {
+    if (object.isLink) {
+      return {
+        title: object.linkName,
+        favicon: object.linkFavicon,
+        url: object.url,
+        rootDomain: getRootDomain(object.url),
+        cid: object.cid,
+        isSaved: true,
+      };
+    }
+
+    const fileUrl = getFileUrl(object);
+
+    return {
+      title: object.name,
+      rootDomain: Constants.uri.domain,
+      url: fileUrl,
+      cid: object.cid,
+      isSaved: true,
+    };
   }
 
   _set(viewer) {
@@ -520,6 +528,35 @@ class ViewerActionsHandler {
         slateName,
       }),
     ]);
+  }
+
+  async search(query) {
+    const response = await Actions.search({
+      types: ["FILE", "SLATE"],
+      query,
+      grouped: true,
+    });
+
+    if (!response || response.error) {
+      return;
+    }
+
+    const { slates, files: objects } = response.results;
+    const serializedObjects = [];
+    const duplicates = {};
+
+    for (let object of objects) {
+      // NOTE(amine): due to a bug (when deleting a file, we didn't delete it from search index)
+      //              we get duplicates and deleted files in search result
+      const url = getFileUrl(object);
+      const isSaved = await Viewer.checkIfLinkIsSaved(object.url);
+      if (url in duplicates || !isSaved) {
+        continue;
+      }
+      duplicates[object.url] = true;
+      serializedObjects.push(Viewer._serializeObject(object));
+    }
+    return { slates: slates || [], files: serializedObjects };
   }
 }
 

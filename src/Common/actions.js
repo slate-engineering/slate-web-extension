@@ -58,3 +58,10 @@ export const removeFileFromSlate = async (data) => {
     body: JSON.stringify({ data }),
   });
 };
+
+export const search = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/search/search`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
