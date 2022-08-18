@@ -39,14 +39,26 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef, viewType }) => {
+export const useHistorySearch = ({
+  inputRef,
+  viewType,
+  viewQuery,
+  viewLabel,
+}) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
+
     chrome.runtime.sendMessage(
-      { type: messages.searchQueryRequest, query: query, viewType },
+      {
+        type: messages.searchQueryRequest,
+        query: query,
+        viewType,
+        viewQuery,
+        viewLabel,
+      },
       (response) => {
         if (response.query === inputRef.current.value)
-          setSearch((prev) => ({ ...prev, result: [...response.result] }));
+          setSearch((prev) => ({ ...prev, ...response }));
       }
     );
   };
@@ -63,5 +75,8 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
     }
   }, [search.query]);
 
-  return [search, { handleInputChange, clearSearch }];
+  return [
+    { ...search, isSearching: search.query.length > 0 && search.searchFeed },
+    { handleInputChange, clearSearch },
+  ];
 };

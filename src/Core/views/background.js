@@ -1,6 +1,37 @@
 import { messages, viewsType } from "./";
-import { Viewer } from "../viewer/background";
+import { Viewer, ViewerActions } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
+
+import Fuse from "fuse.js";
+
+class ViewsHandler {
+  async search({ viewType, viewQuery, query }) {
+    if (viewType === viewsType.allOpen) {
+      return Windows.search(query);
+    }
+
+    if (viewType === viewsType.recent) {
+      return await browserHistory.search(query);
+    }
+
+    if (viewType === viewsType.relatedLinks) {
+      const viewsResult = await browserHistory.getRelatedLinks(viewQuery);
+      const options = {
+        findAllMatches: true,
+        shouldSort: true,
+        threshold: 0.5,
+        keys: ["url", "title"],
+      };
+
+      const fuse = new Fuse(viewsResult, options);
+      const results = fuse.search(query);
+
+      return results.map(({ item }) => item);
+    }
+  }
+}
+
+const Views = new ViewsHandler();
 
 /** ------------ Event listeners ------------- */
 
@@ -29,33 +60,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === messages.searchQueryRequest) {
-    const searchHandlers = [];
-    if (request.viewType === viewsType.allOpen) {
-      const searchOptions = {};
+    const searchHandler = async ({ viewType, viewQuery, viewLabel, query }) => {
+      let slates = [];
+      const searchFeedKeys = ["Saved"];
+      const searchFeed = {};
 
-      searchHandlers.push({
-        handler: Windows.search(request.query, searchOptions),
-        title: request.viewType,
-      });
-    }
-    searchHandlers.push({
-      handler: browserHistory.search(request.query),
-      title: "recent",
-    });
+      const handleSavedFilesSearch = async () => {
+        const savedSearchResult = await ViewerActions.search(query);
+        slates = savedSearchResult.slates;
+        searchFeed["Saved"] = savedSearchResult.files;
+      };
 
-    Promise.all(searchHandlers.map(({ handler }) => handler)).then((result) => {
-      sendResponse({
-        result: result.reduce((acc, result, i) => {
-          if (result.length === 0) return acc;
-          acc.push({
-            title: searchHandlers[i].title,
-            result,
+      const handleViewsSearch = async () => {
+        if (viewType !== viewsType.savedFiles) {
+          const viewsSearchResult = await Views.search({
+            viewType: viewType,
+            viewQuery: viewQuery,
+            query,
           });
-          return acc;
-        }, []),
-        query: request.query,
-      });
-    });
+          searchFeedKeys.push(viewLabel);
+          searchFeed[viewLabel] = viewsSearchResult;
+        }
+      };
+
+      await Promise.all([handleSavedFilesSearch(), handleViewsSearch()]);
+
+      return { query, slates, searchFeedKeys, searchFeed };
+    };
+
+    searchHandler({
+      query: request.query,
+      viewType: request.viewType,
+      viewQuery: request.viewQuery,
+      viewLabel: request.viewLabel,
+    }).then(sendResponse);
 
     return true;
   }

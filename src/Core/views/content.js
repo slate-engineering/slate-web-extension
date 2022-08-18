@@ -7,12 +7,15 @@ window.addEventListener("message", async function (event) {
         type: messages.searchQueryRequest,
         query: event.data.query,
         viewType: event.data.viewType,
+        viewQuery: event.data.viewQuery,
+        viewLabel: event.data.viewLabel,
       },
-      (response) =>
+      (response) => {
         window.postMessage(
           { type: messages.searchQueryResponse, data: response },
           "*"
-        )
+        );
+      }
     );
   }
 
@@ -21,6 +24,8 @@ window.addEventListener("message", async function (event) {
       {
         type: messages.viewByTypeRequest,
         viewType: event.data.viewType,
+        viewQuery: event.data.viewQuery,
+        viewLabel: event.data.viewLabel,
         query: event.data.query,
       },
       (response) =>

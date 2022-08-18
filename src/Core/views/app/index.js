@@ -10,6 +10,7 @@ export const useViewsState = () => {
   const [views, setViewsState] = React.useState({
     feed: [],
     type: viewsType.allOpen,
+    label: "All Open",
     query: undefined,
   });
 
@@ -65,7 +66,9 @@ const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
 export const useHistorySearchState = ({ inputRef, onSearch }) => {
   const SEARCH_INITIAL_STATE = {
     query: "",
-    result: null,
+    slates: [],
+    searchFeedKeys: [],
+    searchFeed: null,
   };
   const [search, setSearch] = React.useState(SEARCH_INITIAL_STATE);
 

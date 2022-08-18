@@ -60,11 +60,22 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef, viewType }) => {
+export const useHistorySearch = ({
+  inputRef,
+  viewQuery,
+  viewType,
+  viewLabel,
+}) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     window.postMessage(
-      { type: messages.searchQueryRequest, query: query, viewType },
+      {
+        type: messages.searchQueryRequest,
+        query: query,
+        viewType,
+        viewQuery,
+        viewLabel,
+      },
       "*"
     );
   };
@@ -79,8 +90,9 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
       let { data, type } = event.data;
 
       if (type === messages.searchQueryResponse) {
-        if (data.query === inputRef.current.value)
-          setSearch((prev) => ({ ...prev, result: [...data.result] }));
+        if (data.query === inputRef.current.value) {
+          setSearch((prev) => ({ ...prev, ...data }));
+        }
       }
     };
     window.addEventListener("message", handleMessage);
@@ -96,7 +108,7 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
   }, [search.query]);
 
   return [
-    { ...search, isSearching: search.query.length > 0 && search.result },
+    { ...search, isSearching: search.query.length > 0 && search.searchFeed },
     { handleInputChange, clearSearch },
   ];
 };
