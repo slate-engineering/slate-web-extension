@@ -491,12 +491,15 @@ window.addEventListener("message", async function (event) {
         type: views_messages.searchQueryRequest,
         query: event.data.query,
         viewType: event.data.viewType,
+        viewQuery: event.data.viewQuery,
+        viewLabel: event.data.viewLabel,
       },
-      (response) =>
+      (response) => {
         window.postMessage(
           { type: views_messages.searchQueryResponse, data: response },
           "*"
-        )
+        );
+      }
     );
   }
 
@@ -505,6 +508,8 @@ window.addEventListener("message", async function (event) {
       {
         type: views_messages.viewByTypeRequest,
         viewType: event.data.viewType,
+        viewQuery: event.data.viewQuery,
+        viewLabel: event.data.viewLabel,
         query: event.data.query,
       },
       (response) =>
