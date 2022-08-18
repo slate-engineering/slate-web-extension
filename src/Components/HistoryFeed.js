@@ -107,13 +107,13 @@ const HistoryFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -161,12 +161,13 @@ const HistoryFeed = React.forwardRef(
       for (let key of sessionsFeedKeys) {
         sessionsFeed[key].forEach((visit, index) => {
           if (index === 0) {
-            virtualizedFeed.push({ title: key });
+            virtualizedFeed.push({ title: key, height: 40 });
           }
 
           virtualizedFeed.push({
             rovingTabIndex,
             visit,
+            height: Constants.sizes.jumperFeedItem,
           });
 
           rovingTabIndex++;
@@ -191,6 +192,8 @@ const HistoryFeed = React.forwardRef(
       }
     };
 
+    const getFeedItemHeight = (index) => virtualizedFeed[index].height;
+
     return (
       <RovingTabIndex.Provider
         ref={(node) => (ref.rovingTabIndexRef = node)}
@@ -210,7 +213,7 @@ const HistoryFeed = React.forwardRef(
               <HistoryFeedList
                 itemCount={virtualizedFeed.length + 1}
                 itemData={virtualizedFeed}
-                itemSize={Constants.sizes.jumperFeedItem}
+                itemSize={getFeedItemHeight}
                 onItemsRendered={onItemsRendered}
                 css={css}
                 ref={ref}

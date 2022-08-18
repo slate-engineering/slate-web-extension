@@ -291,13 +291,13 @@ const SearchFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -338,12 +338,13 @@ const Feed = React.memo(
         for (let key of searchFeedKeys) {
           searchFeed[key].forEach((item, index) => {
             if (index === 0) {
-              virtualizedFeed.push({ title: key });
+              virtualizedFeed.push({ title: key, height: 40 });
             }
 
             virtualizedFeed.push({
               rovingTabIndex,
               item,
+              height: Constants.sizes.jumperFeedItem,
             });
 
             rovingTabIndex++;
@@ -366,6 +367,8 @@ const Feed = React.memo(
         }
       };
 
+      const getFeedItemHeight = (index) => virtualizedFeed[index].height;
+
       return (
         <RovingTabIndex.Provider
           key={searchFeed}
@@ -380,7 +383,7 @@ const Feed = React.memo(
             <SearchFeedList
               itemCount={virtualizedFeed.length}
               itemData={virtualizedFeed}
-              itemSize={Constants.sizes.jumperFeedItem}
+              itemSize={getFeedItemHeight}
               css={css}
               {...props}
             >
