@@ -12,7 +12,11 @@ import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
 import { viewsType } from "../Core/views";
 import { Divider } from "./Divider";
-import { useEventListener } from "Common/hooks";
+import {
+  Combobox,
+  useComboboxNavigation,
+} from "../Components/ComboboxNavigation";
+import { useEscapeKey, useEventListener } from "Common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import {
   mergeRefs,
@@ -20,6 +24,7 @@ import {
   isNewTab,
   getRootDomain,
 } from "../Common/utilities";
+import { useSlatesCombobox } from "../Components/EditSlates";
 
 const VIEWS_ACTIONS = [
   { label: "All Open", data: { type: viewsType.allOpen } },
@@ -79,7 +84,7 @@ const CUSTOM_VIEWS_ACTIONS = [
  * -----------------------------------------------------------------------------------------------*/
 
 const ViewsContext = React.createContext();
-const useViewsContext = () => React.useContext(ViewsContext);
+export const useViewsContext = () => React.useContext(ViewsContext);
 
 const useHandleViewsNavigation = () => {
   const initialIndex = 0;
@@ -207,13 +212,19 @@ const useHandleViewsNavigation = () => {
 
 function Provider({
   children,
+  slates,
   viewsFeed,
   currentView,
   currentViewLabel,
   currentViewQuery,
   viewsType,
   getViewsFeed,
+  onRestoreFocus,
 }) {
+  const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
+  const openCreateMenu = () => setCreateMenuVisibility(true);
+  const closeCreateMenu = () => setCreateMenuVisibility(false);
+
   const {
     registerMenuItem,
     cleanupMenuItem,
@@ -226,6 +237,7 @@ function Provider({
 
   const value = React.useMemo(
     () => ({
+      slates,
       viewsFeed,
       currentView,
       currentViewLabel,
@@ -238,8 +250,15 @@ function Provider({
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+
+      isCreateMenuOpen,
+      openCreateMenu,
+      closeCreateMenu,
+
+      onRestoreFocus,
     }),
     [
+      slates,
       viewsFeed,
       currentView,
       currentViewLabel,
@@ -252,6 +271,12 @@ function Provider({
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+
+      isCreateMenuOpen,
+      openCreateMenu,
+      closeCreateMenu,
+
+      onRestoreFocus,
     ]
   );
 
@@ -259,6 +284,336 @@ function Provider({
     <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
   );
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * Views CreateMenu
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_INPUT = (theme) => css`
+  ${Styles.H4};
+
+  font-family: ${theme.font.text};
+  -webkit-appearance: none;
+  width: 100%;
+  height: 36px;
+  background-color: ${theme.semantic.bgGrayLight};
+  outline: 0;
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: ${theme.semantic.textBlack};
+  padding-left: 16px;
+
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.semantic.textGray};
+    opacity: 1; /* Firefox */
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: ${theme.semantic.textGray};
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: ${theme.semantic.textGray};
+  }
+`;
+
+const STYLES_CREATE_MENU_BUTTON_FOCUS = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+`;
+
+const STYLES_CREATE_MENU_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  padding: 5px 12px 7px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  color: ${theme.semantic.textBlack};
+  &:hover {
+    color: ${theme.semantic.textBlack};
+  }
+  &:focus {
+    ${STYLES_CREATE_MENU_BUTTON_FOCUS(theme)}
+  }
+`;
+
+const CreateMenuInitialScene = ({
+  goToSourceScene,
+  goToTagScene,
+  ...props
+}) => {
+  const handleToggleSavedView = () => {};
+  const handleToggleFilesView = () => {};
+
+  const actions = React.useMemo(
+    () => [
+      { label: "Source", handler: goToSourceScene },
+      { label: "Tag", handler: goToTagScene },
+      { label: "Saved", handler: handleToggleSavedView },
+      { label: "Files", handler: handleToggleFilesView },
+    ],
+    []
+  );
+  return (
+    <section {...props}>
+      <RovingTabIndex.Provider withFocusOnHover>
+        <RovingTabIndex.List>
+          <div style={{ width: "100%" }}>
+            {actions.map((action, index) => (
+              <RovingTabIndex.Item key={action.label} index={index}>
+                <button
+                  onClick={action.handler}
+                  css={STYLES_CREATE_MENU_BUTTON}
+                  autoFocus={index === 0}
+                >
+                  <Typography.H5 color="textBlack">
+                    {action.label}
+                  </Typography.H5>
+                </button>
+              </RovingTabIndex.Item>
+            ))}
+          </div>
+        </RovingTabIndex.List>
+      </RovingTabIndex.Provider>
+    </section>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const sources = [
+  {
+    title: "Twitter",
+    rootDomain: "twitter.com",
+  },
+  {
+    title: "Hacker News",
+    Favicon: "ycombinator.com",
+  },
+  {
+    title: "Youtube",
+    Favicon: "youtube.com",
+  },
+  {
+    title: "Figma",
+    Favicon: "figma.com",
+  },
+  {
+    title: "Notion",
+    Favicon: "notion.so",
+  },
+  {
+    title: "Google Search",
+    Favicon: "google.com",
+  },
+];
+
+const CreateMenuTagButton = ({ index, children, css, ...props }) => {
+  const { checkIfIndexSelected } = useComboboxNavigation();
+  const isSelected = checkIfIndexSelected(index);
+
+  return (
+    <Combobox.MenuButton index={index}>
+      <button
+        css={[
+          STYLES_CREATE_MENU_BUTTON,
+          isSelected && STYLES_CREATE_MENU_BUTTON_FOCUS,
+          css,
+        ]}
+        style={{ padding: "8px 12px" }}
+        {...props}
+      >
+        {children}
+      </button>
+    </Combobox.MenuButton>
+  );
+};
+
+export const useSourcesCombobox = ({ sources }) => {
+  const [searchValue, setSearchValue] = React.useState("");
+
+  const filteredSources = React.useMemo(() => {
+    if (searchValue === "") return sources;
+
+    const searchRegex = new RegExp(searchValue, "gi");
+    return sources.filter((source) => {
+      return searchRegex.test(source.title);
+    });
+  }, [sources, searchValue]);
+
+  return { filteredSources, searchValue, setSearchValue };
+};
+
+const CreateMenuSourceScene = (props) => {
+  const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
+    sources,
+  });
+
+  const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  return (
+    <div {...props}>
+      <Combobox.Provider>
+        <Combobox.Input>
+          <input
+            placeholder="Search"
+            css={STYLES_CREATE_MENU_INPUT}
+            value={searchValue}
+            onChange={handleOnInputChange}
+            autoFocus
+          />
+        </Combobox.Input>
+        <Combobox.Menu>
+          <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
+            {filteredSources.map((source, index) => {
+              const Favicon = getFavicon(source.rootDomain);
+
+              return (
+                <CreateMenuTagButton index={index} key={source.title}>
+                  <div>
+                    <Favicon />
+                  </div>
+                  <Typography.H5
+                    color="textBlack"
+                    style={{ marginLeft: 8 }}
+                    as="div"
+                  >
+                    {source.title}
+                  </Typography.H5>
+                </CreateMenuTagButton>
+              );
+            })}
+          </div>
+        </Combobox.Menu>
+      </Combobox.Provider>
+    </div>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_SLATES_WRAPPER = css`
+  ${Styles.VERTICAL_CONTAINER_CENTERED};
+  width: 100%;
+  padding-top: 8px;
+  height: 128px;
+  overflow-y: auto;
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
+  color: ${theme.system.blue};
+  &:hover {
+    color: ${theme.system.blue};
+  }
+`;
+
+const CreateMenuTagScene = (props) => {
+  const { slates: slatesProp } = useViewsContext();
+  const { slates, canCreateSlate, searchValue, setSearchValue } =
+    useSlatesCombobox({ slates: slatesProp });
+  const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  return (
+    <div {...props}>
+      <Combobox.Provider>
+        <Combobox.Input>
+          <input
+            placeholder="Search or create new tag"
+            css={STYLES_CREATE_MENU_INPUT}
+            value={searchValue}
+            onChange={handleOnInputChange}
+            autoFocus
+          />
+        </Combobox.Input>
+        <Combobox.Menu>
+          <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
+            {slates.map((slate, index) => (
+              <CreateMenuTagButton index={index} key={slate}>
+                <div>
+                  <SVG.Hash height={16} width={16} />
+                </div>
+                <Typography.H5
+                  color="textBlack"
+                  style={{ marginLeft: 8 }}
+                  as="div"
+                >
+                  {slate}
+                </Typography.H5>
+              </CreateMenuTagButton>
+            ))}
+            {canCreateSlate && (
+              <CreateMenuTagButton
+                index={slates.length}
+                css={STYLES_COLOR_SYSTEM_BLUE}
+              >
+                <div>
+                  <SVG.Plus height={16} width={16} />
+                </div>
+                <Typography.H5 color="blue" style={{ marginLeft: 8 }} as="div">
+                  create &quot;{searchValue}&quot;
+                </Typography.H5>
+              </CreateMenuTagButton>
+            )}
+          </div>
+        </Combobox.Menu>
+      </Combobox.Provider>
+    </div>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_WRAPPER = css`
+  ${Styles.VERTICAL_CONTAINER_CENTERED};
+  padding: 8px;
+  width: 100%;
+`;
+
+const CreateMenu = (props) => {
+  const scenes = {
+    initial: "initial",
+    source: "source",
+    tag: "tag",
+  };
+  const [scene, setScene] = React.useState(scenes.initial);
+
+  const goToSourceScene = () => setScene(scenes.source);
+  const goToTagScene = () => setScene(scenes.tag);
+
+  const { closeCreateMenu, onRestoreFocus } = useViewsContext();
+  useEscapeKey(closeCreateMenu);
+
+  React.useLayoutEffect(() => {
+    return () => onRestoreFocus?.();
+  }, []);
+
+  if (scene === scenes.source) {
+    return (
+      <CreateMenuSourceScene css={STYLES_CREATE_MENU_WRAPPER} {...props} />
+    );
+  }
+
+  if (scene === scenes.tag) {
+    return <CreateMenuTagScene css={STYLES_CREATE_MENU_WRAPPER} {...props} />;
+  }
+
+  return (
+    <CreateMenuInitialScene
+      goToTagScene={goToTagScene}
+      goToSourceScene={goToSourceScene}
+      css={STYLES_CREATE_MENU_WRAPPER}
+      {...props}
+    />
+  );
+};
 
 /* -------------------------------------------------------------------------------------------------
  * Views Menu
@@ -492,6 +847,8 @@ function Menu({ css, ...props }) {
 
     registerMenuRef,
     cleanupMenu,
+
+    openCreateMenu,
   } = useViewsContext();
 
   React.useLayoutEffect(() => cleanupMenu, []);
@@ -594,7 +951,11 @@ function Menu({ css, ...props }) {
         ) : null}
       </div>
 
-      <button css={STYLES_VIEWS_ADD_BUTTON} style={{ marginLeft: 6 }}>
+      <button
+        css={STYLES_VIEWS_ADD_BUTTON}
+        style={{ marginLeft: 6 }}
+        onClick={openCreateMenu}
+      >
         <SVG.Plus width={16} height={16} />
       </button>
     </section>
@@ -743,4 +1104,4 @@ const Feed = React.forwardRef(
   }
 );
 
-export { Provider, Menu, Feed };
+export { Provider, CreateMenu, Menu, Feed };
