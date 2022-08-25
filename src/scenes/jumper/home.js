@@ -15,9 +15,34 @@ import { Switch, Match } from "../../Components/Switch";
 import { css } from "@emotion/react";
 import { useNavigation } from "../../Core/navigation/app/jumper";
 import { useViewer } from "../../Core/viewer/app/jumper";
+import { useViewsContext } from "../../Components/Views";
+
+const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
+  position: absolute;
+  height: fit-content;
+  top: calc(-52px + -10px);
+  right: -10px;
+  transform: translateX(100%);
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+  border-radius: 12px;
+  max-width: 240px;
+  max-height: 220px;
+`;
+
+const CreateMenuSidePanel = (props) => {
+  const { isCreateMenuOpen } = useViewsContext();
+
+  if (!isCreateMenuOpen) return null;
+
+  return (
+    <Jumper.SidePanel css={STYLES_VIEWS_CREATE_MENU_WRAPPER}>
+      <Views.CreateMenu />
+    </Jumper.SidePanel>
+  );
+};
 
 /* -------------------------------------------------------------------------------------------------
- * History Scene
+ * Home Scene
  * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_JUMPER_INPUT_WRAPPER = css`
@@ -75,16 +100,20 @@ export default function Home() {
 
   return (
     <Views.Provider
+      slates={viewer.slates}
       viewsFeed={viewsFeed}
       currentView={currentView}
       currentViewLabel={currentViewLabel}
       currentViewQuery={currentViewQuery}
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
+      onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
     >
       <Jumper.TopPanel containerStyle={{ width: "100%" }}>
         <Views.Menu />
       </Jumper.TopPanel>
+
+      <CreateMenuSidePanel />
 
       <Search.Provider
         onInputChange={handleInputChange}
