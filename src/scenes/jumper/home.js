@@ -97,7 +97,7 @@ export default function Home() {
         <Jumper.Divider color="borderGrayLight" />
         <Jumper.Body
           css={Styles.HORIZONTAL_CONTAINER}
-          style={{ height: "100%", flex: 1, overflow: "hidden" }}
+          style={{ height: "100%", flex: 1, overflow: "hidden"}}
         >
           <Switch
             onOpenUrl={Navigation.openUrls}

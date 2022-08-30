@@ -136,6 +136,7 @@ function Header({ children, style, ...props }) {
  * -----------------------------------------------------------------------------------------------*/
 const STYLES_BODY_WRAPPER = (theme) => css`
   height: ${theme.sizes.jumperFeedWrapper}px;
+  padding: 0 8px 8px;
 `;
 
 function Body({ children, css, ...props }) {
