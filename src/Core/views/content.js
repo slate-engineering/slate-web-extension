@@ -6,9 +6,7 @@ window.addEventListener("message", async function (event) {
       {
         type: messages.searchQueryRequest,
         query: event.data.query,
-        viewType: event.data.viewType,
-        viewQuery: event.data.viewQuery,
-        viewLabel: event.data.viewLabel,
+        view: event.data.view,
       },
       (response) => {
         window.postMessage(
@@ -19,20 +17,33 @@ window.addEventListener("message", async function (event) {
     );
   }
 
-  if (event.data.type === messages.viewByTypeRequest) {
+  if (event.data.type === messages.viewFeedRequest) {
     chrome.runtime.sendMessage(
       {
-        type: messages.viewByTypeRequest,
-        viewType: event.data.viewType,
-        viewQuery: event.data.viewQuery,
-        viewLabel: event.data.viewLabel,
-        query: event.data.query,
+        type: messages.viewFeedRequest,
+        view: event.data.view,
       },
       (response) =>
         window.postMessage(
-          { type: messages.viewByTypeResponse, data: response },
+          { type: messages.viewFeedResponse, data: response },
           "*"
         )
+    );
+  }
+
+  if (event.data.type === messages.createViewByTagRequest) {
+    chrome.runtime.sendMessage({
+      type: messages.createViewByTagRequest,
+      slateName: event.data.slateName,
+    });
+  }
+});
+
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === messages.createViewByTagSuccess) {
+    window.postMessage(
+      { type: messages.createViewByTagSuccess, data: request.data },
+      "*"
     );
   }
 });

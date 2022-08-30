@@ -2,15 +2,27 @@ export const messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
   searchQueryResponse: "SEARCH_QUERY_RESPONSE",
 
-  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
-  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
+  viewFeedRequest: "VIEW_FEED_REQUEST",
+  viewFeedResponse: "VIEW_FEED_RESPONSE",
+
+  createViewByTag: "CREATE_VIEW_BY_TAG",
 };
 
 export const viewsType = {
   allOpen: "allOpen",
   recent: "recent",
   savedFiles: "savedFiles",
-  relatedLinks: "relatedLinks",
+  custom: "custom",
 };
 
-export const initialView = viewsType.allOpen;
+export const defaultViews = {
+  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
+  recent: { id: "recent", name: "Recent", type: viewsType.recent },
+  savedFiles: {
+    id: "savedFiles",
+    name: "Saved Files",
+    type: viewsType.savedFiles,
+  },
+};
+
+export const initialView = defaultViews.allOpen;

@@ -1,42 +1,33 @@
 import * as React from "react";
 import { useViewsState, useHistorySearchState } from "./";
-import { messages } from "../";
+import { messages, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [
-    { viewsFeed, currentView, currentViewLabel, currentViewQuery, viewsType },
-    { setViewsFeed, setViewsParams },
-  ] = useViewsState();
+  const [{ viewsFeed, appliedView }, { setViewsFeed, setAppliedView }] =
+    useViewsState();
 
-  const getViewsFeed = ({ type, label, query }) => {
-    setViewsParams({ type, label, query });
-    if (
-      (type === viewsType.relatedLinks && query) ||
-      type === viewsType.savedFiles
-    ) {
-      window.postMessage(
-        { type: messages.viewByTypeRequest, viewType: type, query },
-        "*"
-      );
+  const getViewsFeed = (view) => {
+    setAppliedView(view);
+    if (view.type === viewsType.custom || view.type === viewsType.savedFiles) {
+      window.postMessage({ type: messages.viewFeedRequest, view }, "*");
     }
   };
 
-  const paramsRef = React.useRef();
-  paramsRef.current = { type: currentView, query: currentViewQuery };
+  const appliedViewRef = React.useRef();
+  appliedViewRef.current = appliedView;
   React.useEffect(() => {
     let handleMessage = (event) => {
-      if (paramsRef.current.type === viewsType.recent) return;
       let { data, type } = event.data;
-      if (type === messages.viewByTypeResponse) {
-        if (data.viewType === viewsType.savedFiles) {
+      if (type === messages.viewFeedResponse) {
+        if (data.view.type === viewsType.savedFiles) {
           setViewsFeed(data.result);
           return;
         }
-        if (data.query === paramsRef.current.query) {
+        if (data.view.id === appliedViewRef.current.id) {
           setViewsFeed(data.result);
         }
       }
@@ -48,9 +39,7 @@ export const useViews = () => {
 
   return {
     viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
+    appliedView,
     viewsType,
     getViewsFeed,
   };
@@ -60,21 +49,14 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({
-  inputRef,
-  viewQuery,
-  viewType,
-  viewLabel,
-}) => {
+export const useHistorySearch = ({ inputRef, view }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     window.postMessage(
       {
         type: messages.searchQueryRequest,
         query: query,
-        viewType,
-        viewQuery,
-        viewLabel,
+        view,
       },
       "*"
     );

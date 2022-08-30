@@ -1,48 +1,45 @@
 import * as React from "react";
 
-import { viewsType } from "../";
+import { defaultViews, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViewsState
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViewsState = () => {
-  const [views, setViewsState] = React.useState({
+  const [viewState, setViewState] = React.useState({
     feed: [],
-    type: viewsType.allOpen,
-    label: "All Open",
-    query: undefined,
+    appliedView: defaultViews.allOpen,
   });
 
-  const setViewsParams = ({ type, query, label }) => {
-    setViewsState((prev) => ({ ...prev, type, query, label }));
+  const setAppliedView = (view) => {
+    setViewState((prev) => ({ ...prev, appliedView: view }));
   };
 
   const setViewsFeed = (result) => {
-    setViewsState((prev) => ({
+    setViewState((prev) => ({
       ...prev,
       feed: result,
     }));
   };
 
   React.useEffect(() => {
+    const { appliedView } = viewState;
     if (
-      views.type !== viewsType.relatedLinks &&
-      views.type !== viewsType.savedFiles
+      appliedView.type !== viewsType.custom &&
+      appliedView.type !== viewsType.savedFiles
     ) {
       setViewsFeed([]);
     }
-  }, [views.type]);
+  }, [viewState.appliedView]);
 
   return [
     {
-      viewsFeed: views.feed,
-      currentView: views.type,
-      currentViewLabel: views.label,
-      currentViewQuery: views.query,
+      viewsFeed: viewState.feed,
+      appliedView: viewState.appliedView,
       viewsType,
     },
-    { setViewsFeed, setViewsParams },
+    { setViewsFeed, setAppliedView },
   ];
 };
 

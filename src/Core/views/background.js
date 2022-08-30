@@ -5,17 +5,41 @@ import { browserHistory, Windows } from "../browser/background";
 import Fuse from "fuse.js";
 
 class ViewsHandler {
-  async search({ viewType, viewQuery, query }) {
-    if (viewType === viewsType.allOpen) {
+  async search({ query, view }) {
+    if (view.type === viewsType.allOpen) {
       return Windows.search(query);
     }
 
-    if (viewType === viewsType.recent) {
+    if (view.type === viewsType.recent) {
       return await browserHistory.search(query);
     }
 
-    if (viewType === viewsType.relatedLinks) {
-      const viewsResult = await browserHistory.getRelatedLinks(viewQuery);
+    if (view.type === viewsType.custom) {
+      const handleFetchCustomFeed = async (viewId) => {
+        const viewer = await Viewer.get();
+        const view = viewer.views.find((view) => view.id === viewId);
+
+        if (!view) return [];
+
+        if (view.filters.domain) {
+          const feed = await browserHistory.getRelatedLinks(
+            view.filters.domain
+          );
+          return feed;
+        }
+
+        if (view.filters.slateId) {
+          const slate = viewer.slates.find(
+            (slate) => slate.id === view.filters.slateId
+          );
+
+          if (!slate) return [];
+
+          return slate.objects.map(Viewer._serializeObject);
+        }
+      };
+
+      const viewsResult = await handleFetchCustomFeed(view.id);
       const options = {
         findAllMatches: true,
         shouldSort: true,
@@ -36,31 +60,55 @@ const Views = new ViewsHandler();
 /** ------------ Event listeners ------------- */
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === messages.viewByTypeRequest) {
-    console.log(`VIEW FOR ${request.viewType} ${request.query}`);
-    if (request.viewType === viewsType.savedFiles) {
-      Viewer.get().then((res) =>
+  if (request.type === messages.viewFeedRequest) {
+    console.log(`VIEW FOR`, request.view);
+
+    const handleFetchCustomFeed = async (viewId) => {
+      const viewer = await Viewer.get();
+      const view = viewer.views.find((view) => view.id === viewId);
+
+      if (!view) return [];
+
+      if (view.filters.domain) {
+        const feed = await browserHistory.getRelatedLinks(view.filters.domain);
+
+        return feed;
+      }
+
+      if (view.filters.slateId) {
+        const slate = viewer.slates.find(
+          (slate) => slate.id === view.filters.slateId
+        );
+
+        if (!slate) return [];
+
+        return slate.objects.map(Viewer._serializeObject);
+      }
+    };
+
+    if (request.view.type === viewsType.custom) {
+      handleFetchCustomFeed(request.view.id).then((res) =>
         sendResponse({
-          result: res.objects,
-          viewType: request.viewType,
+          result: res,
+          view: request.view,
         })
       );
-
       return true;
     }
 
-    browserHistory.getRelatedLinks(request.query).then((result) => {
-      sendResponse({
-        result: result,
-        query: request.query,
-      });
-    });
-
-    return true;
+    if (request.view.type === viewsType.savedFiles) {
+      Viewer.get().then((res) =>
+        sendResponse({
+          result: res.objects,
+          view: request.view,
+        })
+      );
+      return true;
+    }
   }
 
   if (request.type === messages.searchQueryRequest) {
-    const searchHandler = async ({ viewType, viewQuery, viewLabel, query }) => {
+    const searchHandler = async ({ query, view }) => {
       let slates = [];
       const searchFeedKeys = ["Saved"];
       const searchFeed = {};
@@ -75,14 +123,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       };
 
       const handleViewsSearch = async () => {
-        if (viewType !== viewsType.savedFiles) {
+        if (view.type !== viewsType.savedFiles) {
           const viewsSearchResult = await Views.search({
-            viewType: viewType,
-            viewQuery: viewQuery,
+            view,
             query,
           });
-          searchFeedKeys.push(viewLabel);
-          searchFeed[viewLabel] = viewsSearchResult;
+          searchFeedKeys.push(view.name);
+          searchFeed[view.name] = viewsSearchResult;
         }
       };
 
@@ -97,9 +144,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     searchHandler({
       query: request.query,
-      viewType: request.viewType,
-      viewQuery: request.viewQuery,
-      viewLabel: request.viewLabel,
+      view: request.view,
     }).then(sendResponse);
 
     return true;

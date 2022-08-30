@@ -1,35 +1,31 @@
 import * as React from "react";
+
 import { useViewsState, useHistorySearchState } from "./";
-import { messages } from "../";
+import { messages, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [
-    { viewsFeed, currentView, currentViewLabel, currentViewQuery, viewsType },
-    { setViewsFeed, setViewsParams },
-  ] = useViewsState();
+  const [{ viewsFeed, appliedView }, { setViewsFeed, setAppliedView }] =
+    useViewsState();
 
-  const getViewsFeed = ({ type, label, query }) => {
-    setViewsParams({ type, query, label });
-    if (
-      (type === viewsType.relatedLinks && query) ||
-      type === viewsType.savedFiles
-    ) {
+  const getViewsFeed = (view) => {
+    setAppliedView(view);
+    if (view.type === viewsType.custom || view.type === viewsType.savedFiles) {
       chrome.runtime.sendMessage(
-        { type: messages.viewByTypeRequest, viewType: type, query },
-        (response) => setViewsFeed(response.result)
+        { type: messages.viewFeedRequest, view },
+        (response) => {
+          setViewsFeed(response.result);
+        }
       );
     }
   };
 
   return {
     viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
+    appliedView,
     viewsType,
     getViewsFeed,
   };
@@ -39,12 +35,7 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({
-  inputRef,
-  viewType,
-  viewQuery,
-  viewLabel,
-}) => {
+export const useHistorySearch = ({ inputRef, view }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
 
@@ -52,9 +43,7 @@ export const useHistorySearch = ({
       {
         type: messages.searchQueryRequest,
         query: query,
-        viewType,
-        viewQuery,
-        viewLabel,
+        view,
       },
       (response) => {
         if (response.query === inputRef.current.value)

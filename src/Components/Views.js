@@ -3,14 +3,13 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
 import * as SVG from "../Common/SVG";
-import * as Favicons from "../Common/favicons";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { viewsType } from "../Core/views";
+import { defaultViews } from "../Core/views";
 import { Divider } from "./Divider";
 import {
   Combobox,
@@ -27,56 +26,9 @@ import {
 import { useSlatesCombobox } from "../Components/EditSlates";
 
 const VIEWS_ACTIONS = [
-  { label: "All Open", data: { type: viewsType.allOpen } },
-  { label: "Recent", data: { type: viewsType.recent } },
-  { label: "Saved Files", data: { type: viewsType.savedFiles } },
-];
-
-const CUSTOM_VIEWS_ACTIONS = [
-  {
-    label: "Twitter",
-    data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
-    Favicon: Favicons.getFavicon("twitter.com"),
-  },
-  {
-    label: "Hacker News",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://news.ycombinator.com",
-    },
-    Favicon: Favicons.getFavicon("ycombinator.com"),
-  },
-  {
-    label: "Youtube",
-    data: { type: viewsType.relatedLinks, query: "https://www.youtube.com/" },
-    Favicon: Favicons.getFavicon("youtube.com"),
-  },
-  {
-    label: "Figma",
-    data: { type: viewsType.relatedLinks, query: "https://www.figma.com/" },
-    Favicon: Favicons.getFavicon("figma.com"),
-  },
-  {
-    label: "Notion",
-    data: { type: viewsType.relatedLinks, query: "https://www.notion.so/" },
-    Favicon: Favicons.getFavicon("notion.so"),
-  },
-  {
-    label: "Google Search",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://www.google.com/search",
-    },
-    Favicon: Favicons.getFavicon("google.com"),
-  },
-  {
-    label: "Google Calendar",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://calendar.google.com/",
-    },
-    Favicon: Favicons.getFavicon("google.com"),
-  },
+  defaultViews.allOpen,
+  defaultViews.recent,
+  defaultViews.savedFiles,
 ];
 
 /* -------------------------------------------------------------------------------------------------
@@ -212,11 +164,9 @@ const useHandleViewsNavigation = () => {
 
 function Provider({
   children,
-  slates,
+  viewer,
   viewsFeed,
-  currentView,
-  currentViewLabel,
-  currentViewQuery,
+  appliedView,
   viewsType,
   getViewsFeed,
   onRestoreFocus,
@@ -237,11 +187,9 @@ function Provider({
 
   const value = React.useMemo(
     () => ({
-      slates,
+      viewer,
       viewsFeed,
-      currentView,
-      currentViewLabel,
-      currentViewQuery,
+      appliedView,
       viewsType,
       getViewsFeed,
 
@@ -258,11 +206,9 @@ function Provider({
       onRestoreFocus,
     }),
     [
-      slates,
+      viewer,
       viewsFeed,
-      currentView,
-      currentViewLabel,
-      currentViewQuery,
+      appliedView,
       viewsType,
       getViewsFeed,
 
@@ -449,6 +395,7 @@ export const useSourcesCombobox = ({ sources }) => {
 };
 
 const CreateMenuSourceScene = (props) => {
+  const { viewer } = useViewsContext();
   const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
     sources,
   });
@@ -471,6 +418,7 @@ const CreateMenuSourceScene = (props) => {
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
             {filteredSources.map((source, index) => {
               const Favicon = getFavicon(source.rootDomain);
+              const isApplied = source.url in viewer.viewsSourcesLookup;
 
               return (
                 <CreateMenuTagButton index={index} key={source.title}>
@@ -484,6 +432,12 @@ const CreateMenuSourceScene = (props) => {
                   >
                     {source.title}
                   </Typography.H5>
+
+                  {isApplied && (
+                    <div style={{ marginLeft: "auto" }}>
+                      <SVG.CheckCircle />
+                    </div>
+                  )}
                 </CreateMenuTagButton>
               );
             })}
@@ -516,9 +470,9 @@ const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
 `;
 
 const CreateMenuTagScene = (props) => {
-  const { slates: slatesProp } = useViewsContext();
+  const { viewer } = useViewsContext();
   const { slates, canCreateSlate, searchValue, setSearchValue } =
-    useSlatesCombobox({ slates: slatesProp });
+    useSlatesCombobox({ slates: viewer.slates });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
   return (
@@ -535,20 +489,28 @@ const CreateMenuTagScene = (props) => {
         </Combobox.Input>
         <Combobox.Menu>
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
-            {slates.map((slate, index) => (
-              <CreateMenuTagButton index={index} key={slate}>
-                <div>
-                  <SVG.Hash height={16} width={16} />
-                </div>
-                <Typography.H5
-                  color="textBlack"
-                  style={{ marginLeft: 8 }}
-                  as="div"
-                >
-                  {slate}
-                </Typography.H5>
-              </CreateMenuTagButton>
-            ))}
+            {slates.map((slate, index) => {
+              const isApplied = slate in viewer.viewsSlatesLookup;
+              return (
+                <CreateMenuTagButton index={index} key={slate}>
+                  <div>
+                    <SVG.Hash height={16} width={16} />
+                  </div>
+                  <Typography.H5
+                    color="textBlack"
+                    style={{ marginLeft: 8 }}
+                    as="div"
+                  >
+                    {slate}
+                  </Typography.H5>
+                  {isApplied && (
+                    <div style={{ marginLeft: "auto" }}>
+                      <SVG.CheckCircle />
+                    </div>
+                  )}
+                </CreateMenuTagButton>
+              );
+            })}
             {canCreateSlate && (
               <CreateMenuTagButton
                 index={slates.length}
@@ -839,8 +801,9 @@ const useHandleScrollNavigation = ({ containerRef }) => {
 
 function Menu({ css, ...props }) {
   const {
-    currentView,
-    currentViewQuery,
+    viewer,
+
+    appliedView,
     getViewsFeed,
 
     scrollButtonCss,
@@ -853,10 +816,7 @@ function Menu({ css, ...props }) {
 
   React.useLayoutEffect(() => cleanupMenu, []);
 
-  const createOnClickHandler =
-    ({ type, label, query }) =>
-    () =>
-      getViewsFeed({ type, label, query });
+  const createOnClickHandler = (view) => () => getViewsFeed(view);
 
   const actionWrapperRef = React.useRef();
   const [isOverflowFrom, { scrollToLeft, scrollToRight }] =
@@ -871,59 +831,48 @@ function Menu({ css, ...props }) {
           style={{ paddingRight: 132 }}
         >
           <AnimateSharedLayout>
-            {VIEWS_ACTIONS.map((viewAction, i) => {
-              const isApplied = currentView === viewAction.data.type;
+            {VIEWS_ACTIONS.map((view, i) => {
+              const isApplied = appliedView.id === view.id;
               return (
                 <MenuItem
-                  key={viewAction.label}
                   isViewApplied={isApplied}
+                  key={view.name}
                   style={{ marginLeft: i > 0 ? 4 : 0 }}
-                  onClick={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                  })}
-                  onSubmit={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                  })}
+                  onClick={createOnClickHandler(view)}
+                  onSubmit={createOnClickHandler(view)}
                   index={i}
                 >
-                  {viewAction.label}
+                  {view.name}
                 </MenuItem>
               );
             })}
 
-            <Divider
-              height="none"
-              width="1px"
-              style={{ margin: "0px 4px", flexShrink: 0 }}
-            />
+            {viewer.views.length && (
+              <Divider
+                height="none"
+                width="1px"
+                style={{ margin: "0px 4px", flexShrink: 0 }}
+              />
+            )}
 
-            {CUSTOM_VIEWS_ACTIONS.map((viewAction, i) => {
-              const { Favicon } = viewAction;
-              const isApplied =
-                currentView === viewAction.data.type &&
-                currentViewQuery === viewAction.data.query;
+            {viewer.views.map((view, i) => {
+              const isApplied = appliedView.id === view.id;
+              const isSlateFilter = view.filters.slate;
+              const Favicon = isSlateFilter
+                ? SVG.Hash
+                : getFavicon(getRootDomain(view.filters.domain));
 
               return (
                 <MenuItem
-                  key={viewAction.label}
+                  key={view.name}
                   isViewApplied={isApplied}
                   style={{ marginLeft: 4 }}
-                  onClick={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                    query: viewAction.data.query,
-                  })}
-                  onSubmit={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                    query: viewAction.data.query,
-                  })}
+                  onClick={createOnClickHandler(view)}
+                  onSubmit={createOnClickHandler(view)}
                   index={VIEWS_ACTIONS.length + i}
                   Favicon={Favicon}
                 >
-                  {viewAction.label}
+                  {view.name}
                 </MenuItem>
               );
             })}
@@ -1059,7 +1008,7 @@ const Feed = React.forwardRef(
     },
     ref
   ) => {
-    const { viewsFeed, currentViewLabel } = useViewsContext();
+    const { viewsFeed, appliedView } = useViewsContext();
 
     const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
@@ -1093,7 +1042,7 @@ const Feed = React.forwardRef(
           <MultiSelection.ActionsMenu
             onOpenURLs={(urls) => onOpenUrl({ urls })}
             onGroupURLs={(urls) =>
-              onGroupURLs({ urls, title: currentViewLabel })
+              onGroupURLs({ urls, title: appliedView.name })
             }
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
