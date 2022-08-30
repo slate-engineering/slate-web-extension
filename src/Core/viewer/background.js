@@ -10,6 +10,9 @@ import {
   savingSources,
 } from ".";
 import { constructWindowsFeed } from "../../Extension_common/utilities";
+import { capitalize } from "../../Common/strings";
+import { viewsType } from "../views";
+import { v4 as uuid } from "uuid";
 
 import Fuse from "fuse.js";
 
@@ -38,6 +41,12 @@ const VIEWER_INITIAL_STATE = {
   savedObjectsSlates: {},
   slatesLookup: {},
   slates: [],
+
+  viewsSourcesLookup: {},
+  viewsSlatesLookup: {},
+  views: [],
+
+  sources: {},
 
   lastFetched: null,
   isAuthenticated: false,
@@ -77,6 +86,36 @@ class ViewerHandler {
   }
 
   _serialize(viewer) {
+    const defaultViews = [
+      {
+        id: "test-youtube",
+        name: "Youtube",
+        createdAt: "",
+        updatedAt: "",
+        order: 1,
+        filters: { domain: "https://www.youtube.com/" },
+        metadata: {},
+      },
+      {
+        id: "test-hacker",
+        name: "Hacker News",
+        createdAt: "",
+        updatedAt: "",
+        order: 2,
+        filters: { domain: "https://news.ycombinator.com/" },
+        metadata: {},
+      },
+      {
+        id: "test-rust",
+        name: "Rust",
+        createdAt: "",
+        updatedAt: "",
+        order: 3,
+        filters: { slateId: "63ce1767-9ab0-4677-9233-d6e372e37c5e" },
+        metadata: {},
+      },
+    ];
+
     const serializedViewer = {
       objects: [],
       objectsMetadata: {},
@@ -87,7 +126,26 @@ class ViewerHandler {
       slates: viewer.slates.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       ),
+
+      viewsSourcesLookup: {},
+      viewsSlatesLookup: {},
+      views: defaultViews,
+
+      sources: {},
     };
+
+    serializedViewer.views.forEach((view) => {
+      const { domain, slateId } = view.filters;
+      if (domain) {
+        serializedViewer.viewsSourcesLookup[domain] = true;
+        return;
+      }
+
+      const slate = viewer.slates.find((slate) => slate.id === slateId);
+      if (slate) {
+        serializedViewer.viewsSlatesLookup[slate.slatename] = true;
+      }
+    });
 
     serializedViewer.objects = viewer.library.map((object) => {
       serializedViewer.objectsMetadata[getFileUrl(object)] = {
@@ -185,7 +243,9 @@ class ViewerHandler {
 
     if (viewer.data) {
       const serializedViewer = this._serialize(viewer.data);
+      const prevViewer = await this.get();
       this._set({
+        ...prevViewer,
         ...serializedViewer,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
@@ -532,6 +592,43 @@ class ViewerActionsHandler {
     ]);
   }
 
+  _addViewToViewer({ viewer, slateName, domain }) {
+    const newView = {
+      id: uuid(),
+      createdAt: "",
+      updatedAt: "",
+      order: viewer.views.length,
+      metadata: {},
+    };
+    if (slateName) {
+      const slate = viewer.slates.find(
+        (slate) => slate.slateName === slateName
+      );
+      viewer.viewsSlatesLookup[slateName] = true;
+      viewer.views.push({
+        ...newView,
+        name: slateName,
+        filters: { slateId: slate.id },
+      });
+      return viewer;
+    }
+
+    viewer.viewsSourcesLookup[domain] = true;
+    viewer.views.push({ ...newView, name: "Source", filters: { domain } });
+    return viewer;
+  }
+
+  async createView({ slateName, domain }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    viewer = this._addViewToViewer({ viewer, slateName, domain });
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
+  }
+
   async search(query) {
     const response = await Actions.search({
       types: ["FILE", "SLATE"],
@@ -698,8 +795,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const viewerData = await Viewer.get();
 
       const slates = viewerData.slates.map(({ name }) => name);
-      const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
-        viewerData;
+
+      const views = viewerData.views.map(({ id, name, filters, order }) => ({
+        id,
+        name,
+        type: viewsType.custom,
+        filters: {
+          slate: !!filters.slateId,
+          domain: filters.domain,
+        },
+        order,
+      }));
+
+      const {
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
+      } = viewerData;
 
       Viewer.sync();
 
@@ -711,6 +825,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         savedObjectsLookup,
         savedObjectsSlates,
         slatesLookup,
+
+        views,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
 
         windows: {
           data: {
