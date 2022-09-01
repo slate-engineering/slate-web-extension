@@ -147,3 +147,14 @@ export const useEscapeKey = (callback) => {
   );
   useEventListener({ type: "keyup", handler: handleKeyUp }, [handleKeyUp]);
 };
+
+export const useMounted = (callback, deps) => {
+  const isMountedRef = React.useRef(false);
+  React.useEffect(() => {
+    isMountedRef.current = true;
+
+    if (isMountedRef.current) {
+      return callback();
+    }
+  }, deps);
+};
