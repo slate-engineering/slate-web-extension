@@ -7,14 +7,17 @@ import { messages, viewsType } from "../";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [{ viewsFeed, appliedView }, { setViewsFeed, setAppliedView }] =
-    useViewsState();
+  const [
+    { viewsFeed, appliedView, isLoadingFeed },
+    { setViewsFeed, setAppliedView, setLoadingState },
+  ] = useViewsState();
 
   const getViewsFeed = (view) => {
-    setAppliedView(view);
     if (view.type === viewsType.custom || view.type === viewsType.savedFiles) {
       window.postMessage({ type: messages.viewFeedRequest, view }, "*");
+      setLoadingState(true);
     }
+    setAppliedView(view);
   };
 
   const appliedViewRef = React.useRef();
@@ -25,10 +28,12 @@ export const useViews = () => {
       if (type === messages.viewFeedResponse) {
         if (data.view.type === viewsType.savedFiles) {
           setViewsFeed(data.result);
+          setLoadingState(false);
           return;
         }
         if (data.view.id === appliedViewRef.current.id) {
           setViewsFeed(data.result);
+          setLoadingState(false);
         }
       }
     };
@@ -40,6 +45,7 @@ export const useViews = () => {
   return {
     viewsFeed,
     appliedView,
+    isLoadingViewFeed: isLoadingFeed,
     viewsType,
     getViewsFeed,
   };

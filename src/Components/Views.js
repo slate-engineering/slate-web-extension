@@ -9,7 +9,7 @@ import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { defaultViews } from "../Core/views";
+import { defaultViews, viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import {
   Combobox,
@@ -24,6 +24,8 @@ import {
   getRootDomain,
 } from "../Common/utilities";
 import { useSlatesCombobox } from "../Components/EditSlates";
+import HistoryFeed from "./HistoryFeed";
+import WindowsFeed from "./WindowsFeed";
 
 const VIEWS_ACTIONS = [
   defaultViews.allOpen,
@@ -169,6 +171,7 @@ function Provider({
   appliedView,
   viewsType,
   getViewsFeed,
+  isLoadingViewFeed,
   onRestoreFocus,
 }) {
   const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
@@ -190,6 +193,7 @@ function Provider({
       viewer,
       viewsFeed,
       appliedView,
+      isLoadingViewFeed,
       viewsType,
       getViewsFeed,
 
@@ -209,6 +213,7 @@ function Provider({
       viewer,
       viewsFeed,
       appliedView,
+      isLoadingViewFeed,
       viewsType,
       getViewsFeed,
 
@@ -921,16 +926,9 @@ const STYLES_VIEWS_FEED_ROW = {
   transform: "translateY(8px)",
 };
 
-const ViewsFeedRow = ({
-  index,
-  data,
-  style,
-  onOpenUrl,
-  onObjectHover,
-  onOpenSlatesJumper,
-  ...props
-}) => {
-  const visit = data[index];
+const ViewsFeedRow = ({ index, data, style, ...props }) => {
+  const visit = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = props;
 
   return (
     <ListView.RovingTabIndexWithMultiSelectObject
@@ -946,7 +944,6 @@ const ViewsFeedRow = ({
       isSaved={visit.isSaved}
       Favicon={getFavicon(visit.rootDomain)}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
-      onMouseEnter={() => onObjectHover?.({ url: visit.url })}
       onOpenSlatesJumper={() =>
         onOpenSlatesJumper([
           {
@@ -956,6 +953,7 @@ const ViewsFeedRow = ({
           },
         ])
       }
+      autoFocus={index === 0}
       {...props}
     />
   );
@@ -996,61 +994,139 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const Feed = React.forwardRef(
-  (
-    {
-      onObjectHover,
-      onOpenUrl,
-      onOpenSlatesJumper,
-      onGroupURLs,
-      onSaveObjects,
-      ...props
-    },
-    ref
-  ) => {
-    const { viewsFeed, appliedView } = useViewsContext();
+const Feed = React.memo(
+  React.forwardRef(
+    (
+      {
+        onObjectHover,
+        onOpenUrl,
+        onOpenSlatesJumper,
+        onGroupURLs,
+        onSaveObjects,
 
-    const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+        historyFeed,
+        historyFeedKeys,
+        loadMoreHistory,
 
-    return (
-      <RovingTabIndex.Provider
-        key={viewsFeed}
-        ref={(node) => (ref.rovingTabIndexRef = node)}
-        isInfiniteList
-        withFocusOnHover
-      >
-        <MultiSelection.Provider
-          totalSelectableItems={viewsFeed.length}
-          onSubmitSelectedItem={handleOnSubmitSelectedItem}
-        >
-          <ViewsFeedList
-            itemCount={viewsFeed.length}
-            itemData={viewsFeed}
-            itemSize={Constants.sizes.jumperFeedItem}
-            {...props}
-          >
-            {(props) =>
-              ViewsFeedRow({
-                ...props,
-                onOpenUrl,
-                onOpenSlatesJumper,
-                onObjectHover,
-              })
-            }
-          </ViewsFeedList>
+        windowsFeed,
+        windowsFeedKeys,
+        onCloseTabs,
+        activeTabId,
 
-          <MultiSelection.ActionsMenu
-            onOpenURLs={(urls) => onOpenUrl({ urls })}
-            onGroupURLs={(urls) =>
-              onGroupURLs({ urls, title: appliedView.name })
-            }
+        ...props
+      },
+      ref
+    ) => {
+      const { viewsFeed, appliedView, isLoadingViewFeed, onRestoreFocus } =
+        useViewsContext();
+
+      const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+
+      // NOTE(amine): display the new feed once it's loaded
+      const prevView = React.useRef(appliedView);
+      const loadedView = React.useMemo(() => {
+        if (isLoadingViewFeed) {
+          return prevView.current;
+        } else {
+          prevView.current = appliedView;
+          return appliedView;
+        }
+      }, [appliedView, isLoadingViewFeed]);
+
+      React.useLayoutEffect(() => {
+        if (loadedView.type === viewsType.allOpen && windowsFeed.length === 0) {
+          onRestoreFocus();
+          return;
+        }
+        if (loadedView.type === viewsType.recent && historyFeed.length === 0) {
+          onRestoreFocus();
+          return;
+        }
+        if (
+          (loadedView.type === viewsType.custom ||
+            loadedView.type === viewsType.savedFiles) &&
+          viewsFeed.length === 0
+        ) {
+          onRestoreFocus();
+          return;
+        }
+      }, [loadedView]);
+
+      const viewsFeedItemsData = React.useMemo(() => {
+        return {
+          feed: viewsFeed,
+          props: {
+            onOpenUrl,
+            onOpenSlatesJumper,
+            onObjectHover,
+          },
+        };
+      }, [viewsFeed]);
+
+      if (loadedView.type === viewsType.allOpen) {
+        return (
+          <WindowsFeed
+            ref={ref}
+            windowsFeed={windowsFeed}
+            windowsFeedKeys={windowsFeedKeys}
+            activeTabId={activeTabId}
+            onCloseTabs={onCloseTabs}
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
+            onOpenUrl={onOpenUrl}
+            {...props}
           />
-        </MultiSelection.Provider>
-      </RovingTabIndex.Provider>
-    );
-  }
+        );
+      }
+
+      if (loadedView.type === viewsType.recent) {
+        return (
+          <HistoryFeed
+            ref={ref}
+            sessionsFeed={historyFeed}
+            sessionsFeedKeys={historyFeedKeys}
+            onLoadMore={loadMoreHistory}
+            onOpenUrl={onOpenUrl}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onSaveObjects={onSaveObjects}
+            onGroupURLs={onGroupURLs}
+            {...props}
+          />
+        );
+      }
+
+      return (
+        <RovingTabIndex.Provider
+          ref={(node) => (ref.rovingTabIndexRef = node)}
+          isInfiniteList
+          withFocusOnHover
+        >
+          <MultiSelection.Provider
+            totalSelectableItems={viewsFeedItemsData.feed.length}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
+            <ViewsFeedList
+              itemCount={viewsFeedItemsData.feed.length}
+              itemData={viewsFeedItemsData}
+              itemSize={Constants.sizes.jumperFeedItem}
+              {...props}
+            >
+              {ViewsFeedRow}
+            </ViewsFeedList>
+
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) =>
+                onGroupURLs({ urls, title: appliedView.name })
+              }
+              onOpenSlatesJumper={onOpenSlatesJumper}
+              onSaveObjects={onSaveObjects}
+            />
+          </MultiSelection.Provider>
+        </RovingTabIndex.Provider>
+      );
+    }
+  )
 );
 
 export { Provider, CreateMenu, Menu, Feed };

@@ -10,6 +10,7 @@ export const useViewsState = () => {
   const [viewState, setViewState] = React.useState({
     feed: [],
     appliedView: defaultViews.allOpen,
+    isLoadingFeed: false,
   });
 
   const setAppliedView = (view) => {
@@ -21,6 +22,10 @@ export const useViewsState = () => {
       ...prev,
       feed: result,
     }));
+  };
+
+  const setLoadingState = (isLoading) => {
+    setViewState((prev) => ({ ...prev, isLoadingFeed: isLoading }));
   };
 
   React.useEffect(() => {
@@ -37,9 +42,10 @@ export const useViewsState = () => {
     {
       viewsFeed: viewState.feed,
       appliedView: viewState.appliedView,
+      isLoadingFeed: viewState.isLoadingFeed,
       viewsType,
     },
-    { setViewsFeed, setAppliedView },
+    { setViewsFeed, setAppliedView, setLoadingState },
   ];
 };
 

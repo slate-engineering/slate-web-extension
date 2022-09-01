@@ -5,8 +5,6 @@ import * as Views from "../../Components/Views";
 import * as Search from "../../Components/Search";
 import * as Jumper from "../../Components/jumper";
 
-import HistoryFeed from "../../Components/HistoryFeed";
-import WindowsFeed from "../../Components/WindowsFeed";
 import Logo from "../../Components/Logo";
 
 import { useHistory, useWindows } from "../../Core/browser/app/jumper";
@@ -35,7 +33,7 @@ const CreateMenuSidePanel = (props) => {
   if (!isCreateMenuOpen) return null;
 
   return (
-    <Jumper.SidePanel css={STYLES_VIEWS_CREATE_MENU_WRAPPER}>
+    <Jumper.SidePanel css={STYLES_VIEWS_CREATE_MENU_WRAPPER} {...props}>
       <Views.CreateMenu />
     </Jumper.SidePanel>
   );
@@ -51,21 +49,13 @@ const STYLES_JUMPER_INPUT_WRAPPER = css`
 `;
 
 export default function Home() {
-  const {
-    viewsFeed,
-    currentViewLabel,
-    currentViewQuery,
-    viewsType,
-    getViewsFeed,
-    currentView,
-  } = useViews();
+  const { viewsFeed, appliedView, isLoadingViewFeed, viewsType, getViewsFeed } =
+    useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
-    viewType: currentView,
-    viewQuery: currentViewQuery,
-    viewLabel: currentViewLabel,
+    view: appliedView,
   });
   const viewer = useViewer();
 
@@ -77,16 +67,10 @@ export default function Home() {
 
   const focusSearchInput = () => inputRef.current.focus();
 
-  const focusFirstItemInFeedOrInputIfEmpty = () => {
-    clearSearch();
-    feedRef.rovingTabIndexRef.focus(focusSearchInput);
-  };
-
-  React.useLayoutEffect(focusFirstItemInFeedOrInputIfEmpty, [
-    currentView,
-    currentViewQuery,
-    viewsFeed,
-  ]);
+  // const focusFirstItemInFeedOrInputIfEmpty = () => {
+  //   clearSearch();
+  //   feedRef.rovingTabIndexRef.focus(focusSearchInput);
+  // };
 
   const handleOnInputKeyUp = (e) => {
     if (e.code === "ArrowDown") {
@@ -100,14 +84,13 @@ export default function Home() {
 
   return (
     <Views.Provider
-      slates={viewer.slates}
+      viewer={viewer}
       viewsFeed={viewsFeed}
-      currentView={currentView}
-      currentViewLabel={currentViewLabel}
-      currentViewQuery={currentViewQuery}
+      appliedView={appliedView}
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
-      onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
+      onRestoreFocus={focusSearchInput}
+      isLoadingViewFeed={isLoadingViewFeed}
     >
       <Jumper.TopPanel containerStyle={{ width: "100%" }}>
         <Views.Menu />
@@ -145,31 +128,16 @@ export default function Home() {
               onGroupURLs={Navigation.createGroupFromUrls}
             />
             <Match
-              when={currentView === viewsType.recent}
-              component={HistoryFeed}
-              sessionsFeed={sessionsFeed}
-              sessionsFeedKeys={sessionsFeedKeys}
-              onLoadMore={loadMoreHistory}
-              // onObjectHover={handleOnObjectHover}
-              onGroupURLs={Navigation.createGroupFromUrls}
-            />
-            <Match
-              when={currentView === viewsType.allOpen}
-              component={WindowsFeed}
+              when={!search.isSearching}
+              component={Views.Feed}
+              historyFeed={sessionsFeed}
+              historyFeedKeys={sessionsFeedKeys}
+              loadMoreHistory={loadMoreHistory}
               windowsFeed={windowsFeeds.allOpenFeed}
               windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
               activeTabId={activeTabId}
-              // onObjectHover={handleOnObjectHover}
               onCloseTabs={Navigation.closeTabs}
-            />
-            <Match
-              when={
-                currentView === viewsType.relatedLinks ||
-                currentView === viewsType.savedFiles
-              }
-              component={Views.Feed}
               onGroupURLs={Navigation.createGroupFromUrls}
-              // onObjectHover={handleOnObjectHover}
             />
           </Switch>
         </Jumper.Body>

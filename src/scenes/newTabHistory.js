@@ -6,8 +6,6 @@ import * as Search from "../Components/Search";
 import * as Jumper from "../Components/jumper";
 import * as EditSlates from "../Components/EditSlates";
 
-import HistoryFeed from "../Components/HistoryFeed";
-import WindowsFeed from "../Components/WindowsFeed";
 import Logo from "../Components/Logo";
 
 import { useHistory, useWindows } from "../Core/browser/app/newTab";
@@ -173,46 +171,18 @@ export default function HistoryScene() {
 
   const { windowsFeeds, activeTabId } = useWindows();
 
-  const {
-    viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
-    viewsType,
-    getViewsFeed,
-  } = useViews();
+  const { viewsFeed, appliedView, isLoadingViewFeed, viewsType, getViewsFeed } =
+    useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
-    viewType: currentView,
-    viewQuery: currentViewQuery,
-    viewLabel: currentViewLabel,
+    view: appliedView,
   });
 
   const focusSearchInput = () => inputRef.current.focus();
 
   const feedRef = React.useRef();
-
-  const focusFirstItemInFeedOrInputIfEmpty = () => {
-    closeSlatesJumper();
-    clearSearch();
-    feedRef.rovingTabIndexRef.focus(focusSearchInput);
-  };
-
-  React.useEffect(() => {
-    if (
-      [viewsType.allOpen, viewsType.recent].some((view) => view === currentView)
-    ) {
-      focusFirstItemInFeedOrInputIfEmpty();
-      return;
-    }
-
-    if (viewsFeed.length) {
-      focusFirstItemInFeedOrInputIfEmpty();
-      return;
-    }
-  }, [currentView, currentViewQuery, viewsFeed]);
 
   const viewer = useViewer();
 
@@ -244,12 +214,13 @@ export default function HistoryScene() {
           clearSearch={clearSearch}
         >
           <Views.Provider
+            viewer={viewer}
             viewsFeed={viewsFeed}
-            currentView={currentView}
-            currentViewLabel={currentViewLabel}
-            currentViewQuery={currentViewQuery}
+            appliedView={appliedView}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
+            isLoadingViewFeed={isLoadingViewFeed}
+            onRestoreFocus={focusSearchInput}
           >
             <section css={STYLES_HISTORY_TOP_POPUP}>
               <Views.Menu css={STYLES_HISTORY_SCENE_VIEWS_MENU} />
@@ -297,27 +268,15 @@ export default function HistoryScene() {
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                   <Match
-                    when={currentView === viewsType.recent}
-                    component={HistoryFeed}
-                    sessionsFeed={sessionsFeed}
-                    sessionsFeedKeys={sessionsFeedKeys}
-                    onLoadMore={loadMoreHistory}
-                    onGroupURLs={Navigation.createGroupFromUrls}
-                  />
-                  <Match
-                    when={currentView === viewsType.allOpen}
-                    component={WindowsFeed}
+                    when={!search.isSearching}
+                    component={Views.Feed}
+                    historyFeed={sessionsFeed}
+                    historyFeedKeys={sessionsFeedKeys}
+                    loadMoreHistory={loadMoreHistory}
                     windowsFeed={windowsFeeds.allOpenFeed}
                     windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
                     activeTabId={activeTabId}
                     onCloseTabs={Navigation.closeTabs}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.relatedLinks ||
-                      currentView === viewsType.savedFiles
-                    }
-                    component={Views.Feed}
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                 </Switch>

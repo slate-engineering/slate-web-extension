@@ -14,18 +14,11 @@ const STYLES_WINDOWS_FEED_ROW = {
   left: "8px",
 };
 
-const WindowsFeedRow = ({
-  index,
-  data,
-  onOpenUrl,
-  onCloseTabs,
-  onObjectHover,
-  onOpenSlatesJumper,
-  style,
-}) => {
-  if (!data[index]) return null;
+const WindowsFeedRow = React.memo(({ index, data, style }) => {
+  if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, tab, isTabActive } = data[index];
+  const { rovingTabIndex, title, tab, isTabActive } = data.feed[index];
+  const { onOpenUrl, onCloseTabs, onOpenSlatesJumper } = data.props;
 
   if (title) {
     return (
@@ -63,10 +56,10 @@ const WindowsFeedRow = ({
           },
         ])
       }
-      onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
+      autoFocus={rovingTabIndex === 0}
     />
   );
-};
+});
 
 /* -----------------------------------------------------------------------------------------------*/
 
@@ -110,7 +103,6 @@ const WindowsFeed = React.forwardRef(
     {
       windowsFeed,
       windowsFeedKeys,
-      onObjectHover,
       onOpenUrl,
       onCloseTabs,
       onOpenSlatesJumper,
@@ -120,7 +112,7 @@ const WindowsFeed = React.forwardRef(
     },
     ref
   ) => {
-    const virtualizedFeed = React.useMemo(() => {
+    const feedItemsData = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
 
@@ -141,8 +133,22 @@ const WindowsFeed = React.forwardRef(
         });
       }
 
-      return virtualizedFeed;
-    }, [windowsFeed, windowsFeedKeys, activeTabId]);
+      return {
+        feed: virtualizedFeed,
+        props: {
+          onOpenUrl,
+          onCloseTabs,
+          onOpenSlatesJumper,
+        },
+      };
+    }, [
+      windowsFeed,
+      windowsFeedKeys,
+      activeTabId,
+      onOpenUrl,
+      onCloseTabs,
+      onOpenSlatesJumper,
+    ]);
 
     const handleOnSubmitSelectedItem = (index) => {
       let currentLength = 0;
@@ -157,11 +163,10 @@ const WindowsFeed = React.forwardRef(
       }
     };
 
-    const getFeedItemHeight = (index) => virtualizedFeed[index].height;
+    const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
 
     return (
       <RovingTabIndex.Provider
-        key={windowsFeed}
         ref={(node) => (ref.rovingTabIndexRef = node)}
         isInfiniteList
         withFocusOnHover
@@ -171,21 +176,13 @@ const WindowsFeed = React.forwardRef(
           onSubmitSelectedItem={handleOnSubmitSelectedItem}
         >
           <WindowsFeedList
-            itemCount={virtualizedFeed.length}
-            itemData={virtualizedFeed}
+            itemCount={feedItemsData.feed.length}
+            itemData={feedItemsData}
             itemSize={getFeedItemHeight}
             ref={ref}
             {...props}
           >
-            {(props) =>
-              WindowsFeedRow({
-                ...props,
-                onCloseTabs,
-                onObjectHover,
-                onOpenSlatesJumper,
-                onOpenUrl,
-              })
-            }
+            {WindowsFeedRow}
           </WindowsFeedList>
 
           <MultiSelection.ActionsMenu

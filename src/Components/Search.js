@@ -194,16 +194,11 @@ const STYLES_SEARCH_FEED_ROW = {
   left: "8px",
 };
 
-const SearchFeedRow = ({
-  index,
-  data,
-  onOpenUrl,
-  onOpenSlatesJumper,
-  style,
-}) => {
-  if (!data[index]) return null;
+const SearchFeedRow = ({ index, data, style }) => {
+  if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, slates, viewType, item } = data[index];
+  const { rovingTabIndex, title, slates, viewType, item } = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   const createOnOpenSlatesHandler = (object) => () => {
     onOpenSlatesJumper([
@@ -341,7 +336,7 @@ const Feed = React.memo(
         return length;
       }, [searchFeed, searchFeedKeys]);
 
-      const virtualizedFeed = React.useMemo(() => {
+      const feedItemsData = React.useMemo(() => {
         let rovingTabIndex = 0;
         let virtualizedFeed = [];
 
@@ -368,8 +363,11 @@ const Feed = React.memo(
           });
         }
 
-        return virtualizedFeed;
-      }, [slates, searchFeed, searchFeedKeys]);
+        return {
+          feed: virtualizedFeed,
+          props: { onOpenUrl, onOpenSlatesJumper },
+        };
+      }, [slates, searchFeed, searchFeedKeys, onOpenUrl, onOpenSlatesJumper]);
 
       const handleOnSubmitSelectedItem = (index) => {
         let currentLength = 0;
@@ -384,7 +382,7 @@ const Feed = React.memo(
         }
       };
 
-      const getFeedItemHeight = (index) => virtualizedFeed[index].height;
+      const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
 
       return (
         <RovingTabIndex.Provider
@@ -398,15 +396,13 @@ const Feed = React.memo(
             onSubmitSelectedItem={handleOnSubmitSelectedItem}
           >
             <SearchFeedList
-              itemCount={virtualizedFeed.length}
-              itemData={virtualizedFeed}
+              itemCount={feedItemsData.feed.length}
+              itemData={feedItemsData}
               itemSize={getFeedItemHeight}
               css={css}
               {...props}
             >
-              {(props) =>
-                SearchFeedRow({ ...props, onOpenUrl, onOpenSlatesJumper })
-              }
+              {SearchFeedRow}
             </SearchFeedList>
             <MultiSelection.ActionsMenu
               onOpenURLs={(urls) => onOpenUrl({ urls })}
