@@ -31,9 +31,9 @@ window.addEventListener("message", async function (event) {
     );
   }
 
-  if (event.data.type === messages.createViewByTagRequest) {
+  if (event.data.type === messages.createViewByTag) {
     chrome.runtime.sendMessage({
-      type: messages.createViewByTagRequest,
+      type: messages.createViewByTag,
       slateName: event.data.slateName,
     });
   }

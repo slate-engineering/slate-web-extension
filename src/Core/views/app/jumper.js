@@ -42,12 +42,17 @@ export const useViews = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
+  const createViewByTag = (slateName) => {
+    window.postMessage({ type: messages.createViewByTag, slateName });
+  };
+
   return {
     viewsFeed,
     appliedView,
     isLoadingViewFeed: isLoadingFeed,
     viewsType,
     getViewsFeed,
+    createViewByTag,
   };
 };
 

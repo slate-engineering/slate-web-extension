@@ -107,6 +107,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   }
 
+  if (request.type === messages.createViewByTag) {
+    ViewerActions.createView({ slateName: request.slateName }).then(
+      sendResponse
+    );
+    return true;
+  }
+
   if (request.type === messages.searchQueryRequest) {
     const searchHandler = async ({ query, view }) => {
       let slates = [];

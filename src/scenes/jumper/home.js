@@ -49,8 +49,14 @@ const STYLES_JUMPER_INPUT_WRAPPER = css`
 `;
 
 export default function Home() {
-  const { viewsFeed, appliedView, isLoadingViewFeed, viewsType, getViewsFeed } =
-    useViews();
+  const {
+    viewsFeed,
+    appliedView,
+    isLoadingViewFeed,
+    viewsType,
+    getViewsFeed,
+    createViewByTag,
+  } = useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -89,6 +95,7 @@ export default function Home() {
       appliedView={appliedView}
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
+      createViewByTag={createViewByTag}
       onRestoreFocus={focusSearchInput}
       isLoadingViewFeed={isLoadingViewFeed}
     >

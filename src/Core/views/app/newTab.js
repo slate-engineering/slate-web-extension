@@ -27,12 +27,17 @@ export const useViews = () => {
     }
   };
 
+  const createViewByTag = (slateName) => {
+    chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
+  };
+
   return {
     viewsFeed,
     isLoadingViewFeed: isLoadingFeed,
     appliedView,
     viewsType,
     getViewsFeed,
+    createViewByTag,
   };
 };
 

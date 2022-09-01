@@ -24,8 +24,11 @@ import {
   getRootDomain,
 } from "../Common/utilities";
 import { useSlatesCombobox } from "../Components/EditSlates";
+import { Switch, Match } from "../Components/Switch.js";
+
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
+import { handleSaveLinkRequests } from "Utilities/upload";
 
 const VIEWS_ACTIONS = [
   defaultViews.allOpen,
@@ -171,6 +174,7 @@ function Provider({
   appliedView,
   viewsType,
   getViewsFeed,
+  createViewByTag,
   isLoadingViewFeed,
   onRestoreFocus,
 }) {
@@ -196,6 +200,7 @@ function Provider({
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
+      createViewByTag,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -216,6 +221,7 @@ function Provider({
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
+      createViewByTag,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -310,7 +316,7 @@ const CreateMenuInitialScene = ({
     []
   );
   return (
-    <section {...props}>
+    <motion.section layoutId="create_menu" {...props}>
       <RovingTabIndex.Provider
         id="create_menu_tabindex"
         withRestoreFocusOnMount
@@ -334,7 +340,7 @@ const CreateMenuInitialScene = ({
           </div>
         </RovingTabIndex.List>
       </RovingTabIndex.Provider>
-    </section>
+    </motion.section>
   );
 };
 
@@ -367,12 +373,12 @@ const sources = [
   },
 ];
 
-const CreateMenuTagButton = ({ index, children, css, ...props }) => {
+const CreateMenuTagButton = ({ index, children, css, onClick, ...props }) => {
   const { checkIfIndexSelected } = useComboboxNavigation();
   const isSelected = checkIfIndexSelected(index);
 
   return (
-    <Combobox.MenuButton index={index}>
+    <Combobox.MenuButton onSubmit={onClick} index={index}>
       <button
         css={[
           STYLES_CREATE_MENU_BUTTON,
@@ -380,6 +386,7 @@ const CreateMenuTagButton = ({ index, children, css, ...props }) => {
           css,
         ]}
         style={{ padding: "5px 12px 7px" }}
+        onClick={onClick}
         {...props}
       >
         {children}
@@ -481,15 +488,27 @@ const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
 `;
 
 const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
-  const { viewer } = useViewsContext();
+  useEscapeKey(goToInitialScene);
+
+  const { viewer, closeCreateMenu, getViewsFeed, createViewByTag } =
+    useViewsContext();
   const { slates, canCreateSlate, searchValue, setSearchValue } =
     useSlatesCombobox({ slates: viewer.slates });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
-  useEscapeKey(goToInitialScene);
+  const handleSwitchToAppliedTagView = (slateName) => {
+    console.log("switching to slate", slateName);
+    const view = viewer.viewsSlatesLookup[slateName];
+    getViewsFeed(view);
+    closeCreateMenu();
+  };
+  const handleCreateView = (slateName) => {
+    console.log("creating slate"), slateName;
+    createViewByTag(slateName);
+  };
 
   return (
-    <div {...props}>
+    <motion.div layoutId="create_menu" {...props}>
       <Combobox.Provider>
         <Combobox.Input>
           <input
@@ -504,8 +523,15 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
             {slates.map((slate, index) => {
               const isApplied = slate in viewer.viewsSlatesLookup;
+              const handleOnClick = isApplied
+                ? handleSwitchToAppliedTagView
+                : handleCreateView;
               return (
-                <CreateMenuTagButton index={index} key={slate}>
+                <CreateMenuTagButton
+                  onClick={() => handleOnClick(slate)}
+                  index={index}
+                  key={slate}
+                >
                   <div>
                     <SVG.Hash height={16} width={16} />
                   </div>
@@ -540,7 +566,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
           </div>
         </Combobox.Menu>
       </Combobox.Provider>
-    </div>
+    </motion.div>
   );
 };
 
@@ -571,33 +597,28 @@ const CreateMenu = (props) => {
     return () => onRestoreFocus?.();
   }, []);
 
-  if (scene === scenes.source) {
-    return (
-      <CreateMenuSourceScene
-        css={STYLES_CREATE_MENU_WRAPPER}
-        goToInitialScene={goToInitialScene}
-        {...props}
-      />
-    );
-  }
-
-  if (scene === scenes.tag) {
-    return (
-      <CreateMenuTagScene
-        css={STYLES_CREATE_MENU_WRAPPER}
-        goToInitialScene={goToInitialScene}
-        {...props}
-      />
-    );
-  }
-
   return (
-    <CreateMenuInitialScene
-      goToTagScene={goToTagScene}
-      goToSourceScene={goToSourceScene}
-      css={STYLES_CREATE_MENU_WRAPPER}
-      {...props}
-    />
+    <Switch {...props}>
+      <Match
+        when={scene === scenes.source}
+        component={CreateMenuSourceScene}
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+      />
+      <Match
+        when={scene === scenes.tag}
+        component={CreateMenuTagScene}
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+      />
+      <Match
+        when={scene === scenes.initial}
+        component={CreateMenuInitialScene}
+        goToTagScene={goToTagScene}
+        goToSourceScene={goToSourceScene}
+        css={STYLES_CREATE_MENU_WRAPPER}
+      />
+    </Switch>
   );
 };
 
@@ -848,7 +869,7 @@ function Menu({ css, ...props }) {
 
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
-      <div style={{ position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "relative", overflow: "hidden", width: "100%" }}>
         <div
           css={STYLES_VIEWS_MENU_ACTIONS}
           ref={mergeRefs([actionWrapperRef, registerMenuRef])}
@@ -871,7 +892,7 @@ function Menu({ css, ...props }) {
               );
             })}
 
-            {viewer.views.length && (
+            {viewer.views.length !== 0 && (
               <Divider
                 height="none"
                 width="1px"

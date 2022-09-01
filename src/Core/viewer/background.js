@@ -32,6 +32,36 @@ const getFileUrl = (object) =>
 
 /** ----------------------------------------- */
 
+// const defaultViews = [
+//   {
+//     id: "test-youtube",
+//     name: "Youtube",
+//     createdAt: "",
+//     updatedAt: "",
+//     order: 1,
+//     filters: { domain: "https://www.youtube.com/" },
+//     metadata: {},
+//   },
+//   {
+//     id: "test-hacker",
+//     name: "Hacker News",
+//     createdAt: "",
+//     updatedAt: "",
+//     order: 2,
+//     filters: { domain: "https://news.ycombinator.com/" },
+//     metadata: {},
+//   },
+//   {
+//     id: "test-rust",
+//     name: "Rust",
+//     createdAt: "",
+//     updatedAt: "",
+//     order: 3,
+//     filters: { slateId: "63ce1767-9ab0-4677-9233-d6e372e37c5e" },
+//     metadata: {},
+//   },
+// ];
+
 const VIEWER_INITIAL_STATE = {
   objects: [],
   objectsMetadata: {},
@@ -86,36 +116,6 @@ class ViewerHandler {
   }
 
   _serialize(viewer) {
-    const defaultViews = [
-      {
-        id: "test-youtube",
-        name: "Youtube",
-        createdAt: "",
-        updatedAt: "",
-        order: 1,
-        filters: { domain: "https://www.youtube.com/" },
-        metadata: {},
-      },
-      {
-        id: "test-hacker",
-        name: "Hacker News",
-        createdAt: "",
-        updatedAt: "",
-        order: 2,
-        filters: { domain: "https://news.ycombinator.com/" },
-        metadata: {},
-      },
-      {
-        id: "test-rust",
-        name: "Rust",
-        createdAt: "",
-        updatedAt: "",
-        order: 3,
-        filters: { slateId: "63ce1767-9ab0-4677-9233-d6e372e37c5e" },
-        metadata: {},
-      },
-    ];
-
     const serializedViewer = {
       objects: [],
       objectsMetadata: {},
@@ -129,7 +129,7 @@ class ViewerHandler {
 
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
-      views: defaultViews,
+      views: viewer.views || [],
 
       sources: {},
     };
@@ -143,7 +143,8 @@ class ViewerHandler {
 
       const slate = viewer.slates.find((slate) => slate.id === slateId);
       if (slate) {
-        serializedViewer.viewsSlatesLookup[slate.slatename] = true;
+        serializedViewer.viewsSlatesLookup[slate.slatename] =
+          this.serializeView(view);
       }
     });
 
@@ -202,6 +203,19 @@ class ViewerHandler {
     };
   }
 
+  serializeView({ id, name, order, filters }) {
+    return {
+      id,
+      name,
+      type: viewsType.custom,
+      filters: {
+        slate: !!filters.slateId,
+        domain: filters.domain,
+      },
+      order,
+    };
+  }
+
   _set(viewer) {
     this._updateStorage(viewer);
     VIEWER_INTERNAL_STORAGE = viewer;
@@ -242,10 +256,12 @@ class ViewerHandler {
     const viewer = await Actions.hydrateAuthenticatedUser();
 
     if (viewer.data) {
-      const serializedViewer = this._serialize(viewer.data);
       const prevViewer = await this.get();
-      this._set({
+      const serializedViewer = this._serialize({
         ...prevViewer,
+        ...viewer.data,
+      });
+      this._set({
         ...serializedViewer,
         lastFetched: new Date().toString(),
         isAuthenticated: true,
@@ -602,7 +618,7 @@ class ViewerActionsHandler {
     };
     if (slateName) {
       const slate = viewer.slates.find(
-        (slate) => slate.slateName === slateName
+        (slate) => slate.slatename === slateName
       );
       viewer.viewsSlatesLookup[slateName] = true;
       viewer.views.push({
@@ -682,11 +698,26 @@ Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ name }) => name);
-  const { savedObjectsLookup, savedObjectsSlates, slatesLookup } = viewerData;
+  const views = viewerData.views.map(Viewer.serializeView);
+  const {
+    savedObjectsLookup,
+    savedObjectsSlates,
+    slatesLookup,
+    viewsSlatesLookup,
+    viewsSourcesLookup,
+  } = viewerData;
 
   chrome.tabs.sendMessage(parseInt(activeTab.id), {
     type: messages.updateViewer,
-    data: { slates, savedObjectsLookup, savedObjectsSlates, slatesLookup },
+    data: {
+      slates,
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+      views,
+      viewsSlatesLookup,
+      viewsSourcesLookup,
+    },
   });
 });
 
@@ -796,16 +827,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const slates = viewerData.slates.map(({ name }) => name);
 
-      const views = viewerData.views.map(({ id, name, filters, order }) => ({
-        id,
-        name,
-        type: viewsType.custom,
-        filters: {
-          slate: !!filters.slateId,
-          domain: filters.domain,
-        },
-        order,
-      }));
+      const views = viewerData.views.map(Viewer.serializeView);
 
       const {
         savedObjectsLookup,
