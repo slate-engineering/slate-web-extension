@@ -311,7 +311,11 @@ const CreateMenuInitialScene = ({
   );
   return (
     <section {...props}>
-      <RovingTabIndex.Provider withFocusOnHover>
+      <RovingTabIndex.Provider
+        id="create_menu_tabindex"
+        withRestoreFocusOnMount
+        withFocusOnHover
+      >
         <RovingTabIndex.List>
           <div style={{ width: "100%" }}>
             {actions.map((action, index) => (
@@ -375,7 +379,7 @@ const CreateMenuTagButton = ({ index, children, css, ...props }) => {
           isSelected && STYLES_CREATE_MENU_BUTTON_FOCUS,
           css,
         ]}
-        style={{ padding: "8px 12px" }}
+        style={{ padding: "5px 12px 7px" }}
         {...props}
       >
         {children}
@@ -399,13 +403,15 @@ export const useSourcesCombobox = ({ sources }) => {
   return { filteredSources, searchValue, setSearchValue };
 };
 
-const CreateMenuSourceScene = (props) => {
+const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
   const { viewer } = useViewsContext();
   const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
     sources,
   });
 
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  useEscapeKey(goToInitialScene);
 
   return (
     <div {...props}>
@@ -474,11 +480,13 @@ const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
   }
 `;
 
-const CreateMenuTagScene = (props) => {
+const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   const { viewer } = useViewsContext();
   const { slates, canCreateSlate, searchValue, setSearchValue } =
     useSlatesCombobox({ slates: viewer.slates });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  useEscapeKey(goToInitialScene);
 
   return (
     <div {...props}>
@@ -554,6 +562,7 @@ const CreateMenu = (props) => {
 
   const goToSourceScene = () => setScene(scenes.source);
   const goToTagScene = () => setScene(scenes.tag);
+  const goToInitialScene = () => setScene(scenes.initial);
 
   const { closeCreateMenu, onRestoreFocus } = useViewsContext();
   useEscapeKey(closeCreateMenu);
@@ -564,12 +573,22 @@ const CreateMenu = (props) => {
 
   if (scene === scenes.source) {
     return (
-      <CreateMenuSourceScene css={STYLES_CREATE_MENU_WRAPPER} {...props} />
+      <CreateMenuSourceScene
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+        {...props}
+      />
     );
   }
 
   if (scene === scenes.tag) {
-    return <CreateMenuTagScene css={STYLES_CREATE_MENU_WRAPPER} {...props} />;
+    return (
+      <CreateMenuTagScene
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+        {...props}
+      />
+    );
   }
 
   return (
