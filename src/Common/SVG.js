@@ -1745,6 +1745,8 @@ export const Hash = ({ style, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     style={{ display: "block", ...style }}
+    height={16}
+    width={16}
     {...props}
   >
     <path d="M2.66663 6H13.3333" />
