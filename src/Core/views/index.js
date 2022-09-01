@@ -6,6 +6,7 @@ export const messages = {
   viewFeedResponse: "VIEW_FEED_RESPONSE",
 
   createViewByTag: "CREATE_VIEW_BY_TAG",
+  createViewBySource: "CREATE_VIEW_BY_SOURCE",
 };
 
 export const viewsType = {

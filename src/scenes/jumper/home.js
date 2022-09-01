@@ -56,6 +56,7 @@ export default function Home() {
     viewsType,
     getViewsFeed,
     createViewByTag,
+    createViewBySource,
   } = useViews();
 
   const inputRef = React.useRef();
@@ -96,6 +97,7 @@ export default function Home() {
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
       createViewByTag={createViewByTag}
+      createViewBySource={createViewBySource}
       onRestoreFocus={focusSearchInput}
       isLoadingViewFeed={isLoadingViewFeed}
     >

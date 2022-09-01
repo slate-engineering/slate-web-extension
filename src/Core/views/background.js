@@ -21,9 +21,9 @@ class ViewsHandler {
 
         if (!view) return [];
 
-        if (view.filters.domain) {
+        if (view.filters.source) {
           const feed = await browserHistory.getRelatedLinks(
-            view.filters.domain
+            view.filters.source
           );
           return feed;
         }
@@ -69,8 +69,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       if (!view) return [];
 
-      if (view.filters.domain) {
-        const feed = await browserHistory.getRelatedLinks(view.filters.domain);
+      if (view.filters.source) {
+        const feed = await browserHistory.getRelatedLinks(view.filters.source);
 
         return feed;
       }
@@ -111,6 +111,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     ViewerActions.createView({ slateName: request.slateName }).then(
       sendResponse
     );
+    return true;
+  }
+
+  if (request.type === messages.createViewBySource) {
+    ViewerActions.createView({ source: request.source }).then(sendResponse);
     return true;
   }
 

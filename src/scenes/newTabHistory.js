@@ -171,8 +171,15 @@ export default function HistoryScene() {
 
   const { windowsFeeds, activeTabId } = useWindows();
 
-  const { viewsFeed, appliedView, isLoadingViewFeed, viewsType, getViewsFeed } =
-    useViews();
+  const {
+    viewsFeed,
+    appliedView,
+    isLoadingViewFeed,
+    viewsType,
+    getViewsFeed,
+    createViewByTag,
+    createViewBySource,
+  } = useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -219,6 +226,8 @@ export default function HistoryScene() {
             appliedView={appliedView}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
+            createViewByTag={createViewByTag}
+            createViewBySource={createViewBySource}
             isLoadingViewFeed={isLoadingViewFeed}
             onRestoreFocus={focusSearchInput}
           >

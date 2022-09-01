@@ -28,7 +28,6 @@ import { Switch, Match } from "../Components/Switch.js";
 
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
-import { handleSaveLinkRequests } from "Utilities/upload";
 
 const VIEWS_ACTIONS = [
   defaultViews.allOpen,
@@ -116,6 +115,12 @@ const useHandleViewsNavigation = () => {
     }
   };
 
+  const scrollMenuToRightEdge = () => {
+    const menuNode = menuElementRef.current;
+    if (!menuNode) return;
+    menuNode.scrollTo({ left: menuNode.scrollWidth });
+  };
+
   useEventListener({ type: "keydown", handler: handleOnKeyDown }, [
     selectedIdx,
   ]);
@@ -163,6 +168,7 @@ const useHandleViewsNavigation = () => {
     registerMenuRef,
     cleanupMenu,
 
+    scrollMenuToRightEdge,
     moveSelectionOnClick,
   };
 };
@@ -175,6 +181,7 @@ function Provider({
   viewsType,
   getViewsFeed,
   createViewByTag,
+  createViewBySource,
   isLoadingViewFeed,
   onRestoreFocus,
 }) {
@@ -190,6 +197,7 @@ function Provider({
     cleanupMenu,
 
     moveSelectionOnClick,
+    scrollMenuToRightEdge,
   } = useHandleViewsNavigation();
 
   const value = React.useMemo(
@@ -201,12 +209,14 @@ function Provider({
       viewsType,
       getViewsFeed,
       createViewByTag,
+      createViewBySource,
 
       registerMenuItem,
       cleanupMenuItem,
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+      scrollMenuToRightEdge,
 
       isCreateMenuOpen,
       openCreateMenu,
@@ -222,12 +232,14 @@ function Provider({
       viewsType,
       getViewsFeed,
       createViewByTag,
+      createViewBySource,
 
       registerMenuItem,
       cleanupMenuItem,
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+      scrollMenuToRightEdge,
 
       isCreateMenuOpen,
       openCreateMenu,
@@ -348,28 +360,14 @@ const CreateMenuInitialScene = ({
 
 const sources = [
   {
-    title: "Twitter",
+    name: "Twitter",
     rootDomain: "twitter.com",
+    source: "https://twitter.com/",
   },
   {
-    title: "Hacker News",
-    Favicon: "ycombinator.com",
-  },
-  {
-    title: "Youtube",
-    Favicon: "youtube.com",
-  },
-  {
-    title: "Figma",
-    Favicon: "figma.com",
-  },
-  {
-    title: "Notion",
-    Favicon: "notion.so",
-  },
-  {
-    title: "Google Search",
-    Favicon: "google.com",
+    name: "Youtube",
+    rootDomain: "youtube.com",
+    source: "https://www.youtube.com/",
   },
 ];
 
@@ -411,7 +409,14 @@ export const useSourcesCombobox = ({ sources }) => {
 };
 
 const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
-  const { viewer } = useViewsContext();
+  const {
+    viewer,
+    getViewsFeed,
+    createViewBySource,
+    scrollMenuToRightEdge,
+    closeCreateMenu,
+  } = useViewsContext();
+
   const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
     sources,
   });
@@ -419,6 +424,18 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
   useEscapeKey(goToInitialScene);
+
+  const handleSwitchToAppliedSourceView = (source) => {
+    console.log("switching to source", source);
+    const view = viewer.viewsSourcesLookup[source];
+    getViewsFeed(view);
+    closeCreateMenu();
+  };
+  const handleCreateView = (source) => {
+    console.log("creating source", source);
+    createViewBySource(source);
+    scrollMenuToRightEdge();
+  };
 
   return (
     <div {...props}>
@@ -434,12 +451,19 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
         </Combobox.Input>
         <Combobox.Menu>
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
-            {filteredSources.map((source, index) => {
-              const Favicon = getFavicon(source.rootDomain);
-              const isApplied = source.url in viewer.viewsSourcesLookup;
+            {filteredSources.map((sourceData, index) => {
+              const Favicon = getFavicon(sourceData.rootDomain);
+              const isApplied = sourceData.source in viewer.viewsSourcesLookup;
+              const handleOnClick = isApplied
+                ? handleSwitchToAppliedSourceView
+                : handleCreateView;
 
               return (
-                <CreateMenuTagButton index={index} key={source.title}>
+                <CreateMenuTagButton
+                  onClick={() => handleOnClick(sourceData.source)}
+                  index={index}
+                  key={sourceData.name}
+                >
                   <div>
                     <Favicon />
                   </div>
@@ -448,7 +472,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
                     style={{ marginLeft: 8 }}
                     as="div"
                   >
-                    {source.title}
+                    {sourceData.name}
                   </Typography.H5>
 
                   {isApplied && (
@@ -490,8 +514,13 @@ const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
 const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   useEscapeKey(goToInitialScene);
 
-  const { viewer, closeCreateMenu, getViewsFeed, createViewByTag } =
-    useViewsContext();
+  const {
+    viewer,
+    closeCreateMenu,
+    getViewsFeed,
+    createViewByTag,
+    scrollMenuToRightEdge,
+  } = useViewsContext();
   const { slates, canCreateSlate, searchValue, setSearchValue } =
     useSlatesCombobox({ slates: viewer.slates });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
@@ -505,6 +534,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   const handleCreateView = (slateName) => {
     console.log("creating slate"), slateName;
     createViewByTag(slateName);
+    scrollMenuToRightEdge();
   };
 
   return (
@@ -905,7 +935,7 @@ function Menu({ css, ...props }) {
               const isSlateFilter = view.filters.slate;
               const Favicon = isSlateFilter
                 ? SVG.Hash
-                : getFavicon(getRootDomain(view.filters.domain));
+                : getFavicon(getRootDomain(view.filters.source));
 
               return (
                 <MenuItem

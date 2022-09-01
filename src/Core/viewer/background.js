@@ -32,36 +32,6 @@ const getFileUrl = (object) =>
 
 /** ----------------------------------------- */
 
-// const defaultViews = [
-//   {
-//     id: "test-youtube",
-//     name: "Youtube",
-//     createdAt: "",
-//     updatedAt: "",
-//     order: 1,
-//     filters: { domain: "https://www.youtube.com/" },
-//     metadata: {},
-//   },
-//   {
-//     id: "test-hacker",
-//     name: "Hacker News",
-//     createdAt: "",
-//     updatedAt: "",
-//     order: 2,
-//     filters: { domain: "https://news.ycombinator.com/" },
-//     metadata: {},
-//   },
-//   {
-//     id: "test-rust",
-//     name: "Rust",
-//     createdAt: "",
-//     updatedAt: "",
-//     order: 3,
-//     filters: { slateId: "63ce1767-9ab0-4677-9233-d6e372e37c5e" },
-//     metadata: {},
-//   },
-// ];
-
 const VIEWER_INITIAL_STATE = {
   objects: [],
   objectsMetadata: {},
@@ -135,9 +105,9 @@ class ViewerHandler {
     };
 
     serializedViewer.views.forEach((view) => {
-      const { domain, slateId } = view.filters;
-      if (domain) {
-        serializedViewer.viewsSourcesLookup[domain] = true;
+      const { source, slateId } = view.filters;
+      if (source) {
+        serializedViewer.viewsSourcesLookup[source] = this.serializeView(view);
         return;
       }
 
@@ -210,7 +180,7 @@ class ViewerHandler {
       type: viewsType.custom,
       filters: {
         slate: !!filters.slateId,
-        domain: filters.domain,
+        source: filters.source,
       },
       order,
     };
@@ -608,7 +578,7 @@ class ViewerActionsHandler {
     ]);
   }
 
-  _addViewToViewer({ viewer, slateName, domain }) {
+  _addViewToViewer({ viewer, slateName, source }) {
     const newView = {
       id: uuid(),
       createdAt: "",
@@ -618,9 +588,13 @@ class ViewerActionsHandler {
     };
     if (slateName) {
       const slate = viewer.slates.find(
-        (slate) => slate.slatename === slateName
+        (slate) => slate.slatename === slateName || slate.name === slateName
       );
-      viewer.viewsSlatesLookup[slateName] = true;
+      viewer.viewsSlatesLookup[slateName] = {
+        ...newView,
+        name: slateName,
+        filters: { slate: !!slate.id },
+      };
       viewer.views.push({
         ...newView,
         name: slateName,
@@ -629,17 +603,27 @@ class ViewerActionsHandler {
       return viewer;
     }
 
-    viewer.viewsSourcesLookup[domain] = true;
-    viewer.views.push({ ...newView, name: "Source", filters: { domain } });
+    const rootDomain = getRootDomain(source);
+    console.log(source, rootDomain);
+    viewer.viewsSourcesLookup[source] = {
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    };
+    viewer.views.push({
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    });
     return viewer;
   }
 
-  async createView({ slateName, domain }) {
+  async createView({ slateName, source }) {
     let viewer = await Viewer.get();
 
     this._registerRunningAction();
 
-    viewer = this._addViewToViewer({ viewer, slateName, domain });
+    viewer = this._addViewToViewer({ viewer, slateName, source });
     Viewer._set(viewer);
 
     this._cleanupCleanupAction();

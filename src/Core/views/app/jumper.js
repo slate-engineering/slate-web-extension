@@ -46,6 +46,10 @@ export const useViews = () => {
     window.postMessage({ type: messages.createViewByTag, slateName });
   };
 
+  const createViewBySource = (source) => {
+    window.postMessage({ type: messages.createViewBySource, source });
+  };
+
   return {
     viewsFeed,
     appliedView,
@@ -53,6 +57,7 @@ export const useViews = () => {
     viewsType,
     getViewsFeed,
     createViewByTag,
+    createViewBySource,
   };
 };
 

@@ -31,6 +31,10 @@ export const useViews = () => {
     chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
   };
 
+  const createViewBySource = (source) => {
+    chrome.runtime.sendMessage({ type: messages.createViewBySource, source });
+  };
+
   return {
     viewsFeed,
     isLoadingViewFeed: isLoadingFeed,
@@ -38,6 +42,7 @@ export const useViews = () => {
     viewsType,
     getViewsFeed,
     createViewByTag,
+    createViewBySource,
   };
 };
 

@@ -37,6 +37,13 @@ window.addEventListener("message", async function (event) {
       slateName: event.data.slateName,
     });
   }
+
+  if (event.data.type === messages.createViewBySource) {
+    chrome.runtime.sendMessage({
+      type: messages.createViewBySource,
+      source: event.data.source,
+    });
+  }
 });
 
 chrome.runtime.onMessage.addListener(function (request) {
