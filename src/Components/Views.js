@@ -94,7 +94,6 @@ const useHandleViewsNavigation = () => {
   };
 
   const moveSelectionOnClick = (index) => {
-    isNavigatingViaKeyboard.current = false;
     setSelectedIdx(index);
   };
 
@@ -707,6 +706,12 @@ const MenuItem = ({
     registerMenuItem({ index, onSubmitRef: onSubmitRef, ref });
     return () => cleanupMenuItem(index);
   }, [index]);
+
+  React.useLayoutEffect(() => {
+    if (isViewApplied) {
+      moveSelectionOnClick(index);
+    }
+  }, [isViewApplied]);
 
   return (
     <Typography.H5
