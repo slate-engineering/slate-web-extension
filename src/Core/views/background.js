@@ -96,10 +96,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       return true;
     }
 
-    if (request.view.type === viewsType.savedFiles) {
+    if (request.view.type === viewsType.saved) {
       Viewer.get().then((res) =>
         sendResponse({
-          result: res.objects,
+          result: res.objects.filter((object) => object.isLink),
+          view: request.view,
+        })
+      );
+      return true;
+    }
+
+    if (request.view.type === viewsType.files) {
+      Viewer.get().then((res) =>
+        sendResponse({
+          result: res.objects.filter((object) => !object.isLink),
           view: request.view,
         })
       );
@@ -135,7 +145,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       };
 
       const handleViewsSearch = async () => {
-        if (view.type !== viewsType.savedFiles) {
+        if (view.type !== viewsType.saved && view.type !== viewsType.file) {
           const viewsSearchResult = await Views.search({
             view,
             query,

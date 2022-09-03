@@ -32,7 +32,8 @@ import WindowsFeed from "./WindowsFeed";
 const VIEWS_ACTIONS = [
   defaultViews.allOpen,
   defaultViews.recent,
-  defaultViews.savedFiles,
+  defaultViews.saved,
+  defaultViews.files,
 ];
 
 /* -------------------------------------------------------------------------------------------------
@@ -1119,7 +1120,8 @@ const Feed = React.memo(
         }
         if (
           (loadedView.type === viewsType.custom ||
-            loadedView.type === viewsType.savedFiles) &&
+            loadedView.type === viewsType.saved ||
+            loadedView === viewsType.files) &&
           viewsFeed.length === 0
         ) {
           onRestoreFocus();
@@ -1172,6 +1174,7 @@ const Feed = React.memo(
 
       return (
         <RovingTabIndex.Provider
+          key={loadedView.id}
           ref={(node) => (ref.rovingTabIndexRef = node)}
           isInfiniteList
           withFocusOnHover

@@ -13,7 +13,11 @@ export const useViews = () => {
   ] = useViewsState();
 
   const getViewsFeed = (view) => {
-    if (view.type === viewsType.custom || view.type === viewsType.savedFiles) {
+    if (
+      view.type === viewsType.custom ||
+      view.type === viewsType.saved ||
+      view.type === viewsType.files
+    ) {
       window.postMessage({ type: messages.viewFeedRequest, view }, "*");
       setLoadingState(true);
     }
@@ -26,7 +30,10 @@ export const useViews = () => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
       if (type === messages.viewFeedResponse) {
-        if (data.view.type === viewsType.savedFiles) {
+        if (
+          data.view.type === viewsType.saved ||
+          data.view.type === viewsType.files
+        ) {
           setViewsFeed(data.result);
           setLoadingState(false);
           return;

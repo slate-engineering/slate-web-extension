@@ -32,7 +32,8 @@ export const useViewsState = () => {
     const { appliedView } = viewState;
     if (
       appliedView.type !== viewsType.custom &&
-      appliedView.type !== viewsType.savedFiles
+      appliedView.type !== viewsType.saved &&
+      appliedView.type !== viewsType.files
     ) {
       setViewsFeed([]);
     }

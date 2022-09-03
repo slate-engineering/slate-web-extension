@@ -15,7 +15,11 @@ export const useViews = () => {
 
   const getViewsFeed = (view) => {
     setAppliedView(view);
-    if (view.type === viewsType.custom || view.type === viewsType.savedFiles) {
+    if (
+      view.type === viewsType.custom ||
+      view.type === viewsType.saved ||
+      view.type === viewsType.files
+    ) {
       setLoadingState(true);
       chrome.runtime.sendMessage(
         { type: messages.viewFeedRequest, view },

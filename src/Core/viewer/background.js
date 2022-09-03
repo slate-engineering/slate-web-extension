@@ -158,6 +158,7 @@ class ViewerHandler {
         url: object.url,
         rootDomain: getRootDomain(object.url),
         cid: object.cid,
+        isLink: true,
         isSaved: true,
       };
     }
@@ -169,6 +170,7 @@ class ViewerHandler {
       rootDomain: Constants.uri.domain,
       url: fileUrl,
       cid: object.cid,
+      isLink: false,
       isSaved: true,
     };
   }

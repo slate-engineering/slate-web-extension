@@ -12,17 +12,23 @@ export const messages = {
 export const viewsType = {
   allOpen: "allOpen",
   recent: "recent",
-  savedFiles: "savedFiles",
+  saved: "saved",
+  files: "files",
   custom: "custom",
 };
 
 export const defaultViews = {
   allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
   recent: { id: "recent", name: "Recent", type: viewsType.recent },
-  savedFiles: {
-    id: "savedFiles",
-    name: "Saved Files",
-    type: viewsType.savedFiles,
+  saved: {
+    id: "saved",
+    name: "Saved",
+    type: viewsType.saved,
+  },
+  files: {
+    id: "files",
+    name: "Files",
+    type: viewsType.files,
   },
 };
 
