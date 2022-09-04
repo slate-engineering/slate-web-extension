@@ -426,8 +426,8 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
   useEscapeKey(goToInitialScene);
 
   const handleSwitchToAppliedSourceView = (source) => {
-    console.log("switching to source", source);
     const view = viewer.viewsSourcesLookup[source];
+    console.log("switching to source", source, view);
     getViewsFeed(view);
     closeCreateMenu();
   };
@@ -627,28 +627,30 @@ const CreateMenu = (props) => {
     return () => onRestoreFocus?.();
   }, []);
 
+  if (scene === scenes.source) {
+    return (
+      <CreateMenuSourceScene
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+      />
+    );
+  }
+
+  if (scene === scenes.tag) {
+    return (
+      <CreateMenuTagScene
+        css={STYLES_CREATE_MENU_WRAPPER}
+        goToInitialScene={goToInitialScene}
+      />
+    );
+  }
+
   return (
-    <Switch {...props}>
-      <Match
-        when={scene === scenes.source}
-        component={CreateMenuSourceScene}
-        css={STYLES_CREATE_MENU_WRAPPER}
-        goToInitialScene={goToInitialScene}
-      />
-      <Match
-        when={scene === scenes.tag}
-        component={CreateMenuTagScene}
-        css={STYLES_CREATE_MENU_WRAPPER}
-        goToInitialScene={goToInitialScene}
-      />
-      <Match
-        when={scene === scenes.initial}
-        component={CreateMenuInitialScene}
-        goToTagScene={goToTagScene}
-        goToSourceScene={goToSourceScene}
-        css={STYLES_CREATE_MENU_WRAPPER}
-      />
-    </Switch>
+    <CreateMenuInitialScene
+      goToTagScene={goToTagScene}
+      goToSourceScene={goToSourceScene}
+      css={STYLES_CREATE_MENU_WRAPPER}
+    />
   );
 };
 
@@ -1002,9 +1004,9 @@ const STYLES_VIEWS_FEED_ROW = {
   transform: "translateY(8px)",
 };
 
-const ViewsFeedRow = ({ index, data, style, ...props }) => {
+const ViewsFeedRow = ({ index, data, style }) => {
   const visit = data.feed[index];
-  const { onOpenUrl, onOpenSlatesJumper } = props;
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   return (
     <ListView.RovingTabIndexWithMultiSelectObject
@@ -1030,7 +1032,6 @@ const ViewsFeedRow = ({ index, data, style, ...props }) => {
         ])
       }
       autoFocus={index === 0}
-      {...props}
     />
   );
 };
@@ -1074,7 +1075,6 @@ const Feed = React.memo(
   React.forwardRef(
     (
       {
-        onObjectHover,
         onOpenUrl,
         onOpenSlatesJumper,
         onGroupURLs,
@@ -1135,7 +1135,6 @@ const Feed = React.memo(
           props: {
             onOpenUrl,
             onOpenSlatesJumper,
-            onObjectHover,
           },
         };
       }, [viewsFeed]);

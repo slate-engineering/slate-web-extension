@@ -592,11 +592,11 @@ class ViewerActionsHandler {
       const slate = viewer.slates.find(
         (slate) => slate.slatename === slateName || slate.name === slateName
       );
-      viewer.viewsSlatesLookup[slateName] = {
+      viewer.viewsSlatesLookup[slateName] = Viewer.serializeView({
         ...newView,
         name: slateName,
         filters: { slate: !!slate.id },
-      };
+      });
       viewer.views.push({
         ...newView,
         name: slateName,
@@ -606,12 +606,11 @@ class ViewerActionsHandler {
     }
 
     const rootDomain = getRootDomain(source);
-    console.log(source, rootDomain);
-    viewer.viewsSourcesLookup[source] = {
+    viewer.viewsSourcesLookup[source] = Viewer.serializeView({
       ...newView,
       name: capitalize(rootDomain),
       filters: { source },
-    };
+    });
     viewer.views.push({
       ...newView,
       name: capitalize(rootDomain),
