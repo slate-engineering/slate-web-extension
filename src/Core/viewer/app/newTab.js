@@ -100,3 +100,22 @@ export const ViewerProvider = ({ children }) => {
     </viewerContext.Provider>
   );
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useSources
+ * -----------------------------------------------------------------------------------------------*/
+
+export const useSources = () => {
+  const [sources, setSources] = React.useState([]);
+
+  const getSources = () => {
+    chrome.runtime.sendMessage(
+      { type: messages.getSavedLinksSourcesRequest },
+      (response) => setSources(response)
+    );
+  };
+
+  React.useEffect(getSources, []);
+
+  return sources;
+};

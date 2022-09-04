@@ -90,3 +90,32 @@ export const ViewerProvider = ({ children }) => {
     </viewerContext.Provider>
   );
 };
+
+/* -------------------------------------------------------------------------------------------------
+ * useSources
+ * -----------------------------------------------------------------------------------------------*/
+
+export const useSources = () => {
+  const [sources, setSources] = React.useState([]);
+
+  React.useEffect(() => {
+    const getSources = () => {
+      window.postMessage({ type: messages.getSavedLinksSourcesRequest }, "*");
+    };
+
+    const handleMessage = (event) => {
+      let { data, type } = event.data;
+      if (type === messages.getSavedLinksSourcesResponse) {
+        setSources(data);
+        return;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    getSources();
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return sources;
+};

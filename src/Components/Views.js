@@ -24,7 +24,9 @@ import {
   getRootDomain,
 } from "../Common/utilities";
 import { useSlatesCombobox } from "../Components/EditSlates";
-import { Switch, Match } from "../Components/Switch.js";
+import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
+import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
+const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
@@ -358,19 +360,6 @@ const CreateMenuInitialScene = ({
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const sources = [
-  {
-    name: "Twitter",
-    rootDomain: "twitter.com",
-    source: "https://twitter.com/",
-  },
-  {
-    name: "Youtube",
-    rootDomain: "youtube.com",
-    source: "https://www.youtube.com/",
-  },
-];
-
 const CreateMenuTagButton = ({ index, children, css, onClick, ...props }) => {
   const { checkIfIndexSelected } = useComboboxNavigation();
   const isSelected = checkIfIndexSelected(index);
@@ -408,7 +397,7 @@ export const useSourcesCombobox = ({ sources }) => {
   return { filteredSources, searchValue, setSearchValue };
 };
 
-const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
+const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
   const {
     viewer,
     getViewsFeed,
@@ -427,12 +416,10 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
 
   const handleSwitchToAppliedSourceView = (source) => {
     const view = viewer.viewsSourcesLookup[source];
-    console.log("switching to source", source, view);
     getViewsFeed(view);
     closeCreateMenu();
   };
   const handleCreateView = (source) => {
-    console.log("creating source", source);
     createViewBySource(source);
     scrollMenuToRightEdge();
   };
@@ -472,7 +459,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, ...props }) => {
                     style={{ marginLeft: 8 }}
                     as="div"
                   >
-                    {sourceData.name}
+                    {sourceData.title}
                   </Typography.H5>
 
                   {isApplied && (
@@ -627,11 +614,15 @@ const CreateMenu = (props) => {
     return () => onRestoreFocus?.();
   }, []);
 
+  const sources = useSources();
+
   if (scene === scenes.source) {
     return (
       <CreateMenuSourceScene
         css={STYLES_CREATE_MENU_WRAPPER}
         goToInitialScene={goToInitialScene}
+        sources={sources}
+        {...props}
       />
     );
   }
@@ -641,6 +632,7 @@ const CreateMenu = (props) => {
       <CreateMenuTagScene
         css={STYLES_CREATE_MENU_WRAPPER}
         goToInitialScene={goToInitialScene}
+        {...props}
       />
     );
   }
@@ -650,6 +642,7 @@ const CreateMenu = (props) => {
       goToTagScene={goToTagScene}
       goToSourceScene={goToSourceScene}
       css={STYLES_CREATE_MENU_WRAPPER}
+      {...props}
     />
   );
 };

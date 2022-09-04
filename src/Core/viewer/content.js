@@ -298,6 +298,19 @@ window.addEventListener("message", async function (event) {
     return;
   }
 
+  if (event.data.type === messages.getSavedLinksSourcesRequest) {
+    chrome.runtime.sendMessage(
+      { type: messages.getSavedLinksSourcesRequest },
+      (response) => {
+        window.postMessage(
+          { type: messages.getSavedLinksSourcesResponse, data: response },
+          "*"
+        );
+      }
+    );
+    return;
+  }
+
   if (event.data.type === messages.createSlate) {
     chrome.runtime.sendMessage({
       type: messages.createSlate,

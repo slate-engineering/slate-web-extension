@@ -27,6 +27,16 @@ const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+const getDomainOrigin = (url) => {
+  let origin;
+  try {
+    origin = new URL(url).origin;
+  } catch (e) {
+    origin = "";
+  }
+  return origin + "/";
+};
+
 const getFileUrl = (object) =>
   object.isLink ? object.url : `${Constants.gateways.ipfs}/${object.cid}`;
 
@@ -207,6 +217,34 @@ class ViewerHandler {
 
     VIEWER_INTERNAL_STORAGE = VIEWER_INITIAL_STATE;
     return VIEWER_INTERNAL_STORAGE;
+  }
+
+  async getSavedLinksSources() {
+    const createSource = (object) => {
+      const rootDomain = getRootDomain(object.url);
+      return {
+        rootDomain,
+        favicon: object.favicon,
+        title: capitalize(rootDomain),
+        source: getDomainOrigin(object.url),
+      };
+    };
+
+    const removeDuplicates = (sources) => {
+      const duplicates = {};
+      const newSources = [];
+      for (let source of sources) {
+        if (source.rootDomain in duplicates) continue;
+        duplicates[source.rootDomain] = true;
+        newSources.push(source);
+      }
+
+      return newSources;
+    };
+
+    const viewer = await this.get();
+    const sources = viewer.objects.map(createSource);
+    return removeDuplicates(sources);
   }
 
   async checkIfAuthenticated() {
@@ -735,6 +773,11 @@ chrome.cookies.onChanged.addListener((e) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === messages.getSavedLinksSourcesRequest) {
+    Viewer.getSavedLinksSources().then(sendResponse);
+    return true;
+  }
+
   if (request.type === messages.saveLink) {
     ViewerActions.saveLink({
       objects: request.objects,
