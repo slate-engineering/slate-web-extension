@@ -468,18 +468,37 @@ const views_messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
   searchQueryResponse: "SEARCH_QUERY_RESPONSE",
 
-  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
-  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
+  viewFeedRequest: "VIEW_FEED_REQUEST",
+  viewFeedResponse: "VIEW_FEED_RESPONSE",
+
+  createViewByTag: "CREATE_VIEW_BY_TAG",
+  createViewBySource: "CREATE_VIEW_BY_SOURCE",
 };
 
 const viewsType = {
   allOpen: "allOpen",
   recent: "recent",
-  savedFiles: "savedFiles",
-  relatedLinks: "relatedLinks",
+  saved: "saved",
+  files: "files",
+  custom: "custom",
 };
 
-const initialView = viewsType.allOpen;
+const defaultViews = {
+  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
+  recent: { id: "recent", name: "Recent", type: viewsType.recent },
+  saved: {
+    id: "saved",
+    name: "Saved",
+    type: viewsType.saved,
+  },
+  files: {
+    id: "files",
+    name: "Files",
+    type: viewsType.files,
+  },
+};
+
+const initialView = defaultViews.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/views/content.js
 
@@ -490,9 +509,7 @@ window.addEventListener("message", async function (event) {
       {
         type: views_messages.searchQueryRequest,
         query: event.data.query,
-        viewType: event.data.viewType,
-        viewQuery: event.data.viewQuery,
-        viewLabel: event.data.viewLabel,
+        view: event.data.view,
       },
       (response) => {
         window.postMessage(
@@ -503,20 +520,40 @@ window.addEventListener("message", async function (event) {
     );
   }
 
-  if (event.data.type === views_messages.viewByTypeRequest) {
+  if (event.data.type === views_messages.viewFeedRequest) {
     chrome.runtime.sendMessage(
       {
-        type: views_messages.viewByTypeRequest,
-        viewType: event.data.viewType,
-        viewQuery: event.data.viewQuery,
-        viewLabel: event.data.viewLabel,
-        query: event.data.query,
+        type: views_messages.viewFeedRequest,
+        view: event.data.view,
       },
       (response) =>
         window.postMessage(
-          { type: views_messages.viewByTypeResponse, data: response },
+          { type: views_messages.viewFeedResponse, data: response },
           "*"
         )
+    );
+  }
+
+  if (event.data.type === views_messages.createViewByTag) {
+    chrome.runtime.sendMessage({
+      type: views_messages.createViewByTag,
+      slateName: event.data.slateName,
+    });
+  }
+
+  if (event.data.type === views_messages.createViewBySource) {
+    chrome.runtime.sendMessage({
+      type: views_messages.createViewBySource,
+      source: event.data.source,
+    });
+  }
+});
+
+chrome.runtime.onMessage.addListener(function (request) {
+  if (request.type === views_messages.createViewByTagSuccess) {
+    window.postMessage(
+      { type: views_messages.createViewByTagSuccess, data: request.data },
+      "*"
     );
   }
 });
@@ -536,6 +573,11 @@ const viewer_messages = {
   addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
   removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
   createSlate: "CREATE_SLATE",
+
+  getSavedLinksSourcesRequest: "GET_SAVED_LINKS_SOURCES_REQUEST",
+  getSavedLinksSourcesResponse: "GET_SAVED_LINKS_SOURCES_RESPONSE",
+
+  updateViewerSettings: "UPDATE_VIEWER_SETTINGS",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -852,12 +894,33 @@ chrome.runtime.onMessage.addListener(async (request) => {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === viewer_messages.updateViewerSettings) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.updateViewerSettings,
+      ...event.data,
+    });
+    return;
+  }
+
   if (event.data.type === viewer_messages.loadViewerDataRequest) {
     chrome.runtime.sendMessage(
       { type: viewer_messages.loadViewerDataRequest },
       (response) => {
         window.postMessage(
           { type: viewer_messages.loadViewerDataResponse, data: response },
+          "*"
+        );
+      }
+    );
+    return;
+  }
+
+  if (event.data.type === viewer_messages.getSavedLinksSourcesRequest) {
+    chrome.runtime.sendMessage(
+      { type: viewer_messages.getSavedLinksSourcesRequest },
+      (response) => {
+        window.postMessage(
+          { type: viewer_messages.getSavedLinksSourcesResponse, data: response },
           "*"
         );
       }
