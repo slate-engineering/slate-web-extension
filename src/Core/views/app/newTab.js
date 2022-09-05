@@ -14,7 +14,6 @@ export const useViews = () => {
   ] = useViewsState();
 
   const getViewsFeed = (view) => {
-    setAppliedView(view);
     if (
       view.type === viewsType.custom ||
       view.type === viewsType.saved ||
@@ -29,6 +28,7 @@ export const useViews = () => {
         }
       );
     }
+    setAppliedView(view);
   };
 
   const createViewByTag = (slateName) => {

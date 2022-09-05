@@ -10,7 +10,7 @@ export const useViewsState = () => {
   const [viewState, setViewState] = React.useState({
     feed: [],
     appliedView: defaultViews.allOpen,
-    isLoadingFeed: false,
+    isLoadingFeed: true,
   });
 
   const setAppliedView = (view) => {
