@@ -145,7 +145,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       };
 
       const handleViewsSearch = async () => {
-        if (view.type !== viewsType.saved && view.type !== viewsType.file) {
+        if (view.type !== viewsType.saved && view.type !== viewsType.files) {
           const viewsSearchResult = await Views.search({
             view,
             query,
