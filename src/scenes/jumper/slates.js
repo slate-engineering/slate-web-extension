@@ -7,6 +7,7 @@ import * as SVG from "../../Common/SVG";
 import { useViewer } from "../../Core/viewer/app/jumper";
 import { css } from "@emotion/react";
 import { useNavigation } from "../../Core/navigation/app/jumper";
+import { useEscapeKey } from "../../Common/hooks";
 
 const STYLES_BACK_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};
@@ -28,6 +29,8 @@ export default function Slates() {
   const checkIfSlateIsApplied = (slate) => {
     return objects.every((object) => object.url in viewer.slatesLookup[slate]);
   };
+
+  useEscapeKey(navigateToHomeJumper);
 
   return (
     <EditSlates.Provider
