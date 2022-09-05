@@ -27,7 +27,7 @@ const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   max-height: 220px;
 `;
 
-const CreateMenuSidePanel = (props) => {
+const CreateViewMenuSidePanel = (props) => {
   const { isCreateMenuOpen } = useViewsContext();
 
   if (!isCreateMenuOpen) return null;
@@ -101,11 +101,13 @@ export default function Home() {
       onRestoreFocus={focusSearchInput}
       isLoadingViewFeed={isLoadingViewFeed}
     >
-      <Jumper.TopPanel containerStyle={{ width: "100%" }}>
-        <Views.Menu />
-      </Jumper.TopPanel>
+      <Views.MenuProvider>
+        <Jumper.TopPanel containerStyle={{ width: "100%" }}>
+          <Views.Menu />
+        </Jumper.TopPanel>
 
-      <CreateMenuSidePanel />
+        <CreateViewMenuSidePanel />
+      </Views.MenuProvider>
 
       <Search.Provider
         onInputChange={handleInputChange}

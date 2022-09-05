@@ -14,7 +14,12 @@ import { Divider } from "../Components/Divider";
 import { Switch, Match } from "../Components/Switch";
 import { getExtensionURL } from "../Common/utilities";
 import { useViewer } from "../Core/viewer/app/newTab";
+import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
+
+/* -------------------------------------------------------------------------------------------------
+ * EditSlatesJumper
+ * -----------------------------------------------------------------------------------------------*/
 
 const useSlatesJumper = () => {
   const [slatesJumperState, setSlatesJumperState] = React.useState({
@@ -64,6 +69,54 @@ function EditSlatesJumper({ objects, onClose }) {
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * CreateViewMenuSidePanel
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_VIEWS_CREATE_MENU_LEFT_POSITION = css`
+  position: absolute;
+  top: 44px;
+  right: 40px;
+  transform: translateX(100%);
+`;
+
+const STYLES_VIEWS_CREATE_MENU_RIGHT_POSITION = css`
+  position: absolute;
+  top: 44px;
+  right: 8px;
+`;
+
+const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
+  height: fit-content;
+  z-index: 1;
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+  border-radius: 12px;
+  width: 100%;
+  max-width: 240px;
+  max-height: 220px;
+  background-color: ${theme.semantic.bgLight};
+  box-shadow: ${theme.shadow.lightLarge};
+`;
+
+const CreateViewMenuSidePanel = (props) => {
+  const { isCreateMenuOpen } = useViewsContext();
+  const { isMenuOverflowingFrom } = useViewsMenuContext();
+
+  if (!isCreateMenuOpen) return null;
+
+  return (
+    <Views.CreateMenu
+      css={[
+        STYLES_VIEWS_CREATE_MENU_WRAPPER,
+        isMenuOverflowingFrom.right || isMenuOverflowingFrom.left
+          ? STYLES_VIEWS_CREATE_MENU_RIGHT_POSITION
+          : STYLES_VIEWS_CREATE_MENU_LEFT_POSITION,
+      ]}
+      {...props}
+    />
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
@@ -96,17 +149,20 @@ const STYLES_HISTORY_TOP_POPUP = (theme) => css`
   position: relative;
   padding-bottom: 48px;
   @supports (
-    (-webkit-backdrop-filter: blur(35px)) or (backdrop-filter: blur(35px))
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(35px))
   ) {
-    -webkit-backdrop-filter: blur(35px);
-    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
     background-color: ${theme.semantic.bgBlurLight6OP};
   }
 `;
 
 const STYLES_HISTORY_SCENE_VIEWS_MENU = css`
   ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
-  padding: 16px 8px 16px 0px;
+  width: 100%;
+  position: relative;
+  padding: 8px;
+  padding-left: 0px;
   margin-left: 16px;
   margin-right: 16px;
 `;
@@ -232,7 +288,23 @@ export default function HistoryScene() {
             onRestoreFocus={focusSearchInput}
           >
             <section css={STYLES_HISTORY_TOP_POPUP}>
-              <Views.Menu css={STYLES_HISTORY_SCENE_VIEWS_MENU} />
+              <div css={STYLES_HISTORY_SCENE_VIEWS_MENU}>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "fit-content",
+                    maxWidth: "100%",
+                  }}
+                >
+                  <Views.MenuProvider>
+                    <Views.Menu
+                      actionsWrapperStyle={{ width: "auto", paddingRight: 0 }}
+                    />
+
+                    <CreateViewMenuSidePanel />
+                  </Views.MenuProvider>
+                </div>
+              </div>
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
               <Logo
                 style={{

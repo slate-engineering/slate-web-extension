@@ -190,6 +190,7 @@ function Provider({
   const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
   const openCreateMenu = () => setCreateMenuVisibility(true);
   const closeCreateMenu = () => setCreateMenuVisibility(false);
+  const toggleCreateMenu = () => setCreateMenuVisibility((prev) => !prev);
 
   const {
     registerMenuItem,
@@ -223,6 +224,7 @@ function Provider({
       isCreateMenuOpen,
       openCreateMenu,
       closeCreateMenu,
+      toggleCreateMenu,
 
       onRestoreFocus,
     }),
@@ -246,6 +248,7 @@ function Provider({
       isCreateMenuOpen,
       openCreateMenu,
       closeCreateMenu,
+      toggleCreateMenu,
 
       onRestoreFocus,
     ]
@@ -330,7 +333,7 @@ const CreateMenuInitialScene = ({
     []
   );
   return (
-    <motion.section layoutId="create_menu" {...props}>
+    <section layoutId="create_menu" style={{ padding: 8 }} {...props}>
       <RovingTabIndex.Provider
         id="create_menu_tabindex"
         withRestoreFocusOnMount
@@ -354,7 +357,7 @@ const CreateMenuInitialScene = ({
           </div>
         </RovingTabIndex.List>
       </RovingTabIndex.Provider>
-    </motion.section>
+    </section>
   );
 };
 
@@ -427,15 +430,18 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
   return (
     <div {...props}>
       <Combobox.Provider>
-        <Combobox.Input>
-          <input
-            placeholder="Search"
-            css={STYLES_CREATE_MENU_INPUT}
-            value={searchValue}
-            onChange={handleOnInputChange}
-            autoFocus
-          />
-        </Combobox.Input>
+        <div style={{ width: "100%", padding: 8 }}>
+          <Combobox.Input>
+            <input
+              placeholder="Search"
+              css={STYLES_CREATE_MENU_INPUT}
+              value={searchValue}
+              onChange={handleOnInputChange}
+              autoFocus
+            />
+          </Combobox.Input>
+        </div>
+        <Divider color="borderGrayLight" style={{ width: "100%" }} />
         <Combobox.Menu>
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
             {filteredSources.map((sourceData, index) => {
@@ -482,7 +488,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
 const STYLES_CREATE_MENU_SLATES_WRAPPER = css`
   ${Styles.VERTICAL_CONTAINER_CENTERED};
   width: 100%;
-  padding-top: 8px;
+  padding: 8px;
   height: 128px;
   overflow-y: auto;
 
@@ -513,29 +519,30 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
   const handleSwitchToAppliedTagView = (slateName) => {
-    console.log("switching to slate", slateName);
     const view = viewer.viewsSlatesLookup[slateName];
     getViewsFeed(view);
     closeCreateMenu();
   };
   const handleCreateView = (slateName) => {
-    console.log("creating slate"), slateName;
     createViewByTag(slateName);
     scrollMenuToRightEdge();
   };
 
   return (
-    <motion.div layoutId="create_menu" {...props}>
+    <section layoutId="create_menu" {...props}>
       <Combobox.Provider>
-        <Combobox.Input>
-          <input
-            placeholder="Search or create new tag"
-            css={STYLES_CREATE_MENU_INPUT}
-            value={searchValue}
-            onChange={handleOnInputChange}
-            autoFocus
-          />
-        </Combobox.Input>
+        <div style={{ width: "100%", padding: 8 }}>
+          <Combobox.Input>
+            <input
+              placeholder="Search or create new tag"
+              css={STYLES_CREATE_MENU_INPUT}
+              value={searchValue}
+              onChange={handleOnInputChange}
+              autoFocus
+            />
+          </Combobox.Input>
+        </div>
+        <Divider style={{ width: "100%" }} />
         <Combobox.Menu>
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
             {slates.map((slate, index) => {
@@ -583,7 +590,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
           </div>
         </Combobox.Menu>
       </Combobox.Provider>
-    </motion.div>
+    </section>
   );
 };
 
@@ -591,11 +598,10 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
 
 const STYLES_CREATE_MENU_WRAPPER = css`
   ${Styles.VERTICAL_CONTAINER_CENTERED};
-  padding: 8px;
   width: 100%;
 `;
 
-const CreateMenu = (props) => {
+const CreateMenu = ({ css, ...props }) => {
   const scenes = {
     initial: "initial",
     source: "source",
@@ -619,7 +625,7 @@ const CreateMenu = (props) => {
   if (scene === scenes.source) {
     return (
       <CreateMenuSourceScene
-        css={STYLES_CREATE_MENU_WRAPPER}
+        css={[STYLES_CREATE_MENU_WRAPPER, css]}
         goToInitialScene={goToInitialScene}
         sources={sources}
         {...props}
@@ -630,7 +636,7 @@ const CreateMenu = (props) => {
   if (scene === scenes.tag) {
     return (
       <CreateMenuTagScene
-        css={STYLES_CREATE_MENU_WRAPPER}
+        css={[STYLES_CREATE_MENU_WRAPPER, css]}
         goToInitialScene={goToInitialScene}
         {...props}
       />
@@ -639,11 +645,38 @@ const CreateMenu = (props) => {
 
   return (
     <CreateMenuInitialScene
+      css={[STYLES_CREATE_MENU_WRAPPER, css]}
       goToTagScene={goToTagScene}
       goToSourceScene={goToSourceScene}
-      css={STYLES_CREATE_MENU_WRAPPER}
       {...props}
     />
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Views MenuContext
+ * -----------------------------------------------------------------------------------------------*/
+const ViewsMenuContext = React.createContext();
+export const useViewsMenuContext = () => React.useContext(ViewsMenuContext);
+
+const MenuProvider = ({ children, ...props }) => {
+  const [isMenuOverflowingFrom, setMenuOverflowFrom] = React.useState({
+    left: false,
+    right: false,
+  });
+
+  const value = React.useMemo(
+    () => ({
+      isMenuOverflowingFrom,
+      setMenuOverflowFrom,
+    }),
+    [isMenuOverflowingFrom, setMenuOverflowFrom]
+  );
+
+  return (
+    <ViewsMenuContext.Provider value={value} {...props}>
+      {children}
+    </ViewsMenuContext.Provider>
   );
 };
 
@@ -744,6 +777,7 @@ const MenuItem = ({
 
 const STYLES_VIEWS_MENU_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER};
+  position: relative;
   width: 100%;
   padding: 8px;
 
@@ -792,15 +826,21 @@ const STYLES_SCROLL_BUTTON = (theme) => css`
 const STYLES_SCROLL_BUTTON_RIGHT = (theme) => css`
   ${STYLES_SCROLL_BUTTON(theme)};
   position: absolute;
-  right: 0px;
-  top: 0px;
+  //NOTE(amine): plus button's width + paddings
+  right: calc(32px + 8px + 8px);
+  top: 8px;
 `;
 
 const STYLES_SCROLL_BUTTON_LEFT = (theme) => css`
   ${STYLES_SCROLL_BUTTON(theme)};
   position: absolute;
-  left: 0px;
-  top: 0px;
+  left: 8px;
+  top: 8px;
+`;
+
+const STYLES_VIEWS_ADD_BUTTON_FOCUS = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+  color: ${theme.semantic.textBlack};
 `;
 
 const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
@@ -824,17 +864,16 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   }
 `;
 
-const useHandleScrollNavigation = ({ containerRef }) => {
-  const [isOverflowFrom, setOverflowFrom] = React.useState({
-    left: false,
-    right: false,
-  });
-
+const useHandleScrollNavigation = ({
+  isMenuOverflowingFrom,
+  setMenuOverflowFrom,
+  containerRef,
+}) => {
   const handleActionWrapperScroll = () => {
     const wrapper = containerRef.current;
     if (!wrapper) return;
 
-    setOverflowFrom((prev) => {
+    setMenuOverflowFrom((prev) => {
       const newState = {
         right: wrapper.scrollLeft < wrapper.scrollWidth - wrapper.offsetWidth,
         left: wrapper.scrollLeft > 0,
@@ -859,7 +898,7 @@ const useHandleScrollNavigation = ({ containerRef }) => {
       handler: handleActionWrapperScroll,
       ref: containerRef,
     },
-    [isOverflowFrom]
+    [isMenuOverflowingFrom]
   );
 
   const scrollToRight = () => {
@@ -872,10 +911,10 @@ const useHandleScrollNavigation = ({ containerRef }) => {
     wrapper.scrollTo({ left: wrapper.scrollLeft - 250 });
   };
 
-  return [isOverflowFrom, { scrollToLeft, scrollToRight }];
+  return { scrollToLeft, scrollToRight };
 };
 
-function Menu({ css, ...props }) {
+function Menu({ css, actionsWrapperStyle, ...props }) {
   const {
     viewer,
 
@@ -887,99 +926,112 @@ function Menu({ css, ...props }) {
     registerMenuRef,
     cleanupMenu,
 
-    openCreateMenu,
+    isCreateMenuOpen,
+    toggleCreateMenu,
   } = useViewsContext();
+
+  const { isMenuOverflowingFrom, setMenuOverflowFrom } = useViewsMenuContext();
 
   React.useLayoutEffect(() => cleanupMenu, []);
 
   const createOnClickHandler = (view) => () => getViewsFeed(view);
 
   const actionWrapperRef = React.useRef();
-  const [isOverflowFrom, { scrollToLeft, scrollToRight }] =
-    useHandleScrollNavigation({ containerRef: actionWrapperRef });
+  const { scrollToLeft, scrollToRight } = useHandleScrollNavigation({
+    isMenuOverflowingFrom,
+    setMenuOverflowFrom,
+    containerRef: actionWrapperRef,
+  });
 
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
-      <div style={{ position: "relative", overflow: "hidden", width: "100%" }}>
-        <div
-          css={STYLES_VIEWS_MENU_ACTIONS}
-          ref={mergeRefs([actionWrapperRef, registerMenuRef])}
-          style={{ paddingRight: 132 }}
-        >
-          <AnimateSharedLayout>
-            {VIEWS_ACTIONS.map((view, i) => {
-              const isApplied = appliedView.id === view.id;
-              return (
-                <MenuItem
-                  isViewApplied={isApplied}
-                  key={view.name}
-                  style={{ marginLeft: i > 0 ? 4 : 0 }}
-                  onClick={createOnClickHandler(view)}
-                  onSubmit={createOnClickHandler(view)}
-                  index={i}
-                >
-                  {view.name}
-                </MenuItem>
-              );
-            })}
+      <div
+        css={STYLES_VIEWS_MENU_ACTIONS}
+        ref={mergeRefs([actionWrapperRef, registerMenuRef])}
+        style={{
+          paddingRight: 132,
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          ...actionsWrapperStyle,
+        }}
+      >
+        <AnimateSharedLayout>
+          {VIEWS_ACTIONS.map((view, i) => {
+            const isApplied = appliedView.id === view.id;
+            return (
+              <MenuItem
+                isViewApplied={isApplied}
+                key={view.name}
+                style={{ marginLeft: i > 0 ? 4 : 0 }}
+                onClick={createOnClickHandler(view)}
+                onSubmit={createOnClickHandler(view)}
+                index={i}
+              >
+                {view.name}
+              </MenuItem>
+            );
+          })}
 
-            {viewer.views.length !== 0 && (
-              <Divider
-                height="none"
-                width="1px"
-                style={{ margin: "0px 4px", flexShrink: 0 }}
-              />
-            )}
+          {viewer.views.length !== 0 && (
+            <Divider
+              height="none"
+              width="1px"
+              style={{ margin: "0px 4px", flexShrink: 0 }}
+            />
+          )}
 
-            {viewer.views.map((view, i) => {
-              const isApplied = appliedView.id === view.id;
-              const isSlateFilter = view.filters.slate;
-              const Favicon = isSlateFilter
-                ? SVG.Hash
-                : getFavicon(getRootDomain(view.filters.source));
+          {viewer.views.map((view, i) => {
+            const isApplied = appliedView.id === view.id;
+            const isSlateFilter = view.filters.slate;
+            const Favicon = isSlateFilter
+              ? SVG.Hash
+              : getFavicon(getRootDomain(view.filters.source));
 
-              return (
-                <MenuItem
-                  key={view.name}
-                  isViewApplied={isApplied}
-                  style={{ marginLeft: 4 }}
-                  onClick={createOnClickHandler(view)}
-                  onSubmit={createOnClickHandler(view)}
-                  index={VIEWS_ACTIONS.length + i}
-                  Favicon={Favicon}
-                >
-                  {view.name}
-                </MenuItem>
-              );
-            })}
-          </AnimateSharedLayout>
-        </div>
-
-        {isOverflowFrom.left ? (
-          <button
-            className="views_actions_chevron"
-            css={[STYLES_SCROLL_BUTTON_LEFT, scrollButtonCss]}
-            onClick={scrollToLeft}
-          >
-            <SVG.ChevronLeft width={16} height={16} />
-          </button>
-        ) : null}
-
-        {isOverflowFrom.right ? (
-          <button
-            className="views_actions_chevron"
-            css={[STYLES_SCROLL_BUTTON_RIGHT, scrollButtonCss]}
-            onClick={scrollToRight}
-          >
-            <SVG.ChevronRight width={16} height={16} />
-          </button>
-        ) : null}
+            return (
+              <MenuItem
+                key={view.name}
+                isViewApplied={isApplied}
+                style={{ marginLeft: 4 }}
+                onClick={createOnClickHandler(view)}
+                onSubmit={createOnClickHandler(view)}
+                index={VIEWS_ACTIONS.length + i}
+                Favicon={Favicon}
+              >
+                {view.name}
+              </MenuItem>
+            );
+          })}
+        </AnimateSharedLayout>
       </div>
 
+      {isMenuOverflowingFrom.left ? (
+        <button
+          className="views_actions_chevron"
+          css={[STYLES_SCROLL_BUTTON_LEFT, scrollButtonCss]}
+          onClick={scrollToLeft}
+        >
+          <SVG.ChevronLeft width={16} height={16} />
+        </button>
+      ) : null}
+
+      {isMenuOverflowingFrom.right ? (
+        <button
+          className="views_actions_chevron"
+          css={[STYLES_SCROLL_BUTTON_RIGHT, scrollButtonCss]}
+          onClick={scrollToRight}
+        >
+          <SVG.ChevronRight width={16} height={16} />
+        </button>
+      ) : null}
+
       <button
-        css={STYLES_VIEWS_ADD_BUTTON}
+        css={[
+          STYLES_VIEWS_ADD_BUTTON,
+          isCreateMenuOpen && STYLES_VIEWS_ADD_BUTTON_FOCUS,
+        ]}
         style={{ marginLeft: 6 }}
-        onClick={openCreateMenu}
+        onClick={toggleCreateMenu}
       >
         <SVG.Plus width={16} height={16} />
       </button>
@@ -1199,4 +1251,4 @@ const Feed = React.memo(
   )
 );
 
-export { Provider, CreateMenu, Menu, Feed };
+export { Provider, MenuProvider, Menu, CreateMenu, Feed };
