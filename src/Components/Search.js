@@ -168,7 +168,7 @@ const Input = React.forwardRef(
         <input
           css={[STYLES_SEARCH_INPUT, css]}
           ref={mergeRefs([inputRef, forwardedRef])}
-          placeholder="Search by keywords, filters, tags"
+          placeholder="Press “/” to search"
           name="search"
           onChange={onInputChange}
           autoComplete="off"
@@ -194,16 +194,11 @@ const STYLES_SEARCH_FEED_ROW = {
   left: "8px",
 };
 
-const SearchFeedRow = ({
-  index,
-  data,
-  onOpenUrl,
-  onOpenSlatesJumper,
-  style,
-}) => {
-  if (!data[index]) return null;
+const SearchFeedRow = ({ index, data, style }) => {
+  if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, viewType, item } = data[index];
+  const { rovingTabIndex, title, slates, viewType, item } = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   const createOnOpenSlatesHandler = (object) => () => {
     onOpenSlatesJumper([
@@ -214,6 +209,15 @@ const SearchFeedRow = ({
       },
     ]);
   };
+
+  if (slates) {
+    return (
+      <ListView.SlatesItem
+        slates={slates}
+        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+      />
+    );
+  }
 
   if (title) {
     return (
@@ -291,13 +295,13 @@ const SearchFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -305,72 +309,84 @@ const SearchFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const getTitleFromView = (view) => {
-  const titles = {
-    allOpen: "All Open",
-    recent: "Recent",
-  };
-  return titles[view];
-};
-
 const Feed = React.memo(
   React.forwardRef(
     (
-      { onOpenUrl, onGroupURLs, onOpenSlatesJumper, onSaveObjects, ...props },
+      {
+        onOpenUrl,
+        onGroupURLs,
+        onOpenSlatesJumper,
+        onSaveObjects,
+        searchFeed,
+        searchFeedKeys,
+        slates,
+        ...props
+      },
       ref
     ) => {
       const {
-        search: { result: feeds, query: searchQuery },
+        search: { query: searchQuery },
       } = useSearchContext();
 
       const searchFeedLength = React.useMemo(() => {
         let length = 0;
-        for (let feed of feeds) {
-          length += feed.result.length;
-        }
+        searchFeedKeys.forEach((key) => {
+          length += searchFeed[key].length;
+        });
         return length;
-      }, [feeds]);
+      }, [searchFeed, searchFeedKeys]);
 
-      const virtualizedFeed = React.useMemo(() => {
+      const feedItemsData = React.useMemo(() => {
         let rovingTabIndex = 0;
         let virtualizedFeed = [];
 
-        for (let feed of feeds) {
-          const { title: view, result } = feed;
-          result.forEach((item, index) => {
+        if (slates?.length) {
+          virtualizedFeed.push({
+            slates,
+            height: Constants.sizes.jumperFeedItem,
+          });
+        }
+
+        for (let key of searchFeedKeys) {
+          searchFeed[key].forEach((item, index) => {
             if (index === 0) {
-              virtualizedFeed.push({ title: getTitleFromView(view) });
+              virtualizedFeed.push({ title: key, height: 40 });
             }
 
             virtualizedFeed.push({
               rovingTabIndex,
-              viewType: view,
               item,
+              height: Constants.sizes.jumperFeedItem,
             });
 
             rovingTabIndex++;
           });
         }
 
-        return virtualizedFeed;
-      }, [feeds]);
+        return {
+          feed: virtualizedFeed,
+          props: { onOpenUrl, onOpenSlatesJumper },
+        };
+      }, [slates, searchFeed, searchFeedKeys, onOpenUrl, onOpenSlatesJumper]);
 
       const handleOnSubmitSelectedItem = (index) => {
         let currentLength = 0;
 
-        for (let feed of feeds) {
-          const { result } = feed;
-          const nextLength = currentLength + result.length;
+        for (let feedKey of searchFeedKeys) {
+          const feed = searchFeed[feedKey];
+          const nextLength = currentLength + feed.length;
           if (index < nextLength) {
-            return result[index - currentLength];
+            return feed[index - currentLength];
           }
           currentLength = nextLength;
         }
       };
 
+      const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
+
       return (
         <RovingTabIndex.Provider
-          key={feeds}
+          key={searchFeed}
           ref={(node) => (ref.rovingTabIndexRef = node)}
           isInfiniteList
           withFocusOnHover
@@ -380,15 +396,13 @@ const Feed = React.memo(
             onSubmitSelectedItem={handleOnSubmitSelectedItem}
           >
             <SearchFeedList
-              itemCount={virtualizedFeed.length}
-              itemData={virtualizedFeed}
-              itemSize={Constants.sizes.jumperFeedItem}
+              itemCount={feedItemsData.feed.length}
+              itemData={feedItemsData}
+              itemSize={getFeedItemHeight}
               css={css}
               {...props}
             >
-              {(props) =>
-                SearchFeedRow({ ...props, onOpenUrl, onOpenSlatesJumper })
-              }
+              {SearchFeedRow}
             </SearchFeedList>
             <MultiSelection.ActionsMenu
               onOpenURLs={(urls) => onOpenUrl({ urls })}

@@ -10,6 +10,11 @@ import {
   savingSources,
 } from ".";
 import { constructWindowsFeed } from "../../Extension_common/utilities";
+import { capitalize } from "../../Common/strings";
+import { viewsType } from "../views";
+import { v4 as uuid } from "uuid";
+
+import Fuse from "fuse.js";
 
 const getRootDomain = (url) => {
   let hostname;
@@ -20,6 +25,16 @@ const getRootDomain = (url) => {
   }
   const hostnameParts = hostname.split(".");
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
+const getDomainOrigin = (url) => {
+  let origin;
+  try {
+    origin = new URL(url).origin;
+  } catch (e) {
+    origin = "";
+  }
+  return origin + "/";
 };
 
 const getFileUrl = (object) =>
@@ -36,6 +51,14 @@ const VIEWER_INITIAL_STATE = {
   savedObjectsSlates: {},
   slatesLookup: {},
   slates: [],
+
+  viewsSourcesLookup: {},
+  viewsSlatesLookup: {},
+  views: [],
+
+  sources: {},
+
+  settings: { isSavedViewActivated: false, isFilesViewActivated: false },
 
   lastFetched: null,
   isAuthenticated: false,
@@ -85,7 +108,28 @@ class ViewerHandler {
       slates: viewer.slates.sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       ),
+
+      viewsSourcesLookup: {},
+      viewsSlatesLookup: {},
+      views: viewer.views || [],
+      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
+
+      sources: {},
     };
+
+    serializedViewer.views.forEach((view) => {
+      const { source, slateId } = view.filters;
+      if (source) {
+        serializedViewer.viewsSourcesLookup[source] = this.serializeView(view);
+        return;
+      }
+
+      const slate = viewer.slates.find((slate) => slate.id === slateId);
+      if (slate) {
+        serializedViewer.viewsSlatesLookup[slate.slatename] =
+          this.serializeView(view);
+      }
+    });
 
     serializedViewer.objects = viewer.library.map((object) => {
       serializedViewer.objectsMetadata[getFileUrl(object)] = {
@@ -95,27 +139,12 @@ class ViewerHandler {
 
       if (object.isLink) {
         serializedViewer.savedObjectsLookup[object.url] = true;
-
-        return {
-          title: object.linkName,
-          favicon: object.linkFavicon,
-          url: object.url,
-          rootDomain: getRootDomain(object.url),
-          cid: object.cid,
-          isSaved: true,
-        };
       }
 
       const fileUrl = getFileUrl(object);
       serializedViewer.savedObjectsLookup[fileUrl] = true;
 
-      return {
-        title: object.name,
-        rootDomain: Constants.uri.domain,
-        url: fileUrl,
-        cid: object.cid,
-        isSaved: true,
-      };
+      return this._serializeObject(object);
     });
 
     viewer.slates.forEach((slate) => {
@@ -132,6 +161,44 @@ class ViewerHandler {
     });
 
     return serializedViewer;
+  }
+
+  _serializeObject(object) {
+    if (object.isLink) {
+      return {
+        title: object.linkName,
+        favicon: object.linkFavicon,
+        url: object.url,
+        rootDomain: getRootDomain(object.url),
+        cid: object.cid,
+        isLink: true,
+        isSaved: true,
+      };
+    }
+
+    const fileUrl = getFileUrl(object);
+
+    return {
+      title: object.name,
+      rootDomain: Constants.uri.domain,
+      url: fileUrl,
+      cid: object.cid,
+      isLink: false,
+      isSaved: true,
+    };
+  }
+
+  serializeView({ id, name, order, filters }) {
+    return {
+      id,
+      name,
+      type: viewsType.custom,
+      filters: {
+        slate: !!filters.slateId,
+        source: filters.source,
+      },
+      order,
+    };
   }
 
   _set(viewer) {
@@ -155,6 +222,34 @@ class ViewerHandler {
     return VIEWER_INTERNAL_STORAGE;
   }
 
+  async getSavedLinksSources() {
+    const createSource = (object) => {
+      const rootDomain = getRootDomain(object.url);
+      return {
+        rootDomain,
+        favicon: object.favicon,
+        title: capitalize(rootDomain),
+        source: getDomainOrigin(object.url),
+      };
+    };
+
+    const removeDuplicates = (sources) => {
+      const duplicates = {};
+      const newSources = [];
+      for (let source of sources) {
+        if (source.rootDomain in duplicates) continue;
+        duplicates[source.rootDomain] = true;
+        newSources.push(source);
+      }
+
+      return newSources;
+    };
+
+    const viewer = await this.get();
+    const sources = viewer.objects.map(createSource);
+    return removeDuplicates(sources);
+  }
+
   async checkIfAuthenticated() {
     return (await this.get()).isAuthenticated;
   }
@@ -174,7 +269,11 @@ class ViewerHandler {
     const viewer = await Actions.hydrateAuthenticatedUser();
 
     if (viewer.data) {
-      const serializedViewer = this._serialize(viewer.data);
+      const prevViewer = await this.get();
+      const serializedViewer = this._serialize({
+        ...prevViewer,
+        ...viewer.data,
+      });
       this._set({
         ...serializedViewer,
         lastFetched: new Date().toString(),
@@ -278,6 +377,24 @@ class ViewerActionsHandler {
     });
 
     return viewer;
+  }
+
+  async updateViewerSettings({ isSavedViewActivated, isFilesViewActivated }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    if (typeof isSavedViewActivated === "boolean") {
+      viewer.settings.isSavedViewActivated = isSavedViewActivated;
+    }
+
+    if (typeof isFilesViewActivated === "boolean") {
+      viewer.settings.isFilesViewActivated = isFilesViewActivated;
+    }
+
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
   }
 
   /**
@@ -521,6 +638,100 @@ class ViewerActionsHandler {
       }),
     ]);
   }
+
+  _addViewToViewer({ viewer, slateName, source }) {
+    const newView = {
+      id: uuid(),
+      createdAt: "",
+      updatedAt: "",
+      order: viewer.views.length,
+      metadata: {},
+    };
+    if (slateName) {
+      const slate = viewer.slates.find(
+        (slate) => slate.slatename === slateName || slate.name === slateName
+      );
+      viewer.viewsSlatesLookup[slateName] = Viewer.serializeView({
+        ...newView,
+        name: slateName,
+        filters: { slate: !!slate.id },
+      });
+      viewer.views.push({
+        ...newView,
+        name: slateName,
+        filters: { slateId: slate.id },
+      });
+      return viewer;
+    }
+
+    const rootDomain = getRootDomain(source);
+    viewer.viewsSourcesLookup[source] = Viewer.serializeView({
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    });
+    viewer.views.push({
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    });
+    return viewer;
+  }
+
+  async createView({ slateName, source }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    viewer = this._addViewToViewer({ viewer, slateName, source });
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
+  }
+
+  async search(query) {
+    const response = await Actions.search({
+      types: ["FILE", "SLATE"],
+      query,
+      grouped: true,
+    });
+
+    if (!response || response.error) {
+      return;
+    }
+
+    const { slates, files: objects } = response.results;
+    const serializedObjects = [];
+    const duplicates = {};
+
+    for (let object of objects) {
+      // NOTE(amine): due to a bug (when deleting a file, we didn't delete it from search index)
+      //              we get duplicates and deleted files in search result
+      const url = getFileUrl(object);
+      const isSaved = await Viewer.checkIfLinkIsSaved(object.url);
+      if (url in duplicates || !isSaved) {
+        continue;
+      }
+      duplicates[object.url] = true;
+      serializedObjects.push(Viewer._serializeObject(object));
+    }
+    return { slates: slates || [], files: serializedObjects };
+  }
+
+  async searchSlates(query) {
+    const viewer = await Viewer.get(query);
+    const options = {
+      findAllMatches: true,
+      shouldSort: true,
+      threshold: 0.5,
+      keys: ["slatename", "name"],
+    };
+
+    const fuse = new Fuse(viewer.slates, options);
+    const results = fuse.search(query);
+
+    return results.map(({ item: { slatename, name } }) => name || slatename);
+  }
 }
 
 export const ViewerActions = new ViewerActionsHandler();
@@ -531,11 +742,28 @@ Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ name }) => name);
-  const { savedObjectsLookup, savedObjectsSlates, slatesLookup } = viewerData;
+  const views = viewerData.views.map(Viewer.serializeView);
+  const {
+    savedObjectsLookup,
+    savedObjectsSlates,
+    slatesLookup,
+    viewsSlatesLookup,
+    viewsSourcesLookup,
+    settings,
+  } = viewerData;
 
   chrome.tabs.sendMessage(parseInt(activeTab.id), {
     type: messages.updateViewer,
-    data: { slates, savedObjectsLookup, savedObjectsSlates, slatesLookup },
+    data: {
+      slates,
+      settings,
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+      views,
+      viewsSlatesLookup,
+      viewsSourcesLookup,
+    },
   });
 });
 
@@ -568,6 +796,19 @@ chrome.cookies.onChanged.addListener((e) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === messages.updateViewerSettings) {
+    ViewerActions.updateViewerSettings({
+      isSavedViewActivated: request.isSavedViewActivated,
+      isFilesViewActivated: request.isFilesViewActivated,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === messages.getSavedLinksSourcesRequest) {
+    Viewer.getSavedLinksSources().then(sendResponse);
+    return true;
+  }
+
   if (request.type === messages.saveLink) {
     ViewerActions.saveLink({
       objects: request.objects,
@@ -644,19 +885,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const viewerData = await Viewer.get();
 
       const slates = viewerData.slates.map(({ name }) => name);
-      const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
-        viewerData;
+
+      const views = viewerData.views.map(Viewer.serializeView);
+
+      const {
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
+        settings,
+      } = viewerData;
 
       Viewer.sync();
 
       const response = {
         ...viewerInitialState,
         isAuthenticated,
+        settings,
 
         slates,
         savedObjectsLookup,
         savedObjectsSlates,
         slatesLookup,
+
+        views,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
 
         windows: {
           data: {

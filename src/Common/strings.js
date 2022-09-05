@@ -311,7 +311,7 @@ export const createSlug = (text, base = "untitled") => {
     return base;
   }
 
-  text = text.toString().toLowerCase().trim();
+  text = text.toString().toLowerCase();
 
   const sets = [
     { to: "a", from: "[ÀÁÂÃÅÆĀĂĄẠẢẤẦẨẪẬẮẰẲẴẶ]" },
@@ -341,7 +341,7 @@ export const createSlug = (text, base = "untitled") => {
     { to: "x", from: "[ẍ]" },
     { to: "y", from: "[ÝŶŸỲỴỶỸ]" },
     { to: "z", from: "[ŹŻŽ]" },
-    { to: "-", from: "[·/_,:;']" },
+    { to: "-", from: "[_]" },
   ];
 
   sets.forEach((set) => {
@@ -355,8 +355,8 @@ export const createSlug = (text, base = "untitled") => {
     .replace(/&/g, "-and-") // Replace & with 'and'
     .replace(/[^a-zA-Z0-9_\u3400-\u9FBF\s-]/g, "") // Remove all non-word chars
     .replace(/\--+/g, "-") // Replace multiple - with single -
-    .replace(/^-+/, "") // Trim - from start of text
-    .replace(/-+$/, ""); // Trim - from end of text
+    .replace(/^-+/, "")
+    .trim(); // Trim - from start of text
 
   return text;
 };

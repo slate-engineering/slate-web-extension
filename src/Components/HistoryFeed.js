@@ -33,17 +33,11 @@ const STYLES_HISTORY_FEED_ROW = {
   left: "8px",
 };
 
-const HistoryFeedRow = ({
-  index,
-  data,
-  onOpenUrl,
-  onOpenSlatesJumper,
-  onObjectHover,
-  style,
-}) => {
-  if (!data[index]) return null;
+const HistoryFeedRow = React.memo(({ index, data, style }) => {
+  if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, visit } = data[index];
+  const { rovingTabIndex, title, visit } = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   if (title) {
     return (
@@ -67,12 +61,6 @@ const HistoryFeedRow = ({
       Favicon={getFavicon(visit.rootDomain)}
       isSaved={visit.isSaved}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
-      onMouseEnter={() =>
-        onObjectHover?.({
-          url: visit.url,
-          title: visit.title,
-        })
-      }
       onOpenSlatesJumper={() =>
         onOpenSlatesJumper([
           {
@@ -82,9 +70,10 @@ const HistoryFeedRow = ({
           },
         ])
       }
+      autoFocus={rovingTabIndex === 0}
     />
   );
-};
+});
 
 /* -----------------------------------------------------------------------------------------------*/
 
@@ -107,13 +96,13 @@ const HistoryFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -129,7 +118,6 @@ const HistoryFeed = React.forwardRef(
       sessionsFeed,
       sessionsFeedKeys,
       onLoadMore,
-      onObjectHover,
       onOpenUrl,
       onOpenSlatesJumper,
       onGroupURLs,
@@ -154,29 +142,36 @@ const HistoryFeed = React.forwardRef(
       return length;
     }, [sessionsFeed, sessionsFeedKeys]);
 
-    const virtualizedFeed = React.useMemo(() => {
+    const feedItemsData = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
 
       for (let key of sessionsFeedKeys) {
         sessionsFeed[key].forEach((visit, index) => {
           if (index === 0) {
-            virtualizedFeed.push({ title: key });
+            virtualizedFeed.push({ title: key, height: 40 });
           }
 
           virtualizedFeed.push({
             rovingTabIndex,
             visit,
+            height: Constants.sizes.jumperFeedItem,
           });
 
           rovingTabIndex++;
         });
       }
 
-      return virtualizedFeed;
-    }, [sessionsFeed, sessionsFeedKeys]);
+      return {
+        feed: virtualizedFeed,
+        props: {
+          onOpenUrl,
+          onOpenSlatesJumper,
+        },
+      };
+    }, [sessionsFeed, sessionsFeedKeys, onOpenUrl, onOpenSlatesJumper]);
 
-    const isItemLoaded = (index) => index < virtualizedFeed.length;
+    const isItemLoaded = (index) => index < feedItemsData.feed.length;
 
     const handleOnSubmitSelectedItem = (index) => {
       let currentLength = 0;
@@ -191,6 +186,8 @@ const HistoryFeed = React.forwardRef(
       }
     };
 
+    const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
+
     return (
       <RovingTabIndex.Provider
         ref={(node) => (ref.rovingTabIndexRef = node)}
@@ -203,27 +200,20 @@ const HistoryFeed = React.forwardRef(
         >
           <InfiniteLoader
             isItemLoaded={isItemLoaded}
-            itemCount={virtualizedFeed.length + 1}
+            itemCount={feedItemsData.feed.length + 1}
             loadMoreItems={handleInfiniteScroll}
           >
             {({ onItemsRendered, ref }) => (
               <HistoryFeedList
-                itemCount={virtualizedFeed.length + 1}
-                itemData={virtualizedFeed}
-                itemSize={Constants.sizes.jumperFeedItem}
+                itemCount={feedItemsData.feed.length + 1}
+                itemData={feedItemsData}
+                itemSize={getFeedItemHeight}
                 onItemsRendered={onItemsRendered}
                 css={css}
                 ref={ref}
                 {...props}
               >
-                {(props) =>
-                  HistoryFeedRow({
-                    ...props,
-                    onOpenUrl,
-                    onOpenSlatesJumper,
-                    onObjectHover,
-                  })
-                }
+                {HistoryFeedRow}
               </HistoryFeedList>
             )}
           </InfiniteLoader>
