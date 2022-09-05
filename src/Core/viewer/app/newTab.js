@@ -79,6 +79,17 @@ export const ViewerProvider = ({ children }) => {
     });
   };
 
+  const updateViewerSettings = ({
+    isSavedViewActivated,
+    isFilesViewActivated,
+  }) => {
+    chrome.runtime.sendMessage({
+      type: messages.updateViewerSettings,
+      isSavedViewActivated,
+      isFilesViewActivated,
+    });
+  };
+
   const contextValue = React.useMemo(
     () => ({
       ...state,
@@ -86,6 +97,7 @@ export const ViewerProvider = ({ children }) => {
       createSlate,
       addObjectsToSlate,
       removeObjectsFromSlate,
+      updateViewerSettings,
     }),
     [state]
   );

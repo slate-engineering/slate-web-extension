@@ -31,13 +31,6 @@ const useSources = isNewTab ? useNewTabSources : useJumperSources;
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
 
-const VIEWS_ACTIONS = [
-  defaultViews.allOpen,
-  defaultViews.recent,
-  defaultViews.saved,
-  defaultViews.files,
-];
-
 /* -------------------------------------------------------------------------------------------------
  * Views Provider
  * -----------------------------------------------------------------------------------------------*/
@@ -123,6 +116,12 @@ const useHandleViewsNavigation = () => {
     menuNode.scrollTo({ left: menuNode.scrollWidth });
   };
 
+  const scrollMenuToLeftEdge = () => {
+    const menuNode = menuElementRef.current;
+    if (!menuNode) return;
+    menuNode.scrollTo({ left: 0 });
+  };
+
   useEventListener({ type: "keydown", handler: handleOnKeyDown }, [
     selectedIdx,
   ]);
@@ -171,6 +170,7 @@ const useHandleViewsNavigation = () => {
     cleanupMenu,
 
     scrollMenuToRightEdge,
+    scrollMenuToLeftEdge,
     moveSelectionOnClick,
   };
 };
@@ -201,6 +201,7 @@ function Provider({
 
     moveSelectionOnClick,
     scrollMenuToRightEdge,
+    scrollMenuToLeftEdge,
   } = useHandleViewsNavigation();
 
   const value = React.useMemo(
@@ -220,6 +221,7 @@ function Provider({
       cleanupMenu,
       moveSelectionOnClick,
       scrollMenuToRightEdge,
+      scrollMenuToLeftEdge,
 
       isCreateMenuOpen,
       openCreateMenu,
@@ -244,6 +246,7 @@ function Provider({
       cleanupMenu,
       moveSelectionOnClick,
       scrollMenuToRightEdge,
+      scrollMenuToLeftEdge,
 
       isCreateMenuOpen,
       openCreateMenu,
@@ -320,17 +323,37 @@ const CreateMenuInitialScene = ({
   goToTagScene,
   ...props
 }) => {
-  const handleToggleSavedView = () => {};
-  const handleToggleFilesView = () => {};
+  const { viewer, scrollMenuToLeftEdge } = useViewsContext();
+
+  const handleToggleSavedView = () => {
+    viewer.updateViewerSettings({
+      isSavedViewActivated: !viewer.settings?.isSavedViewActivated,
+    });
+    scrollMenuToLeftEdge();
+  };
+  const handleToggleFilesView = () => {
+    viewer.updateViewerSettings({
+      isFilesViewActivated: !viewer.settings?.isFilesViewActivated,
+    });
+    scrollMenuToLeftEdge();
+  };
 
   const actions = React.useMemo(
     () => [
       { label: "Source", handler: goToSourceScene },
       { label: "Tag", handler: goToTagScene },
-      { label: "Saved", handler: handleToggleSavedView },
-      { label: "Files", handler: handleToggleFilesView },
+      {
+        label: "Saved",
+        handler: handleToggleSavedView,
+        isApplied: viewer.settings?.isSavedViewActivated,
+      },
+      {
+        label: "Files",
+        handler: handleToggleFilesView,
+        isApplied: viewer.settings?.isFilesViewActivated,
+      },
     ],
-    []
+    [viewer.settings]
   );
   return (
     <section layoutId="create_menu" style={{ padding: 8 }} {...props}>
@@ -341,19 +364,27 @@ const CreateMenuInitialScene = ({
       >
         <RovingTabIndex.List>
           <div style={{ width: "100%" }}>
-            {actions.map((action, index) => (
-              <RovingTabIndex.Item key={action.label} index={index}>
-                <button
-                  onClick={action.handler}
-                  css={STYLES_CREATE_MENU_BUTTON}
-                  autoFocus={index === 0}
-                >
-                  <Typography.H5 color="textBlack">
-                    {action.label}
-                  </Typography.H5>
-                </button>
-              </RovingTabIndex.Item>
-            ))}
+            {actions.map((action, index) => {
+              return (
+                <RovingTabIndex.Item key={action.label} index={index}>
+                  <button
+                    onClick={action.handler}
+                    css={STYLES_CREATE_MENU_BUTTON}
+                    autoFocus={index === 0}
+                  >
+                    <Typography.H5 color="textBlack">
+                      {action.label}
+                    </Typography.H5>
+
+                    {action.isApplied && (
+                      <div style={{ marginLeft: "auto" }}>
+                        <SVG.CheckCircle />
+                      </div>
+                    )}
+                  </button>
+                </RovingTabIndex.Item>
+              );
+            })}
           </div>
         </RovingTabIndex.List>
       </RovingTabIndex.Provider>
@@ -943,6 +974,19 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
     containerRef: actionWrapperRef,
   });
 
+  const VIEWS_ACTIONS = React.useMemo(() => {
+    const actions = [defaultViews.allOpen, defaultViews.recent];
+
+    if (viewer.settings?.isSavedViewActivated) {
+      actions.push(defaultViews.saved);
+    }
+    if (viewer.settings?.isFilesViewActivated) {
+      actions.push(defaultViews.files);
+    }
+
+    return actions;
+  }, [viewer.settings]);
+
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
       <div
@@ -1239,7 +1283,7 @@ const Feed = React.memo(
             <MultiSelection.ActionsMenu
               onOpenURLs={(urls) => onOpenUrl({ urls })}
               onGroupURLs={(urls) =>
-                onGroupURLs({ urls, title: appliedView.name })
+                onGroupURLs({ urls, title: loadedView.name })
               }
               onOpenSlatesJumper={onOpenSlatesJumper}
               onSaveObjects={onSaveObjects}

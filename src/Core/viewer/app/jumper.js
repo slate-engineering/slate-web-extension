@@ -68,6 +68,20 @@ export const ViewerProvider = ({ children }) => {
     window.postMessage({ type: messages.saveLink, objects }, "*");
   };
 
+  const updateViewerSettings = ({
+    isSavedViewActivated,
+    isFilesViewActivated,
+  }) => {
+    window.postMessage(
+      {
+        type: messages.updateViewerSettings,
+        isSavedViewActivated,
+        isFilesViewActivated,
+      },
+      "*"
+    );
+  };
+
   const contextValue = React.useMemo(
     () => ({
       ...state,
@@ -75,6 +89,7 @@ export const ViewerProvider = ({ children }) => {
       createSlate,
       addObjectsToSlate,
       removeObjectsFromSlate,
+      updateViewerSettings,
     }),
     [state]
   );

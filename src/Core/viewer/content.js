@@ -285,6 +285,14 @@ chrome.runtime.onMessage.addListener(async (request) => {
 });
 
 window.addEventListener("message", async function (event) {
+  if (event.data.type === messages.updateViewerSettings) {
+    chrome.runtime.sendMessage({
+      type: messages.updateViewerSettings,
+      ...event.data,
+    });
+    return;
+  }
+
   if (event.data.type === messages.loadViewerDataRequest) {
     chrome.runtime.sendMessage(
       { type: messages.loadViewerDataRequest },

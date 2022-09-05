@@ -58,6 +58,8 @@ const VIEWER_INITIAL_STATE = {
 
   sources: {},
 
+  settings: { isSavedViewActivated: false, isFilesViewActivated: false },
+
   lastFetched: null,
   isAuthenticated: false,
 };
@@ -110,6 +112,7 @@ class ViewerHandler {
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
       views: viewer.views || [],
+      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
       sources: {},
     };
@@ -374,6 +377,24 @@ class ViewerActionsHandler {
     });
 
     return viewer;
+  }
+
+  async updateViewerSettings({ isSavedViewActivated, isFilesViewActivated }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    if (typeof isSavedViewActivated === "boolean") {
+      viewer.settings.isSavedViewActivated = isSavedViewActivated;
+    }
+
+    if (typeof isFilesViewActivated === "boolean") {
+      viewer.settings.isFilesViewActivated = isFilesViewActivated;
+    }
+
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
   }
 
   /**
@@ -728,12 +749,14 @@ Viewer.onChange(async (viewerData) => {
     slatesLookup,
     viewsSlatesLookup,
     viewsSourcesLookup,
+    settings,
   } = viewerData;
 
   chrome.tabs.sendMessage(parseInt(activeTab.id), {
     type: messages.updateViewer,
     data: {
       slates,
+      settings,
       savedObjectsLookup,
       savedObjectsSlates,
       slatesLookup,
@@ -773,6 +796,14 @@ chrome.cookies.onChanged.addListener((e) => {
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === messages.updateViewerSettings) {
+    ViewerActions.updateViewerSettings({
+      isSavedViewActivated: request.isSavedViewActivated,
+      isFilesViewActivated: request.isFilesViewActivated,
+    }).then(sendResponse);
+    return true;
+  }
+
   if (request.type === messages.getSavedLinksSourcesRequest) {
     Viewer.getSavedLinksSources().then(sendResponse);
     return true;
@@ -863,6 +894,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         slatesLookup,
         viewsSourcesLookup,
         viewsSlatesLookup,
+        settings,
       } = viewerData;
 
       Viewer.sync();
@@ -870,6 +902,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       const response = {
         ...viewerInitialState,
         isAuthenticated,
+        settings,
 
         slates,
         savedObjectsLookup,
