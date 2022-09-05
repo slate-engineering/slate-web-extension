@@ -13,18 +13,11 @@ const STYLES_WINDOWS_FEED_ROW = {
   width: "100%",
 };
 
-const WindowsFeedRow = ({
-  index,
-  data,
-  onOpenUrl,
-  onCloseTabs,
-  onObjectHover,
-  onOpenSlatesJumper,
-  style,
-}) => {
-  if (!data[index]) return null;
+const WindowsFeedRow = React.memo(({ index, data, style }) => {
+  if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, tab, isTabActive } = data[index];
+  const { rovingTabIndex, title, tab, isTabActive } = data.feed[index];
+  const { onOpenUrl, onCloseTabs, onOpenSlatesJumper } = data.props;
 
   if (title) {
     return (
@@ -35,38 +28,37 @@ const WindowsFeedRow = ({
   }
 
   return (
-    <div style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}>
-      <ListView.RovingTabIndexWithMultiSelectObject
-        key={tab.id}
-        isTab
-        isTabActive={isTabActive}
-        withActions
-        withMultiSelection
-        index={rovingTabIndex}
-        title={tab.title}
-        url={tab.url}
-        Favicon={getFavicon(tab.rootDomain)}
-        isSaved={tab.isSaved}
-        onCloseTab={() => onCloseTabs([tab.id])}
-        onClick={() =>
-          onOpenUrl({
-            query: { tabId: tab.id, windowId: tab.windowId },
-          })
-        }
-        onOpenSlatesJumper={() =>
-          onOpenSlatesJumper([
-            {
-              title: tab.title,
-              url: tab.url,
-              rootDomain: getRootDomain(tab.url),
-            },
-          ])
-        }
-        onMouseEnter={() => onObjectHover?.({ url: tab.url, title: tab.title })}
-      />
-    </div>
+    <ListView.RovingTabIndexWithMultiSelectObject
+      key={tab.id}
+      isTab
+      isTabActive={isTabActive}
+      withActions
+      withMultiSelection
+      style={{ ...style, ...STYLES_WINDOWS_FEED_ROW }}
+      index={rovingTabIndex}
+      title={tab.title}
+      url={tab.url}
+      Favicon={getFavicon(tab.rootDomain)}
+      isSaved={tab.isSaved}
+      onCloseTab={() => onCloseTabs([tab.id])}
+      onClick={() =>
+        onOpenUrl({
+          query: { tabId: tab.id, windowId: tab.windowId },
+        })
+      }
+      onOpenSlatesJumper={() =>
+        onOpenSlatesJumper([
+          {
+            title: tab.title,
+            url: tab.url,
+            rootDomain: getRootDomain(tab.url),
+          },
+        ])
+      }
+      autoFocus={rovingTabIndex === 0}
+    />
   );
-};
+});
 
 /* -----------------------------------------------------------------------------------------------*/
 
@@ -89,13 +81,13 @@ const WindowsFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -110,7 +102,6 @@ const WindowsFeed = React.forwardRef(
     {
       windowsFeed,
       windowsFeedKeys,
-      onObjectHover,
       onOpenUrl,
       onCloseTabs,
       onOpenSlatesJumper,
@@ -120,28 +111,43 @@ const WindowsFeed = React.forwardRef(
     },
     ref
   ) => {
-    const virtualizedFeed = React.useMemo(() => {
+    const feedItemsData = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
 
       for (let key of windowsFeedKeys) {
         windowsFeed[key].forEach((tab, index) => {
           if (index === 0) {
-            virtualizedFeed.push({ title: key });
+            virtualizedFeed.push({ title: key, height: 40 });
           }
 
           virtualizedFeed.push({
             rovingTabIndex,
             isTabActive: activeTabId === tab.id,
             tab,
+            height: Constants.sizes.jumperFeedItem,
           });
 
           rovingTabIndex++;
         });
       }
 
-      return virtualizedFeed;
-    }, [windowsFeed, windowsFeedKeys, activeTabId]);
+      return {
+        feed: virtualizedFeed,
+        props: {
+          onOpenUrl,
+          onCloseTabs,
+          onOpenSlatesJumper,
+        },
+      };
+    }, [
+      windowsFeed,
+      windowsFeedKeys,
+      activeTabId,
+      onOpenUrl,
+      onCloseTabs,
+      onOpenSlatesJumper,
+    ]);
 
     const handleOnSubmitSelectedItem = (index) => {
       let currentLength = 0;
@@ -156,43 +162,34 @@ const WindowsFeed = React.forwardRef(
       }
     };
 
+    const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
+
     return (
       <RovingTabIndex.Provider
-        key={windowsFeed}
         ref={(node) => (ref.rovingTabIndexRef = node)}
         isInfiniteList
         withFocusOnHover
       >
-        <RovingTabIndex.List>
-          <MultiSelection.Provider
-            totalSelectableItems={windowsFeed.length}
-            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+        <MultiSelection.Provider
+          totalSelectableItems={windowsFeed.length}
+          onSubmitSelectedItem={handleOnSubmitSelectedItem}
+        >
+          <WindowsFeedList
+            itemCount={feedItemsData.feed.length}
+            itemData={feedItemsData}
+            itemSize={getFeedItemHeight}
+            ref={ref}
+            {...props}
           >
-            <WindowsFeedList
-              itemCount={virtualizedFeed.length}
-              itemData={virtualizedFeed}
-              itemSize={Constants.sizes.jumperFeedItem}
-              ref={ref}
-              {...props}
-            >
-              {(props) =>
-                WindowsFeedRow({
-                  ...props,
-                  onCloseTabs,
-                  onObjectHover,
-                  onOpenSlatesJumper,
-                  onOpenUrl,
-                })
-              }
-            </WindowsFeedList>
+            {WindowsFeedRow}
+          </WindowsFeedList>
 
-            <MultiSelection.ActionsMenu
-              onCloseTabs={onCloseTabs}
-              onOpenSlatesJumper={onOpenSlatesJumper}
-              onSaveObjects={onSaveObjects}
-            />
-          </MultiSelection.Provider>
-        </RovingTabIndex.List>
+          <MultiSelection.ActionsMenu
+            onCloseTabs={onCloseTabs}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onSaveObjects={onSaveObjects}
+          />
+        </MultiSelection.Provider>
       </RovingTabIndex.Provider>
     );
   }

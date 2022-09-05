@@ -192,6 +192,7 @@ const STYLES_JUMPER_TOP_PANEL_BACKGROUND = css`
 const STYLES_JUMPER_TOP_PANEL = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
 
+  position: relative;
   border-radius: 16px;
   background-color: white;
   border: 1px solid ${theme.semantic.borderGrayLight4};
@@ -310,20 +311,15 @@ const STYLES_JUMPER_SIDE_PANEL = (theme) => css`
   box-shadow: ${theme.shadow.lightLarge};
   border: 1px solid ${theme.semantic.borderGrayLight};
 
-  background-color: ${theme.semantic.bgWhite};
-  @supports (
-    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(75px))
-  ) {
-    -webkit-backdrop-filter: blur(75px);
-    backdrop-filter: blur(75px);
-    background-color: ${theme.semantic.bgBlurLightOP};
-  }
+  background-color: ${theme.semantic.bgLight};
 `;
 
-const SidePanel = ({ children }) => {
+const SidePanel = ({ children, css, ...props }) => {
   return (
     <JumperPanelsPortal>
-      <div css={STYLES_JUMPER_SIDE_PANEL}>{children}</div>
+      <div css={[STYLES_JUMPER_SIDE_PANEL, css]} {...props}>
+        {children}
+      </div>
     </JumperPanelsPortal>
   );
 };

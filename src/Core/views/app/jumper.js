@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useViewsState, useHistorySearchState } from "./";
-import { messages } from "../";
+import { messages, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
@@ -8,36 +8,39 @@ import { messages } from "../";
 
 export const useViews = () => {
   const [
-    { viewsFeed, currentView, currentViewLabel, currentViewQuery, viewsType },
-    { setViewsFeed, setViewsParams },
+    { viewsFeed, appliedView, isLoadingFeed },
+    { setViewsFeed, setAppliedView, setLoadingState },
   ] = useViewsState();
 
-  const getViewsFeed = ({ type, label, query }) => {
-    setViewsParams({ type, label, query });
+  const getViewsFeed = (view) => {
     if (
-      (type === viewsType.relatedLinks && query) ||
-      type === viewsType.savedFiles
+      view.type === viewsType.custom ||
+      view.type === viewsType.saved ||
+      view.type === viewsType.files
     ) {
-      window.postMessage(
-        { type: messages.viewByTypeRequest, viewType: type, query },
-        "*"
-      );
+      window.postMessage({ type: messages.viewFeedRequest, view }, "*");
+      setLoadingState(true);
     }
+    setAppliedView(view);
   };
 
-  const paramsRef = React.useRef();
-  paramsRef.current = { type: currentView, query: currentViewQuery };
+  const appliedViewRef = React.useRef();
+  appliedViewRef.current = appliedView;
   React.useEffect(() => {
     let handleMessage = (event) => {
-      if (paramsRef.current.type === viewsType.recent) return;
       let { data, type } = event.data;
-      if (type === messages.viewByTypeResponse) {
-        if (data.viewType === viewsType.savedFiles) {
+      if (type === messages.viewFeedResponse) {
+        if (
+          data.view.type === viewsType.saved ||
+          data.view.type === viewsType.files
+        ) {
           setViewsFeed(data.result);
+          setLoadingState(false);
           return;
         }
-        if (data.query === paramsRef.current.query) {
+        if (data.view.id === appliedViewRef.current.id) {
           setViewsFeed(data.result);
+          setLoadingState(false);
         }
       }
     };
@@ -46,13 +49,22 @@ export const useViews = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
+  const createViewByTag = (slateName) => {
+    window.postMessage({ type: messages.createViewByTag, slateName });
+  };
+
+  const createViewBySource = (source) => {
+    window.postMessage({ type: messages.createViewBySource, source });
+  };
+
   return {
     viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
+    appliedView,
+    isLoadingViewFeed: isLoadingFeed,
     viewsType,
     getViewsFeed,
+    createViewByTag,
+    createViewBySource,
   };
 };
 
@@ -60,11 +72,15 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef, viewType }) => {
+export const useHistorySearch = ({ inputRef, view }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
     window.postMessage(
-      { type: messages.searchQueryRequest, query: query, viewType },
+      {
+        type: messages.searchQueryRequest,
+        query: query,
+        view,
+      },
       "*"
     );
   };
@@ -79,8 +95,9 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
       let { data, type } = event.data;
 
       if (type === messages.searchQueryResponse) {
-        if (data.query === inputRef.current.value)
-          setSearch((prev) => ({ ...prev, result: [...data.result] }));
+        if (data.query === inputRef.current.value) {
+          setSearch((prev) => ({ ...prev, ...data }));
+        }
       }
     };
     window.addEventListener("message", handleMessage);
@@ -96,7 +113,7 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
   }, [search.query]);
 
   return [
-    { ...search, isSearching: search.query.length > 0 && search.result },
+    { ...search, isSearching: search.query.length > 0 && search.searchFeed },
     { handleInputChange, clearSearch },
   ];
 };

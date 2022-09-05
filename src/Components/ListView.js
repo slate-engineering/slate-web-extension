@@ -9,7 +9,7 @@ import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
 import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
 import { Checkbox } from "./system";
-import { FixedSizeList } from "react-window";
+import { FixedSizeList, VariableSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
@@ -66,6 +66,34 @@ const FixedSizeListRoot = React.forwardRef(
 );
 
 /* -------------------------------------------------------------------------------------------------
+ * ListView VariableSizeList Root
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_LIST_VIEW_VARIABLE_SIZE_ROOT = css`
+  height: 100%;
+  flex: 1;
+  padding: 0px 8px 8px;
+  overflow-y: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const VariableSizeListRoot = React.forwardRef(
+  ({ children, css, ...props }, ref) => {
+    return (
+      <VariableSizeList
+        outerRef={ref}
+        css={[STYLES_LIST_VIEW_VARIABLE_SIZE_ROOT, css]}
+        {...props}
+      >
+        {children}
+      </VariableSizeList>
+    );
+  }
+);
+
+/* -------------------------------------------------------------------------------------------------
  * ListView Section
  * -----------------------------------------------------------------------------------------------*/
 
@@ -103,6 +131,56 @@ const Title = ({ children, count, css, ...props }) => {
         </Typography.H5>
       )}
     </Typography.H5>
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * ListView SlatesItem
+ * -----------------------------------------------------------------------------------------------*/
+
+const SLATE_WRAPPER = (theme) => css`
+  border-radius: 8px;
+  padding: 1px 8px;
+  max-width: 150px;
+  background-color: ${theme.semantic.bgWhite};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  box-shadow: ${theme.shadow.lightSmall};
+`;
+
+const Slate = ({ children, as = "span", ...props }) => {
+  return (
+    <Typography.H6
+      as={as}
+      nbrOflines={1}
+      css={SLATE_WRAPPER}
+      color="textBlack"
+      {...props}
+    >
+      {children}
+    </Typography.H6>
+  );
+};
+
+const STYLES_SLATES_ITEM_WRAPPER = (theme) => css`
+  position: relative;
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  height: ${theme.sizes.jumperFeedItem};
+
+  & > * + * {
+    margin-left: 6px;
+  }
+`;
+
+const SlatesItem = ({ slates, ...props }) => {
+  return (
+    <div css={STYLES_SLATES_ITEM_WRAPPER} {...props}>
+      {slates.map((slate) => (
+        <Slate key={slate}>{slate}</Slate>
+      ))}
+    </div>
   );
 };
 
@@ -198,30 +276,6 @@ const CopyAction = ({ isCopied, ...props }) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const SLATE_WRAPPER = (theme) => css`
-  border-radius: 8px;
-  padding: 1px 8px;
-  max-width: 150px;
-  background-color: ${theme.semantic.bgWhite};
-  border: 1px solid ${theme.semantic.borderGrayLight};
-  box-shadow: ${theme.shadow.lightSmall};
-`;
-
-const Slate = ({ children, ...props }) => {
-  return (
-    <Typography.H6
-      as="span"
-      nbrOflines={1}
-      css={SLATE_WRAPPER}
-      color="textBlack"
-      {...props}
-    >
-      {children}
-    </Typography.H6>
-  );
-};
-
-/* -----------------------------------------------------------------------------------------------*/
 const OBJECT_ACTION_SIZE = 20;
 
 const STYLES_ACTIONS_WRAPPER = (theme) => css`
@@ -527,9 +581,11 @@ const RovingTabIndexWithMultiSelectObject = ({ index, ...props }) => {
 export {
   Root,
   FixedSizeListRoot,
+  VariableSizeListRoot,
   Section,
   Title,
   Object,
   ComboboxObject,
   RovingTabIndexWithMultiSelectObject,
+  SlatesItem,
 };

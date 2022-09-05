@@ -6,8 +6,6 @@ import * as Search from "../Components/Search";
 import * as Jumper from "../Components/jumper";
 import * as EditSlates from "../Components/EditSlates";
 
-import HistoryFeed from "../Components/HistoryFeed";
-import WindowsFeed from "../Components/WindowsFeed";
 import Logo from "../Components/Logo";
 
 import { useHistory, useWindows } from "../Core/browser/app/newTab";
@@ -16,7 +14,12 @@ import { Divider } from "../Components/Divider";
 import { Switch, Match } from "../Components/Switch";
 import { getExtensionURL } from "../Common/utilities";
 import { useViewer } from "../Core/viewer/app/newTab";
+import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
+
+/* -------------------------------------------------------------------------------------------------
+ * EditSlatesJumper
+ * -----------------------------------------------------------------------------------------------*/
 
 const useSlatesJumper = () => {
   const [slatesJumperState, setSlatesJumperState] = React.useState({
@@ -66,6 +69,54 @@ function EditSlatesJumper({ objects, onClose }) {
 }
 
 /* -------------------------------------------------------------------------------------------------
+ * CreateViewMenuSidePanel
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_VIEWS_CREATE_MENU_LEFT_POSITION = css`
+  position: absolute;
+  top: 44px;
+  right: 40px;
+  transform: translateX(100%);
+`;
+
+const STYLES_VIEWS_CREATE_MENU_RIGHT_POSITION = css`
+  position: absolute;
+  top: 44px;
+  right: 8px;
+`;
+
+const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
+  height: fit-content;
+  z-index: 1;
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+  border-radius: 12px;
+  width: 100%;
+  max-width: 240px;
+  max-height: 220px;
+  background-color: ${theme.semantic.bgLight};
+  box-shadow: ${theme.shadow.lightLarge};
+`;
+
+const CreateViewMenuSidePanel = (props) => {
+  const { isCreateMenuOpen } = useViewsContext();
+  const { isMenuOverflowingFrom } = useViewsMenuContext();
+
+  if (!isCreateMenuOpen) return null;
+
+  return (
+    <Views.CreateMenu
+      css={[
+        STYLES_VIEWS_CREATE_MENU_WRAPPER,
+        isMenuOverflowingFrom.right || isMenuOverflowingFrom.left
+          ? STYLES_VIEWS_CREATE_MENU_RIGHT_POSITION
+          : STYLES_VIEWS_CREATE_MENU_LEFT_POSITION,
+      ]}
+      {...props}
+    />
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
@@ -98,17 +149,20 @@ const STYLES_HISTORY_TOP_POPUP = (theme) => css`
   position: relative;
   padding-bottom: 48px;
   @supports (
-    (-webkit-backdrop-filter: blur(35px)) or (backdrop-filter: blur(35px))
+    (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(35px))
   ) {
-    -webkit-backdrop-filter: blur(35px);
-    backdrop-filter: blur(35px);
+    -webkit-backdrop-filter: blur(75px);
+    backdrop-filter: blur(75px);
     background-color: ${theme.semantic.bgBlurLight6OP};
   }
 `;
 
 const STYLES_HISTORY_SCENE_VIEWS_MENU = css`
   ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
-  padding: 16px 8px 16px 0px;
+  width: 100%;
+  position: relative;
+  padding: 8px;
+  padding-left: 0px;
   margin-left: 16px;
   margin-right: 16px;
 `;
@@ -175,43 +229,23 @@ export default function HistoryScene() {
 
   const {
     viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
+    appliedView,
+    isLoadingViewFeed,
     viewsType,
     getViewsFeed,
+    createViewByTag,
+    createViewBySource,
   } = useViews();
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
     inputRef,
-    viewType: currentView,
+    view: appliedView,
   });
-  const isSearching = search.query.length > 0 && search.result;
 
   const focusSearchInput = () => inputRef.current.focus();
 
   const feedRef = React.useRef();
-
-  const focusFirstItemInFeedOrInputIfEmpty = () => {
-    closeSlatesJumper();
-    clearSearch();
-    feedRef.rovingTabIndexRef.focus(focusSearchInput);
-  };
-
-  React.useEffect(() => {
-    if (
-      [viewsType.allOpen, viewsType.recent].some((view) => view === currentView)
-    ) {
-      focusFirstItemInFeedOrInputIfEmpty();
-      return;
-    }
-
-    if (viewsFeed.length) {
-      focusFirstItemInFeedOrInputIfEmpty();
-      return;
-    }
-  }, [currentView, currentViewQuery, viewsFeed]);
 
   const viewer = useViewer();
 
@@ -243,15 +277,34 @@ export default function HistoryScene() {
           clearSearch={clearSearch}
         >
           <Views.Provider
+            viewer={viewer}
             viewsFeed={viewsFeed}
-            currentView={currentView}
-            currentViewLabel={currentViewLabel}
-            currentViewQuery={currentViewQuery}
+            appliedView={appliedView}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
+            createViewByTag={createViewByTag}
+            createViewBySource={createViewBySource}
+            isLoadingViewFeed={isLoadingViewFeed}
+            onRestoreFocus={focusSearchInput}
           >
             <section css={STYLES_HISTORY_TOP_POPUP}>
-              <Views.Menu css={STYLES_HISTORY_SCENE_VIEWS_MENU} />
+              <div css={STYLES_HISTORY_SCENE_VIEWS_MENU}>
+                <div
+                  style={{
+                    position: "relative",
+                    width: "fit-content",
+                    maxWidth: "100%",
+                  }}
+                >
+                  <Views.MenuProvider>
+                    <Views.Menu
+                      actionsWrapperStyle={{ width: "auto", paddingRight: 0 }}
+                    />
+
+                    <CreateViewMenuSidePanel />
+                  </Views.MenuProvider>
+                </div>
+              </div>
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
               <Logo
                 style={{
@@ -278,8 +331,8 @@ export default function HistoryScene() {
                     <SVG.Plus width={16} height={16} />
                     <Typography.H5 as="span">Filter</Typography.H5>
                   </button>
-                </section> */}
 
+              </section> */}
                 <Switch
                   onOpenSlatesJumper={openSlatesJumper}
                   onOpenUrl={Navigation.openUrls}
@@ -288,32 +341,23 @@ export default function HistoryScene() {
                   css={STYLES_HISTORY_SCENE_FEED}
                 >
                   <Match
-                    when={isSearching}
+                    when={search.isSearching}
                     component={Search.Feed}
+                    searchFeed={search.searchFeed}
+                    searchFeedKeys={search.searchFeedKeys}
+                    slates={search.slates}
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                   <Match
-                    when={currentView === viewsType.recent}
-                    component={HistoryFeed}
-                    sessionsFeed={sessionsFeed}
-                    sessionsFeedKeys={sessionsFeedKeys}
-                    onLoadMore={loadMoreHistory}
-                    onGroupURLs={Navigation.createGroupFromUrls}
-                  />
-                  <Match
-                    when={currentView === viewsType.allOpen}
-                    component={WindowsFeed}
+                    when={!search.isSearching}
+                    component={Views.Feed}
+                    historyFeed={sessionsFeed}
+                    historyFeedKeys={sessionsFeedKeys}
+                    loadMoreHistory={loadMoreHistory}
                     windowsFeed={windowsFeeds.allOpenFeed}
                     windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
                     activeTabId={activeTabId}
                     onCloseTabs={Navigation.closeTabs}
-                  />
-                  <Match
-                    when={
-                      currentView === viewsType.relatedLinks ||
-                      currentView === viewsType.savedFiles
-                    }
-                    component={Views.Feed}
                     onGroupURLs={Navigation.createGroupFromUrls}
                   />
                 </Switch>

@@ -1,6 +1,7 @@
 import * as React from "react";
+
 import { useViewsState, useHistorySearchState } from "./";
-import { messages } from "../";
+import { messages, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
@@ -8,30 +9,44 @@ import { messages } from "../";
 
 export const useViews = () => {
   const [
-    { viewsFeed, currentView, currentViewLabel, currentViewQuery, viewsType },
-    { setViewsFeed, setViewsParams },
+    { viewsFeed, appliedView, isLoadingFeed },
+    { setViewsFeed, setAppliedView, setLoadingState },
   ] = useViewsState();
 
-  const getViewsFeed = ({ type, label, query }) => {
-    setViewsParams({ type, query, label });
+  const getViewsFeed = (view) => {
+    setAppliedView(view);
     if (
-      (type === viewsType.relatedLinks && query) ||
-      type === viewsType.savedFiles
+      view.type === viewsType.custom ||
+      view.type === viewsType.saved ||
+      view.type === viewsType.files
     ) {
+      setLoadingState(true);
       chrome.runtime.sendMessage(
-        { type: messages.viewByTypeRequest, viewType: type, query },
-        (response) => setViewsFeed(response.result)
+        { type: messages.viewFeedRequest, view },
+        (response) => {
+          setViewsFeed(response.result);
+          setLoadingState(false);
+        }
       );
     }
   };
 
+  const createViewByTag = (slateName) => {
+    chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
+  };
+
+  const createViewBySource = (source) => {
+    chrome.runtime.sendMessage({ type: messages.createViewBySource, source });
+  };
+
   return {
     viewsFeed,
-    currentView,
-    currentViewLabel,
-    currentViewQuery,
+    isLoadingViewFeed: isLoadingFeed,
+    appliedView,
     viewsType,
     getViewsFeed,
+    createViewByTag,
+    createViewBySource,
   };
 };
 
@@ -39,14 +54,19 @@ export const useViews = () => {
  * useHistorySearch
  * -----------------------------------------------------------------------------------------------*/
 
-export const useHistorySearch = ({ inputRef, viewType }) => {
+export const useHistorySearch = ({ inputRef, view }) => {
   const searchByQuery = (query) => {
     if (query.length === 0) return;
+
     chrome.runtime.sendMessage(
-      { type: messages.searchQueryRequest, query: query, viewType },
+      {
+        type: messages.searchQueryRequest,
+        query: query,
+        view,
+      },
       (response) => {
         if (response.query === inputRef.current.value)
-          setSearch((prev) => ({ ...prev, result: [...response.result] }));
+          setSearch((prev) => ({ ...prev, ...response }));
       }
     );
   };
@@ -63,5 +83,8 @@ export const useHistorySearch = ({ inputRef, viewType }) => {
     }
   }, [search.query]);
 
-  return [search, { handleInputChange, clearSearch }];
+  return [
+    { ...search, isSearching: search.query.length > 0 && search.searchFeed },
+    { handleInputChange, clearSearch },
+  ];
 };

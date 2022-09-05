@@ -68,6 +68,20 @@ export const ViewerProvider = ({ children }) => {
     window.postMessage({ type: messages.saveLink, objects }, "*");
   };
 
+  const updateViewerSettings = ({
+    isSavedViewActivated,
+    isFilesViewActivated,
+  }) => {
+    window.postMessage(
+      {
+        type: messages.updateViewerSettings,
+        isSavedViewActivated,
+        isFilesViewActivated,
+      },
+      "*"
+    );
+  };
+
   const contextValue = React.useMemo(
     () => ({
       ...state,
@@ -75,6 +89,7 @@ export const ViewerProvider = ({ children }) => {
       createSlate,
       addObjectsToSlate,
       removeObjectsFromSlate,
+      updateViewerSettings,
     }),
     [state]
   );
@@ -89,4 +104,33 @@ export const ViewerProvider = ({ children }) => {
       {children}
     </viewerContext.Provider>
   );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * useSources
+ * -----------------------------------------------------------------------------------------------*/
+
+export const useSources = () => {
+  const [sources, setSources] = React.useState([]);
+
+  React.useEffect(() => {
+    const getSources = () => {
+      window.postMessage({ type: messages.getSavedLinksSourcesRequest }, "*");
+    };
+
+    const handleMessage = (event) => {
+      let { data, type } = event.data;
+      if (type === messages.getSavedLinksSourcesResponse) {
+        setSources(data);
+        return;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    getSources();
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  return sources;
 };

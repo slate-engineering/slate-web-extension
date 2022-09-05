@@ -12,6 +12,11 @@ export const messages = {
   addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
   removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
   createSlate: "CREATE_SLATE",
+
+  getSavedLinksSourcesRequest: "GET_SAVED_LINKS_SOURCES_REQUEST",
+  getSavedLinksSourcesResponse: "GET_SAVED_LINKS_SOURCES_RESPONSE",
+
+  updateViewerSettings: "UPDATE_VIEWER_SETTINGS",
 };
 
 // NOTE(amine): commands are defined in manifest.json

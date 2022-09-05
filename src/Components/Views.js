@@ -3,16 +3,19 @@ import * as Typography from "../Components/system/Typography";
 import * as Styles from "../Common/styles";
 import * as ListView from "../Components/ListView";
 import * as SVG from "../Common/SVG";
-import * as Favicons from "../Common/favicons";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
 import { getFavicon } from "../Common/favicons";
-import { viewsType } from "../Core/views";
+import { defaultViews, viewsType } from "../Core/views";
 import { Divider } from "./Divider";
-import { useEventListener } from "Common/hooks";
+import {
+  Combobox,
+  useComboboxNavigation,
+} from "../Components/ComboboxNavigation";
+import { useEscapeKey, useEventListener } from "Common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import {
   mergeRefs,
@@ -20,66 +23,20 @@ import {
   isNewTab,
   getRootDomain,
 } from "../Common/utilities";
+import { useSlatesCombobox } from "../Components/EditSlates";
+import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
+import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
+const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
-const VIEWS_ACTIONS = [
-  { label: "All Open", data: { type: viewsType.allOpen } },
-  { label: "Recent", data: { type: viewsType.recent } },
-  { label: "Saved Files", data: { type: viewsType.savedFiles } },
-];
-
-const CUSTOM_VIEWS_ACTIONS = [
-  {
-    label: "Twitter",
-    data: { type: viewsType.relatedLinks, query: "https://twitter.com/" },
-    Favicon: Favicons.getFavicon("twitter.com"),
-  },
-  {
-    label: "Hacker News",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://news.ycombinator.com",
-    },
-    Favicon: Favicons.getFavicon("ycombinator.com"),
-  },
-  {
-    label: "Youtube",
-    data: { type: viewsType.relatedLinks, query: "https://www.youtube.com/" },
-    Favicon: Favicons.getFavicon("youtube.com"),
-  },
-  {
-    label: "Figma",
-    data: { type: viewsType.relatedLinks, query: "https://www.figma.com/" },
-    Favicon: Favicons.getFavicon("figma.com"),
-  },
-  {
-    label: "Notion",
-    data: { type: viewsType.relatedLinks, query: "https://www.notion.so/" },
-    Favicon: Favicons.getFavicon("notion.so"),
-  },
-  {
-    label: "Google Search",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://www.google.com/search",
-    },
-    Favicon: Favicons.getFavicon("google.com"),
-  },
-  {
-    label: "Google Calendar",
-    data: {
-      type: viewsType.relatedLinks,
-      query: "https://calendar.google.com/",
-    },
-    Favicon: Favicons.getFavicon("google.com"),
-  },
-];
+import HistoryFeed from "./HistoryFeed";
+import WindowsFeed from "./WindowsFeed";
 
 /* -------------------------------------------------------------------------------------------------
  * Views Provider
  * -----------------------------------------------------------------------------------------------*/
 
 const ViewsContext = React.createContext();
-const useViewsContext = () => React.useContext(ViewsContext);
+export const useViewsContext = () => React.useContext(ViewsContext);
 
 const useHandleViewsNavigation = () => {
   const initialIndex = 0;
@@ -133,7 +90,6 @@ const useHandleViewsNavigation = () => {
   };
 
   const moveSelectionOnClick = (index) => {
-    isNavigatingViaKeyboard.current = false;
     setSelectedIdx(index);
   };
 
@@ -152,6 +108,18 @@ const useHandleViewsNavigation = () => {
       e.stopPropagation();
       e.preventDefault();
     }
+  };
+
+  const scrollMenuToRightEdge = () => {
+    const menuNode = menuElementRef.current;
+    if (!menuNode) return;
+    menuNode.scrollTo({ left: menuNode.scrollWidth });
+  };
+
+  const scrollMenuToLeftEdge = () => {
+    const menuNode = menuElementRef.current;
+    if (!menuNode) return;
+    menuNode.scrollTo({ left: 0 });
   };
 
   useEventListener({ type: "keydown", handler: handleOnKeyDown }, [
@@ -201,19 +169,29 @@ const useHandleViewsNavigation = () => {
     registerMenuRef,
     cleanupMenu,
 
+    scrollMenuToRightEdge,
+    scrollMenuToLeftEdge,
     moveSelectionOnClick,
   };
 };
 
 function Provider({
   children,
+  viewer,
   viewsFeed,
-  currentView,
-  currentViewLabel,
-  currentViewQuery,
+  appliedView,
   viewsType,
   getViewsFeed,
+  createViewByTag,
+  createViewBySource,
+  isLoadingViewFeed,
+  onRestoreFocus,
 }) {
+  const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
+  const openCreateMenu = () => setCreateMenuVisibility(true);
+  const closeCreateMenu = () => setCreateMenuVisibility(false);
+  const toggleCreateMenu = () => setCreateMenuVisibility((prev) => !prev);
+
   const {
     registerMenuItem,
     cleanupMenuItem,
@@ -222,36 +200,60 @@ function Provider({
     cleanupMenu,
 
     moveSelectionOnClick,
+    scrollMenuToRightEdge,
+    scrollMenuToLeftEdge,
   } = useHandleViewsNavigation();
 
   const value = React.useMemo(
     () => ({
+      viewer,
       viewsFeed,
-      currentView,
-      currentViewLabel,
-      currentViewQuery,
+      appliedView,
+      isLoadingViewFeed,
       viewsType,
       getViewsFeed,
+      createViewByTag,
+      createViewBySource,
 
       registerMenuItem,
       cleanupMenuItem,
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+      scrollMenuToRightEdge,
+      scrollMenuToLeftEdge,
+
+      isCreateMenuOpen,
+      openCreateMenu,
+      closeCreateMenu,
+      toggleCreateMenu,
+
+      onRestoreFocus,
     }),
     [
+      viewer,
       viewsFeed,
-      currentView,
-      currentViewLabel,
-      currentViewQuery,
+      appliedView,
+      isLoadingViewFeed,
       viewsType,
       getViewsFeed,
+      createViewByTag,
+      createViewBySource,
 
       registerMenuItem,
       cleanupMenuItem,
       registerMenuRef,
       cleanupMenu,
       moveSelectionOnClick,
+      scrollMenuToRightEdge,
+      scrollMenuToLeftEdge,
+
+      isCreateMenuOpen,
+      openCreateMenu,
+      closeCreateMenu,
+      toggleCreateMenu,
+
+      onRestoreFocus,
     ]
   );
 
@@ -259,6 +261,455 @@ function Provider({
     <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
   );
 }
+
+/* -------------------------------------------------------------------------------------------------
+ * Views CreateMenu
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_INPUT = (theme) => css`
+  ${Styles.H4};
+
+  font-family: ${theme.font.text};
+  -webkit-appearance: none;
+  width: 100%;
+  height: 36px;
+  background-color: ${theme.semantic.bgGrayLight};
+  outline: 0;
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: ${theme.semantic.textBlack};
+  padding-left: 16px;
+
+  ::placeholder {
+    /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: ${theme.semantic.textGray};
+    opacity: 1; /* Firefox */
+  }
+
+  :-ms-input-placeholder {
+    /* Internet Explorer 10-11 */
+    color: ${theme.semantic.textGray};
+  }
+
+  ::-ms-input-placeholder {
+    /* Microsoft Edge */
+    color: ${theme.semantic.textGray};
+  }
+`;
+
+const STYLES_CREATE_MENU_BUTTON_FOCUS = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+`;
+
+const STYLES_CREATE_MENU_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  padding: 5px 12px 7px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  color: ${theme.semantic.textBlack};
+  &:hover {
+    color: ${theme.semantic.textBlack};
+  }
+  &:focus {
+    ${STYLES_CREATE_MENU_BUTTON_FOCUS(theme)}
+  }
+`;
+
+const CreateMenuInitialScene = ({
+  goToSourceScene,
+  goToTagScene,
+  ...props
+}) => {
+  const { viewer, scrollMenuToLeftEdge } = useViewsContext();
+
+  const handleToggleSavedView = () => {
+    viewer.updateViewerSettings({
+      isSavedViewActivated: !viewer.settings?.isSavedViewActivated,
+    });
+    scrollMenuToLeftEdge();
+  };
+  const handleToggleFilesView = () => {
+    viewer.updateViewerSettings({
+      isFilesViewActivated: !viewer.settings?.isFilesViewActivated,
+    });
+    scrollMenuToLeftEdge();
+  };
+
+  const actions = React.useMemo(
+    () => [
+      { label: "Source", handler: goToSourceScene },
+      { label: "Tag", handler: goToTagScene },
+      {
+        label: "Saved",
+        handler: handleToggleSavedView,
+        isApplied: viewer.settings?.isSavedViewActivated,
+      },
+      {
+        label: "Files",
+        handler: handleToggleFilesView,
+        isApplied: viewer.settings?.isFilesViewActivated,
+      },
+    ],
+    [viewer.settings]
+  );
+  return (
+    <section layoutId="create_menu" style={{ padding: 8 }} {...props}>
+      <RovingTabIndex.Provider
+        id="create_menu_tabindex"
+        withRestoreFocusOnMount
+        withFocusOnHover
+      >
+        <RovingTabIndex.List>
+          <div style={{ width: "100%" }}>
+            {actions.map((action, index) => {
+              return (
+                <RovingTabIndex.Item key={action.label} index={index}>
+                  <button
+                    onClick={action.handler}
+                    css={STYLES_CREATE_MENU_BUTTON}
+                    autoFocus={index === 0}
+                  >
+                    <Typography.H5 color="textBlack">
+                      {action.label}
+                    </Typography.H5>
+
+                    {action.isApplied && (
+                      <div style={{ marginLeft: "auto" }}>
+                        <SVG.CheckCircle />
+                      </div>
+                    )}
+                  </button>
+                </RovingTabIndex.Item>
+              );
+            })}
+          </div>
+        </RovingTabIndex.List>
+      </RovingTabIndex.Provider>
+    </section>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const CreateMenuTagButton = ({ index, children, css, onClick, ...props }) => {
+  const { checkIfIndexSelected } = useComboboxNavigation();
+  const isSelected = checkIfIndexSelected(index);
+
+  return (
+    <Combobox.MenuButton onSubmit={onClick} index={index}>
+      <button
+        css={[
+          STYLES_CREATE_MENU_BUTTON,
+          isSelected && STYLES_CREATE_MENU_BUTTON_FOCUS,
+          css,
+        ]}
+        style={{ padding: "5px 12px 7px" }}
+        onClick={onClick}
+        {...props}
+      >
+        {children}
+      </button>
+    </Combobox.MenuButton>
+  );
+};
+
+export const useSourcesCombobox = ({ sources }) => {
+  const [searchValue, setSearchValue] = React.useState("");
+
+  const filteredSources = React.useMemo(() => {
+    if (searchValue === "") return sources;
+
+    const searchRegex = new RegExp(searchValue, "gi");
+    return sources.filter((source) => {
+      return searchRegex.test(source.title);
+    });
+  }, [sources, searchValue]);
+
+  return { filteredSources, searchValue, setSearchValue };
+};
+
+const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
+  const {
+    viewer,
+    getViewsFeed,
+    createViewBySource,
+    scrollMenuToRightEdge,
+    closeCreateMenu,
+  } = useViewsContext();
+
+  const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
+    sources,
+  });
+
+  const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  useEscapeKey(goToInitialScene);
+
+  const handleSwitchToAppliedSourceView = (source) => {
+    const view = viewer.viewsSourcesLookup[source];
+    getViewsFeed(view);
+    closeCreateMenu();
+  };
+  const handleCreateView = (source) => {
+    createViewBySource(source);
+    scrollMenuToRightEdge();
+  };
+
+  return (
+    <div {...props}>
+      <Combobox.Provider>
+        <div style={{ width: "100%", padding: 8 }}>
+          <Combobox.Input>
+            <input
+              placeholder="Search"
+              css={STYLES_CREATE_MENU_INPUT}
+              value={searchValue}
+              onChange={handleOnInputChange}
+              autoFocus
+            />
+          </Combobox.Input>
+        </div>
+        <Divider color="borderGrayLight" style={{ width: "100%" }} />
+        <Combobox.Menu>
+          <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
+            {filteredSources.map((sourceData, index) => {
+              const Favicon = getFavicon(sourceData.rootDomain);
+              const isApplied = sourceData.source in viewer.viewsSourcesLookup;
+              const handleOnClick = isApplied
+                ? handleSwitchToAppliedSourceView
+                : handleCreateView;
+
+              return (
+                <CreateMenuTagButton
+                  onClick={() => handleOnClick(sourceData.source)}
+                  index={index}
+                  key={sourceData.name}
+                >
+                  <div>
+                    <Favicon />
+                  </div>
+                  <Typography.H5
+                    color="textBlack"
+                    style={{ marginLeft: 8 }}
+                    as="div"
+                  >
+                    {sourceData.title}
+                  </Typography.H5>
+
+                  {isApplied && (
+                    <div style={{ marginLeft: "auto" }}>
+                      <SVG.CheckCircle />
+                    </div>
+                  )}
+                </CreateMenuTagButton>
+              );
+            })}
+          </div>
+        </Combobox.Menu>
+      </Combobox.Provider>
+    </div>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_SLATES_WRAPPER = css`
+  ${Styles.VERTICAL_CONTAINER_CENTERED};
+  width: 100%;
+  padding: 8px;
+  height: 128px;
+  overflow-y: auto;
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
+  color: ${theme.system.blue};
+  &:hover {
+    color: ${theme.system.blue};
+  }
+`;
+
+const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
+  useEscapeKey(goToInitialScene);
+
+  const {
+    viewer,
+    closeCreateMenu,
+    getViewsFeed,
+    createViewByTag,
+    scrollMenuToRightEdge,
+  } = useViewsContext();
+  const { slates, canCreateSlate, searchValue, setSearchValue } =
+    useSlatesCombobox({ slates: viewer.slates });
+  const handleOnInputChange = (e) => setSearchValue(e.target.value);
+
+  const handleSwitchToAppliedTagView = (slateName) => {
+    const view = viewer.viewsSlatesLookup[slateName];
+    getViewsFeed(view);
+    closeCreateMenu();
+  };
+  const handleCreateView = (slateName) => {
+    createViewByTag(slateName);
+    scrollMenuToRightEdge();
+  };
+
+  return (
+    <section layoutId="create_menu" {...props}>
+      <Combobox.Provider>
+        <div style={{ width: "100%", padding: 8 }}>
+          <Combobox.Input>
+            <input
+              placeholder="Search or create new tag"
+              css={STYLES_CREATE_MENU_INPUT}
+              value={searchValue}
+              onChange={handleOnInputChange}
+              autoFocus
+            />
+          </Combobox.Input>
+        </div>
+        <Divider style={{ width: "100%" }} />
+        <Combobox.Menu>
+          <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
+            {slates.map((slate, index) => {
+              const isApplied = slate in viewer.viewsSlatesLookup;
+              const handleOnClick = isApplied
+                ? handleSwitchToAppliedTagView
+                : handleCreateView;
+              return (
+                <CreateMenuTagButton
+                  onClick={() => handleOnClick(slate)}
+                  index={index}
+                  key={slate}
+                >
+                  <div>
+                    <SVG.Hash height={16} width={16} />
+                  </div>
+                  <Typography.H5
+                    color="textBlack"
+                    style={{ marginLeft: 8 }}
+                    as="div"
+                  >
+                    {slate}
+                  </Typography.H5>
+                  {isApplied && (
+                    <div style={{ marginLeft: "auto" }}>
+                      <SVG.CheckCircle />
+                    </div>
+                  )}
+                </CreateMenuTagButton>
+              );
+            })}
+            {canCreateSlate && (
+              <CreateMenuTagButton
+                index={slates.length}
+                css={STYLES_COLOR_SYSTEM_BLUE}
+              >
+                <div>
+                  <SVG.Plus height={16} width={16} />
+                </div>
+                <Typography.H5 color="blue" style={{ marginLeft: 8 }} as="div">
+                  create &quot;{searchValue}&quot;
+                </Typography.H5>
+              </CreateMenuTagButton>
+            )}
+          </div>
+        </Combobox.Menu>
+      </Combobox.Provider>
+    </section>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_CREATE_MENU_WRAPPER = css`
+  ${Styles.VERTICAL_CONTAINER_CENTERED};
+  width: 100%;
+`;
+
+const CreateMenu = ({ css, ...props }) => {
+  const scenes = {
+    initial: "initial",
+    source: "source",
+    tag: "tag",
+  };
+  const [scene, setScene] = React.useState(scenes.initial);
+
+  const goToSourceScene = () => setScene(scenes.source);
+  const goToTagScene = () => setScene(scenes.tag);
+  const goToInitialScene = () => setScene(scenes.initial);
+
+  const { closeCreateMenu, onRestoreFocus } = useViewsContext();
+  useEscapeKey(closeCreateMenu);
+
+  React.useLayoutEffect(() => {
+    return () => onRestoreFocus?.();
+  }, []);
+
+  const sources = useSources();
+
+  if (scene === scenes.source) {
+    return (
+      <CreateMenuSourceScene
+        css={[STYLES_CREATE_MENU_WRAPPER, css]}
+        goToInitialScene={goToInitialScene}
+        sources={sources}
+        {...props}
+      />
+    );
+  }
+
+  if (scene === scenes.tag) {
+    return (
+      <CreateMenuTagScene
+        css={[STYLES_CREATE_MENU_WRAPPER, css]}
+        goToInitialScene={goToInitialScene}
+        {...props}
+      />
+    );
+  }
+
+  return (
+    <CreateMenuInitialScene
+      css={[STYLES_CREATE_MENU_WRAPPER, css]}
+      goToTagScene={goToTagScene}
+      goToSourceScene={goToSourceScene}
+      {...props}
+    />
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Views MenuContext
+ * -----------------------------------------------------------------------------------------------*/
+const ViewsMenuContext = React.createContext();
+export const useViewsMenuContext = () => React.useContext(ViewsMenuContext);
+
+const MenuProvider = ({ children, ...props }) => {
+  const [isMenuOverflowingFrom, setMenuOverflowFrom] = React.useState({
+    left: false,
+    right: false,
+  });
+
+  const value = React.useMemo(
+    () => ({
+      isMenuOverflowingFrom,
+      setMenuOverflowFrom,
+    }),
+    [isMenuOverflowingFrom, setMenuOverflowFrom]
+  );
+
+  return (
+    <ViewsMenuContext.Provider value={value} {...props}>
+      {children}
+    </ViewsMenuContext.Provider>
+  );
+};
 
 /* -------------------------------------------------------------------------------------------------
  * Views Menu
@@ -316,6 +767,12 @@ const MenuItem = ({
     return () => cleanupMenuItem(index);
   }, [index]);
 
+  React.useLayoutEffect(() => {
+    if (isViewApplied) {
+      moveSelectionOnClick(index);
+    }
+  }, [isViewApplied]);
+
   return (
     <Typography.H5
       css={[STYLES_VIEWS_BUTTON, isViewApplied && STYLES_VIEWS_BUTTON_ACTIVE]}
@@ -351,6 +808,7 @@ const MenuItem = ({
 
 const STYLES_VIEWS_MENU_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER};
+  position: relative;
   width: 100%;
   padding: 8px;
 
@@ -399,15 +857,21 @@ const STYLES_SCROLL_BUTTON = (theme) => css`
 const STYLES_SCROLL_BUTTON_RIGHT = (theme) => css`
   ${STYLES_SCROLL_BUTTON(theme)};
   position: absolute;
-  right: 0px;
-  top: 0px;
+  //NOTE(amine): plus button's width + paddings
+  right: calc(32px + 8px + 8px);
+  top: 8px;
 `;
 
 const STYLES_SCROLL_BUTTON_LEFT = (theme) => css`
   ${STYLES_SCROLL_BUTTON(theme)};
   position: absolute;
-  left: 0px;
-  top: 0px;
+  left: 8px;
+  top: 8px;
+`;
+
+const STYLES_VIEWS_ADD_BUTTON_FOCUS = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+  color: ${theme.semantic.textBlack};
 `;
 
 const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
@@ -431,17 +895,16 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   }
 `;
 
-const useHandleScrollNavigation = ({ containerRef }) => {
-  const [isOverflowFrom, setOverflowFrom] = React.useState({
-    left: false,
-    right: false,
-  });
-
+const useHandleScrollNavigation = ({
+  isMenuOverflowingFrom,
+  setMenuOverflowFrom,
+  containerRef,
+}) => {
   const handleActionWrapperScroll = () => {
     const wrapper = containerRef.current;
     if (!wrapper) return;
 
-    setOverflowFrom((prev) => {
+    setMenuOverflowFrom((prev) => {
       const newState = {
         right: wrapper.scrollLeft < wrapper.scrollWidth - wrapper.offsetWidth,
         left: wrapper.scrollLeft > 0,
@@ -466,7 +929,7 @@ const useHandleScrollNavigation = ({ containerRef }) => {
       handler: handleActionWrapperScroll,
       ref: containerRef,
     },
-    [isOverflowFrom]
+    [isMenuOverflowingFrom]
   );
 
   const scrollToRight = () => {
@@ -479,122 +942,141 @@ const useHandleScrollNavigation = ({ containerRef }) => {
     wrapper.scrollTo({ left: wrapper.scrollLeft - 250 });
   };
 
-  return [isOverflowFrom, { scrollToLeft, scrollToRight }];
+  return { scrollToLeft, scrollToRight };
 };
 
-function Menu({ css, ...props }) {
+function Menu({ css, actionsWrapperStyle, ...props }) {
   const {
-    currentView,
-    currentViewQuery,
+    viewer,
+
+    appliedView,
     getViewsFeed,
 
     scrollButtonCss,
 
     registerMenuRef,
     cleanupMenu,
+
+    isCreateMenuOpen,
+    toggleCreateMenu,
   } = useViewsContext();
+
+  const { isMenuOverflowingFrom, setMenuOverflowFrom } = useViewsMenuContext();
 
   React.useLayoutEffect(() => cleanupMenu, []);
 
-  const createOnClickHandler =
-    ({ type, label, query }) =>
-    () =>
-      getViewsFeed({ type, label, query });
+  const createOnClickHandler = (view) => () => getViewsFeed(view);
 
   const actionWrapperRef = React.useRef();
-  const [isOverflowFrom, { scrollToLeft, scrollToRight }] =
-    useHandleScrollNavigation({ containerRef: actionWrapperRef });
+  const { scrollToLeft, scrollToRight } = useHandleScrollNavigation({
+    isMenuOverflowingFrom,
+    setMenuOverflowFrom,
+    containerRef: actionWrapperRef,
+  });
+
+  const VIEWS_ACTIONS = React.useMemo(() => {
+    const actions = [defaultViews.allOpen, defaultViews.recent];
+
+    if (viewer.settings?.isSavedViewActivated) {
+      actions.push(defaultViews.saved);
+    }
+    if (viewer.settings?.isFilesViewActivated) {
+      actions.push(defaultViews.files);
+    }
+
+    return actions;
+  }, [viewer.settings]);
 
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
-      <div style={{ position: "relative", overflow: "hidden" }}>
-        <div
-          css={STYLES_VIEWS_MENU_ACTIONS}
-          ref={mergeRefs([actionWrapperRef, registerMenuRef])}
-          style={{ paddingRight: 132 }}
-        >
-          <AnimateSharedLayout>
-            {VIEWS_ACTIONS.map((viewAction, i) => {
-              const isApplied = currentView === viewAction.data.type;
-              return (
-                <MenuItem
-                  key={viewAction.label}
-                  isViewApplied={isApplied}
-                  style={{ marginLeft: i > 0 ? 4 : 0 }}
-                  onClick={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                  })}
-                  onSubmit={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                  })}
-                  index={i}
-                >
-                  {viewAction.label}
-                </MenuItem>
-              );
-            })}
+      <div
+        css={STYLES_VIEWS_MENU_ACTIONS}
+        ref={mergeRefs([actionWrapperRef, registerMenuRef])}
+        style={{
+          paddingRight: 132,
+          position: "relative",
+          overflow: "hidden",
+          width: "100%",
+          ...actionsWrapperStyle,
+        }}
+      >
+        <AnimateSharedLayout>
+          {VIEWS_ACTIONS.map((view, i) => {
+            const isApplied = appliedView.id === view.id;
+            return (
+              <MenuItem
+                isViewApplied={isApplied}
+                key={view.name}
+                style={{ marginLeft: i > 0 ? 4 : 0 }}
+                onClick={createOnClickHandler(view)}
+                onSubmit={createOnClickHandler(view)}
+                index={i}
+              >
+                {view.name}
+              </MenuItem>
+            );
+          })}
 
+          {viewer.views.length !== 0 && (
             <Divider
               height="none"
               width="1px"
               style={{ margin: "0px 4px", flexShrink: 0 }}
             />
+          )}
 
-            {CUSTOM_VIEWS_ACTIONS.map((viewAction, i) => {
-              const { Favicon } = viewAction;
-              const isApplied =
-                currentView === viewAction.data.type &&
-                currentViewQuery === viewAction.data.query;
+          {viewer.views.map((view, i) => {
+            const isApplied = appliedView.id === view.id;
+            const isSlateFilter = view.filters.slate;
+            const Favicon = isSlateFilter
+              ? SVG.Hash
+              : getFavicon(getRootDomain(view.filters.source));
 
-              return (
-                <MenuItem
-                  key={viewAction.label}
-                  isViewApplied={isApplied}
-                  style={{ marginLeft: 4 }}
-                  onClick={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                    query: viewAction.data.query,
-                  })}
-                  onSubmit={createOnClickHandler({
-                    type: viewAction.data.type,
-                    label: viewAction.label,
-                    query: viewAction.data.query,
-                  })}
-                  index={VIEWS_ACTIONS.length + i}
-                  Favicon={Favicon}
-                >
-                  {viewAction.label}
-                </MenuItem>
-              );
-            })}
-          </AnimateSharedLayout>
-        </div>
-
-        {isOverflowFrom.left ? (
-          <button
-            className="views_actions_chevron"
-            css={[STYLES_SCROLL_BUTTON_LEFT, scrollButtonCss]}
-            onClick={scrollToLeft}
-          >
-            <SVG.ChevronLeft width={16} height={16} />
-          </button>
-        ) : null}
-
-        {isOverflowFrom.right ? (
-          <button
-            className="views_actions_chevron"
-            css={[STYLES_SCROLL_BUTTON_RIGHT, scrollButtonCss]}
-            onClick={scrollToRight}
-          >
-            <SVG.ChevronRight width={16} height={16} />
-          </button>
-        ) : null}
+            return (
+              <MenuItem
+                key={view.name}
+                isViewApplied={isApplied}
+                style={{ marginLeft: 4 }}
+                onClick={createOnClickHandler(view)}
+                onSubmit={createOnClickHandler(view)}
+                index={VIEWS_ACTIONS.length + i}
+                Favicon={Favicon}
+              >
+                {view.name}
+              </MenuItem>
+            );
+          })}
+        </AnimateSharedLayout>
       </div>
 
-      <button css={STYLES_VIEWS_ADD_BUTTON} style={{ marginLeft: 6 }}>
+      {isMenuOverflowingFrom.left ? (
+        <button
+          className="views_actions_chevron"
+          css={[STYLES_SCROLL_BUTTON_LEFT, scrollButtonCss]}
+          onClick={scrollToLeft}
+        >
+          <SVG.ChevronLeft width={16} height={16} />
+        </button>
+      ) : null}
+
+      {isMenuOverflowingFrom.right ? (
+        <button
+          className="views_actions_chevron"
+          css={[STYLES_SCROLL_BUTTON_RIGHT, scrollButtonCss]}
+          onClick={scrollToRight}
+        >
+          <SVG.ChevronRight width={16} height={16} />
+        </button>
+      ) : null}
+
+      <button
+        css={[
+          STYLES_VIEWS_ADD_BUTTON,
+          isCreateMenuOpen && STYLES_VIEWS_ADD_BUTTON_FOCUS,
+        ]}
+        style={{ marginLeft: 6 }}
+        onClick={toggleCreateMenu}
+      >
         <SVG.Plus width={16} height={16} />
       </button>
     </section>
@@ -610,16 +1092,9 @@ const STYLES_VIEWS_FEED_ROW = {
   transform: "translateY(8px)",
 };
 
-const ViewsFeedRow = ({
-  index,
-  data,
-  style,
-  onOpenUrl,
-  onObjectHover,
-  onOpenSlatesJumper,
-  ...props
-}) => {
-  const visit = data[index];
+const ViewsFeedRow = ({ index, data, style }) => {
+  const visit = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   return (
     <ListView.RovingTabIndexWithMultiSelectObject
@@ -635,7 +1110,6 @@ const ViewsFeedRow = ({
       isSaved={visit.isSaved}
       Favicon={getFavicon(visit.rootDomain)}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
-      onMouseEnter={() => onObjectHover?.({ url: visit.url })}
       onOpenSlatesJumper={() =>
         onOpenSlatesJumper([
           {
@@ -645,7 +1119,7 @@ const ViewsFeedRow = ({
           },
         ])
       }
-      {...props}
+      autoFocus={index === 0}
     />
   );
 };
@@ -685,61 +1159,139 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const Feed = React.forwardRef(
-  (
-    {
-      onObjectHover,
-      onOpenUrl,
-      onOpenSlatesJumper,
-      onGroupURLs,
-      onSaveObjects,
-      ...props
-    },
-    ref
-  ) => {
-    const { viewsFeed, currentViewLabel } = useViewsContext();
+const Feed = React.memo(
+  React.forwardRef(
+    (
+      {
+        onOpenUrl,
+        onOpenSlatesJumper,
+        onGroupURLs,
+        onSaveObjects,
 
-    const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+        historyFeed,
+        historyFeedKeys,
+        loadMoreHistory,
 
-    return (
-      <RovingTabIndex.Provider
-        key={viewsFeed}
-        ref={(node) => (ref.rovingTabIndexRef = node)}
-        isInfiniteList
-        withFocusOnHover
-      >
-        <MultiSelection.Provider
-          totalSelectableItems={viewsFeed.length}
-          onSubmitSelectedItem={handleOnSubmitSelectedItem}
-        >
-          <ViewsFeedList
-            itemCount={viewsFeed.length}
-            itemData={viewsFeed}
-            itemSize={Constants.sizes.jumperFeedItem}
-            {...props}
-          >
-            {(props) =>
-              ViewsFeedRow({
-                ...props,
-                onOpenUrl,
-                onOpenSlatesJumper,
-                onObjectHover,
-              })
-            }
-          </ViewsFeedList>
+        windowsFeed,
+        windowsFeedKeys,
+        onCloseTabs,
+        activeTabId,
 
-          <MultiSelection.ActionsMenu
-            onOpenURLs={(urls) => onOpenUrl({ urls })}
-            onGroupURLs={(urls) =>
-              onGroupURLs({ urls, title: currentViewLabel })
-            }
+        ...props
+      },
+      ref
+    ) => {
+      const { viewsFeed, appliedView, isLoadingViewFeed, onRestoreFocus } =
+        useViewsContext();
+
+      const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
+
+      // NOTE(amine): display the new feed once it's loaded
+      const prevView = React.useRef(appliedView);
+      const loadedView = React.useMemo(() => {
+        if (isLoadingViewFeed) {
+          return prevView.current;
+        } else {
+          prevView.current = appliedView;
+          return appliedView;
+        }
+      }, [appliedView, isLoadingViewFeed]);
+
+      React.useLayoutEffect(() => {
+        if (loadedView.type === viewsType.allOpen && windowsFeed.length === 0) {
+          onRestoreFocus();
+          return;
+        }
+        if (loadedView.type === viewsType.recent && historyFeed.length === 0) {
+          onRestoreFocus();
+          return;
+        }
+        if (
+          (loadedView.type === viewsType.custom ||
+            loadedView.type === viewsType.saved ||
+            loadedView === viewsType.files) &&
+          viewsFeed.length === 0
+        ) {
+          onRestoreFocus();
+          return;
+        }
+      }, [loadedView]);
+
+      const viewsFeedItemsData = React.useMemo(() => {
+        return {
+          feed: viewsFeed,
+          props: {
+            onOpenUrl,
+            onOpenSlatesJumper,
+          },
+        };
+      }, [viewsFeed]);
+
+      if (loadedView.type === viewsType.allOpen) {
+        return (
+          <WindowsFeed
+            ref={ref}
+            windowsFeed={windowsFeed}
+            windowsFeedKeys={windowsFeedKeys}
+            activeTabId={activeTabId}
+            onCloseTabs={onCloseTabs}
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
+            onOpenUrl={onOpenUrl}
+            {...props}
           />
-        </MultiSelection.Provider>
-      </RovingTabIndex.Provider>
-    );
-  }
+        );
+      }
+
+      if (loadedView.type === viewsType.recent) {
+        return (
+          <HistoryFeed
+            ref={ref}
+            sessionsFeed={historyFeed}
+            sessionsFeedKeys={historyFeedKeys}
+            onLoadMore={loadMoreHistory}
+            onOpenUrl={onOpenUrl}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onSaveObjects={onSaveObjects}
+            onGroupURLs={onGroupURLs}
+            {...props}
+          />
+        );
+      }
+
+      return (
+        <RovingTabIndex.Provider
+          key={loadedView.id}
+          ref={(node) => (ref.rovingTabIndexRef = node)}
+          isInfiniteList
+          withFocusOnHover
+        >
+          <MultiSelection.Provider
+            totalSelectableItems={viewsFeedItemsData.feed.length}
+            onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          >
+            <ViewsFeedList
+              itemCount={viewsFeedItemsData.feed.length}
+              itemData={viewsFeedItemsData}
+              itemSize={Constants.sizes.jumperFeedItem}
+              {...props}
+            >
+              {ViewsFeedRow}
+            </ViewsFeedList>
+
+            <MultiSelection.ActionsMenu
+              onOpenURLs={(urls) => onOpenUrl({ urls })}
+              onGroupURLs={(urls) =>
+                onGroupURLs({ urls, title: loadedView.name })
+              }
+              onOpenSlatesJumper={onOpenSlatesJumper}
+              onSaveObjects={onSaveObjects}
+            />
+          </MultiSelection.Provider>
+        </RovingTabIndex.Provider>
+      );
+    }
+  )
 );
 
-export { Provider, Menu, Feed };
+export { Provider, MenuProvider, Menu, CreateMenu, Feed };

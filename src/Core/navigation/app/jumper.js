@@ -87,11 +87,11 @@ export const NavigationProvider = ({ children }) => {
   }, [isOpen]);
 
   const { navigationState, navigate } = useHandleJumperNavigation();
-  const navigateToHomeJumper = () => navigate("/");
-  const navigateToSlatesJumper = (objects) => {
+  const navigateToHomeJumper = React.useCallback(() => navigate("/"), []);
+  const navigateToSlatesJumper = React.useCallback((objects) => {
     const urlsQuery = encodeURIComponent(JSON.stringify(objects));
     navigate(`/slates?urls=${urlsQuery}`);
-  };
+  }, []);
 
   const value = React.useMemo(
     () => ({

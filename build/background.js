@@ -341,23 +341,49 @@ const removeFileFromSlate = async (data) => {
   });
 };
 
+const search = async (data) => {
+  return await returnJSON(`${uri.hostname}/api/search/search`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
 ;// CONCATENATED MODULE: ./src/Core/views/index.js
 const views_messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
   searchQueryResponse: "SEARCH_QUERY_RESPONSE",
 
-  viewByTypeRequest: "VIEW_BY_TYPE_REQUEST",
-  viewByTypeResponse: "VIEW_BY_TYPE_RESPONSE",
+  viewFeedRequest: "VIEW_FEED_REQUEST",
+  viewFeedResponse: "VIEW_FEED_RESPONSE",
+
+  createViewByTag: "CREATE_VIEW_BY_TAG",
+  createViewBySource: "CREATE_VIEW_BY_SOURCE",
 };
 
 const viewsType = {
   allOpen: "allOpen",
   recent: "recent",
-  savedFiles: "savedFiles",
-  relatedLinks: "relatedLinks",
+  saved: "saved",
+  files: "files",
+  custom: "custom",
 };
 
-const initialView = viewsType.allOpen;
+const defaultViews = {
+  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
+  recent: { id: "recent", name: "Recent", type: viewsType.recent },
+  saved: {
+    id: "saved",
+    name: "Saved",
+    type: viewsType.saved,
+  },
+  files: {
+    id: "files",
+    name: "Files",
+    type: viewsType.files,
+  },
+};
+
+const initialView = defaultViews.allOpen;
 
 ;// CONCATENATED MODULE: ./src/Core/viewer/index.js
 
@@ -374,6 +400,11 @@ const viewer_messages = {
   addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
   removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
   createSlate: "CREATE_SLATE",
+
+  getSavedLinksSourcesRequest: "GET_SAVED_LINKS_SOURCES_REQUEST",
+  getSavedLinksSourcesResponse: "GET_SAVED_LINKS_SOURCES_RESPONSE",
+
+  updateViewerSettings: "UPDATE_VIEWER_SETTINGS",
 };
 
 // NOTE(amine): commands are defined in manifest.json
@@ -437,687 +468,458 @@ const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
-;// CONCATENATED MODULE: ./src/Core/viewer/background.js
+;// CONCATENATED MODULE: ./src/Common/strings.js
 
 
+const MINUTE = 60;
+const HOUR = MINUTE * 60;
+const DAY = HOUR * 24;
+const WEEK = DAY * 7;
+const MONTH = (DAY * 365) / 12;
+const YEAR = DAY * 365;
 
-
-
-
-
-const background_getRootDomain = (url) => {
-  let hostname;
-  try {
-    hostname = new URL(url).hostname;
-  } catch (e) {
-    hostname = "";
-  }
-  const hostnameParts = hostname.split(".");
-  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+const generateRandomString = () => {
+  return Math.random().toString(36).substr(2, 5);
 };
 
-const getFileUrl = (object) =>
-  object.isLink ? object.url : `${gateways.ipfs}/${object.cid}`;
+const getKey = (text) => {
+  if (isEmpty(text)) {
+    return null;
+  }
 
-/** ----------------------------------------- */
-
-const VIEWER_INITIAL_STATE = {
-  objects: [],
-  objectsMetadata: {},
-  // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
-  savedObjectsLookup: {},
-
-  savedObjectsSlates: {},
-  slatesLookup: {},
-  slates: [],
-
-  lastFetched: null,
-  isAuthenticated: false,
+  return text.replace("Basic ", "");
 };
 
-let VIEWER_INTERNAL_STORAGE;
-const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
-
-class ViewerHandler {
-  constructor() {
-    this.observers = [];
-    this.runningActions = [];
+const getPresentationSlateName = (slate) => {
+  if (!isEmpty(slate.name)) {
+    return slate.name;
   }
 
-  onChange(callback) {
-    this.observers.push(callback);
+  return slate.slatename;
+};
+
+const getPresentationName = (user) => {
+  if (!isEmpty(user.name)) {
+    return user.name;
   }
 
-  notifyChange(viewer) {
-    this.observers.forEach((callback) => callback(viewer));
+  return user.username;
+};
+
+const zeroPad = (num, places) => {
+  var zero = places - num.toString().length + 1;
+  return Array(+(zero > 0 && zero)).join("0") + num;
+};
+
+const getURLfromCID = (cid) => {
+  return `${Constants.gateways.ipfs}/${cid}`;
+};
+
+const getApiUrl = {
+  link: `${uri.hostname}/api/v3/create-link`,
+  image: `${uri.hostname}/api/v3/public/upload-by-url`,
+};
+
+const getSlateFileLink = (id) => {
+  return `${Constants.uri.hostname}/_/data?id=${id}&extension=true`;
+};
+
+const getUrlHost = (url) => {
+  return new URL(url).hostname;
+};
+
+const truncateString = (count, string) => {
+  return string.slice(0, count) + (string.length > count ? "..." : "");
+};
+
+const shortcuts = [
+  { short: "⌥", key: "S", name: "Open extension" },
+  { short: "⌥", key: "B", name: "Bookmark current page" },
+  { short: "↑", key: "↓", extra: "←", name: "Navigate extension" },
+  { short: "", key: "esc", name: "Close extension" },
+  { short: "⌥", key: "O", name: "Open web app" },
+];
+
+// NOTE(jsign): Each epoch is 30s, then divide by 60 for getting mins, by 60 to get hours, then by 24 to get days
+const getDaysFromEpoch = (epoch) => {
+  const number = (epoch * 30) / DAY;
+  const formatted = number.toFixed(2);
+  return `${formatted} days`;
+};
+
+const toDateSinceEpoch = (epoch) => {
+  return toDate(new Date().getTime() - epoch);
+};
+
+// export const getURLfromCIDWithExtension = (cid, name) => {
+//   const url = getURLfromCID(cid);
+//   const extension = getFileExtension(name);
+//   if (!isEmpty(extension)) {
+//     return `${url}.${getFileExtension(name)}`;
+//   }
+
+//   return url;
+// };
+
+const getURLFromPath = (path) => {
+  return `${window.location.protocol}//${window.location.hostname}${
+    window.location.port ? ":" + window.location.port : ""
+  }${path}`;
+};
+
+const getFileExtension = (name) => {
+  if (!name || isEmpty(name)) {
+    return "";
   }
-
-  async _getFromLocalStorage() {
-    const result = await chrome.storage.local.get([VIEWER_LOCAL_STORAGE_KEY]);
-    return result[VIEWER_LOCAL_STORAGE_KEY];
+  // if (name.lastIndexOf(".") !== -1) {
+  //   return name.slice(name.lastIndexOf("."));
+  // } else {
+  //   return "";
+  // }
+  if (name.lastIndexOf(".") !== -1) {
+    return name.slice(((name.lastIndexOf(".") - 1) >>> 0) + 2);
   }
+  return "";
+};
 
-  async _updateStorage(viewer) {
-    chrome.storage.local.set({
-      [VIEWER_LOCAL_STORAGE_KEY]: viewer,
-    });
-  }
-
-  async _getObjectIdFromUrl(url) {
-    const viewer = await this.get();
-    return viewer.savedObjectsLookup[url];
-  }
-
-  _serialize(viewer) {
-    const serializedViewer = {
-      objects: [],
-      objectsMetadata: {},
-      savedObjectsLookup: {},
-
-      savedObjectsSlates: {},
-      slatesLookup: {},
-      slates: viewer.slates.sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-      ),
-    };
-
-    serializedViewer.objects = viewer.library.map((object) => {
-      serializedViewer.objectsMetadata[getFileUrl(object)] = {
-        id: object.id,
-        cid: object.cid,
-      };
-
-      if (object.isLink) {
-        serializedViewer.savedObjectsLookup[object.url] = true;
-
-        return {
-          title: object.linkName,
-          favicon: object.linkFavicon,
-          url: object.url,
-          rootDomain: background_getRootDomain(object.url),
-          cid: object.cid,
-          isSaved: true,
-        };
-      }
-
-      const fileUrl = getFileUrl(object);
-      serializedViewer.savedObjectsLookup[fileUrl] = true;
-
-      return {
-        title: object.name,
-        rootDomain: uri.domain,
-        url: fileUrl,
-        cid: object.cid,
-        isSaved: true,
-      };
-    });
-
-    viewer.slates.forEach((slate) => {
-      const { savedObjectsSlates, slatesLookup } = serializedViewer;
-      if (!slatesLookup[slate.name]) slatesLookup[slate.name] = {};
-
-      slate.objects.forEach((object) => {
-        const objectUrl = getFileUrl(object);
-        slatesLookup[slate.name][objectUrl] = true;
-
-        if (!savedObjectsSlates[objectUrl]) savedObjectsSlates[objectUrl] = [];
-        savedObjectsSlates[objectUrl].push(slate.name);
-      });
-    });
-
-    return serializedViewer;
-  }
-
-  _set(viewer) {
-    this._updateStorage(viewer);
-    VIEWER_INTERNAL_STORAGE = viewer;
-
-    this.notifyChange(viewer);
-    return VIEWER_INTERNAL_STORAGE;
-  }
-
-  async get() {
-    if (VIEWER_INTERNAL_STORAGE) return VIEWER_INTERNAL_STORAGE;
-
-    const localViewer = await this._getFromLocalStorage();
-    if (localViewer) {
-      VIEWER_INTERNAL_STORAGE = localViewer;
-      return localViewer;
+const createQueryParams = (params) => {
+  let query = "?";
+  let first = true;
+  for (const [key, value] of Object.entries(params)) {
+    if (!first) {
+      query += "&";
     }
+    query += `${key}=${value}`;
+    first = false;
+  }
+  return query;
+};
 
-    VIEWER_INTERNAL_STORAGE = VIEWER_INITIAL_STATE;
-    return VIEWER_INTERNAL_STORAGE;
+const getCIDFromIPFS = (url) => {
+  // NOTE(andrew)
+  const cid = url.includes("/ipfs/")
+    ? // pull cid from a path format gateway
+      url.split("/ipfs/")[1]
+    : // pull cid from a subdomain format gateway
+      url.match(/(?:http[s]*\:\/\/)*(.*?)\.(?=[^\/]*\..{2,5})/i)[1];
+  return cid;
+};
+
+const formatAsUploadMessage = (added, skipped, slate = false) => {
+  let message = `${added || 0} file${added !== 1 ? "s" : ""} added${
+    slate ? " to collection" : ""
+  }. `;
+  if (skipped) {
+    message += `${skipped || 0} duplicate / existing file${
+      added !== 1 ? "s were" : " was"
+    } skipped.`;
+  }
+  return message;
+};
+
+const pluralize = (text, count) => {
+  return count > 1 || count === 0 ? `${text}s` : text;
+};
+
+const toDate = (data) => {
+  const date = new Date(data);
+  return `${date.getMonth() + 1}-${date.getDate()}-${date.getFullYear()}`;
+};
+
+const formatNumber = (x) => {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+const elide = (string, length = 140, emptyState = "...") => {
+  if (isEmpty(string)) {
+    return emptyState;
   }
 
-  async checkIfAuthenticated() {
-    return (await this.get()).isAuthenticated;
+  if (string.length < length) {
+    return string.trim();
   }
 
-  async checkIfLinkIsSaved(url) {
-    const viewer = await this.get();
-    return !!viewer.savedObjectsLookup[url];
+  return `${string.substring(0, length)}...`;
+};
+
+const isEmpty = (string) => {
+  // NOTE(jim): This is not empty when its coerced into a string.
+  if (string === 0) {
+    return false;
   }
 
-  async reset() {
-    this._set(VIEWER_INITIAL_STATE);
+  if (!string) {
+    return true;
   }
 
-  async sync() {
-    //NOTE(amine): only sync when there are no running actions
+  if (typeof string === "object") {
+    return true;
+  }
 
-    const viewer = await hydrateAuthenticatedUser();
+  if (string.length === 0) {
+    return true;
+  }
 
-    if (viewer.data) {
-      const serializedViewer = this._serialize(viewer.data);
-      this._set({
-        ...serializedViewer,
-        lastFetched: new Date().toString(),
-        isAuthenticated: true,
-      });
-      return;
+  string = string.toString();
+
+  return !string.trim();
+};
+
+const bytesToSize = (bytes, decimals = 2) => {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${(bytes / Math.pow(k, i)).toFixed(dm)}${sizes[i]}`;
+};
+
+const getRemainingTime = (seconds) => {
+  seconds = seconds > 0 ? seconds : 1;
+
+  let [value, unit] =
+    seconds < MINUTE
+      ? [Math.round(seconds), "second"]
+      : seconds < HOUR
+      ? [Math.round(seconds / MINUTE), "minute"]
+      : seconds < DAY
+      ? [Math.round(seconds / HOUR), "hour"]
+      : seconds < WEEK
+      ? [Math.round(seconds / DAY), "day"]
+      : seconds < MONTH
+      ? [Math.round(seconds / WEEK), "week"]
+      : seconds < YEAR
+      ? [Math.round(seconds / MONTH), "month"]
+      : [Math.round(seconds / YEAR), "year"];
+
+  unit = pluralize(unit, value);
+
+  return `${value} ${unit} remaining`;
+};
+
+const urlToCid = (url) => {
+  return url
+    .replace(`${Constants.gateways.ipfs}/`, "")
+    .replace("https://", "")
+    .replace("undefined", "")
+    .replace(".ipfs.slate.textile.io", "")
+    .replace("hub.textile.io/ipfs/", "");
+};
+
+const getQueryStringFromParams = (params) => {
+  let pairs = Object.entries(params).map(([key, value]) => `${key}=${value}`);
+  let query = "?".concat(pairs.join("&"));
+  if (query.length === 1) {
+    return "";
+  }
+  return query;
+};
+
+//NOTE(martina): works with both url and search passed in
+const getParamsFromUrl = (url) => {
+  let startIndex = url.indexOf("?") + 1;
+  let search = url.slice(startIndex);
+  if (search.length < 3) {
+    return {};
+  }
+  let params = {};
+  let pairs = search.split("&");
+  for (let pair of pairs) {
+    let key = pair.split("=")[0];
+    let value = pair.slice(key.length + 1);
+    if (key && value) {
+      params[key] = value;
     }
-
-    this.reset(VIEWER_INITIAL_STATE);
   }
-}
+  return params;
+};
 
-const Viewer = new ViewerHandler();
-
-class ViewerActionsHandler {
-  constructor() {
-    this.runningActions = [];
+const hexToRGBA = (hex, alpha = 1) => {
+  hex = hex.replace("#", "");
+  var r = parseInt(
+    hex.length === 3 ? hex.slice(0, 1).repeat(2) : hex.slice(0, 2),
+    16
+  );
+  var g = parseInt(
+    hex.length === 3 ? hex.slice(1, 2).repeat(2) : hex.slice(2, 4),
+    16
+  );
+  var b = parseInt(
+    hex.length === 3 ? hex.slice(2, 3).repeat(2) : hex.slice(4, 6),
+    16
+  );
+  if (alpha) {
+    return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+  } else {
+    return "rgb(" + r + ", " + g + ", " + b + ")";
   }
+};
 
-  _registerRunningAction() {
-    this.runningActions.push("");
-  }
+const copyText = (str) => {
+  const el = document.createElement("textarea");
+  el.value = str;
+  el.setAttribute("readonly", "");
+  el.style.position = "absolute";
+  el.style.left = "-9999px";
+  el.style.visibility = "hidden";
+  el.style.opacity = "0";
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand("copy");
+  document.body.removeChild(el);
 
-  _cleanupCleanupAction() {
-    this.runningActions.pop();
-    setTimeout(() => {
-      if (!this.runningActions.length) Viewer.sync();
-    }, 200);
-  }
+  return true;
+};
 
-  _addObjectsToViewer({ viewer, objects }) {
-    objects.forEach((object) => {
-      if (object.url in viewer.savedObjectsLookup) {
-        return;
-      }
-      viewer.savedObjectsLookup[object.url] = savingStates.start;
-      viewer.objects.push({
-        title: object.title,
-        url: object.title,
-        favicon: object.favicon,
-        rootDomain: background_getRootDomain(object.url),
-        isSaved: true,
-      });
-    });
-    return viewer;
-  }
-
-  async _removeObjectsFromViewer({ viewer, objects }) {
-    objects.forEach(({ url }) => {
-      delete viewer.savedObjectsLookup[url];
-      viewer.objects = objects.filter((object) => object.url !== url);
-    });
-
-    return viewer;
-  }
-
-  _addSlateToViewer({ viewer, slateName }) {
-    viewer.slatesLookup[slateName] = {};
-    viewer.slates.push({
-      slatename: slateName,
-      name: slateName,
-      createAt: new Date().toDateString(),
-    });
-    return viewer;
+// SOURCE(jim):
+// https://gist.github.com/mathewbyrne/1280286
+// modified to support chinese characters, base case, and german.
+const createSlug = (text, base = "untitled") => {
+  if (isEmpty(text)) {
+    return base;
   }
 
-  _removeSlateFromViewer({ viewer, slateName }) {
-    delete viewer.slatesLookup[slateName];
+  text = text.toString().toLowerCase();
 
-    viewer.slates = viewer.slates.filter(
-      (slate) => slate.slatename !== slateName
-    );
-    return viewer;
-  }
+  const sets = [
+    { to: "a", from: "[ÀÁÂÃÅÆĀĂĄẠẢẤẦẨẪẬẮẰẲẴẶ]" },
+    { to: "ae", from: "[Ä]" },
+    { to: "c", from: "[ÇĆĈČ]" },
+    { to: "d", from: "[ÐĎĐÞ]" },
+    { to: "e", from: "[ÈÉÊËĒĔĖĘĚẸẺẼẾỀỂỄỆ]" },
+    { to: "g", from: "[ĜĞĢǴ]" },
+    { to: "h", from: "[ĤḦ]" },
+    { to: "i", from: "[ÌÍÎÏĨĪĮİỈỊ]" },
+    { to: "j", from: "[Ĵ]" },
+    { to: "ij", from: "[Ĳ]" },
+    { to: "k", from: "[Ķ]" },
+    { to: "l", from: "[ĹĻĽŁ]" },
+    { to: "m", from: "[Ḿ]" },
+    { to: "n", from: "[ÑŃŅŇ]" },
+    { to: "o", from: "[ÒÓÔÕØŌŎŐỌỎỐỒỔỖỘỚỜỞỠỢǪǬƠ]" },
+    { to: "oe", from: "[ŒÖ]" },
+    { to: "p", from: "[ṕ]" },
+    { to: "r", from: "[ŔŖŘ]" },
+    { to: "s", from: "[ŚŜŞŠ]" },
+    { to: "ss", from: "[ß]" },
+    { to: "t", from: "[ŢŤ]" },
+    { to: "u", from: "[ÙÚÛŨŪŬŮŰŲỤỦỨỪỬỮỰƯ]" },
+    { to: "ue", from: "[Ü]" },
+    { to: "w", from: "[ẂŴẀẄ]" },
+    { to: "x", from: "[ẍ]" },
+    { to: "y", from: "[ÝŶŸỲỴỶỸ]" },
+    { to: "z", from: "[ŹŻŽ]" },
+    { to: "-", from: "[_]" },
+  ];
 
-  _addObjectsToViewerSlate({ viewer, objects, slateName }) {
-    objects.forEach(({ url }) => {
-      viewer.slatesLookup[slateName][url] = true;
-    });
-
-    objects.forEach(({ url }) => {
-      if (!(url in viewer.savedObjectsSlates))
-        viewer.savedObjectsSlates[url] = [];
-      viewer.savedObjectsSlates[url].push(slateName);
-    });
-
-    return viewer;
-  }
-
-  _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
-    objects.forEach(({ url }) => {
-      if (slateName in viewer.slatesLookup) {
-        delete viewer.slatesLookup[slateName][url];
-      }
-    });
-
-    objects.forEach(({ url }) => {
-      const filterOutSlateName = (slate) => slate !== slateName;
-      viewer.savedObjectsSlates[url] =
-        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
-    });
-
-    return viewer;
-  }
-
-  /**
-   * @description save a link and send saving status to new tab and the jumper
-   *
-   * @param {Object} Arguments
-   * @param {string} Arguments.objects - objects to save
-   * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
-   * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
-   */
-
-  async saveLink({ objects, slateName, tab, source = savingSources.app }) {
-    this._registerRunningAction();
-
-    let viewer = await Viewer.get();
-    const areObjectsBeingSaved = objects.every(
-      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
-    );
-
-    if (areObjectsBeingSaved) return;
-
-    const sendStatusUpdate = (status) => {
-      if (source === savingSources.command) {
-        // NOTE(amine): you can only save one object via command
-        const { url, title, favicon } = objects[0];
-        chrome.tabs.sendMessage(parseInt(tab.id), {
-          type: viewer_messages.savingStatus,
-          data: { savingStatus: status, url, title, favicon, source },
-        });
-      }
-    };
-
-    sendStatusUpdate(savingStates.start);
-
-    const objectsToBeSaved = objects.filter(
-      ({ url }) => !(url in viewer.savedObjectsLookup)
-    );
-
-    viewer = this._addObjectsToViewer({
-      viewer,
-      objects: objectsToBeSaved,
-    });
-
-    if (slateName) {
-      viewer = this._addObjectsToViewerSlate({
-        viewer,
-        objects: objectsToBeSaved,
-        slateName,
-      });
-    }
-    Viewer._set(viewer);
-
-    let payload = {};
-    payload.urls = objectsToBeSaved.map(({ url }) => url);
-    if (slateName) {
-      const slatePayload = viewer.slates.find(
-        (slate) => slate.name === slateName
-      );
-      payload.slate = slatePayload;
-    }
-
-    const response = await createLink(payload);
-
-    if (!response || response.error) {
-      sendStatusUpdate(savingStates.failed);
-      let viewer = await Viewer.get();
-      if (slateName) {
-        viewer = this._removeObjectsFromViewerSlate({
-          viewer,
-          objects: objectsToBeSaved,
-          slateName,
-        });
-      }
-      viewer = this._removeObjectsFromViewer({
-        viewer: viewer,
-        objects: objectsToBeSaved,
-      });
-      Viewer._set(viewer);
-      return;
-    }
-
-    sendStatusUpdate(savingStates.done);
-
-    this._cleanupCleanupAction();
-  }
-
-  async addObjectsToSlate({ slateName, objects }) {
-    let viewer = await Viewer.get();
-    if (!(slateName in viewer.slatesLookup)) {
-      return;
-    }
-
-    viewer = this._addObjectsToViewerSlate({
-      viewer,
-      objects,
-      slateName,
-    });
-    Viewer._set(viewer);
-
-    const filesPayload = objects.map(({ url }) => ({
-      id: viewer.objectsMetadata[url].id,
-      cid: viewer.objectsMetadata[url].cid,
-    }));
-
-    const slatePayload = viewer.slates.find(
-      (slate) => slate.name === slateName
-    );
-
-    const response = await saveCopy({
-      files: filesPayload,
-      slate: slatePayload,
-    });
-
-    if (!response || response.error) {
-      viewer = await Viewer.get();
-      viewer = this._removeObjectsFromViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      Viewer._set(viewer);
-    }
-
-    return;
-  }
-
-  async removeObjectsFromSlate({ slateName, objects }) {
-    let viewer = await Viewer.get();
-    if (!(slateName in viewer.slatesLookup)) {
-      return;
-    }
-
-    const filesIdsPayload = objects.map(
-      ({ url }) => viewer.objectsMetadata[url].id
-    );
-
-    const slatePayload = viewer.slates.find(
-      (slate) => slate.name === slateName
-    );
-
-    viewer = await this._removeObjectsFromViewerSlate({
-      viewer,
-      objects,
-      slateName,
-    });
-
-    const isSlateEmpty =
-      Object.keys(viewer.slatesLookup[slateName]).length === 0;
-    // NOTE(amine): if the request fails, we'll use oldSlate to add that slate back
-    let oldSlate;
-    if (isSlateEmpty) {
-      oldSlate = viewer.slates.find((slate) => slate.slatename === slateName);
-      viewer = this._removeSlateFromViewer({ viewer, slateName });
-    }
-
-    Viewer._set(viewer);
-
-    const response = await removeFileFromSlate({
-      ids: filesIdsPayload,
-      slateId: slatePayload.id,
-    });
-
-    if (!response || response.error) {
-      viewer = await this.get();
-      if (isSlateEmpty) {
-        viewer.slates.push(oldSlate);
-        oldSlate.objects.forEach((object) => {
-          const objectUrl = getFileUrl(object);
-          viewer.slatesLookup[slateName][objectUrl] = true;
-        });
-      }
-      viewer = this._addObjectsToViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      Viewer._set(viewer);
-    }
-
-    return;
-  }
-
-  async createSlate({ slateName, objects }) {
-    let viewer = await Viewer.get();
-    if (slateName in viewer.slatesLookup) return;
-
-    this._registerRunningAction();
-
-    viewer = this._addSlateToViewer({ viewer, slateName });
-    viewer = this._addObjectsToViewerSlate({
-      viewer,
-      objects,
-      slateName,
-    });
-    Viewer._set(viewer);
-
-    const response = await createSlate({
-      name: slateName,
-      isPublic: false,
-    });
-
-    if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._removeObjectsFromViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      viewer = this._removeSlateFromViewer({ viewer, slateName });
-      Viewer._set(viewer);
-      return;
-    } else {
-      const viewer = await Viewer.get();
-      viewer.slates = viewer.slates.filter(
-        (slate) => slate.slatename !== slateName
-      );
-      viewer.slates.unshift(response.slate);
-      Viewer._set(viewer);
-    }
-
-    const savedObjects = [];
-    const unsavedObjects = [];
-    for (let object of objects) {
-      if (await Viewer.checkIfLinkIsSaved(object.url)) {
-        savedObjects.push(object);
-        continue;
-      }
-      unsavedObjects.push(object);
-    }
-
-    this._cleanupCleanupAction();
-
-    Promise.all([
-      ViewerActions.addObjectsToSlate({
-        objects: savedObjects,
-        slateName: slateName,
-      }),
-      ViewerActions.saveLink({
-        objects: unsavedObjects,
-        slateName,
-      }),
-    ]);
-  }
-}
-
-const ViewerActions = new ViewerActionsHandler();
-
-/** ------------ Event listeners ------------- */
-
-Viewer.onChange(async (viewerData) => {
-  const activeTab = await Tabs.getActive();
-  if (!activeTab) return;
-  const slates = viewerData.slates.map(({ name }) => name);
-  const { savedObjectsLookup, savedObjectsSlates, slatesLookup } = viewerData;
-
-  chrome.tabs.sendMessage(parseInt(activeTab.id), {
-    type: viewer_messages.updateViewer,
-    data: { slates, savedObjectsLookup, savedObjectsSlates, slatesLookup },
+  sets.forEach((set) => {
+    text = text.replace(new RegExp(set.from, "gi"), set.to);
   });
-});
 
-chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == viewer_commands.directSave) {
-    if (await Viewer.checkIfAuthenticated()) {
-      Viewer.saveLink({
-        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
-        tab,
-        source: savingSources.command,
-      });
+  text = text
+    .toString()
+    .toLowerCase()
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/&/g, "-and-") // Replace & with 'and'
+    .replace(/[^a-zA-Z0-9_\u3400-\u9FBF\s-]/g, "") // Remove all non-word chars
+    .replace(/\--+/g, "-") // Replace multiple - with single -
+    .replace(/^-+/, "")
+    .trim(); // Trim - from start of text
+
+  return text;
+};
+
+const capitalize = (str = "") => str[0].toUpperCase() + str.slice(1);
+
+;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/rng.js
+// Unique ID creation requires a high quality random # generator. In the browser we therefore
+// require the crypto API and do not support built-in fallback to lower quality random number
+// generators (like Math.random()).
+var getRandomValues;
+var rnds8 = new Uint8Array(16);
+function rng() {
+  // lazy load so that environments that need to polyfill have a chance to do so
+  if (!getRandomValues) {
+    // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
+    // find the complete implementation of crypto (msCrypto) on IE11.
+    getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
+
+    if (!getRandomValues) {
+      throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
     }
   }
-});
 
-chrome.runtime.onInstalled.addListener(() => {
-  Viewer.sync();
-});
+  return getRandomValues(rnds8);
+}
+;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/regex.js
+/* harmony default export */ var regex = (/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i);
+;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/validate.js
 
-chrome.cookies.onChanged.addListener((e) => {
-  if (e.cookie.domain !== uri.domain) return;
 
-  if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {
-    Viewer.reset();
+function validate(uuid) {
+  return typeof uuid === 'string' && regex.test(uuid);
+}
+
+/* harmony default export */ var esm_browser_validate = (validate);
+;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/stringify.js
+
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+
+var byteToHex = [];
+
+for (var i = 0; i < 256; ++i) {
+  byteToHex.push((i + 0x100).toString(16).substr(1));
+}
+
+function stringify(arr) {
+  var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  // Note: Be careful editing this code!  It's been tuned for performance
+  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+  var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+  // of the following:
+  // - One or more input array values don't map to a hex octet (leading to
+  // "undefined" in the uuid)
+  // - Invalid input values for the RFC `version` or `variant` fields
+
+  if (!esm_browser_validate(uuid)) {
+    throw TypeError('Stringified UUID is invalid');
   }
 
-  if (!e.removed && e.cause === "explicit") {
-    Viewer.sync();
-  }
-});
+  return uuid;
+}
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === viewer_messages.saveLink) {
-    ViewerActions.saveLink({
-      objects: request.objects,
-      tab: sender.tab,
-      source: request.source,
-    }).then(sendResponse);
-    return true;
-  }
+/* harmony default export */ var esm_browser_stringify = (stringify);
+;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/v4.js
 
-  if (request.type === viewer_messages.addObjectsToSlate) {
-    const handleAddObjectsToSlate = async ({ objects, slateName }) => {
-      const savedObjects = [];
-      const unsavedObjects = [];
-      for (let object of objects) {
-        if (await Viewer.checkIfLinkIsSaved(object.url)) {
-          savedObjects.push(object);
-          continue;
-        }
-        unsavedObjects.push(object);
-      }
 
-      Promise.all([
-        ViewerActions.addObjectsToSlate({
-          objects: savedObjects,
-          slateName: slateName,
-        }),
-        ViewerActions.saveLink({
-          objects: unsavedObjects,
-          slateName,
-        }),
-      ]);
-    };
 
-    handleAddObjectsToSlate({
-      objects: request.objects,
-      slateName: request.slateName,
-    }).then(sendResponse);
+function v4(options, buf, offset) {
+  options = options || {};
+  var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
 
-    return true;
+  rnds[6] = rnds[6] & 0x0f | 0x40;
+  rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
+
+  if (buf) {
+    offset = offset || 0;
+
+    for (var i = 0; i < 16; ++i) {
+      buf[offset + i] = rnds[i];
+    }
+
+    return buf;
   }
 
-  if (request.type === viewer_messages.createSlate) {
-    ViewerActions.createSlate({
-      objects: request.objects,
-      slateName: request.slateName,
-    }).then(sendResponse);
-    return true;
-  }
+  return esm_browser_stringify(rnds);
+}
 
-  if (request.type === viewer_messages.removeObjectsFromSlate) {
-    ViewerActions.removeObjectsFromSlate({
-      objects: request.objects,
-      slateName: request.slateName,
-    }).then(sendResponse);
-    return true;
-  }
-
-  if (request.type === viewer_messages.loadViewerDataRequest) {
-    const getInitialData = async () => {
-      const isAuthenticated = await Viewer.checkIfAuthenticated();
-
-      if (!isAuthenticated) {
-        return { isAuthenticated };
-      }
-
-      const openTabs = await Windows.getAllTabs();
-
-      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
-        tabs: openTabs,
-        activeTabId: sender.tab.id,
-        activeWindowId: sender.tab.windowId,
-      });
-
-      const viewerData = await Viewer.get();
-
-      const slates = viewerData.slates.map(({ name }) => name);
-      const { savedObjectsLookup, savedObjectsSlates, slatesLookup } =
-        viewerData;
-
-      Viewer.sync();
-
-      const response = {
-        ...viewerInitialState,
-        isAuthenticated,
-
-        slates,
-        savedObjectsLookup,
-        savedObjectsSlates,
-        slatesLookup,
-
-        windows: {
-          data: {
-            allOpenFeedKeys,
-            allOpenFeed,
-          },
-          params: {
-            activeWindowId: sender.tab.windowId,
-            activeTabId: sender.tab.id,
-          },
-        },
-      };
-
-      // NOTE(amine): if there is only one tab open, preload recent view
-      // if (response.windows.data.allOpen.length === 1) {
-      //   response.recent = await browserHistory.getChunk();
-      //   response.initialView = viewsType.recent;
-      // }
-
-      return response;
-    };
-
-    getInitialData().then(sendResponse);
-    return true;
-  }
-});
-
+/* harmony default export */ var esm_browser_v4 = (v4);
 ;// CONCATENATED MODULE: ./node_modules/fuse.js/dist/fuse.esm.js
 /**
  * Fuse.js v6.5.3 - Lightweight fuzzy-search (http://fusejs.io)
@@ -1655,7 +1457,7 @@ function convertMaskToIndices(
 // Machine word size
 const MAX_BITS = 32;
 
-function search(
+function fuse_esm_search(
   text,
   pattern,
   patternAlphabet,
@@ -1947,7 +1749,7 @@ class BitapSearch {
     let hasMatches = false;
 
     this.chunks.forEach(({ pattern, alphabet, startIndex }) => {
-      const { isMatch, score, indices } = search(text, pattern, alphabet, {
+      const { isMatch, score, indices } = fuse_esm_search(text, pattern, alphabet, {
         location: location + startIndex,
         distance,
         threshold,
@@ -2897,6 +2699,942 @@ Fuse.config = Config;
 
 
 
+;// CONCATENATED MODULE: ./src/Core/viewer/background.js
+
+
+
+
+
+
+
+
+
+
+
+
+const background_getRootDomain = (url) => {
+  let hostname;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    hostname = "";
+  }
+  const hostnameParts = hostname.split(".");
+  return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
+const getDomainOrigin = (url) => {
+  let origin;
+  try {
+    origin = new URL(url).origin;
+  } catch (e) {
+    origin = "";
+  }
+  return origin + "/";
+};
+
+const getFileUrl = (object) =>
+  object.isLink ? object.url : `${gateways.ipfs}/${object.cid}`;
+
+/** ----------------------------------------- */
+
+const VIEWER_INITIAL_STATE = {
+  objects: [],
+  objectsMetadata: {},
+  // NOTE(amine): { key: URL, value: id || 'savingStates.start' when saving an object (will be updated with the id when it's saved)}
+  savedObjectsLookup: {},
+
+  savedObjectsSlates: {},
+  slatesLookup: {},
+  slates: [],
+
+  viewsSourcesLookup: {},
+  viewsSlatesLookup: {},
+  views: [],
+
+  sources: {},
+
+  settings: { isSavedViewActivated: false, isFilesViewActivated: false },
+
+  lastFetched: null,
+  isAuthenticated: false,
+};
+
+let VIEWER_INTERNAL_STORAGE;
+const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
+
+class ViewerHandler {
+  constructor() {
+    this.observers = [];
+    this.runningActions = [];
+  }
+
+  onChange(callback) {
+    this.observers.push(callback);
+  }
+
+  notifyChange(viewer) {
+    this.observers.forEach((callback) => callback(viewer));
+  }
+
+  async _getFromLocalStorage() {
+    const result = await chrome.storage.local.get([VIEWER_LOCAL_STORAGE_KEY]);
+    return result[VIEWER_LOCAL_STORAGE_KEY];
+  }
+
+  async _updateStorage(viewer) {
+    chrome.storage.local.set({
+      [VIEWER_LOCAL_STORAGE_KEY]: viewer,
+    });
+  }
+
+  async _getObjectIdFromUrl(url) {
+    const viewer = await this.get();
+    return viewer.savedObjectsLookup[url];
+  }
+
+  _serialize(viewer) {
+    const serializedViewer = {
+      objects: [],
+      objectsMetadata: {},
+      savedObjectsLookup: {},
+
+      savedObjectsSlates: {},
+      slatesLookup: {},
+      slates: viewer.slates.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      ),
+
+      viewsSourcesLookup: {},
+      viewsSlatesLookup: {},
+      views: viewer.views || [],
+      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
+
+      sources: {},
+    };
+
+    serializedViewer.views.forEach((view) => {
+      const { source, slateId } = view.filters;
+      if (source) {
+        serializedViewer.viewsSourcesLookup[source] = this.serializeView(view);
+        return;
+      }
+
+      const slate = viewer.slates.find((slate) => slate.id === slateId);
+      if (slate) {
+        serializedViewer.viewsSlatesLookup[slate.slatename] =
+          this.serializeView(view);
+      }
+    });
+
+    serializedViewer.objects = viewer.library.map((object) => {
+      serializedViewer.objectsMetadata[getFileUrl(object)] = {
+        id: object.id,
+        cid: object.cid,
+      };
+
+      if (object.isLink) {
+        serializedViewer.savedObjectsLookup[object.url] = true;
+      }
+
+      const fileUrl = getFileUrl(object);
+      serializedViewer.savedObjectsLookup[fileUrl] = true;
+
+      return this._serializeObject(object);
+    });
+
+    viewer.slates.forEach((slate) => {
+      const { savedObjectsSlates, slatesLookup } = serializedViewer;
+      if (!slatesLookup[slate.name]) slatesLookup[slate.name] = {};
+
+      slate.objects.forEach((object) => {
+        const objectUrl = getFileUrl(object);
+        slatesLookup[slate.name][objectUrl] = true;
+
+        if (!savedObjectsSlates[objectUrl]) savedObjectsSlates[objectUrl] = [];
+        savedObjectsSlates[objectUrl].push(slate.name);
+      });
+    });
+
+    return serializedViewer;
+  }
+
+  _serializeObject(object) {
+    if (object.isLink) {
+      return {
+        title: object.linkName,
+        favicon: object.linkFavicon,
+        url: object.url,
+        rootDomain: background_getRootDomain(object.url),
+        cid: object.cid,
+        isLink: true,
+        isSaved: true,
+      };
+    }
+
+    const fileUrl = getFileUrl(object);
+
+    return {
+      title: object.name,
+      rootDomain: uri.domain,
+      url: fileUrl,
+      cid: object.cid,
+      isLink: false,
+      isSaved: true,
+    };
+  }
+
+  serializeView({ id, name, order, filters }) {
+    return {
+      id,
+      name,
+      type: viewsType.custom,
+      filters: {
+        slate: !!filters.slateId,
+        source: filters.source,
+      },
+      order,
+    };
+  }
+
+  _set(viewer) {
+    this._updateStorage(viewer);
+    VIEWER_INTERNAL_STORAGE = viewer;
+
+    this.notifyChange(viewer);
+    return VIEWER_INTERNAL_STORAGE;
+  }
+
+  async get() {
+    if (VIEWER_INTERNAL_STORAGE) return VIEWER_INTERNAL_STORAGE;
+
+    const localViewer = await this._getFromLocalStorage();
+    if (localViewer) {
+      VIEWER_INTERNAL_STORAGE = localViewer;
+      return localViewer;
+    }
+
+    VIEWER_INTERNAL_STORAGE = VIEWER_INITIAL_STATE;
+    return VIEWER_INTERNAL_STORAGE;
+  }
+
+  async getSavedLinksSources() {
+    const createSource = (object) => {
+      const rootDomain = background_getRootDomain(object.url);
+      return {
+        rootDomain,
+        favicon: object.favicon,
+        title: capitalize(rootDomain),
+        source: getDomainOrigin(object.url),
+      };
+    };
+
+    const removeDuplicates = (sources) => {
+      const duplicates = {};
+      const newSources = [];
+      for (let source of sources) {
+        if (source.rootDomain in duplicates) continue;
+        duplicates[source.rootDomain] = true;
+        newSources.push(source);
+      }
+
+      return newSources;
+    };
+
+    const viewer = await this.get();
+    const sources = viewer.objects.map(createSource);
+    return removeDuplicates(sources);
+  }
+
+  async checkIfAuthenticated() {
+    return (await this.get()).isAuthenticated;
+  }
+
+  async checkIfLinkIsSaved(url) {
+    const viewer = await this.get();
+    return !!viewer.savedObjectsLookup[url];
+  }
+
+  async reset() {
+    this._set(VIEWER_INITIAL_STATE);
+  }
+
+  async sync() {
+    //NOTE(amine): only sync when there are no running actions
+
+    const viewer = await hydrateAuthenticatedUser();
+
+    if (viewer.data) {
+      const prevViewer = await this.get();
+      const serializedViewer = this._serialize({
+        ...prevViewer,
+        ...viewer.data,
+      });
+      this._set({
+        ...serializedViewer,
+        lastFetched: new Date().toString(),
+        isAuthenticated: true,
+      });
+      return;
+    }
+
+    this.reset(VIEWER_INITIAL_STATE);
+  }
+}
+
+const Viewer = new ViewerHandler();
+
+class ViewerActionsHandler {
+  constructor() {
+    this.runningActions = [];
+  }
+
+  _registerRunningAction() {
+    this.runningActions.push("");
+  }
+
+  _cleanupCleanupAction() {
+    this.runningActions.pop();
+    setTimeout(() => {
+      if (!this.runningActions.length) Viewer.sync();
+    }, 200);
+  }
+
+  _addObjectsToViewer({ viewer, objects }) {
+    objects.forEach((object) => {
+      if (object.url in viewer.savedObjectsLookup) {
+        return;
+      }
+      viewer.savedObjectsLookup[object.url] = savingStates.start;
+      viewer.objects.push({
+        title: object.title,
+        url: object.title,
+        favicon: object.favicon,
+        rootDomain: background_getRootDomain(object.url),
+        isSaved: true,
+      });
+    });
+    return viewer;
+  }
+
+  async _removeObjectsFromViewer({ viewer, objects }) {
+    objects.forEach(({ url }) => {
+      delete viewer.savedObjectsLookup[url];
+      viewer.objects = objects.filter((object) => object.url !== url);
+    });
+
+    return viewer;
+  }
+
+  _addSlateToViewer({ viewer, slateName }) {
+    viewer.slatesLookup[slateName] = {};
+    viewer.slates.push({
+      slatename: slateName,
+      name: slateName,
+      createAt: new Date().toDateString(),
+    });
+    return viewer;
+  }
+
+  _removeSlateFromViewer({ viewer, slateName }) {
+    delete viewer.slatesLookup[slateName];
+
+    viewer.slates = viewer.slates.filter(
+      (slate) => slate.slatename !== slateName
+    );
+    return viewer;
+  }
+
+  _addObjectsToViewerSlate({ viewer, objects, slateName }) {
+    objects.forEach(({ url }) => {
+      viewer.slatesLookup[slateName][url] = true;
+    });
+
+    objects.forEach(({ url }) => {
+      if (!(url in viewer.savedObjectsSlates))
+        viewer.savedObjectsSlates[url] = [];
+      viewer.savedObjectsSlates[url].push(slateName);
+    });
+
+    return viewer;
+  }
+
+  _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
+    objects.forEach(({ url }) => {
+      if (slateName in viewer.slatesLookup) {
+        delete viewer.slatesLookup[slateName][url];
+      }
+    });
+
+    objects.forEach(({ url }) => {
+      const filterOutSlateName = (slate) => slate !== slateName;
+      viewer.savedObjectsSlates[url] =
+        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
+    });
+
+    return viewer;
+  }
+
+  async updateViewerSettings({ isSavedViewActivated, isFilesViewActivated }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    if (typeof isSavedViewActivated === "boolean") {
+      viewer.settings.isSavedViewActivated = isSavedViewActivated;
+    }
+
+    if (typeof isFilesViewActivated === "boolean") {
+      viewer.settings.isFilesViewActivated = isFilesViewActivated;
+    }
+
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
+  }
+
+  /**
+   * @description save a link and send saving status to new tab and the jumper
+   *
+   * @param {Object} Arguments
+   * @param {string} Arguments.objects - objects to save
+   * @param {Chrome.tab} Arguments.tab - tab to which we'll send saving status
+   * @param {string} [Arguments.source="app"] - which source triggered saving, either via command or the app
+   */
+
+  async saveLink({ objects, slateName, tab, source = savingSources.app }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+    const areObjectsBeingSaved = objects.every(
+      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
+    );
+
+    if (areObjectsBeingSaved) return;
+
+    const sendStatusUpdate = (status) => {
+      if (source === savingSources.command) {
+        // NOTE(amine): you can only save one object via command
+        const { url, title, favicon } = objects[0];
+        chrome.tabs.sendMessage(parseInt(tab.id), {
+          type: viewer_messages.savingStatus,
+          data: { savingStatus: status, url, title, favicon, source },
+        });
+      }
+    };
+
+    sendStatusUpdate(savingStates.start);
+
+    const objectsToBeSaved = objects.filter(
+      ({ url }) => !(url in viewer.savedObjectsLookup)
+    );
+
+    viewer = this._addObjectsToViewer({
+      viewer,
+      objects: objectsToBeSaved,
+    });
+
+    if (slateName) {
+      viewer = this._addObjectsToViewerSlate({
+        viewer,
+        objects: objectsToBeSaved,
+        slateName,
+      });
+    }
+    Viewer._set(viewer);
+
+    let payload = {};
+    payload.urls = objectsToBeSaved.map(({ url }) => url);
+    if (slateName) {
+      const slatePayload = viewer.slates.find(
+        (slate) => slate.name === slateName
+      );
+      payload.slate = slatePayload;
+    }
+
+    const response = await createLink(payload);
+
+    if (!response || response.error) {
+      sendStatusUpdate(savingStates.failed);
+      let viewer = await Viewer.get();
+      if (slateName) {
+        viewer = this._removeObjectsFromViewerSlate({
+          viewer,
+          objects: objectsToBeSaved,
+          slateName,
+        });
+      }
+      viewer = this._removeObjectsFromViewer({
+        viewer: viewer,
+        objects: objectsToBeSaved,
+      });
+      Viewer._set(viewer);
+      return;
+    }
+
+    sendStatusUpdate(savingStates.done);
+
+    this._cleanupCleanupAction();
+  }
+
+  async addObjectsToSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (!(slateName in viewer.slatesLookup)) {
+      return;
+    }
+
+    viewer = this._addObjectsToViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+    Viewer._set(viewer);
+
+    const filesPayload = objects.map(({ url }) => ({
+      id: viewer.objectsMetadata[url].id,
+      cid: viewer.objectsMetadata[url].cid,
+    }));
+
+    const slatePayload = viewer.slates.find(
+      (slate) => slate.name === slateName
+    );
+
+    const response = await saveCopy({
+      files: filesPayload,
+      slate: slatePayload,
+    });
+
+    if (!response || response.error) {
+      viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      Viewer._set(viewer);
+    }
+
+    return;
+  }
+
+  async removeObjectsFromSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (!(slateName in viewer.slatesLookup)) {
+      return;
+    }
+
+    const filesIdsPayload = objects.map(
+      ({ url }) => viewer.objectsMetadata[url].id
+    );
+
+    const slatePayload = viewer.slates.find(
+      (slate) => slate.name === slateName
+    );
+
+    viewer = await this._removeObjectsFromViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+
+    const isSlateEmpty =
+      Object.keys(viewer.slatesLookup[slateName]).length === 0;
+    // NOTE(amine): if the request fails, we'll use oldSlate to add that slate back
+    let oldSlate;
+    if (isSlateEmpty) {
+      oldSlate = viewer.slates.find((slate) => slate.slatename === slateName);
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+    }
+
+    Viewer._set(viewer);
+
+    const response = await removeFileFromSlate({
+      ids: filesIdsPayload,
+      slateId: slatePayload.id,
+    });
+
+    if (!response || response.error) {
+      viewer = await this.get();
+      if (isSlateEmpty) {
+        viewer.slates.push(oldSlate);
+        oldSlate.objects.forEach((object) => {
+          const objectUrl = getFileUrl(object);
+          viewer.slatesLookup[slateName][objectUrl] = true;
+        });
+      }
+      viewer = this._addObjectsToViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      Viewer._set(viewer);
+    }
+
+    return;
+  }
+
+  async createSlate({ slateName, objects }) {
+    let viewer = await Viewer.get();
+    if (slateName in viewer.slatesLookup) return;
+
+    this._registerRunningAction();
+
+    viewer = this._addSlateToViewer({ viewer, slateName });
+    viewer = this._addObjectsToViewerSlate({
+      viewer,
+      objects,
+      slateName,
+    });
+    Viewer._set(viewer);
+
+    const response = await createSlate({
+      name: slateName,
+      isPublic: false,
+    });
+
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._removeObjectsFromViewerSlate({
+        viewer,
+        objects,
+        slateName,
+      });
+      viewer = this._removeSlateFromViewer({ viewer, slateName });
+      Viewer._set(viewer);
+      return;
+    } else {
+      const viewer = await Viewer.get();
+      viewer.slates = viewer.slates.filter(
+        (slate) => slate.slatename !== slateName
+      );
+      viewer.slates.unshift(response.slate);
+      Viewer._set(viewer);
+    }
+
+    const savedObjects = [];
+    const unsavedObjects = [];
+    for (let object of objects) {
+      if (await Viewer.checkIfLinkIsSaved(object.url)) {
+        savedObjects.push(object);
+        continue;
+      }
+      unsavedObjects.push(object);
+    }
+
+    this._cleanupCleanupAction();
+
+    Promise.all([
+      ViewerActions.addObjectsToSlate({
+        objects: savedObjects,
+        slateName: slateName,
+      }),
+      ViewerActions.saveLink({
+        objects: unsavedObjects,
+        slateName,
+      }),
+    ]);
+  }
+
+  _addViewToViewer({ viewer, slateName, source }) {
+    const newView = {
+      id: esm_browser_v4(),
+      createdAt: "",
+      updatedAt: "",
+      order: viewer.views.length,
+      metadata: {},
+    };
+    if (slateName) {
+      const slate = viewer.slates.find(
+        (slate) => slate.slatename === slateName || slate.name === slateName
+      );
+      viewer.viewsSlatesLookup[slateName] = Viewer.serializeView({
+        ...newView,
+        name: slateName,
+        filters: { slate: !!slate.id },
+      });
+      viewer.views.push({
+        ...newView,
+        name: slateName,
+        filters: { slateId: slate.id },
+      });
+      return viewer;
+    }
+
+    const rootDomain = background_getRootDomain(source);
+    viewer.viewsSourcesLookup[source] = Viewer.serializeView({
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    });
+    viewer.views.push({
+      ...newView,
+      name: capitalize(rootDomain),
+      filters: { source },
+    });
+    return viewer;
+  }
+
+  async createView({ slateName, source }) {
+    let viewer = await Viewer.get();
+
+    this._registerRunningAction();
+
+    viewer = this._addViewToViewer({ viewer, slateName, source });
+    Viewer._set(viewer);
+
+    this._cleanupCleanupAction();
+  }
+
+  async search(query) {
+    const response = await search({
+      types: ["FILE", "SLATE"],
+      query,
+      grouped: true,
+    });
+
+    if (!response || response.error) {
+      return;
+    }
+
+    const { slates, files: objects } = response.results;
+    const serializedObjects = [];
+    const duplicates = {};
+
+    for (let object of objects) {
+      // NOTE(amine): due to a bug (when deleting a file, we didn't delete it from search index)
+      //              we get duplicates and deleted files in search result
+      const url = getFileUrl(object);
+      const isSaved = await Viewer.checkIfLinkIsSaved(object.url);
+      if (url in duplicates || !isSaved) {
+        continue;
+      }
+      duplicates[object.url] = true;
+      serializedObjects.push(Viewer._serializeObject(object));
+    }
+    return { slates: slates || [], files: serializedObjects };
+  }
+
+  async searchSlates(query) {
+    const viewer = await Viewer.get(query);
+    const options = {
+      findAllMatches: true,
+      shouldSort: true,
+      threshold: 0.5,
+      keys: ["slatename", "name"],
+    };
+
+    const fuse = new Fuse(viewer.slates, options);
+    const results = fuse.search(query);
+
+    return results.map(({ item: { slatename, name } }) => name || slatename);
+  }
+}
+
+const ViewerActions = new ViewerActionsHandler();
+
+/** ------------ Event listeners ------------- */
+
+Viewer.onChange(async (viewerData) => {
+  const activeTab = await Tabs.getActive();
+  if (!activeTab) return;
+  const slates = viewerData.slates.map(({ name }) => name);
+  const views = viewerData.views.map(Viewer.serializeView);
+  const {
+    savedObjectsLookup,
+    savedObjectsSlates,
+    slatesLookup,
+    viewsSlatesLookup,
+    viewsSourcesLookup,
+    settings,
+  } = viewerData;
+
+  chrome.tabs.sendMessage(parseInt(activeTab.id), {
+    type: viewer_messages.updateViewer,
+    data: {
+      slates,
+      settings,
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+      views,
+      viewsSlatesLookup,
+      viewsSourcesLookup,
+    },
+  });
+});
+
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command == viewer_commands.directSave) {
+    if (await Viewer.checkIfAuthenticated()) {
+      Viewer.saveLink({
+        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
+        tab,
+        source: savingSources.command,
+      });
+    }
+  }
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  Viewer.sync();
+});
+
+chrome.cookies.onChanged.addListener((e) => {
+  if (e.cookie.domain !== uri.domain) return;
+
+  if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {
+    Viewer.reset();
+  }
+
+  if (!e.removed && e.cause === "explicit") {
+    Viewer.sync();
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === viewer_messages.updateViewerSettings) {
+    ViewerActions.updateViewerSettings({
+      isSavedViewActivated: request.isSavedViewActivated,
+      isFilesViewActivated: request.isFilesViewActivated,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.getSavedLinksSourcesRequest) {
+    Viewer.getSavedLinksSources().then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.saveLink) {
+    ViewerActions.saveLink({
+      objects: request.objects,
+      tab: sender.tab,
+      source: request.source,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.addObjectsToSlate) {
+    const handleAddObjectsToSlate = async ({ objects, slateName }) => {
+      const savedObjects = [];
+      const unsavedObjects = [];
+      for (let object of objects) {
+        if (await Viewer.checkIfLinkIsSaved(object.url)) {
+          savedObjects.push(object);
+          continue;
+        }
+        unsavedObjects.push(object);
+      }
+
+      Promise.all([
+        ViewerActions.addObjectsToSlate({
+          objects: savedObjects,
+          slateName: slateName,
+        }),
+        ViewerActions.saveLink({
+          objects: unsavedObjects,
+          slateName,
+        }),
+      ]);
+    };
+
+    handleAddObjectsToSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+
+    return true;
+  }
+
+  if (request.type === viewer_messages.createSlate) {
+    ViewerActions.createSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.removeObjectsFromSlate) {
+    ViewerActions.removeObjectsFromSlate({
+      objects: request.objects,
+      slateName: request.slateName,
+    }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === viewer_messages.loadViewerDataRequest) {
+    const getInitialData = async () => {
+      const isAuthenticated = await Viewer.checkIfAuthenticated();
+
+      if (!isAuthenticated) {
+        return { isAuthenticated };
+      }
+
+      const openTabs = await Windows.getAllTabs();
+
+      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
+        tabs: openTabs,
+        activeTabId: sender.tab.id,
+        activeWindowId: sender.tab.windowId,
+      });
+
+      const viewerData = await Viewer.get();
+
+      const slates = viewerData.slates.map(({ name }) => name);
+
+      const views = viewerData.views.map(Viewer.serializeView);
+
+      const {
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
+        settings,
+      } = viewerData;
+
+      Viewer.sync();
+
+      const response = {
+        ...viewerInitialState,
+        isAuthenticated,
+        settings,
+
+        slates,
+        savedObjectsLookup,
+        savedObjectsSlates,
+        slatesLookup,
+
+        views,
+        viewsSourcesLookup,
+        viewsSlatesLookup,
+
+        windows: {
+          data: {
+            allOpenFeedKeys,
+            allOpenFeed,
+          },
+          params: {
+            activeWindowId: sender.tab.windowId,
+            activeTabId: sender.tab.id,
+          },
+        },
+      };
+
+      // NOTE(amine): if there is only one tab open, preload recent view
+      // if (response.windows.data.allOpen.length === 1) {
+      //   response.recent = await browserHistory.getChunk();
+      //   response.initialView = viewsType.recent;
+      // }
+
+      return response;
+    };
+
+    getInitialData().then(sendResponse);
+    return true;
+  }
+});
+
 ;// CONCATENATED MODULE: ./src/Core/browser/background.js
 
 
@@ -3155,31 +3893,94 @@ class BrowserHistory {
 
     const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
 
-    return await Promise.all(
-      cleanedResult.map(async (item) => ({
-        ...item,
-        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
-      }))
-    );
+    return cleanedResult.map((item) => ({
+      title: item.title,
+      favicon: item.favIconUrl,
+      url: item.url,
+      rootDomain: item.rootDomain,
+    }));
   }
 
   async getRelatedLinks(url) {
+    const getVisitsFromSearchResult = (searchResult) => {
+      const result = [];
+
+      for (let { item, matches } of searchResult) {
+        const { visits } = item;
+        matches.forEach(({ refIndex }) => {
+          result.push(visits[refIndex]);
+        });
+      }
+
+      return result;
+    };
+
+    const removeDuplicatesFromVisits = (visits) => {
+      const duplicates = {};
+
+      const cleanedVisits = [];
+      for (let visit of visits) {
+        if (visit.url in duplicates) continue;
+        duplicates[visit.url] = true;
+        cleanedVisits.push(visit);
+      }
+
+      const result = [];
+      const visitsWithSameTitle = {};
+      for (let item of cleanedVisits) {
+        if (item.title in visitsWithSameTitle) {
+          visitsWithSameTitle[item.title].push({
+            title: item.title,
+            favicon: item.favIconUrl,
+            url: item.url,
+            rootDomain: item.rootDomain,
+          });
+          continue;
+        } else {
+          visitsWithSameTitle[item.title] = [];
+        }
+
+        result.push({
+          ...item,
+          relatedVisits: visitsWithSameTitle[item.title],
+        });
+      }
+
+      return result;
+    };
+
     const options = {
       findAllMatches: true,
       threshold: 0.0,
+      includeMatches: true,
       keys: ["visits.url"],
     };
-
     const history = await this.get();
-    const fuse = new Fuse(history, options);
+    const historyFuse = new Fuse(history, options);
+    const historySearchResult = historyFuse.search(url);
+    const visitsResult = getVisitsFromSearchResult(historySearchResult);
 
-    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(url));
-    return await Promise.all(
-      cleanedResult.map(async (item) => ({
-        ...item,
-        isSaved: await Viewer.checkIfLinkIsSaved(item.url),
-      }))
-    );
+    const savedFilesFuseOptions = {
+      findAllMatches: true,
+      threshold: 0.0,
+      keys: ["url"],
+    };
+    const savedFiles = await Viewer.get();
+    const savedFilesFuse = new Fuse(savedFiles.objects, savedFilesFuseOptions);
+    const savedFilesSearchResult = savedFilesFuse.search(url);
+
+    const cleanedVisits = removeDuplicatesFromVisits([
+      ...savedFilesSearchResult.map(({ item }) => item),
+      ...visitsResult,
+    ]);
+
+    return cleanedVisits.map((item) => ({
+      title: item.title,
+      favicon: item.favIconUrl,
+      url: item.url,
+      rootDomain: item.rootDomain,
+      relatedVisits: item.relatedVisits,
+    }));
   }
 
   async getChunk(startIndex = 0, endIndex) {
@@ -3208,14 +4009,13 @@ const browserHistory = new BrowserHistory();
 /** ----------------------------------------- */
 
 const Tabs = {
-  create: async (tab) => ({
+  create: (tab) => ({
     id: tab.id,
     windowId: tab.windowId,
     title: tab.title,
     favicon: tab.favIconUrl,
     url: tab.url,
     rootDomain: browser_background_getRootDomain(tab.url),
-    isSaved: await Viewer.checkIfLinkIsSaved(tab.url),
   }),
   getActive: async () => {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -3226,24 +4026,22 @@ const Tabs = {
 const Windows = {
   getAllTabsInWindow: async (windowId) => {
     const window = await chrome.windows.get(windowId, { populate: true });
-    const tabs = await Promise.all(window.tabs.map(Tabs.create));
+    const tabs = window.tabs.map(Tabs.create);
     return tabs;
   },
   getAllTabs: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
     const tabs = windows.flatMap((window) => window.tabs.map(Tabs.create));
-    return await Promise.all(tabs);
+    return tabs;
   },
   getAll: async () => {
     const windows = await chrome.windows.getAll({ populate: true });
-    return await Promise.all(
-      windows.map(async (window) => ({
-        id: window.id,
-        tabs: await Promise.all(window.tabs.map(Tabs.create)),
-      }))
-    );
+    return windows.map((window) => ({
+      id: window.id,
+      tabs: window.tabs.map(Tabs.create),
+    }));
   },
-  search: async (query, { windowId }) => {
+  search: async (query, { windowId } = {}) => {
     const options = {
       findAllMatches: true,
       includeMatches: true,
@@ -3259,9 +4057,7 @@ const Windows = {
 
     const fuse = new Fuse(tabs, options);
     const searchResult = fuse.search(query);
-    return await Promise.all(
-      searchResult.map(async ({ item }) => await Tabs.create(item))
-    );
+    return searchResult.map(({ item }) => Tabs.create(item));
   },
 };
 
@@ -3475,60 +4271,172 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 
 
 
+
+
+class ViewsHandler {
+  async search({ query, view }) {
+    if (view.type === viewsType.allOpen) {
+      return Windows.search(query);
+    }
+
+    if (view.type === viewsType.recent) {
+      return await browserHistory.search(query);
+    }
+
+    if (view.type === viewsType.custom) {
+      const handleFetchCustomFeed = async (viewId) => {
+        const viewer = await Viewer.get();
+        const view = viewer.views.find((view) => view.id === viewId);
+
+        if (!view) return [];
+
+        if (view.filters.source) {
+          const feed = await browserHistory.getRelatedLinks(
+            view.filters.source
+          );
+          return feed;
+        }
+
+        if (view.filters.slateId) {
+          const slate = viewer.slates.find(
+            (slate) => slate.id === view.filters.slateId
+          );
+
+          if (!slate) return [];
+
+          return slate.objects.map(Viewer._serializeObject);
+        }
+      };
+
+      const viewsResult = await handleFetchCustomFeed(view.id);
+      const options = {
+        findAllMatches: true,
+        shouldSort: true,
+        threshold: 0.5,
+        keys: ["url", "title"],
+      };
+
+      const fuse = new Fuse(viewsResult, options);
+      const results = fuse.search(query);
+
+      return results.map(({ item }) => item);
+    }
+  }
+}
+
+const Views = new ViewsHandler();
+
 /** ------------ Event listeners ------------- */
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === views_messages.viewByTypeRequest) {
-    console.log(`VIEW FOR ${request.viewType} ${request.query}`);
-    if (request.viewType === viewsType.savedFiles) {
-      Viewer.get().then((res) =>
+  if (request.type === views_messages.viewFeedRequest) {
+    console.log(`VIEW FOR`, request.view);
+
+    const handleFetchCustomFeed = async (viewId) => {
+      const viewer = await Viewer.get();
+      const view = viewer.views.find((view) => view.id === viewId);
+
+      if (!view) return [];
+
+      if (view.filters.source) {
+        const feed = await browserHistory.getRelatedLinks(view.filters.source);
+
+        return feed;
+      }
+
+      if (view.filters.slateId) {
+        const slate = viewer.slates.find(
+          (slate) => slate.id === view.filters.slateId
+        );
+
+        if (!slate) return [];
+
+        return slate.objects.map(Viewer._serializeObject);
+      }
+    };
+
+    if (request.view.type === viewsType.custom) {
+      handleFetchCustomFeed(request.view.id).then((res) =>
         sendResponse({
-          result: res.objects,
-          viewType: request.viewType,
+          result: res,
+          view: request.view,
         })
       );
-
       return true;
     }
 
-    browserHistory.getRelatedLinks(request.query).then((result) => {
-      sendResponse({
-        result: result,
-        query: request.query,
-      });
-    });
+    if (request.view.type === viewsType.saved) {
+      Viewer.get().then((res) =>
+        sendResponse({
+          result: res.objects.filter((object) => object.isLink),
+          view: request.view,
+        })
+      );
+      return true;
+    }
 
+    if (request.view.type === viewsType.files) {
+      Viewer.get().then((res) =>
+        sendResponse({
+          result: res.objects.filter((object) => !object.isLink),
+          view: request.view,
+        })
+      );
+      return true;
+    }
+  }
+
+  if (request.type === views_messages.createViewByTag) {
+    ViewerActions.createView({ slateName: request.slateName }).then(
+      sendResponse
+    );
+    return true;
+  }
+
+  if (request.type === views_messages.createViewBySource) {
+    ViewerActions.createView({ source: request.source }).then(sendResponse);
     return true;
   }
 
   if (request.type === views_messages.searchQueryRequest) {
-    const searchHandlers = [];
-    if (request.viewType === viewsType.allOpen) {
-      const searchOptions = {};
+    const searchHandler = async ({ query, view }) => {
+      let slates = [];
+      const searchFeedKeys = ["Saved"];
+      const searchFeed = {};
 
-      searchHandlers.push({
-        handler: Windows.search(request.query, searchOptions),
-        title: request.viewType,
-      });
-    }
-    searchHandlers.push({
-      handler: browserHistory.search(request.query),
-      title: "recent",
-    });
+      const handleSlatesSearch = async () => {
+        slates = await ViewerActions.searchSlates(query);
+      };
 
-    Promise.all(searchHandlers.map(({ handler }) => handler)).then((result) => {
-      sendResponse({
-        result: result.reduce((acc, result, i) => {
-          if (result.length === 0) return acc;
-          acc.push({
-            title: searchHandlers[i].title,
-            result,
+      const handleSavedFilesSearch = async () => {
+        const savedSearchResult = await ViewerActions.search(query);
+        searchFeed["Saved"] = savedSearchResult.files;
+      };
+
+      const handleViewsSearch = async () => {
+        if (view.type !== viewsType.saved && view.type !== viewsType.file) {
+          const viewsSearchResult = await Views.search({
+            view,
+            query,
           });
-          return acc;
-        }, []),
-        query: request.query,
-      });
-    });
+          searchFeedKeys.push(view.name);
+          searchFeed[view.name] = viewsSearchResult;
+        }
+      };
+
+      await Promise.all([
+        handleSavedFilesSearch(),
+        handleSlatesSearch(),
+        handleViewsSearch(),
+      ]);
+
+      return { query, slates, searchFeedKeys, searchFeed };
+    };
+
+    searchHandler({
+      query: request.query,
+      view: request.view,
+    }).then(sendResponse);
 
     return true;
   }

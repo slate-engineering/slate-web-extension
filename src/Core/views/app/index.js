@@ -1,47 +1,52 @@
 import * as React from "react";
 
-import { viewsType } from "../";
+import { defaultViews, viewsType } from "../";
 
 /* -------------------------------------------------------------------------------------------------
  * useViewsState
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViewsState = () => {
-  const [views, setViewsState] = React.useState({
+  const [viewState, setViewState] = React.useState({
     feed: [],
-    type: viewsType.allOpen,
-    query: undefined,
+    appliedView: defaultViews.allOpen,
+    isLoadingFeed: false,
   });
 
-  const setViewsParams = ({ type, query, label }) => {
-    setViewsState((prev) => ({ ...prev, type, query, label }));
+  const setAppliedView = (view) => {
+    setViewState((prev) => ({ ...prev, appliedView: view }));
   };
 
   const setViewsFeed = (result) => {
-    setViewsState((prev) => ({
+    setViewState((prev) => ({
       ...prev,
       feed: result,
     }));
   };
 
+  const setLoadingState = (isLoading) => {
+    setViewState((prev) => ({ ...prev, isLoadingFeed: isLoading }));
+  };
+
   React.useEffect(() => {
+    const { appliedView } = viewState;
     if (
-      views.type !== viewsType.relatedLinks &&
-      views.type !== viewsType.savedFiles
+      appliedView.type !== viewsType.custom &&
+      appliedView.type !== viewsType.saved &&
+      appliedView.type !== viewsType.files
     ) {
       setViewsFeed([]);
     }
-  }, [views.type]);
+  }, [viewState.appliedView]);
 
   return [
     {
-      viewsFeed: views.feed,
-      currentView: views.type,
-      currentViewLabel: views.label,
-      currentViewQuery: views.query,
+      viewsFeed: viewState.feed,
+      appliedView: viewState.appliedView,
+      isLoadingFeed: viewState.isLoadingFeed,
       viewsType,
     },
-    { setViewsFeed, setViewsParams },
+    { setViewsFeed, setAppliedView, setLoadingState },
   ];
 };
 
@@ -65,7 +70,9 @@ const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
 export const useHistorySearchState = ({ inputRef, onSearch }) => {
   const SEARCH_INITIAL_STATE = {
     query: "",
-    result: null,
+    slates: [],
+    searchFeedKeys: [],
+    searchFeed: null,
   };
   const [search, setSearch] = React.useState(SEARCH_INITIAL_STATE);
 

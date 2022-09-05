@@ -1,7 +1,11 @@
 import * as React from "react";
 
 import { mergeRefs } from "../Common/utilities";
-import { useEventListener, useIsomorphicLayoutEffect } from "../Common/hooks";
+import {
+  useEventListener,
+  useIsomorphicLayoutEffect,
+  useMounted,
+} from "../Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * RovingTabIndex Provider
@@ -52,8 +56,45 @@ const useManageScrollPosition = ({
 const rovingIndexContext = React.createContext({});
 export const useRovingIndexContext = () => React.useContext(rovingIndexContext);
 
+/* -------------------------------------------------------------------------------------------------
+ *  Provider
+ * -----------------------------------------------------------------------------------------------*/
+
+const ids = {};
+const useHandleRestoreFocusOnMount = ({
+  id,
+  onRestoreFocus,
+  withRestoreFocusOnMount,
+  focusedIndex,
+}) => {
+  const shouldRestoreFocus = id && withRestoreFocusOnMount;
+
+  React.useEffect(() => {
+    if (shouldRestoreFocus && id in ids) {
+      const prevSessionIndex = ids[id];
+      onRestoreFocus(prevSessionIndex);
+    }
+  }, []);
+
+  useMounted(() => {
+    if (shouldRestoreFocus) {
+      ids[id] = focusedIndex;
+    }
+  }, [focusedIndex]);
+};
+
 const Provider = React.forwardRef(
-  ({ isInfiniteList, axis = "vertical", withFocusOnHover, children }, ref) => {
+  (
+    {
+      id,
+      withRestoreFocusOnMount,
+      isInfiniteList,
+      axis = "vertical",
+      withFocusOnHover,
+      children,
+    },
+    ref
+  ) => {
     const isNavigatingViaKeyboardRef = React.useRef(true);
 
     const focusedElementsRefs = React.useRef({});
@@ -161,6 +202,13 @@ const Provider = React.forwardRef(
       axis,
     });
 
+    useHandleRestoreFocusOnMount({
+      id,
+      withRestoreFocusOnMount,
+      focusedIndex,
+      onRestoreFocus: setIndexTo,
+    });
+
     React.useImperativeHandle(
       ref,
       () => {
@@ -180,7 +228,7 @@ const Provider = React.forwardRef(
 
     const contextValue = React.useMemo(
       () => [
-        { focusedIndex, axis, withFocusOnHover },
+        { focusedIndex, axis, withFocusOnHover, withRestoreFocusOnMount },
         {
           registerItem,
           cleanupItem,
@@ -254,7 +302,7 @@ const List = React.forwardRef(({ children, ...props }, forwardedRef) => {
 
 const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
   const [
-    { focusedIndex, withFocusOnHover },
+    { focusedIndex, withFocusOnHover, withRestoreFocusOnMount },
     { registerItem, cleanupItem, syncFocusedIndexState, setIndexTo },
   ] = useRovingIndexContext();
   const ref = React.useRef();
@@ -278,7 +326,7 @@ const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
 
   React.useEffect(() => {
     if (!ref.current) return;
-    if (children.props.autoFocus) setIndexTo(index);
+    if (children.props.autoFocus && !withRestoreFocusOnMount) setIndexTo(index);
 
     // NOTE(amine): when an element is removed and is focused,move focus the next one
     return () => {

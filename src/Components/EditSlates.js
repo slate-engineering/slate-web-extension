@@ -17,16 +17,7 @@ const EditSlatesContext = React.createContext({});
 
 const useEditSlatesContext = () => React.useContext(EditSlatesContext);
 
-const Provider = ({
-  children,
-  objects,
-  slates: slatesProp,
-  checkIfSlateIsApplied,
-
-  onCreateSlate,
-  onAddObjectsToSlate,
-  onRemoveObjectsFromSlate,
-}) => {
+export const useSlatesCombobox = ({ slates: slatesProp }) => {
   const [searchValue, setSearchValue] = React.useState("");
 
   const slates = React.useMemo(() => {
@@ -43,6 +34,22 @@ const Provider = ({
 
     return !slates.some((slate) => slate === searchValue);
   }, [slates, searchValue]);
+
+  return { slates, canCreateSlate, searchValue, setSearchValue };
+};
+
+const Provider = ({
+  children,
+  objects,
+  slates: slatesProp,
+  checkIfSlateIsApplied,
+
+  onCreateSlate,
+  onAddObjectsToSlate,
+  onRemoveObjectsFromSlate,
+}) => {
+  const { slates, canCreateSlate, searchValue, setSearchValue } =
+    useSlatesCombobox({ slates: slatesProp });
 
   const contextValue = React.useMemo(
     () => ({
