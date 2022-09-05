@@ -264,21 +264,84 @@ class BrowserHistory {
   }
 
   async getRelatedLinks(url) {
+    const getVisitsFromSearchResult = (searchResult) => {
+      const result = [];
+
+      for (let { item, matches } of searchResult) {
+        const { visits } = item;
+        matches.forEach(({ refIndex }) => {
+          result.push(visits[refIndex]);
+        });
+      }
+
+      return result;
+    };
+
+    const removeDuplicatesFromVisits = (visits) => {
+      const duplicates = {};
+
+      const cleanedVisits = [];
+      for (let visit of visits) {
+        if (visit.url in duplicates) continue;
+        duplicates[visit.url] = true;
+        cleanedVisits.push(visit);
+      }
+
+      const result = [];
+      const visitsWithSameTitle = {};
+      for (let item of cleanedVisits) {
+        if (item.title in visitsWithSameTitle) {
+          visitsWithSameTitle[item.title].push({
+            title: item.title,
+            favicon: item.favIconUrl,
+            url: item.url,
+            rootDomain: item.rootDomain,
+          });
+          continue;
+        } else {
+          visitsWithSameTitle[item.title] = [];
+        }
+
+        result.push({
+          ...item,
+          relatedVisits: visitsWithSameTitle[item.title],
+        });
+      }
+
+      return result;
+    };
+
     const options = {
       findAllMatches: true,
       threshold: 0.0,
+      includeMatches: true,
       keys: ["visits.url"],
     };
-
     const history = await this.get();
-    const fuse = new Fuse(history, options);
+    const historyFuse = new Fuse(history, options);
+    const historySearchResult = historyFuse.search(url);
+    const visitsResult = getVisitsFromSearchResult(historySearchResult);
 
-    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(url));
-    return cleanedResult.map((item) => ({
+    const savedFilesFuseOptions = {
+      findAllMatches: true,
+      threshold: 0.0,
+      keys: ["url"],
+    };
+    const savedFiles = await Viewer.get();
+    const savedFilesFuse = new Fuse(savedFiles.objects, savedFilesFuseOptions);
+    const savedFilesSearchResult = savedFilesFuse.search(url);
+
+    const cleanedVisits = removeDuplicatesFromVisits([
+      ...savedFilesSearchResult.map(({ item }) => item),
+      ...visitsResult,
+    ]);
+
+    return cleanedVisits.map((item) => ({
       title: item.title,
       favicon: item.favIconUrl,
       url: item.url,
       rootDomain: item.rootDomain,
+      relatedVisits: item.relatedVisits,
     }));
   }
 
