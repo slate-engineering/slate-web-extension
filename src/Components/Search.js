@@ -168,7 +168,7 @@ const Input = React.forwardRef(
         <input
           css={[STYLES_SEARCH_INPUT, css]}
           ref={mergeRefs([inputRef, forwardedRef])}
-          placeholder="Press “/” to search"
+          placeholder="Search by keywords, #tags"
           name="search"
           onChange={onInputChange}
           autoComplete="off"

@@ -112,21 +112,21 @@ const Section = React.forwardRef(({ children, css, ...props }, ref) => (
  * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_SESSION_TITLE = css`
-  padding: 9px 8px 11px;
+  padding: 13px 8px 7px;
 `;
 
 const Title = ({ children, count, css, ...props }) => {
   return (
     <Typography.H5
       css={[STYLES_SESSION_TITLE, css]}
-      color="textGrayDark"
+      color="textGray"
       as="p"
       nbrOflines={1}
       {...props}
     >
       {children}
       {count && (
-        <Typography.H5 as="span" color="textGrayLight">
+        <Typography.H5 as="span" color="textGray">
           &nbsp;&nbsp;{count}
         </Typography.H5>
       )}

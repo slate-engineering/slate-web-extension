@@ -1088,8 +1088,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
  * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_VIEWS_FEED_ROW = {
-  width: "calc(100% - 16px)",
-  left: "8px",
+  width: "100%",
   transform: "translateY(8px)",
 };
 

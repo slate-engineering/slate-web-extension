@@ -435,8 +435,8 @@ const viewerInitialState = {
 
 ;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
 const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
-  const allOpenFeedKeys = ["Current Window", "Others"];
-  let allOpenFeed = { ["Current Window"]: [], Others: [] };
+  const allOpenFeedKeys = ["Current Window", "Other Windows"];
+  let allOpenFeed = { ["Current Window"]: [], ["Other Windows"]: [] };
 
   tabs.forEach((tab) => {
     if (tab.windowId === activeWindowId) {
@@ -448,7 +448,7 @@ const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
       return;
     }
 
-    allOpenFeed["Others"].push(tab);
+    allOpenFeed["Other Windows"].push(tab);
   });
 
   return {

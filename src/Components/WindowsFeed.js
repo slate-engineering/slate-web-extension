@@ -10,8 +10,7 @@ import { getRootDomain, isNewTab } from "../Common/utilities";
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_WINDOWS_FEED_ROW = {
-  width: "calc(100% - 16px)",
-  left: "8px",
+  width: "100%",
 };
 
 const WindowsFeedRow = React.memo(({ index, data, style }) => {
