@@ -161,7 +161,6 @@ export const useRestoreFocus = ({ isEnabled } = { isEnabled: true }) => {
     if (!isEnabled) return;
     return () => {
       const lastActiveElement = activeElementRef.current;
-      console.log("item to focus", lastActiveElement);
       lastActiveElement?.focus?.();
     };
   }, [isEnabled]);
