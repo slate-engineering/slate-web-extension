@@ -17,17 +17,31 @@ const EditSlatesContext = React.createContext({});
 
 const useEditSlatesContext = () => React.useContext(EditSlatesContext);
 
-export const useSlatesCombobox = ({ slates: slatesProp }) => {
+export const useSlatesCombobox = ({
+  slates: slatesProp,
+  checkIfSlateIsApplied,
+}) => {
   const [searchValue, setSearchValue] = React.useState("");
 
   const slates = React.useMemo(() => {
-    if (searchValue === "") return slatesProp;
+    if (searchValue === "") {
+      const sortByIfApplied = (slateA, slateB) => {
+        if (checkIfSlateIsApplied(slateA) && checkIfSlateIsApplied(slateB)) {
+          return 0;
+        }
+        if (checkIfSlateIsApplied(slateA)) {
+          return -1;
+        }
+        return 1;
+      };
+      return slatesProp.sort(sortByIfApplied);
+    }
 
     const searchRegex = new RegExp(searchValue, "gi");
     return slatesProp.filter((slate) => {
       return searchRegex.test(slate);
     });
-  }, [slatesProp, searchValue]);
+  }, [slatesProp.length, searchValue]);
 
   const canCreateSlate = React.useMemo(() => {
     if (searchValue === "") return false;
@@ -49,7 +63,7 @@ const Provider = ({
   onRemoveObjectsFromSlate,
 }) => {
   const { slates, canCreateSlate, searchValue, setSearchValue } =
-    useSlatesCombobox({ slates: slatesProp });
+    useSlatesCombobox({ slates: slatesProp, checkIfSlateIsApplied });
 
   const contextValue = React.useMemo(
     () => ({
@@ -342,7 +356,9 @@ const Body = ({ ...props }) => {
       } else {
         onAddObjectsToSlate({ slateName, objects });
       }
-      setSearchValue("");
+      setTimeout(() => {
+        setSearchValue("");
+      }, 100);
     };
 
   const handleCreateSlate = () => {
