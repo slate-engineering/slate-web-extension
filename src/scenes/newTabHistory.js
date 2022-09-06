@@ -16,6 +16,7 @@ import { getExtensionURL } from "../Common/utilities";
 import { useViewer } from "../Core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
+import { useRestoreFocus } from "../Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * EditSlatesJumper
@@ -38,6 +39,8 @@ const useSlatesJumper = () => {
 
 function EditSlatesJumper({ objects, onClose }) {
   const viewer = useViewer();
+
+  useRestoreFocus();
 
   const checkIfSlateIsApplied = (slate) => {
     return objects.every((object) => object.url in viewer.slatesLookup[slate]);
