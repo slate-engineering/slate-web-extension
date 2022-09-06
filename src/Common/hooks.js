@@ -148,6 +148,25 @@ export const useEscapeKey = (callback) => {
   useEventListener({ type: "keyup", handler: handleKeyUp }, [handleKeyUp]);
 };
 
+export const useRestoreFocus = ({ isEnabled } = { isEnabled: true }) => {
+  const activeElementRef = React.useRef();
+  React.useMemo(() => {
+    const lastActiveElement =
+      typeof document !== "undefined" ? document.activeElement : null;
+
+    activeElementRef.current = lastActiveElement;
+  }, []);
+
+  React.useLayoutEffect(() => {
+    if (!isEnabled) return;
+    return () => {
+      const lastActiveElement = activeElementRef.current;
+      console.log("item to focus", lastActiveElement);
+      lastActiveElement?.focus?.();
+    };
+  }, [isEnabled]);
+};
+
 export const useMounted = (callback, deps) => {
   const isMountedRef = React.useRef(false);
   React.useEffect(() => {
