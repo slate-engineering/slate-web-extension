@@ -1081,7 +1081,9 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
         style={{ marginLeft: 6 }}
         onClick={toggleCreateMenu}
       >
-        <SVG.Plus width={16} height={16} />
+        <motion.div animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}>
+          <SVG.Plus width={16} height={16} />
+        </motion.div>
       </button>
     </section>
   );
