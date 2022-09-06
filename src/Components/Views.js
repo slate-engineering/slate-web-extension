@@ -967,6 +967,8 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
 
   const createOnClickHandler = (view) => () => getViewsFeed(view);
 
+  const preventActionButtonFocus = (e) => e.preventDefault();
+
   const actionWrapperRef = React.useRef();
   const { scrollToLeft, scrollToRight } = useHandleScrollNavigation({
     isMenuOverflowingFrom,
@@ -1008,6 +1010,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 isViewApplied={isApplied}
                 key={view.name}
                 style={{ marginLeft: i > 0 ? 4 : 0 }}
+                onMouseDown={preventActionButtonFocus}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
                 index={i}
@@ -1037,6 +1040,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 key={view.name}
                 isViewApplied={isApplied}
                 style={{ marginLeft: 4 }}
+                onMouseDown={preventActionButtonFocus}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
                 index={VIEWS_ACTIONS.length + i}
@@ -1119,7 +1123,6 @@ const ViewsFeedRow = ({ index, data, style }) => {
           },
         ])
       }
-      autoFocus={index === 0}
     />
   );
 };
@@ -1159,6 +1162,65 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const useManageFeedFocus = ({
+  viewer,
+  getViewsFeed,
+  onRestoreFocus,
+
+  appliedView,
+}) => {
+  const shouldFocus = React.useRef(true);
+
+  // NOTE(amine): When creating a new view, load the feed without focusing it
+  const prevViewsRef = React.useRef(viewer.views);
+  React.useEffect(() => {
+    const prevViews = prevViewsRef.current;
+    const currentViews = viewer.views;
+
+    if (currentViews.length > prevViews.length) {
+      const newView = currentViews[currentViews.length - 1];
+      shouldFocus.current = false;
+      getViewsFeed(newView);
+    }
+
+    prevViewsRef.current = viewer.views;
+  }, [viewer.views]);
+
+  // NOTE(amine): When activating a view, load the feed without focusing it
+  const prevSettingsRef = React.useRef(viewer.settings);
+  React.useEffect(() => {
+    const prevSettings = prevSettingsRef.current;
+    const currentSettings = viewer.settings;
+
+    if (
+      currentSettings.isSavedViewActivated &&
+      !prevSettings.isSavedViewActivated
+    ) {
+      shouldFocus.current = false;
+      getViewsFeed(defaultViews.saved);
+    }
+
+    if (
+      currentSettings.isFilesViewActivated &&
+      !prevSettings.isFilesViewActivated
+    ) {
+      shouldFocus.current = false;
+      getViewsFeed(defaultViews.files);
+    }
+
+    prevSettingsRef.current = viewer.settings;
+  }, [viewer.settings]);
+
+  // NOTE(amine): focus the feed when the applied view changes
+  React.useLayoutEffect(() => {
+    if (!shouldFocus.current) {
+      shouldFocus.current = true;
+      return;
+    }
+    onRestoreFocus();
+  }, [appliedView]);
+};
+
 const Feed = React.memo(
   React.forwardRef(
     (
@@ -1181,41 +1243,33 @@ const Feed = React.memo(
       },
       ref
     ) => {
-      const { viewsFeed, appliedView, isLoadingViewFeed, onRestoreFocus } =
-        useViewsContext();
+      const {
+        viewsFeed,
+        viewer,
+        appliedView,
+        getViewsFeed,
+        isLoadingViewFeed,
+        onRestoreFocus,
+      } = useViewsContext();
 
       const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
       // NOTE(amine): display the new feed once it's loaded
       const prevView = React.useRef(appliedView);
       const loadedView = React.useMemo(() => {
-        if (isLoadingViewFeed) {
+        const isCustomView = [
+          viewsType.custom,
+          viewsType.saved,
+          viewsType.files,
+        ].some((type) => appliedView.type === type);
+
+        if (isCustomView && isLoadingViewFeed) {
           return prevView.current;
         } else {
           prevView.current = appliedView;
           return appliedView;
         }
       }, [appliedView, isLoadingViewFeed]);
-
-      React.useLayoutEffect(() => {
-        if (loadedView.type === viewsType.allOpen && windowsFeed.length === 0) {
-          onRestoreFocus();
-          return;
-        }
-        if (loadedView.type === viewsType.recent && historyFeed.length === 0) {
-          onRestoreFocus();
-          return;
-        }
-        if (
-          (loadedView.type === viewsType.custom ||
-            loadedView.type === viewsType.saved ||
-            loadedView === viewsType.files) &&
-          viewsFeed.length === 0
-        ) {
-          onRestoreFocus();
-          return;
-        }
-      }, [loadedView]);
 
       const viewsFeedItemsData = React.useMemo(() => {
         return {
@@ -1226,6 +1280,18 @@ const Feed = React.memo(
           },
         };
       }, [viewsFeed]);
+
+      const handleRestoreFocus = () => {
+        ref.rovingTabIndexRef.focus(onRestoreFocus);
+      };
+
+      useManageFeedFocus({
+        viewer,
+        getViewsFeed,
+        onRestoreFocus: handleRestoreFocus,
+
+        appliedView: loadedView,
+      });
 
       if (loadedView.type === viewsType.allOpen) {
         return (

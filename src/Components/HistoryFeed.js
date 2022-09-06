@@ -69,7 +69,6 @@ const HistoryFeedRow = React.memo(({ index, data, style }) => {
           },
         ])
       }
-      autoFocus={rovingTabIndex === 0}
     />
   );
 });
