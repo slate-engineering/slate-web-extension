@@ -25,6 +25,7 @@ export const useSlatesCombobox = ({
 
   const slates = React.useMemo(() => {
     if (searchValue === "") {
+      if (!checkIfSlateIsApplied) return slatesProp;
       const sortByIfApplied = (slateA, slateB) => {
         if (checkIfSlateIsApplied(slateA) && checkIfSlateIsApplied(slateB)) {
           return 0;
