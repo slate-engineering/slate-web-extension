@@ -494,7 +494,7 @@ const Object = React.forwardRef(
               </button>
             </ShortcutsTooltip>
             {onCloseTab && (
-              <ShortcutsTooltip label="Close" keyTrigger="x">
+              <ShortcutsTooltip label="Close" keyTrigger="X">
                 <button
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}

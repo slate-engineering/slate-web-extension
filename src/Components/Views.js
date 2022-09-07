@@ -205,6 +205,17 @@ function Provider({
     scrollMenuToLeftEdge,
   } = useHandleViewsNavigation();
 
+  const handleOpenCreateMenuOnKeyDown = (e) => {
+    if (e.key === "n") {
+      openCreateMenu();
+
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+  };
+  useEventListener({ type: "keydown", handler: handleOpenCreateMenuOnKeyDown });
+
   const value = React.useMemo(
     () => ({
       viewer,
