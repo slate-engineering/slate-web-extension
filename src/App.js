@@ -9,6 +9,10 @@ import SlatesScene from "./scenes/jumper/slates";
 import { Route } from "./Core/navigation/app/jumper";
 import { useOnWindowBlur } from "./Common/hooks";
 import { ViewerProvider } from "./Core/viewer/app/jumper";
+import {
+  ModalsPortalProvider,
+  ModalsContainer,
+} from "./Components/ModalsPortal";
 
 function App() {
   useOnWindowBlur(Navigation.closeExtensionJumper);
@@ -19,10 +23,13 @@ function App() {
     <div style={{ all: "initial" }}>
       <ShadowDom>
         <ViewerProvider>
-          <Jumper.Root onClose={closeTheJumper}>
-            <Route path="/" component={HomeScene} />
-            <Route path="/slates" component={SlatesScene} />
-          </Jumper.Root>
+          <ModalsPortalProvider>
+            <ModalsContainer />
+            <Jumper.Root onClose={closeTheJumper}>
+              <Route path="/" component={HomeScene} />
+              <Route path="/slates" component={SlatesScene} />
+            </Jumper.Root>
+          </ModalsPortalProvider>
         </ViewerProvider>
       </ShadowDom>
     </div>

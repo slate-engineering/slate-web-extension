@@ -13,6 +13,8 @@ import { FixedSizeList, VariableSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
+import { ShortcutsTooltip } from "../Components/Tooltip";
+
 const useViewer = isNewTab ? useNewTabViewer : useJumperViewer;
 
 /* -------------------------------------------------------------------------------------------------
@@ -264,13 +266,15 @@ const useCopyState = (url) => {
 
 const CopyAction = ({ isCopied, ...props }) => {
   return (
-    <button css={STYLES_OBJECT_ACTION_BUTTON} {...props}>
-      {isCopied ? (
-        <SVG.Check width={16} height={16} />
-      ) : (
-        <SVG.CopyAndPaste width={16} height={16} />
-      )}
-    </button>
+    <ShortcutsTooltip label="Copy" keyTrigger="C">
+      <button css={STYLES_OBJECT_ACTION_BUTTON} {...props}>
+        {isCopied ? (
+          <SVG.Check width={16} height={16} />
+        ) : (
+          <SVG.CopyAndPaste width={16} height={16} />
+        )}
+      </button>
+    </ShortcutsTooltip>
   );
 };
 
@@ -459,16 +463,18 @@ const Object = React.forwardRef(
 
         {withActions && (typeof isSelected === "undefined" || isSelected) && (
           <div css={STYLES_ACTIONS_WRAPPER}>
-            <button
-              className="object_action_button"
-              css={STYLES_OBJECT_ACTION_BUTTON}
-              onMouseDown={preventFocus}
-              onClick={(e) => (
-                e.stopPropagation(), e.preventDefault(), onOpenSlatesJumper()
-              )}
-            >
-              <SVG.Hash width={16} height={16} />
-            </button>
+            <ShortcutsTooltip label="Tag" keyTrigger="T">
+              <button
+                className="object_action_button"
+                css={STYLES_OBJECT_ACTION_BUTTON}
+                onMouseDown={preventFocus}
+                onClick={(e) => (
+                  e.stopPropagation(), e.preventDefault(), onOpenSlatesJumper()
+                )}
+              >
+                <SVG.Hash width={16} height={16} />
+              </button>
+            </ShortcutsTooltip>
             <CopyAction
               className="object_action_button"
               isCopied={isCopied}
@@ -478,24 +484,28 @@ const Object = React.forwardRef(
               onMouseDown={preventFocus}
               url={url}
             />
-            <button
-              className="object_action_button"
-              css={STYLES_OBJECT_ACTION_BUTTON}
-              onMouseDown={preventFocus}
-            >
-              <SVG.Trash width={16} height={16} />
-            </button>
-            {onCloseTab && (
+            <ShortcutsTooltip label="Delete" keyTrigger="delete">
               <button
                 className="object_action_button"
                 css={STYLES_OBJECT_ACTION_BUTTON}
-                onClick={(e) => (
-                  e.stopPropagation(), e.preventDefault(), onCloseTab()
-                )}
                 onMouseDown={preventFocus}
               >
-                <SVG.XCircle width={16} height={16} />
+                <SVG.Trash width={16} height={16} />
               </button>
+            </ShortcutsTooltip>
+            {onCloseTab && (
+              <ShortcutsTooltip label="Close" keyTrigger="x">
+                <button
+                  className="object_action_button"
+                  css={STYLES_OBJECT_ACTION_BUTTON}
+                  onClick={(e) => (
+                    e.stopPropagation(), e.preventDefault(), onCloseTab()
+                  )}
+                  onMouseDown={preventFocus}
+                >
+                  <SVG.XCircle width={16} height={16} />
+                </button>
+              </ShortcutsTooltip>
             )}
           </div>
         )}
@@ -509,20 +519,24 @@ const Object = React.forwardRef(
           }}
         >
           {(typeof isSelected === "undefined" || isSelected) && !isSaved && (
-            <button
-              className="object_action_button"
-              css={STYLES_OBJECT_ACTION_BUTTON}
-              onClick={handleLinkSaving}
-              onMouseDown={preventFocus}
-            >
-              <SVG.Plus width={16} height={16} />
-            </button>
+            <ShortcutsTooltip vertical="above" label="Save" keyTrigger="S">
+              <button
+                className="object_action_button"
+                css={STYLES_OBJECT_ACTION_BUTTON}
+                onClick={handleLinkSaving}
+                onMouseDown={preventFocus}
+              >
+                <SVG.Plus width={16} height={16} />
+              </button>
+            </ShortcutsTooltip>
           )}
 
           {isSaved && (
-            <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
-              <SVG.CheckCircle />
-            </div>
+            <ShortcutsTooltip label="Saved">
+              <div css={STYLES_COLOR_SYSTEM_GREEN} style={{ padding: 2 }}>
+                <SVG.CheckCircle />
+              </div>
+            </ShortcutsTooltip>
           )}
         </div>
       </button>

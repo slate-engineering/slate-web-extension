@@ -23,6 +23,7 @@ import {
   isNewTab,
   getRootDomain,
 } from "../Common/utilities";
+import { ShortcutsTooltip } from "../Components/Tooltip";
 import { useSlatesCombobox } from "../Components/EditSlates";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
@@ -1073,18 +1074,20 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
         </button>
       ) : null}
 
-      <button
-        css={[
-          STYLES_VIEWS_ADD_BUTTON,
-          isCreateMenuOpen && STYLES_VIEWS_ADD_BUTTON_FOCUS,
-        ]}
-        style={{ marginLeft: 6 }}
-        onClick={toggleCreateMenu}
-      >
-        <motion.div animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}>
-          <SVG.Plus width={16} height={16} />
-        </motion.div>
-      </button>
+      <ShortcutsTooltip label="Create new space" keyTrigger="N">
+        <button
+          css={[
+            STYLES_VIEWS_ADD_BUTTON,
+            isCreateMenuOpen && STYLES_VIEWS_ADD_BUTTON_FOCUS,
+          ]}
+          style={{ marginLeft: 6 }}
+          onClick={toggleCreateMenu}
+        >
+          <motion.div animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}>
+            <SVG.Plus width={16} height={16} />
+          </motion.div>
+        </button>
+      </ShortcutsTooltip>
     </section>
   );
 }

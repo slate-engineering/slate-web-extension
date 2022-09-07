@@ -17,6 +17,7 @@ import { useViewer } from "../Core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
 import { useRestoreFocus } from "../Common/hooks";
+import { ShortcutsTooltip } from "../Components/Tooltip";
 
 /* -------------------------------------------------------------------------------------------------
  * EditSlatesJumper
@@ -309,14 +310,16 @@ export default function HistoryScene() {
                 </div>
               </div>
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
-              <Logo
-                style={{
-                  width: "24.78px",
-                  height: "24px",
-                  marginTop: 48,
-                  marginBottom: 24,
-                }}
-              />
+              <ShortcutsTooltip vertical="above" label="Slate Settings">
+                <Logo
+                  style={{
+                    width: "24.78px",
+                    height: "24px",
+                    marginTop: 48,
+                    marginBottom: 24,
+                  }}
+                />
+              </ShortcutsTooltip>
               <Search.Input
                 ref={inputRef}
                 containerCss={STYLES_HISTORY_SCENE_INPUT}

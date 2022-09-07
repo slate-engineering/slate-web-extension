@@ -14,6 +14,7 @@ import { css } from "@emotion/react";
 import { useNavigation } from "../../Core/navigation/app/jumper";
 import { useViewer } from "../../Core/viewer/app/jumper";
 import { useViewsContext } from "../../Components/Views";
+import { ShortcutsTooltip } from "../../Components/Tooltip";
 
 const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   position: absolute;
@@ -115,14 +116,16 @@ export default function Home() {
         clearSearch={clearSearch}
       >
         <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
-          <Logo width={20} height={20} style={{ marginRight: 12 }} />
+          <ShortcutsTooltip vertical="above" label="Slate Settings">
+            <Logo width={20} height={20} style={{ marginRight: 12 }} />
+          </ShortcutsTooltip>
           <Search.Input ref={inputRef} onKeyDown={handleOnInputKeyUp} />
         </Jumper.Header>
 
         <Jumper.Divider color="borderGrayLight" />
         <Jumper.Body
           css={Styles.HORIZONTAL_CONTAINER}
-          style={{ height: "100%", flex: 1, overflow: "hidden"}}
+          style={{ height: "100%", flex: 1, overflow: "hidden" }}
         >
           <Switch
             onOpenUrl={Navigation.openUrls}

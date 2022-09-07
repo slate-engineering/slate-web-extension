@@ -44,11 +44,11 @@ const STYLES_JUMPER_FADE_IN_ANIMATION = css`
   animation: jumper-fade-in 200ms ease;
 `;
 
-const STYLES_JUMPER_ROOT_FIXED_POSITION = css`
+const STYLES_JUMPER_ROOT_FIXED_POSITION = (theme) => css`
   width: ${JUMPER_WIDTH}px;
   height: ${JUMPER_HEIGHT}px;
   position: fixed;
-  z-index: 23423423432;
+  z-index: ${theme.semantic.extensionJumper};
   top: 50%;
   left: 50%;
   margin-left: calc(-696px / 2);

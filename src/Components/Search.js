@@ -14,6 +14,8 @@ import {
   mergeRefs,
   mergeEvents,
 } from "../Common/utilities";
+import { ShortcutsTooltip } from "../Components/Tooltip";
+import { useEscapeKey } from "Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * Search Provider
@@ -67,14 +69,19 @@ const STYLES_DISMISS_BUTTON = (theme) => css`
 `;
 
 function Dismiss({ css, ...props }) {
+  const { clearSearch } = useSearchContext();
+  useEscapeKey(clearSearch);
+
   return (
-    <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
-      <SVG.Dismiss
-        style={{ display: "block" }}
-        height={DISMISS_BUTTON_WIDTH}
-        width={DISMISS_BUTTON_WIDTH}
-      />
-    </button>
+    <ShortcutsTooltip label="Exit search" keyTrigger="Esc/←">
+      <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
+        <SVG.Dismiss
+          style={{ display: "block" }}
+          height={DISMISS_BUTTON_WIDTH}
+          width={DISMISS_BUTTON_WIDTH}
+        />
+      </button>
+    </ShortcutsTooltip>
   );
 }
 
