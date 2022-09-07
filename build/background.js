@@ -176,7 +176,7 @@ const zindex = {
   modal: 6,
   tooltip: 7,
   cta: 8,
-  extensionJumper: 2147483647,
+  extensionJumper: 2147483600,
 };
 
 const font = {
@@ -278,6 +278,8 @@ const profileDefaultPicture =
   "https://slate.textile.io/ipfs/bafkreick3nscgixwfpq736forz7kzxvvhuej6kszevpsgmcubyhsx2pf7i";
 
 const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
+
+const jumperSlateExtensionModalsPortal = "slate-extension-modals";
 
 ;// CONCATENATED MODULE: ./src/Common/actions.js
 
