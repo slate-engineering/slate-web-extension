@@ -350,6 +350,31 @@ const search = async (data) => {
   });
 };
 
+;// CONCATENATED MODULE: ./src/Extension_common/constants.js
+const constants_gateways = {
+  ipfs: "https://slate.textile.io/ipfs",
+};
+
+//NOTE(martina): dev server uri's
+// export const uri = {
+//   hostname: "https://slate-dev.onrender.com",
+//   domain: "slate-dev.onrender.com",
+//   upload: "https://shovelstaging.onrender.com",
+// };
+
+//NOTE(martina): production server uri's
+
+const constants_uri = {
+  hostname: "https://slate.host",
+  domain: "slate.host",
+  upload: "https://uploads.slate.host",
+};
+
+const popularDomainsTitles = {
+  "news.ycombinator.com": "Hacker news",
+  "hackernews.com": "Hacker news",
+};
+
 ;// CONCATENATED MODULE: ./src/Core/views/index.js
 const views_messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
@@ -2725,6 +2750,16 @@ const background_getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+const getTitleFromRootDomain = (rootDomain) => {
+  let title = popularDomainsTitles[rootDomain];
+  if (title) return title;
+
+  const domainsPart = rootDomain.split(".");
+  if (domainsPart.length === 2) return capitalize(domainsPart[0]);
+
+  return capitalize(rootDomain);
+};
+
 const getDomainOrigin = (url) => {
   let origin;
   try {
@@ -2736,7 +2771,7 @@ const getDomainOrigin = (url) => {
 };
 
 const getFileUrl = (object) =>
-  object.isLink ? object.url : `${gateways.ipfs}/${object.cid}`;
+  object.isLink ? object.url : `${constants_gateways.ipfs}/${object.cid}`;
 
 /** ----------------------------------------- */
 
@@ -2878,7 +2913,7 @@ class ViewerHandler {
 
     return {
       title: object.name,
-      rootDomain: uri.domain,
+      rootDomain: constants_uri.domain,
       url: fileUrl,
       cid: object.cid,
       isLink: false,
@@ -2886,7 +2921,7 @@ class ViewerHandler {
     };
   }
 
-  serializeView({ id, name, order, filters }) {
+  serializeView({ id, name, order, filters, metadata }) {
     return {
       id,
       name,
@@ -2895,6 +2930,7 @@ class ViewerHandler {
         slate: !!filters.slateId,
         source: filters.source,
       },
+      metadata,
       order,
     };
   }
@@ -2926,7 +2962,7 @@ class ViewerHandler {
       return {
         rootDomain,
         favicon: object.favicon,
-        title: capitalize(rootDomain),
+        title: getTitleFromRootDomain(rootDomain),
         source: getDomainOrigin(object.url),
       };
     };
@@ -3337,7 +3373,7 @@ class ViewerActionsHandler {
     ]);
   }
 
-  _addViewToViewer({ viewer, slateName, source }) {
+  _addViewToViewer({ viewer, slateName, source, favicon }) {
     const newView = {
       id: esm_browser_v4(),
       createdAt: "",
@@ -3365,13 +3401,15 @@ class ViewerActionsHandler {
     const rootDomain = background_getRootDomain(source);
     viewer.viewsSourcesLookup[source] = Viewer.serializeView({
       ...newView,
-      name: capitalize(rootDomain),
+      name: getTitleFromRootDomain(rootDomain),
       filters: { source },
+      metadata: { favicon },
     });
     viewer.views.push({
       ...newView,
-      name: capitalize(rootDomain),
+      name: getTitleFromRootDomain(rootDomain),
       filters: { source },
+      metadata: { favicon },
     });
     return viewer;
   }
@@ -3381,7 +3419,15 @@ class ViewerActionsHandler {
 
     this._registerRunningAction();
 
-    viewer = this._addViewToViewer({ viewer, slateName, source });
+    let favicon;
+    if (source) {
+      const sources = await Viewer.getSavedLinksSources();
+      favicon =
+        sources.find((sourceData) => sourceData.source === source)?.favicon ||
+        undefined;
+    }
+
+    viewer = this._addViewToViewer({ viewer, slateName, source, favicon });
     Viewer._set(viewer);
 
     this._cleanupCleanupAction();
@@ -3482,7 +3528,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.cookies.onChanged.addListener((e) => {
-  if (e.cookie.domain !== uri.domain) return;
+  if (e.cookie.domain !== constants_uri.domain) return;
 
   if (e.removed && (e.cause === "expired_overwrite" || e.cause === "expired")) {
     Viewer.reset();
@@ -3933,7 +3979,7 @@ class BrowserHistory {
         if (item.title in visitsWithSameTitle) {
           visitsWithSameTitle[item.title].push({
             title: item.title,
-            favicon: item.favIconUrl,
+            favicon: item?.favIconUrl || item.favicon,
             url: item.url,
             rootDomain: item.rootDomain,
           });
@@ -3978,7 +4024,7 @@ class BrowserHistory {
 
     return cleanedVisits.map((item) => ({
       title: item.title,
-      favicon: item.favIconUrl,
+      favicon: item?.favIconUrl || item.favicon,
       url: item.url,
       rootDomain: item.rootDomain,
       relatedVisits: item.relatedVisits,
