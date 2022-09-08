@@ -52,16 +52,53 @@ function Root({ children, vertical = "below", horizontal = "right" }) {
 const Trigger = React.forwardRef(({ children, ...props }, forwardedRef) => {
   const { setTriggerRef, showTooltip, hideTooltip } = useTooltipContext();
 
-  const ref = React.useRef();
+  const ref = React.useRef(null);
+  const isFocusByKeyboard = React.useRef(true);
 
   React.useEffect(() => {
     if (ref.current) setTriggerRef(ref);
   }, []);
 
-  useEventListener({ type: "mouseenter", handler: showTooltip, ref });
-  useEventListener({ type: "mouseleave", handler: hideTooltip, ref });
-  useEventListener({ type: "click", handler: hideTooltip, ref });
-  useEventListener({ type: "focus", handler: showTooltip, ref });
+  const timeoutRef = React.useRef();
+  const clearTimeoutAndItsRef = () => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = null;
+  };
+  const handleMouseMove = () => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      showTooltip();
+    }, 400);
+  };
+
+  const handleMouseLeave = () => {
+    clearTimeoutAndItsRef();
+    hideTooltip();
+  };
+
+  const handleMouseDown = () => {
+    isFocusByKeyboard.current = false;
+  };
+
+  const handleOnClick = () => {
+    clearTimeoutAndItsRef();
+    hideTooltip();
+  };
+
+  const handleFocus = () => {
+    if (!isFocusByKeyboard.current) {
+      isFocusByKeyboard.current = true;
+      return;
+    }
+    showTooltip();
+    isFocusByKeyboard.current = true;
+  };
+
+  useEventListener({ type: "mousedown", handler: handleMouseDown, ref });
+  useEventListener({ type: "mousemove", handler: handleMouseMove, ref });
+  useEventListener({ type: "mouseleave", handler: handleMouseLeave, ref });
+  useEventListener({ type: "click", handler: handleOnClick, ref });
+  useEventListener({ type: "focus", handler: handleFocus, ref });
   useEventListener({ type: "blur", handler: hideTooltip, ref });
 
   return React.cloneElement(React.Children.only(children), {
