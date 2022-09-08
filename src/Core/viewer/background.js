@@ -1,5 +1,5 @@
 import * as Actions from "../../Common/actions";
-import * as Constants from "../../Common/constants";
+import * as Constants from "../../Extension_common/constants";
 
 import { Windows, Tabs } from "../browser/background";
 import {
@@ -25,6 +25,16 @@ const getRootDomain = (url) => {
   }
   const hostnameParts = hostname.split(".");
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
+};
+
+const getTitleFromRootDomain = (rootDomain) => {
+  let title = Constants.popularDomainsTitles[rootDomain];
+  if (title) return title;
+
+  const domainsPart = rootDomain.split(".");
+  if (domainsPart.length === 2) return capitalize(domainsPart[0]);
+
+  return capitalize(rootDomain);
 };
 
 const getDomainOrigin = (url) => {
@@ -228,7 +238,7 @@ class ViewerHandler {
       return {
         rootDomain,
         favicon: object.favicon,
-        title: capitalize(rootDomain),
+        title: getTitleFromRootDomain(rootDomain),
         source: getDomainOrigin(object.url),
       };
     };
@@ -667,12 +677,12 @@ class ViewerActionsHandler {
     const rootDomain = getRootDomain(source);
     viewer.viewsSourcesLookup[source] = Viewer.serializeView({
       ...newView,
-      name: capitalize(rootDomain),
+      name: getTitleFromRootDomain(rootDomain),
       filters: { source },
     });
     viewer.views.push({
       ...newView,
-      name: capitalize(rootDomain),
+      name: getTitleFromRootDomain(rootDomain),
       filters: { source },
     });
     return viewer;
