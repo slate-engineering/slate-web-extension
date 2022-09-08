@@ -696,7 +696,7 @@ const favicons = {
   "notion.so": Notion,
 };
 
-const DEFAULT_FAVICON = (props) => (
+const DefaultFavicon = (props) => (
   <svg
     height={16}
     width={16}
@@ -715,7 +715,9 @@ const DEFAULT_FAVICON = (props) => (
   </svg>
 );
 
-export const getFavicon = (domain) => {
+const getFavicon = (domain) => {
   if (domain in favicons) return favicons[domain];
-  return DEFAULT_FAVICON;
+  return DefaultFavicon;
 };
+
+export { DefaultFavicon, getFavicon };
