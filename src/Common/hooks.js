@@ -127,21 +127,33 @@ export const usePreviousValue = (value) => {
 };
 
 let layers = [];
-const removeLayer = (id) => (layers = layers.filter((layer) => layer !== id));
+let layersLookup = {};
+
+const addLayer = (id) => (layers.push(id), (layersLookup[id] = true));
+const removeLayer = (id) => {
+  layers = layers.filter((layer) => layer !== id);
+  delete layersLookup[id];
+};
 const isDeepestLayer = (id) => last(layers) === id;
 
 export const useEscapeKey = (callback) => {
-  const layerIdRef = React.useRef();
+  const [layerId] = React.useState(uuid);
+
+  React.useMemo(() => {
+    if (!layersLookup[layerId]) {
+      addLayer(layerId);
+    }
+  }, []);
+
   React.useEffect(() => {
-    layerIdRef.current = uuid();
-    layers.push(layerIdRef.current);
-    return () => removeLayer(layerIdRef.current);
+    return () => {
+      removeLayer(layerId);
+    };
   }, []);
 
   const handleKeyUp = React.useCallback(
     (e) => {
-      if (e.key === "Escape" && isDeepestLayer(layerIdRef.current))
-        callback?.(e);
+      if (e.key === "Escape" && isDeepestLayer(layerId)) callback?.(e);
     },
     [callback]
   );
