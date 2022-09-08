@@ -8,7 +8,7 @@ import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
-import { getFavicon } from "../Common/favicons";
+
 import { defaultViews, viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import {
@@ -24,6 +24,7 @@ import {
   getRootDomain,
 } from "../Common/utilities";
 import { ShortcutsTooltip } from "../Components/Tooltip";
+import { Favicon } from "../Components/Favicon";
 import { useSlatesCombobox } from "../Components/EditSlates";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
@@ -488,7 +489,6 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
         <Combobox.Menu>
           <div css={STYLES_CREATE_MENU_SLATES_WRAPPER}>
             {filteredSources.map((sourceData, index) => {
-              const Favicon = getFavicon(sourceData.rootDomain);
               const isApplied = sourceData.source in viewer.viewsSourcesLookup;
               const handleOnClick = isApplied
                 ? handleSwitchToAppliedSourceView
@@ -498,10 +498,14 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
                 <CreateMenuTagButton
                   onClick={() => handleOnClick(sourceData.source)}
                   index={index}
-                  key={sourceData.name}
+                  key={sourceData.title}
                 >
                   <div>
-                    <Favicon />
+                    <Favicon
+                      rootDomain={sourceData.rootDomain}
+                      src={sourceData.favicon}
+                      alt={`${sourceData.title}'s favicon`}
+                    />
                   </div>
                   <Typography.H5
                     color="textBlack"
@@ -761,7 +765,10 @@ const STYLES_VIEWS_BUTTON_BACKGROUND = (theme) => css`
 const MenuItem = ({
   isViewApplied,
   onClick,
-  Favicon,
+  rootDomain,
+  favicon,
+  isSlateView,
+  isSourceView,
   children,
   index,
   onSubmit,
@@ -794,14 +801,20 @@ const MenuItem = ({
       ref={ref}
       {...props}
     >
-      {Favicon && (
-        <Favicon
+      {(isSlateView || isSourceView) && (
+        <div
           style={{
             marginRight: 4,
             opacity: isViewApplied ? 1 : 0.5,
             transition: "opacity 0.25s",
           }}
-        />
+        >
+          {isSourceView ? (
+            <Favicon src={favicon} rootDomain={rootDomain} />
+          ) : (
+            <SVG.Hash height={16} width={16} />
+          )}
+        </div>
       )}
       {children}
       <AnimatePresence>
@@ -1043,15 +1056,15 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
           {viewer.views.map((view, i) => {
             const isApplied = appliedView.id === view.id;
             const isSlateFilter = view.filters.slate;
-            const Favicon = isSlateFilter
-              ? SVG.Hash
-              : getFavicon(getRootDomain(view.filters.source));
-
             return (
               <MenuItem
                 key={view.name}
                 isViewApplied={isApplied}
                 style={{ marginLeft: 4 }}
+                favicon={view?.metadata?.favicon}
+                rootDomain={getRootDomain(view.filters.source)}
+                isSlateView={isSlateFilter}
+                isSourceView={!isSlateFilter}
                 onMouseDown={preventActionButtonFocus}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
@@ -1126,9 +1139,9 @@ const ViewsFeedRow = ({ index, data, style }) => {
       title={visit.title}
       url={visit.url}
       favicon={visit.favicon}
+      rootDomain={visit.rootDomain}
       relatedVisits={visit.relatedVisits}
       isSaved={visit.isSaved}
-      Favicon={getFavicon(visit.rootDomain)}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
       onOpenSlatesJumper={() =>
         onOpenSlatesJumper([

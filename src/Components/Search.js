@@ -7,7 +7,6 @@ import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
-import { getFavicon } from "../Common/favicons";
 import {
   getRootDomain,
   isNewTab,
@@ -245,7 +244,7 @@ const SearchFeedRow = ({ index, data, style }) => {
         title={item.title}
         url={item.url}
         favicon={item.favicon}
-        Favicon={getFavicon(getRootDomain(item.url))}
+        rootDomain={getRootDomain(item.url)}
         isSaved={item.isSaved}
         onClick={() =>
           onOpenUrl({
@@ -271,8 +270,9 @@ const SearchFeedRow = ({ index, data, style }) => {
       index={rovingTabIndex}
       title={item.title}
       url={item.url}
+      favicon={item.favicon}
+      rootDomain={item.rootDomain}
       relatedVisits={item.relatedVisits}
-      Favicon={getFavicon(item.rootDomain)}
       isSaved={item.isSaved}
       onClick={() => onOpenUrl({ urls: [item.url] })}
       onSubmit={() => onOpenUrl({ urls: [item.url] })}

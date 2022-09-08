@@ -14,6 +14,7 @@ import { FixedSizeList, VariableSizeList } from "react-window";
 import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
 import { ShortcutsTooltip } from "../Components/Tooltip";
+import { Favicon } from "../Components/Favicon";
 
 const useViewer = isNewTab ? useNewTabViewer : useJumperViewer;
 
@@ -320,12 +321,12 @@ const STYLES_SYSTEM_GREEN = (theme) => css`
 const Object = React.forwardRef(
   (
     {
-      Favicon,
       title,
       css,
       isSelected,
       withActions = false,
       relatedVisits,
+      rootDomain,
       favicon,
 
       onCloseTab,
@@ -439,6 +440,8 @@ const Object = React.forwardRef(
           className="object_favicon"
           css={STYLES_TEXT_BLACK}
           style={{ margin: 2, flexShrink: 0, display: isChecked && "none" }}
+          rootDomain={rootDomain}
+          src={favicon}
         />
         <div
           css={Styles.HORIZONTAL_CONTAINER_CENTERED}

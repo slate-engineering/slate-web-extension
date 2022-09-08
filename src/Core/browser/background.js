@@ -293,7 +293,7 @@ class BrowserHistory {
         if (item.title in visitsWithSameTitle) {
           visitsWithSameTitle[item.title].push({
             title: item.title,
-            favicon: item.favIconUrl,
+            favicon: item?.favIconUrl || item.favicon,
             url: item.url,
             rootDomain: item.rootDomain,
           });
@@ -338,7 +338,7 @@ class BrowserHistory {
 
     return cleanedVisits.map((item) => ({
       title: item.title,
-      favicon: item.favIconUrl,
+      favicon: item?.favIconUrl || item.favicon,
       url: item.url,
       rootDomain: item.rootDomain,
       relatedVisits: item.relatedVisits,

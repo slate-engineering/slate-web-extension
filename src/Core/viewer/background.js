@@ -198,7 +198,7 @@ class ViewerHandler {
     };
   }
 
-  serializeView({ id, name, order, filters }) {
+  serializeView({ id, name, order, filters, metadata }) {
     return {
       id,
       name,
@@ -207,6 +207,7 @@ class ViewerHandler {
         slate: !!filters.slateId,
         source: filters.source,
       },
+      metadata,
       order,
     };
   }
@@ -649,7 +650,7 @@ class ViewerActionsHandler {
     ]);
   }
 
-  _addViewToViewer({ viewer, slateName, source }) {
+  _addViewToViewer({ viewer, slateName, source, favicon }) {
     const newView = {
       id: uuid(),
       createdAt: "",
@@ -679,11 +680,13 @@ class ViewerActionsHandler {
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
       filters: { source },
+      metadata: { favicon },
     });
     viewer.views.push({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
       filters: { source },
+      metadata: { favicon },
     });
     return viewer;
   }
@@ -693,7 +696,15 @@ class ViewerActionsHandler {
 
     this._registerRunningAction();
 
-    viewer = this._addViewToViewer({ viewer, slateName, source });
+    let favicon;
+    if (source) {
+      const sources = await Viewer.getSavedLinksSources();
+      favicon =
+        sources.find((sourceData) => sourceData.source === source)?.favicon ||
+        undefined;
+    }
+
+    viewer = this._addViewToViewer({ viewer, slateName, source, favicon });
     Viewer._set(viewer);
 
     this._cleanupCleanupAction();

@@ -4,7 +4,6 @@ import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
-import { getFavicon } from "../Common/favicons";
 import { getRootDomain, isNewTab } from "../Common/utilities";
 
 /* -----------------------------------------------------------------------------------------------*/
@@ -38,7 +37,8 @@ const WindowsFeedRow = React.memo(({ index, data, style }) => {
       index={rovingTabIndex}
       title={tab.title}
       url={tab.url}
-      Favicon={getFavicon(tab.rootDomain)}
+      rootDomain={tab.rootDomain}
+      favicon={tab.favicon}
       isSaved={tab.isSaved}
       onCloseTab={() => onCloseTabs([tab.id])}
       onClick={() =>

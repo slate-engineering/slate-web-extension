@@ -6,7 +6,6 @@ import * as Constants from "../Common/constants";
 
 import InfiniteLoader from "react-window-infinite-loader";
 
-import { getFavicon } from "../Common/favicons";
 import { getRootDomain, isNewTab } from "../Common/utilities";
 
 const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
@@ -56,8 +55,8 @@ const HistoryFeedRow = React.memo(({ index, data, style }) => {
       title={visit.title}
       url={visit.url}
       favicon={visit.favicon}
+      rootDomain={visit.rootDomain}
       relatedVisits={visit.relatedVisits}
-      Favicon={getFavicon(visit.rootDomain)}
       isSaved={visit.isSaved}
       onClick={() => onOpenUrl({ urls: [visit.url] })}
       onOpenSlatesJumper={() =>
@@ -184,7 +183,13 @@ const HistoryFeed = React.forwardRef(
       }
     };
 
-    const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
+    const getFeedItemHeight = (index) => {
+      const { feed } = feedItemsData;
+      // NOTE(amine): the last item in the list is used for infinite loading
+      if (index === feed.length) return Constants.sizes.jumperFeedItem;
+
+      return feed[index].height;
+    };
 
     return (
       <RovingTabIndex.Provider
