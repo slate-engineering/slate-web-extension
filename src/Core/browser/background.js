@@ -470,6 +470,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
+  if (!bookmark.url) return;
+
   if (await Viewer.checkIfAuthenticated()) {
     const activeTab = await Tabs.getActive();
     ViewerActions.saveLink({
