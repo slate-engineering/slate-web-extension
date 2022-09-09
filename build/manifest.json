@@ -24,10 +24,19 @@
       "run_at": "document_idle"
     }
   ],
-  "chrome_url_overrides":{
+  "chrome_url_overrides": {
     "newtab": "newTab.html"
   },
-  "permissions": ["tabs", "contextMenus", "cookies", "commands", "history", "storage", "unlimitedStorage", "tabGroups" ],
+  "permissions": [
+    "tabs",
+    "cookies",
+    "commands",
+    "bookmarks",
+    "history",
+    "storage",
+    "unlimitedStorage",
+    "tabGroups"
+  ],
   "host_permissions": [
     "https://slate.host/",
     "https://slate-dev.onrender.com/"
@@ -47,12 +56,12 @@
       },
       "description": "Open the slate web app"
     },
-    "open-app-on-slates":{
+    "open-app-on-slates": {
       "suggested_key": {
         "default": "Alt+T",
         "mac": "Alt+T"
       },
-      "description": "Open the slate extension" 
+      "description": "Open the slate extension"
     },
     "direct-save": {
       "suggested_key": {

@@ -13,9 +13,94 @@ const messages = {
   windowsUpdate: "WINDOWS_UPDATE",
 };
 
-;// CONCATENATED MODULE: ./src/Common/constants.js
+;// CONCATENATED MODULE: ./src/Core/views/index.js
+const views_messages = {
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewFeedRequest: "VIEW_FEED_REQUEST",
+  viewFeedResponse: "VIEW_FEED_RESPONSE",
+
+  createViewByTag: "CREATE_VIEW_BY_TAG",
+  createViewBySource: "CREATE_VIEW_BY_SOURCE",
+};
+
+const viewsType = {
+  allOpen: "allOpen",
+  recent: "recent",
+  saved: "saved",
+  files: "files",
+  custom: "custom",
+};
+
+const defaultViews = {
+  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
+  recent: { id: "recent", name: "Recent", type: viewsType.recent },
+  saved: {
+    id: "saved",
+    name: "Saved",
+    type: viewsType.saved,
+  },
+  files: {
+    id: "files",
+    name: "Files",
+    type: viewsType.files,
+  },
+};
+
+const initialView = defaultViews.allOpen;
+
+;// CONCATENATED MODULE: ./src/Core/viewer/index.js
+
+
+const viewer_messages = {
+  loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
+  loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
+
+  updateViewer: "UPDATE_VIEWER",
+
+  saveLink: "SAVE_LINK",
+  savingStatus: "SAVING_STATUS",
+
+  addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
+  removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
+  createSlate: "CREATE_SLATE",
+
+  getSavedLinksSourcesRequest: "GET_SAVED_LINKS_SOURCES_REQUEST",
+  getSavedLinksSourcesResponse: "GET_SAVED_LINKS_SOURCES_RESPONSE",
+
+  updateViewerSettings: "UPDATE_VIEWER_SETTINGS",
+};
+
 // NOTE(amine): commands are defined in manifest.json
 const commands = {
+  directSave: "direct-save",
+};
+
+const savingStates = {
+  start: "start",
+  done: "done",
+  duplicate: "duplicate",
+  failed: "failed",
+};
+
+const savingSources = {
+  command: "command",
+  app: "app",
+};
+
+const viewerInitialState = {
+  isAuthenticated: false,
+  initialView: initialView,
+  windows: {
+    data: { currentWindow: [], allOpen: [] },
+  },
+  // NOTE(amine):if there is one tab is open,populate the recent view
+};
+
+;// CONCATENATED MODULE: ./src/Common/constants.js
+// NOTE(amine): commands are defined in manifest.json
+const constants_commands = {
   openApp: "open-app",
   openSlate: "open-slate",
   openAppOnSlates: "open-app-on-slates",
@@ -373,91 +458,6 @@ const constants_uri = {
 const popularDomainsTitles = {
   "news.ycombinator.com": "Hacker news",
   "hackernews.com": "Hacker news",
-};
-
-;// CONCATENATED MODULE: ./src/Core/views/index.js
-const views_messages = {
-  searchQueryRequest: "SEARCH_QUERY_REQUEST",
-  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
-
-  viewFeedRequest: "VIEW_FEED_REQUEST",
-  viewFeedResponse: "VIEW_FEED_RESPONSE",
-
-  createViewByTag: "CREATE_VIEW_BY_TAG",
-  createViewBySource: "CREATE_VIEW_BY_SOURCE",
-};
-
-const viewsType = {
-  allOpen: "allOpen",
-  recent: "recent",
-  saved: "saved",
-  files: "files",
-  custom: "custom",
-};
-
-const defaultViews = {
-  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
-  recent: { id: "recent", name: "Recent", type: viewsType.recent },
-  saved: {
-    id: "saved",
-    name: "Saved",
-    type: viewsType.saved,
-  },
-  files: {
-    id: "files",
-    name: "Files",
-    type: viewsType.files,
-  },
-};
-
-const initialView = defaultViews.allOpen;
-
-;// CONCATENATED MODULE: ./src/Core/viewer/index.js
-
-
-const viewer_messages = {
-  loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
-  loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
-
-  updateViewer: "UPDATE_VIEWER",
-
-  saveLink: "SAVE_LINK",
-  savingStatus: "SAVING_STATUS",
-
-  addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
-  removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
-  createSlate: "CREATE_SLATE",
-
-  getSavedLinksSourcesRequest: "GET_SAVED_LINKS_SOURCES_REQUEST",
-  getSavedLinksSourcesResponse: "GET_SAVED_LINKS_SOURCES_RESPONSE",
-
-  updateViewerSettings: "UPDATE_VIEWER_SETTINGS",
-};
-
-// NOTE(amine): commands are defined in manifest.json
-const viewer_commands = {
-  directSave: "direct-save",
-};
-
-const savingStates = {
-  start: "start",
-  done: "done",
-  duplicate: "duplicate",
-  failed: "failed",
-};
-
-const savingSources = {
-  command: "command",
-  app: "app",
-};
-
-const viewerInitialState = {
-  isAuthenticated: false,
-  initialView: initialView,
-  windows: {
-    data: { currentWindow: [], allOpen: [] },
-  },
-  // NOTE(amine):if there is one tab is open,populate the recent view
 };
 
 ;// CONCATENATED MODULE: ./src/Extension_common/utilities.js
@@ -3512,9 +3512,9 @@ Viewer.onChange(async (viewerData) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == viewer_commands.directSave) {
+  if (command == commands.directSave) {
     if (await Viewer.checkIfAuthenticated()) {
-      Viewer.saveLink({
+      ViewerActions.saveLink({
         objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
         tab,
         source: savingSources.command,
@@ -3684,6 +3684,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 ;// CONCATENATED MODULE: ./src/Core/browser/background.js
+
 
 
 
@@ -4154,6 +4155,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
+chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
+  if (await Viewer.checkIfAuthenticated()) {
+    const activeTab = await Tabs.getActive();
+    ViewerActions.saveLink({
+      objects: [{ url: bookmark.url, title: bookmark.title }],
+      tab: activeTab,
+      source: savingSources.command,
+    });
+  }
+});
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.historyChunkRequest) {
     browserHistory
@@ -4289,14 +4301,14 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == commands.openApp) {
+  if (command == constants_commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
       data: { url: "/" },
     });
   }
 
-  if (command == commands.openAppOnSlates) {
+  if (command == constants_commands.openAppOnSlates) {
     const urls = [
       { url: tab.url, title: tab.title, rootDomain: getRootDomain(tab.url) },
     ];
@@ -4307,7 +4319,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     });
   }
 
-  if (command == commands.openSlate) {
+  if (command == constants_commands.openSlate) {
     chrome.tabs.create({
       url: `${uri.hostname}/_/data&extension=true&id=${tab.id}`,
     });
