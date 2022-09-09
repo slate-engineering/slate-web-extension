@@ -1,5 +1,6 @@
 import { messages } from ".";
-import { Viewer } from "../viewer/background";
+import { savingSources } from "../viewer";
+import { Viewer, ViewerActions } from "../viewer/background";
 
 import Fuse from "fuse.js";
 
@@ -465,6 +466,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 
     const sessionVisit = Session.createVisit(historyItem, latestVisit);
     await browserHistory.addVisit(sessionVisit);
+  }
+});
+
+chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
+  if (await Viewer.checkIfAuthenticated()) {
+    const activeTab = await Tabs.getActive();
+    ViewerActions.saveLink({
+      objects: [{ url: bookmark.url, title: bookmark.title }],
+      tab: activeTab,
+      source: savingSources.command,
+    });
   }
 });
 

@@ -791,7 +791,7 @@ Viewer.onChange(async (viewerData) => {
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if (command == commands.directSave) {
     if (await Viewer.checkIfAuthenticated()) {
-      Viewer.saveLink({
+      ViewerActions.saveLink({
         objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
         tab,
         source: savingSources.command,
