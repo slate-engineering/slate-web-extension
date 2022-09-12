@@ -239,6 +239,7 @@ export default function HistoryScene() {
     getViewsFeed,
     createViewByTag,
     createViewBySource,
+    removeView,
   } = useViews();
 
   const inputRef = React.useRef();
@@ -288,6 +289,7 @@ export default function HistoryScene() {
             getViewsFeed={getViewsFeed}
             createViewByTag={createViewByTag}
             createViewBySource={createViewBySource}
+            removeView={removeView}
             isLoadingViewFeed={isLoadingViewFeed}
             onRestoreFocus={focusSearchInput}
           >

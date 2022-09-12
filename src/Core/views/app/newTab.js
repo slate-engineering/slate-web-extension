@@ -39,6 +39,10 @@ export const useViews = () => {
     chrome.runtime.sendMessage({ type: messages.createViewBySource, source });
   };
 
+  const removeView = (id) => {
+    chrome.runtime.sendMessage({ type: messages.removeView, id });
+  };
+
   return {
     viewsFeed,
     isLoadingViewFeed: isLoadingFeed,
@@ -47,6 +51,7 @@ export const useViews = () => {
     getViewsFeed,
     createViewByTag,
     createViewBySource,
+    removeView,
   };
 };
 

@@ -7,6 +7,8 @@ export const messages = {
 
   createViewByTag: "CREATE_VIEW_BY_TAG",
   createViewBySource: "CREATE_VIEW_BY_SOURCE",
+
+  removeView: "REMOVE_VIEW",
 };
 
 export const viewsType = {

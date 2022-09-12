@@ -44,6 +44,13 @@ window.addEventListener("message", async function (event) {
       source: event.data.source,
     });
   }
+
+  if (event.data.type === messages.removeView) {
+    chrome.runtime.sendMessage({
+      type: messages.removeView,
+      id: event.data.id,
+    });
+  }
 });
 
 chrome.runtime.onMessage.addListener(function (request) {

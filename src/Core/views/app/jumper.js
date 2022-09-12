@@ -57,6 +57,10 @@ export const useViews = () => {
     window.postMessage({ type: messages.createViewBySource, source });
   };
 
+  const removeView = (id) => {
+    window.postMessage({ type: messages.removeView, id });
+  };
+
   return {
     viewsFeed,
     appliedView,
@@ -65,6 +69,7 @@ export const useViews = () => {
     getViewsFeed,
     createViewByTag,
     createViewBySource,
+    removeView,
   };
 };
 

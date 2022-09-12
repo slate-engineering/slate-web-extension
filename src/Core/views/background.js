@@ -131,6 +131,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  if (request.type === messages.removeView) {
+    ViewerActions.removeView({ customId: request.id }).then(sendResponse);
+    return true;
+  }
+
   if (request.type === messages.searchQueryRequest) {
     const searchHandler = async ({ query, view }) => {
       let slates = [];

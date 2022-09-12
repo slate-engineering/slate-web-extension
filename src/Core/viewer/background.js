@@ -298,7 +298,7 @@ class ViewerHandler {
     this._set(VIEWER_INITIAL_STATE);
   }
 
-  async sync() {
+  async sync({ shouldSync } = {}) {
     //NOTE(amine): only sync when there are no running actions
 
     const viewer = await Actions.hydrateAuthenticatedUser();
@@ -309,6 +309,7 @@ class ViewerHandler {
         ...prevViewer,
         ...viewer.data,
       });
+      if (shouldSync && !shouldSync()) return;
       this._set({
         ...serializedViewer,
         lastFetched: new Date().toString(),
@@ -333,10 +334,13 @@ class ViewerActionsHandler {
   }
 
   _cleanupCleanupAction() {
-    this.runningActions.pop();
     setTimeout(() => {
-      if (!this.runningActions.length) Viewer.sync();
-    }, 200);
+      this.runningActions.pop();
+      if (!this.runningActions.length) {
+        const shouldSync = () => !this.runningActions.length;
+        Viewer.sync({ shouldSync });
+      }
+    }, 500);
   }
 
   _addObjectsToViewer({ viewer, objects }) {
@@ -720,7 +724,7 @@ class ViewerActionsHandler {
   }
 
   _removeViewFromViewer({ viewer, customId }) {
-    let id = viewer.viewsIdsLookup[customId];
+    let id = getViewId({ viewer, customId });
     const view = viewer.views.find((view) => view.id === id);
     if (!view) return;
 
@@ -783,10 +787,41 @@ class ViewerActionsHandler {
       filterBySource,
     });
 
-    console.log({ response });
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._removeViewFromViewer({ viewer, customId });
+      Viewer._set(viewer);
+    }
 
-    if (!response) {
-      this._removeViewFromViewer({ viewer, customId });
+    this._cleanupCleanupAction();
+  }
+
+  async removeView({ customId }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+
+    const viewId = getViewId({ viewer, customId });
+    const deletedView = viewer.views.find((view) => view.id === viewId);
+    if (!deletedView) return;
+
+    viewer = this._removeViewFromViewer({ viewer, customId });
+    Viewer._set(viewer);
+
+    const response = await Actions.removeView({
+      id: viewId,
+    });
+
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._addViewToViewer({
+        viewer,
+        name: deletedView.name,
+        filterBySource: deletedView.filterBySource,
+        filterBySlateId: deletedView.filterBySlateId,
+        favicon: deletedView.metadata.favicon,
+      });
+      Viewer._set(viewer);
     }
 
     this._cleanupCleanupAction();

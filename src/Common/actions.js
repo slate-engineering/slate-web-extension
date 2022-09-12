@@ -73,7 +73,7 @@ export const createView = async (data) => {
   });
 };
 
-export const deleteView = async (data) => {
+export const removeView = async (data) => {
   return await returnJSON(`${Constants.uri.hostname}/api/views/delete`, {
     ...DEFAULT_OPTIONS,
     body: JSON.stringify({ data }),
