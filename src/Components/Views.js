@@ -1055,14 +1055,14 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
 
           {viewer.views.map((view, i) => {
             const isApplied = appliedView.id === view.id;
-            const isSlateFilter = view.filters.slate;
+            const isSlateFilter = view.filterBySlateId;
             return (
               <MenuItem
                 key={view.name}
                 isViewApplied={isApplied}
                 style={{ marginLeft: 4 }}
                 favicon={view?.metadata?.favicon}
-                rootDomain={getRootDomain(view.filters.source)}
+                rootDomain={getRootDomain(view.filterBySource)}
                 isSlateView={isSlateFilter}
                 isSourceView={!isSlateFilter}
                 onMouseDown={preventActionButtonFocus}

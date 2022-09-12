@@ -1,5 +1,5 @@
 import { messages, viewsType } from "./";
-import { Viewer, ViewerActions } from "../viewer/background";
+import { Viewer, ViewerActions, getViewId } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
 
 import Fuse from "fuse.js";
@@ -15,22 +15,23 @@ class ViewsHandler {
     }
 
     if (view.type === viewsType.custom) {
-      const handleFetchCustomFeed = async (viewId) => {
+      const handleFetchCustomFeed = async (viewCustomId) => {
         const viewer = await Viewer.get();
+        const viewId = getViewId({ viewer, customId: viewCustomId });
         const view = viewer.views.find((view) => view.id === viewId);
 
         if (!view) return [];
 
-        if (view.filters.source) {
+        if (view.filterBySource) {
           const feed = await browserHistory.getRelatedLinks(
-            view.filters.source
+            view.filterBySource
           );
           return feed;
         }
 
-        if (view.filters.slateId) {
+        if (view.filterBySlateId) {
           const slate = viewer.slates.find(
-            (slate) => slate.id === view.filters.slateId
+            (slate) => slate.id === view.filterBySlateId
           );
 
           if (!slate) return [];
@@ -63,21 +64,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.viewFeedRequest) {
     console.log(`VIEW FOR`, request.view);
 
-    const handleFetchCustomFeed = async (viewId) => {
+    const handleFetchCustomFeed = async (viewCustomId) => {
       const viewer = await Viewer.get();
+      const viewId = getViewId({ viewer, customId: viewCustomId });
       const view = viewer.views.find((view) => view.id === viewId);
 
       if (!view) return [];
 
-      if (view.filters.source) {
-        const feed = await browserHistory.getRelatedLinks(view.filters.source);
+      if (view.filterBySource) {
+        const feed = await browserHistory.getRelatedLinks(view.filterBySource);
 
         return feed;
       }
 
-      if (view.filters.slateId) {
+      if (view.filterBySlateId) {
         const slate = viewer.slates.find(
-          (slate) => slate.id === view.filters.slateId
+          (slate) => slate.id === view.filterBySlateId
         );
 
         if (!slate) return [];

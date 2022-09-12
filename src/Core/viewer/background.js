@@ -50,6 +50,15 @@ const getDomainOrigin = (url) => {
 const getFileUrl = (object) =>
   object.isLink ? object.url : `${Constants.gateways.ipfs}/${object.cid}`;
 
+// NOTE(amine): custom id to make sure app don't rerender when we replace optimistic data with the server's data
+const createViewCustomId = ({ name, source, slatename }) => {
+  if (source) return name + source;
+  return name + slatename;
+};
+
+export const getViewId = ({ viewer, customId }) => {
+  return viewer.viewsIdsLookup[customId];
+};
 /** ----------------------------------------- */
 
 const VIEWER_INITIAL_STATE = {
@@ -64,6 +73,7 @@ const VIEWER_INITIAL_STATE = {
 
   viewsSourcesLookup: {},
   viewsSlatesLookup: {},
+  viewsIdsLookup: {},
   views: [],
 
   sources: {},
@@ -80,7 +90,6 @@ const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
 class ViewerHandler {
   constructor() {
     this.observers = [];
-    this.runningActions = [];
   }
 
   onChange(callback) {
@@ -121,6 +130,7 @@ class ViewerHandler {
 
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
+      viewsIdsLookup: {},
       views: viewer.views || [],
       settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
@@ -128,14 +138,26 @@ class ViewerHandler {
     };
 
     serializedViewer.views.forEach((view) => {
-      const { source, slateId } = view.filters;
-      if (source) {
-        serializedViewer.viewsSourcesLookup[source] = this.serializeView(view);
+      const { filterBySource, filterBySlateId } = view;
+
+      if (filterBySource) {
+        const viewCustomId = createViewCustomId({
+          name: view.name,
+          source: filterBySource,
+        });
+        serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
+        serializedViewer.viewsSourcesLookup[filterBySource] =
+          this.serializeView(view);
         return;
       }
 
-      const slate = viewer.slates.find((slate) => slate.id === slateId);
+      const slate = viewer.slates.find((slate) => slate.id === filterBySlateId);
       if (slate) {
+        const viewCustomId = createViewCustomId({
+          name: view.name,
+          slatename: slate.slatename || slate.name,
+        });
+        serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
         serializedViewer.viewsSlatesLookup[slate.slatename] =
           this.serializeView(view);
       }
@@ -198,17 +220,19 @@ class ViewerHandler {
     };
   }
 
-  serializeView({ id, name, order, filters, metadata }) {
+  serializeView({ name, filterBySource, filterBySlateId, metadata }) {
+    let customId = createViewCustomId({
+      name,
+      source: filterBySource,
+      slatename: name,
+    });
     return {
-      id,
+      id: customId,
       name,
       type: viewsType.custom,
-      filters: {
-        slate: !!filters.slateId,
-        source: filters.source,
-      },
+      filterBySource: filterBySource,
+      filterBySlateId: !!filterBySlateId,
       metadata,
-      order,
     };
   }
 
@@ -650,62 +674,120 @@ class ViewerActionsHandler {
     ]);
   }
 
-  _addViewToViewer({ viewer, slateName, source, favicon }) {
+  _addViewToViewer({ viewer, name, filterBySource, filterBySlateId, favicon }) {
     const newView = {
       id: uuid(),
       createdAt: "",
       updatedAt: "",
-      order: viewer.views.length,
       metadata: {},
     };
-    if (slateName) {
-      const slate = viewer.slates.find(
-        (slate) => slate.slatename === slateName || slate.name === slateName
-      );
-      viewer.viewsSlatesLookup[slateName] = Viewer.serializeView({
+
+    if (filterBySlateId) {
+      const customId = createViewCustomId({ name, slatename: name });
+      viewer.viewsIdsLookup[customId] = newView.id;
+
+      viewer.viewsSlatesLookup[name] = Viewer.serializeView({
         ...newView,
-        name: slateName,
-        filters: { slate: !!slate.id },
+        name,
+        filterBySlateId: !!filterBySlateId,
       });
       viewer.views.push({
         ...newView,
-        name: slateName,
-        filters: { slateId: slate.id },
+        name,
+        filterBySlateId,
       });
       return viewer;
     }
 
-    const rootDomain = getRootDomain(source);
-    viewer.viewsSourcesLookup[source] = Viewer.serializeView({
+    const customId = createViewCustomId({ name, source: filterBySource });
+    viewer.viewsIdsLookup[customId] = newView.id;
+
+    const rootDomain = getRootDomain(filterBySource);
+    viewer.viewsSourcesLookup[filterBySource] = Viewer.serializeView({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filters: { source },
+      filterBySource: !!filterBySource,
       metadata: { favicon },
     });
     viewer.views.push({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filters: { source },
+      filterBySource,
       metadata: { favicon },
     });
+
+    return viewer;
+  }
+
+  _removeViewFromViewer({ viewer, customId }) {
+    let id = viewer.viewsIdsLookup[customId];
+    const view = viewer.views.find((view) => view.id === id);
+    if (!view) return;
+
+    if (view.filterBySource) {
+      delete viewer.viewsSourcesLookup[view.filterBySource];
+    } else {
+      delete viewer.viewsSlatesLookup[view.filterBySlateId];
+    }
+
+    delete viewer.viewsIdsLookup[customId];
+
+    viewer.views = viewer.views.filter((item) => item.id !== view.id);
+
     return viewer;
   }
 
   async createView({ slateName, source }) {
+    this._registerRunningAction();
     let viewer = await Viewer.get();
 
-    this._registerRunningAction();
+    let name;
+    let filterBySlateId;
+    let filterBySource;
+    let metadata = {};
+    let customId;
 
-    let favicon;
-    if (source) {
+    if (slateName) {
+      customId = createViewCustomId({ name, slatename: name });
+      name = slateName;
+      const slate = viewer.slates.find(
+        (slate) => slate.slatename === slateName || slate.name === slateName
+      );
+      filterBySlateId = slate.id;
+    } else {
+      customId = createViewCustomId({ name, source });
+      const rootDomain = getRootDomain(source);
+      name = getTitleFromRootDomain(rootDomain);
+      filterBySource = source;
+
       const sources = await Viewer.getSavedLinksSources();
-      favicon =
+      const favicon =
         sources.find((sourceData) => sourceData.source === source)?.favicon ||
         undefined;
+      metadata = { favicon };
     }
 
-    viewer = this._addViewToViewer({ viewer, slateName, source, favicon });
+    viewer = this._addViewToViewer({
+      viewer,
+      name,
+      filterBySource,
+      filterBySlateId,
+      favicon: metadata.favicon,
+    });
     Viewer._set(viewer);
+
+    const response = await Actions.createView({
+      name,
+      metadata: metadata,
+      filterBySlateId,
+      filterBySource,
+    });
+
+    console.log({ response });
+
+    if (!response) {
+      this._removeViewFromViewer({ viewer, customId });
+    }
 
     this._cleanupCleanupAction();
   }
