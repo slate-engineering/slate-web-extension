@@ -65,3 +65,17 @@ export const search = async (data) => {
     body: JSON.stringify({ data }),
   });
 };
+
+export const createView = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/views/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+export const deleteView = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/views/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
