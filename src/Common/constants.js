@@ -202,6 +202,13 @@ export const gateways = {
   ipfs: "https://slate.textile.io/ipfs",
 };
 
+//NOTE(amine): local server uri's
+// export const uri = {
+//   hostname: "http://localhost:1337",
+//   domain: "localhost:1337",
+//   upload: "http://localhost:4242",
+// };
+
 //NOTE(martina): dev server uri's
 // export const uri = {
 //   hostname: "https://slate-dev.onrender.com",
