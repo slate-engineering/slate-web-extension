@@ -422,9 +422,13 @@ const Object = React.forwardRef(
         {...props}
       >
         {isTab && (
-          <div
-            css={[STYLES_TAB_INDICATOR, isTabActive && STYLES_SYSTEM_GREEN]}
-          />
+          <ShortcutsTooltip
+            label={isTabActive ? "Current open tab" : "Open tab"}
+          >
+            <div
+              css={[STYLES_TAB_INDICATOR, isTabActive && STYLES_SYSTEM_GREEN]}
+            />
+          </ShortcutsTooltip>
         )}
         {withMultiSelection && (
           <Checkbox
