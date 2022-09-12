@@ -256,6 +256,13 @@ const gateways = {
   ipfs: "https://slate.textile.io/ipfs",
 };
 
+//NOTE(amine): local server uri's
+// export const uri = {
+//   hostname: "http://localhost:1337",
+//   domain: "localhost:1337",
+//   upload: "http://localhost:4242",
+// };
+
 //NOTE(martina): dev server uri's
 // export const uri = {
 //   hostname: "https://slate-dev.onrender.com",
@@ -475,6 +482,8 @@ const views_messages = {
 
   createViewByTag: "CREATE_VIEW_BY_TAG",
   createViewBySource: "CREATE_VIEW_BY_SOURCE",
+
+  removeView: "REMOVE_VIEW",
 };
 
 const viewsType = {
@@ -547,6 +556,13 @@ window.addEventListener("message", async function (event) {
     chrome.runtime.sendMessage({
       type: views_messages.createViewBySource,
       source: event.data.source,
+    });
+  }
+
+  if (event.data.type === views_messages.removeView) {
+    chrome.runtime.sendMessage({
+      type: views_messages.removeView,
+      id: event.data.id,
     });
   }
 });

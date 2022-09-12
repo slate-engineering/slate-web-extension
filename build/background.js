@@ -23,6 +23,8 @@ const views_messages = {
 
   createViewByTag: "CREATE_VIEW_BY_TAG",
   createViewBySource: "CREATE_VIEW_BY_SOURCE",
+
+  removeView: "REMOVE_VIEW",
 };
 
 const viewsType = {
@@ -303,6 +305,13 @@ const gateways = {
   ipfs: "https://slate.textile.io/ipfs",
 };
 
+//NOTE(amine): local server uri's
+// export const uri = {
+//   hostname: "http://localhost:1337",
+//   domain: "localhost:1337",
+//   upload: "http://localhost:4242",
+// };
+
 //NOTE(martina): dev server uri's
 // export const uri = {
 //   hostname: "https://slate-dev.onrender.com",
@@ -435,10 +444,31 @@ const search = async (data) => {
   });
 };
 
+const createView = async (data) => {
+  return await returnJSON(`${uri.hostname}/api/views/create`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+const removeView = async (data) => {
+  return await returnJSON(`${uri.hostname}/api/views/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
 ;// CONCATENATED MODULE: ./src/Extension_common/constants.js
 const constants_gateways = {
   ipfs: "https://slate.textile.io/ipfs",
 };
+
+//NOTE(amine): local server uri's
+// export const uri = {
+//   hostname: "http://localhost:1337",
+//   domain: "localhost:1337",
+//   upload: "http://localhost:4242",
+// };
 
 //NOTE(martina): dev server uri's
 // export const uri = {
@@ -2773,6 +2803,15 @@ const getDomainOrigin = (url) => {
 const getFileUrl = (object) =>
   object.isLink ? object.url : `${constants_gateways.ipfs}/${object.cid}`;
 
+// NOTE(amine): custom id to make sure app don't rerender when we replace optimistic data with the server's data
+const createViewCustomId = ({ name, source, slatename }) => {
+  if (source) return name + source;
+  return name + slatename;
+};
+
+const getViewId = ({ viewer, customId }) => {
+  return viewer.viewsIdsLookup[customId];
+};
 /** ----------------------------------------- */
 
 const VIEWER_INITIAL_STATE = {
@@ -2787,6 +2826,7 @@ const VIEWER_INITIAL_STATE = {
 
   viewsSourcesLookup: {},
   viewsSlatesLookup: {},
+  viewsIdsLookup: {},
   views: [],
 
   sources: {},
@@ -2803,7 +2843,6 @@ const VIEWER_LOCAL_STORAGE_KEY = "viewer_backup";
 class ViewerHandler {
   constructor() {
     this.observers = [];
-    this.runningActions = [];
   }
 
   onChange(callback) {
@@ -2844,6 +2883,7 @@ class ViewerHandler {
 
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
+      viewsIdsLookup: {},
       views: viewer.views || [],
       settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
@@ -2851,14 +2891,26 @@ class ViewerHandler {
     };
 
     serializedViewer.views.forEach((view) => {
-      const { source, slateId } = view.filters;
-      if (source) {
-        serializedViewer.viewsSourcesLookup[source] = this.serializeView(view);
+      const { filterBySource, filterBySlateId } = view;
+
+      if (filterBySource) {
+        const viewCustomId = createViewCustomId({
+          name: view.name,
+          source: filterBySource,
+        });
+        serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
+        serializedViewer.viewsSourcesLookup[filterBySource] =
+          this.serializeView(view);
         return;
       }
 
-      const slate = viewer.slates.find((slate) => slate.id === slateId);
+      const slate = viewer.slates.find((slate) => slate.id === filterBySlateId);
       if (slate) {
+        const viewCustomId = createViewCustomId({
+          name: view.name,
+          slatename: slate.slatename || slate.name,
+        });
+        serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
         serializedViewer.viewsSlatesLookup[slate.slatename] =
           this.serializeView(view);
       }
@@ -2921,17 +2973,19 @@ class ViewerHandler {
     };
   }
 
-  serializeView({ id, name, order, filters, metadata }) {
+  serializeView({ name, filterBySource, filterBySlateId, metadata }) {
+    let customId = createViewCustomId({
+      name,
+      source: filterBySource,
+      slatename: name,
+    });
     return {
-      id,
+      id: customId,
       name,
       type: viewsType.custom,
-      filters: {
-        slate: !!filters.slateId,
-        source: filters.source,
-      },
+      filterBySource: filterBySource,
+      filterBySlateId: !!filterBySlateId,
       metadata,
-      order,
     };
   }
 
@@ -2997,7 +3051,7 @@ class ViewerHandler {
     this._set(VIEWER_INITIAL_STATE);
   }
 
-  async sync() {
+  async sync({ shouldSync } = {}) {
     //NOTE(amine): only sync when there are no running actions
 
     const viewer = await hydrateAuthenticatedUser();
@@ -3008,6 +3062,7 @@ class ViewerHandler {
         ...prevViewer,
         ...viewer.data,
       });
+      if (shouldSync && !shouldSync()) return;
       this._set({
         ...serializedViewer,
         lastFetched: new Date().toString(),
@@ -3032,10 +3087,13 @@ class ViewerActionsHandler {
   }
 
   _cleanupCleanupAction() {
-    this.runningActions.pop();
     setTimeout(() => {
-      if (!this.runningActions.length) Viewer.sync();
-    }, 200);
+      this.runningActions.pop();
+      if (!this.runningActions.length) {
+        const shouldSync = () => !this.runningActions.length;
+        Viewer.sync({ shouldSync });
+      }
+    }, 500);
   }
 
   _addObjectsToViewer({ viewer, objects }) {
@@ -3373,62 +3431,151 @@ class ViewerActionsHandler {
     ]);
   }
 
-  _addViewToViewer({ viewer, slateName, source, favicon }) {
+  _addViewToViewer({ viewer, name, filterBySource, filterBySlateId, favicon }) {
     const newView = {
       id: esm_browser_v4(),
       createdAt: "",
       updatedAt: "",
-      order: viewer.views.length,
       metadata: {},
     };
-    if (slateName) {
-      const slate = viewer.slates.find(
-        (slate) => slate.slatename === slateName || slate.name === slateName
-      );
-      viewer.viewsSlatesLookup[slateName] = Viewer.serializeView({
+
+    if (filterBySlateId) {
+      const customId = createViewCustomId({ name, slatename: name });
+      viewer.viewsIdsLookup[customId] = newView.id;
+
+      viewer.viewsSlatesLookup[name] = Viewer.serializeView({
         ...newView,
-        name: slateName,
-        filters: { slate: !!slate.id },
+        name,
+        filterBySlateId: !!filterBySlateId,
       });
       viewer.views.push({
         ...newView,
-        name: slateName,
-        filters: { slateId: slate.id },
+        name,
+        filterBySlateId,
       });
       return viewer;
     }
 
-    const rootDomain = background_getRootDomain(source);
-    viewer.viewsSourcesLookup[source] = Viewer.serializeView({
+    const customId = createViewCustomId({ name, source: filterBySource });
+    viewer.viewsIdsLookup[customId] = newView.id;
+
+    const rootDomain = background_getRootDomain(filterBySource);
+    viewer.viewsSourcesLookup[filterBySource] = Viewer.serializeView({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filters: { source },
+      filterBySource: !!filterBySource,
       metadata: { favicon },
     });
     viewer.views.push({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filters: { source },
+      filterBySource,
       metadata: { favicon },
     });
+
+    return viewer;
+  }
+
+  _removeViewFromViewer({ viewer, customId }) {
+    let id = getViewId({ viewer, customId });
+    const view = viewer.views.find((view) => view.id === id);
+    if (!view) return;
+
+    if (view.filterBySource) {
+      delete viewer.viewsSourcesLookup[view.filterBySource];
+    } else {
+      delete viewer.viewsSlatesLookup[view.filterBySlateId];
+    }
+
+    delete viewer.viewsIdsLookup[customId];
+
+    viewer.views = viewer.views.filter((item) => item.id !== view.id);
+
     return viewer;
   }
 
   async createView({ slateName, source }) {
+    this._registerRunningAction();
     let viewer = await Viewer.get();
 
-    this._registerRunningAction();
+    let name;
+    let filterBySlateId;
+    let filterBySource;
+    let metadata = {};
+    let customId;
 
-    let favicon;
-    if (source) {
+    if (slateName) {
+      customId = createViewCustomId({ name, slatename: name });
+      name = slateName;
+      const slate = viewer.slates.find(
+        (slate) => slate.slatename === slateName || slate.name === slateName
+      );
+      filterBySlateId = slate.id;
+    } else {
+      customId = createViewCustomId({ name, source });
+      const rootDomain = background_getRootDomain(source);
+      name = getTitleFromRootDomain(rootDomain);
+      filterBySource = source;
+
       const sources = await Viewer.getSavedLinksSources();
-      favicon =
+      const favicon =
         sources.find((sourceData) => sourceData.source === source)?.favicon ||
         undefined;
+      metadata = { favicon };
     }
 
-    viewer = this._addViewToViewer({ viewer, slateName, source, favicon });
+    viewer = this._addViewToViewer({
+      viewer,
+      name,
+      filterBySource,
+      filterBySlateId,
+      favicon: metadata.favicon,
+    });
     Viewer._set(viewer);
+
+    const response = await createView({
+      name,
+      metadata: metadata,
+      filterBySlateId,
+      filterBySource,
+    });
+
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._removeViewFromViewer({ viewer, customId });
+      Viewer._set(viewer);
+    }
+
+    this._cleanupCleanupAction();
+  }
+
+  async removeView({ customId }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+
+    const viewId = getViewId({ viewer, customId });
+    const deletedView = viewer.views.find((view) => view.id === viewId);
+    if (!deletedView) return;
+
+    viewer = this._removeViewFromViewer({ viewer, customId });
+    Viewer._set(viewer);
+
+    const response = await removeView({
+      id: viewId,
+    });
+
+    if (!response || response.error) {
+      let viewer = await Viewer.get();
+      viewer = this._addViewToViewer({
+        viewer,
+        name: deletedView.name,
+        filterBySource: deletedView.filterBySource,
+        filterBySlateId: deletedView.filterBySlateId,
+        favicon: deletedView.metadata.favicon,
+      });
+      Viewer._set(viewer);
+    }
 
     this._cleanupCleanupAction();
   }
@@ -4346,22 +4493,23 @@ class ViewsHandler {
     }
 
     if (view.type === viewsType.custom) {
-      const handleFetchCustomFeed = async (viewId) => {
+      const handleFetchCustomFeed = async (viewCustomId) => {
         const viewer = await Viewer.get();
+        const viewId = getViewId({ viewer, customId: viewCustomId });
         const view = viewer.views.find((view) => view.id === viewId);
 
         if (!view) return [];
 
-        if (view.filters.source) {
+        if (view.filterBySource) {
           const feed = await browserHistory.getRelatedLinks(
-            view.filters.source
+            view.filterBySource
           );
           return feed;
         }
 
-        if (view.filters.slateId) {
+        if (view.filterBySlateId) {
           const slate = viewer.slates.find(
-            (slate) => slate.id === view.filters.slateId
+            (slate) => slate.id === view.filterBySlateId
           );
 
           if (!slate) return [];
@@ -4394,21 +4542,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === views_messages.viewFeedRequest) {
     console.log(`VIEW FOR`, request.view);
 
-    const handleFetchCustomFeed = async (viewId) => {
+    const handleFetchCustomFeed = async (viewCustomId) => {
       const viewer = await Viewer.get();
+      const viewId = getViewId({ viewer, customId: viewCustomId });
       const view = viewer.views.find((view) => view.id === viewId);
 
       if (!view) return [];
 
-      if (view.filters.source) {
-        const feed = await browserHistory.getRelatedLinks(view.filters.source);
+      if (view.filterBySource) {
+        const feed = await browserHistory.getRelatedLinks(view.filterBySource);
 
         return feed;
       }
 
-      if (view.filters.slateId) {
+      if (view.filterBySlateId) {
         const slate = viewer.slates.find(
-          (slate) => slate.id === view.filters.slateId
+          (slate) => slate.id === view.filterBySlateId
         );
 
         if (!slate) return [];
@@ -4457,6 +4606,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === views_messages.createViewBySource) {
     ViewerActions.createView({ source: request.source }).then(sendResponse);
+    return true;
+  }
+
+  if (request.type === views_messages.removeView) {
+    ViewerActions.removeView({ customId: request.id }).then(sendResponse);
     return true;
   }
 
