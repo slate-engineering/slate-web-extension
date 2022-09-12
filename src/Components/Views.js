@@ -1179,7 +1179,11 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
         </button>
       ) : null}
 
-      <ShortcutsTooltip label="Create new space" keyTrigger="N">
+      <ShortcutsTooltip
+        label="Create new space"
+        vertical={isNewTab ? "below" : "above"}
+        keyTrigger="N"
+      >
         <button
           css={[
             STYLES_VIEWS_ADD_BUTTON,
