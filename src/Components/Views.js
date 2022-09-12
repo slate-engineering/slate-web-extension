@@ -186,6 +186,7 @@ function Provider({
   getViewsFeed,
   createViewByTag,
   createViewBySource,
+  removeView,
   isLoadingViewFeed,
   onRestoreFocus,
 }) {
@@ -227,6 +228,7 @@ function Provider({
       getViewsFeed,
       createViewByTag,
       createViewBySource,
+      removeView,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -252,6 +254,7 @@ function Provider({
       getViewsFeed,
       createViewByTag,
       createViewBySource,
+      removeView,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -762,16 +765,32 @@ const STYLES_VIEWS_BUTTON_BACKGROUND = (theme) => css`
   background-color: ${theme.semantic.bgGrayLight};
 `;
 
+const STYLES_VIEWS_REMOVE_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform: translateY(-50%);
+  z-index: 1;
+  padding: 4px;
+  background-color: ${theme.semantic.bgLight};
+  color: ${theme.semantic.textGray};
+  border: 1px solid ${theme.semantic.borderGrayLight};
+  border-radius: 50%;
+  box-shadow: ${theme.shadow.darkSmall};
+`;
+
 const MenuItem = ({
   isViewApplied,
-  onClick,
   rootDomain,
   favicon,
   isSlateView,
   isSourceView,
   children,
   index,
+  onClick,
   onSubmit,
+  onRemove,
   ...props
 }) => {
   const { registerMenuItem, cleanupMenuItem, moveSelectionOnClick } =
@@ -792,40 +811,56 @@ const MenuItem = ({
     }
   }, [isViewApplied]);
 
+  const [isRemoveButtonVisible, setRemoveButtonVisibility] =
+    React.useState(false);
+  const showRemoveButton = () => setRemoveButtonVisibility(true);
+  const hideRemoveButton = () => setRemoveButtonVisibility(false);
+
   return (
-    <Typography.H5
-      css={[STYLES_VIEWS_BUTTON, isViewApplied && STYLES_VIEWS_BUTTON_ACTIVE]}
-      as="button"
-      onClick={mergeEvents(onClick, () => moveSelectionOnClick(index))}
-      tabIndex="-1"
+    <div
+      style={{ position: "relative" }}
+      onMouseEnter={showRemoveButton}
+      onMouseLeave={hideRemoveButton}
       ref={ref}
-      {...props}
     >
-      {(isSlateView || isSourceView) && (
-        <div
-          style={{
-            marginRight: 4,
-            opacity: isViewApplied ? 1 : 0.5,
-            transition: "opacity 0.25s",
-          }}
-        >
-          {isSourceView ? (
-            <Favicon src={favicon} rootDomain={rootDomain} />
-          ) : (
-            <SVG.Hash height={16} width={16} />
-          )}
-        </div>
+      {onRemove && isRemoveButtonVisible && (
+        <button onClick={onRemove} css={STYLES_VIEWS_REMOVE_BUTTON}>
+          <SVG.Minus height={16} width={16} />
+        </button>
       )}
-      {children}
-      <AnimatePresence>
-        {isViewApplied && (
-          <motion.div
-            css={STYLES_VIEWS_BUTTON_BACKGROUND}
-            layoutId="views-menu-actions-motion"
-          />
+      <Typography.H5
+        css={[STYLES_VIEWS_BUTTON, isViewApplied && STYLES_VIEWS_BUTTON_ACTIVE]}
+        as="button"
+        onClick={mergeEvents(onClick, () => moveSelectionOnClick(index))}
+        tabIndex="-1"
+        {...props}
+      >
+        {(isSlateView || isSourceView) && (
+          <div
+            style={{
+              marginRight: 4,
+              opacity: isViewApplied ? 1 : 0.5,
+              transition: "opacity 0.25s",
+            }}
+          >
+            {isSourceView ? (
+              <Favicon src={favicon} rootDomain={rootDomain} />
+            ) : (
+              <SVG.Hash height={16} width={16} />
+            )}
+          </div>
         )}
-      </AnimatePresence>
-    </Typography.H5>
+        {children}
+        <AnimatePresence>
+          {isViewApplied && (
+            <motion.div
+              css={STYLES_VIEWS_BUTTON_BACKGROUND}
+              layoutId="views-menu-actions-motion"
+            />
+          )}
+        </AnimatePresence>
+      </Typography.H5>
+    </div>
   );
 };
 
@@ -976,6 +1011,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
 
     appliedView,
     getViewsFeed,
+    removeView,
 
     scrollButtonCss,
 
@@ -991,6 +1027,43 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
   React.useLayoutEffect(() => cleanupMenu, []);
 
   const createOnClickHandler = (view) => () => getViewsFeed(view);
+
+  const createOnRemoveHandler =
+    ({ view, currentViewIndex }) =>
+    () => {
+      if (view.id === appliedView.id) {
+        let prevView = viewer.views[currentViewIndex - 1];
+        if (!prevView) {
+          prevView = VIEWS_ACTIONS[VIEWS_ACTIONS.length - 1];
+        }
+        getViewsFeed(prevView);
+      }
+      removeView(view.id);
+    };
+
+  const createOnDisableSavedOrFilesView =
+    ({ view, currentViewIndex }) =>
+    () => {
+      if (view.type === viewsType.saved) {
+        if (appliedView.id === view.id) {
+          const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
+          getViewsFeed(prevView);
+        }
+        viewer.updateViewerSettings({
+          isSavedViewActivated: false,
+        });
+        return;
+      }
+      if (view.type === viewsType.files) {
+        if (appliedView.id === view.id) {
+          const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
+          getViewsFeed(prevView);
+        }
+        viewer.updateViewerSettings({
+          isFilesViewActivated: false,
+        });
+      }
+    };
 
   const preventActionButtonFocus = (e) => e.preventDefault();
 
@@ -1030,6 +1103,10 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
         <AnimateSharedLayout>
           {VIEWS_ACTIONS.map((view, i) => {
             const isApplied = appliedView.id === view.id;
+
+            const isSavedOrFilesView =
+              view.type === viewsType.saved || view.type === viewsType.files;
+
             return (
               <MenuItem
                 isViewApplied={isApplied}
@@ -1038,6 +1115,10 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 onMouseDown={preventActionButtonFocus}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
+                onRemove={
+                  isSavedOrFilesView &&
+                  createOnDisableSavedOrFilesView({ view, currentViewIndex: i })
+                }
                 index={i}
               >
                 {view.name}
@@ -1066,10 +1147,10 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 isSlateView={isSlateFilter}
                 isSourceView={!isSlateFilter}
                 onMouseDown={preventActionButtonFocus}
+                index={VIEWS_ACTIONS.length + i}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
-                index={VIEWS_ACTIONS.length + i}
-                Favicon={Favicon}
+                onRemove={createOnRemoveHandler({ view, currentViewIndex: i })}
               >
                 {view.name}
               </MenuItem>
