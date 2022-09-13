@@ -470,7 +470,7 @@ const Object = React.forwardRef(
 
         {withActions && (typeof isSelected === "undefined" || isSelected) && (
           <div css={STYLES_ACTIONS_WRAPPER}>
-            <ShortcutsTooltip label="Tag" keyTrigger="T">
+            <ShortcutsTooltip label="Tag" keyTrigger="T / ⌥T">
               <button
                 className="object_action_button"
                 css={STYLES_OBJECT_ACTION_BUTTON}
@@ -526,7 +526,7 @@ const Object = React.forwardRef(
           }}
         >
           {(typeof isSelected === "undefined" || isSelected) && !isSaved && (
-            <ShortcutsTooltip vertical="above" label="Save" keyTrigger="S">
+            <ShortcutsTooltip vertical="above" label="Save" keyTrigger="S / ⌥S">
               <button
                 className="object_action_button"
                 css={STYLES_OBJECT_ACTION_BUTTON}
