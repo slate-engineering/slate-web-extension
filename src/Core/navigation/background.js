@@ -79,7 +79,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   ) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: messages.openExtensionJumperRequest,
-      data: { url: "/" },
+      data: { url: "/", toggle: true },
     });
   }
 
