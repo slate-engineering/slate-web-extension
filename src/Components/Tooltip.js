@@ -210,9 +210,9 @@ const adjustTooltipDirection = (
 };
 
 const STYLES_CONTENT_WRAPPER = (theme) => css`
-  z-index: ${theme.zindex.tooltip + !isNewTab
-    ? theme.zindex.extensionJumper
-    : 0};
+  z-index: ${isNewTab
+    ? theme.zindex.tooltip
+    : theme.zindex.tooltip + theme.zindex.extensionJumper};
   position: absolute;
   top: 0;
   left: 0;

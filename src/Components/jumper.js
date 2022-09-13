@@ -49,7 +49,7 @@ const STYLES_JUMPER_ROOT_FIXED_POSITION = (theme) => css`
   width: ${JUMPER_WIDTH}px;
   height: ${JUMPER_HEIGHT}px;
   position: fixed;
-  z-index: ${theme.semantic.extensionJumper};
+  z-index: ${theme.zindex.extensionJumper};
   top: 50%;
   left: 50%;
   margin-left: calc(-696px / 2);
