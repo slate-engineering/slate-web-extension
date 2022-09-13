@@ -170,7 +170,7 @@ const WindowsFeed = React.forwardRef(
         withFocusOnHover
       >
         <MultiSelection.Provider
-          totalSelectableItems={windowsFeed.length}
+          totalSelectableItems={feedItemsData.feed.length}
           onSubmitSelectedItem={handleOnSubmitSelectedItem}
         >
           <WindowsFeedList
