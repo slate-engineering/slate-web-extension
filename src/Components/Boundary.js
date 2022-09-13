@@ -57,33 +57,38 @@ class Boundary extends React.PureComponent {
   };
 
   _handleOutsideClick = (e) => {
+    const target = e.composedPath()[0];
     // NOTE(jim): anything with `data-menu` is also ignored...
-    if (!e.target) {
+    if (!target) {
       return;
     }
 
-    if (e.target instanceof SVGElement) {
+    if (target instanceof SVGElement) {
       return;
     }
 
     if (
       this.props.isDataMenuCaptured &&
-      typeof e.target.hasAttribute === "function" &&
-      e.target.hasAttribute("data-menu")
+      typeof target.hasAttribute === "function" &&
+      target.hasAttribute("data-menu")
     ) {
       return;
     }
 
     if (
       this.props.isDataMenuCaptured &&
-      e.target.parentNode &&
-      typeof e.target.parentNode.hasAttribute === "function" &&
-      e.target.parentNode.hasAttribute("data-menu")
+      target.parentNode &&
+      typeof target.parentNode.hasAttribute === "function" &&
+      target.parentNode.hasAttribute("data-menu")
     ) {
       return;
     }
 
-    if (this._root && !this._root.contains(e.target)) {
+    if (!target.isConnected) {
+      return;
+    }
+
+    if (this._root && !this._root.contains(target)) {
       this._handleOutsideRectEvent(e);
     }
   };
