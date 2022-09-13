@@ -396,10 +396,13 @@ const createExtensionJumperWrapper = () => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const checkIfAppOpen = () =>
+  document.getElementById("modal-window-slate-extension");
+
 const openApp = (url) => {
   const extensionOrigin = "chrome-extension://" + chrome.runtime.id;
 
-  const isAppOpen = document.getElementById("modal-window-slate-extension");
+  const isAppOpen = checkIfAppOpen();
   if (isAppOpen) {
     updateAddressBarUrl(url);
     return;
@@ -433,6 +436,13 @@ const closeApp = () => {
 let activeElement;
 chrome.runtime.onMessage.addListener(function (request) {
   if (request.type === navigation_messages.openExtensionJumperRequest) {
+    const shouldToggle = request.data.toggle;
+    if (shouldToggle && checkIfAppOpen()) {
+      if (activeElement) activeElement.focus();
+      closeApp();
+      return;
+    }
+
     activeElement = document.activeElement;
     openApp(request.data.url);
   }

@@ -4457,7 +4457,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   ) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
-      data: { url: "/" },
+      data: { url: "/", toggle: true },
     });
   }
 
