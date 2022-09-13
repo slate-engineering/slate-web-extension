@@ -73,14 +73,17 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == Constants.commands.openApp) {
+  if (
+    command === Constants.commands.openApp ||
+    command === Constants.commands.openAppAlternate
+  ) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: messages.openExtensionJumperRequest,
       data: { url: "/" },
     });
   }
 
-  if (command == Constants.commands.openAppOnSlates) {
+  if (command === Constants.commands.openAppOnSlates) {
     const urls = [
       { url: tab.url, title: tab.title, rootDomain: getRootDomain(tab.url) },
     ];
