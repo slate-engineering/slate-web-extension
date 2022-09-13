@@ -94,9 +94,9 @@ const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   z-index: 1;
   border: 1px solid ${theme.semantic.borderGrayLight4};
   border-radius: 12px;
-  width: 100%;
+  width: 240px;
   max-width: 240px;
-  max-height: 220px;
+  max-height: 320px;
   background-color: ${theme.semantic.bgLight};
   box-shadow: ${theme.shadow.lightLarge};
 `;
@@ -151,6 +151,7 @@ const STYLES_HISTORY_SCENE_WRAPPER = css`
 const STYLES_HISTORY_TOP_POPUP = (theme) => css`
   ${Styles.VERTICAL_CONTAINER_CENTERED};
   position: relative;
+  z-index: 1;
   padding-bottom: 48px;
   @supports (
     (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(35px))

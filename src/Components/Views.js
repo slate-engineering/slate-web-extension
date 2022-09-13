@@ -541,7 +541,7 @@ const STYLES_CREATE_MENU_SLATES_WRAPPER = css`
   ${Styles.VERTICAL_CONTAINER_CENTERED};
   width: 100%;
   padding: 8px;
-  height: 128px;
+  max-height: 268px;
   overflow-y: auto;
 
   ::-webkit-scrollbar {

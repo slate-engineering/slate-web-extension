@@ -25,7 +25,7 @@ const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   border: 1px solid ${theme.semantic.borderGrayLight4};
   border-radius: 12px;
   max-width: 240px;
-  max-height: 220px;
+  max-height: 320px;
 `;
 
 const CreateViewMenuSidePanel = (props) => {
