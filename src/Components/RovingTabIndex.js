@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { mergeRefs } from "../Common/utilities";
+import { mergeEvents, mergeRefs } from "../Common/utilities";
 import {
   useEventListener,
   useIsomorphicLayoutEffect,
@@ -341,6 +341,10 @@ const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
     if (withFocusOnHover) setIndexTo(index);
   };
 
+  const handleFocusOnMouseEnter = () => {
+    if (withFocusOnHover) setIndexTo(index);
+  };
+
   useEventListener(
     {
       type: "mousemove",
@@ -353,6 +357,7 @@ const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
 
   return React.cloneElement(React.Children.only(children), {
     ...props,
+    onMouseEnter: mergeEvents(handleFocusOnMouseEnter, children.onClick),
     tabIndex: focusedIndex === index ? 0 : -1,
     ref: mergeRefs([ref, forwardedRef, children.ref]),
   });
