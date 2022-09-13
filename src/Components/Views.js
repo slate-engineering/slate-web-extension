@@ -115,13 +115,13 @@ const useHandleViewsNavigation = () => {
   const scrollMenuToRightEdge = () => {
     const menuNode = menuElementRef.current;
     if (!menuNode) return;
-    menuNode.scrollTo({ left: menuNode.scrollWidth });
+    menuNode.scrollTo({ left: menuNode.scrollWidth, behavior: "smooth" });
   };
 
   const scrollMenuToLeftEdge = () => {
     const menuNode = menuElementRef.current;
     if (!menuNode) return;
-    menuNode.scrollTo({ left: 0 });
+    menuNode.scrollTo({ left: 0, behavior: "smooth" });
   };
 
   useEventListener({ type: "keydown", handler: handleOnKeyDown }, [
@@ -136,12 +136,12 @@ const useHandleViewsNavigation = () => {
     if (!menuNode || !selectedNode) return;
 
     if (selectedIdx === 0) {
-      menuNode.scrollTo({ left: 0 });
+      menuNode.scrollTo({ left: 0, behavior: "smooth" });
     }
 
     const lastIndex = Math.max(...Object.keys(menuItemsRef.current));
     if (selectedIdx === lastIndex) {
-      menuNode.scrollTo({ left: menuNode.scrollWidth });
+      menuNode.scrollTo({ left: menuNode.scrollWidth, behavior: "smooth" });
     }
 
     if (
@@ -150,6 +150,7 @@ const useHandleViewsNavigation = () => {
     ) {
       menuNode.scrollTo({
         left: selectedNode.offsetLeft - selectedNode.offsetWidth,
+        behavior: "smooth",
       });
       return;
     }
@@ -160,6 +161,7 @@ const useHandleViewsNavigation = () => {
 
       menuNode.scrollTo({
         left: prevNode ? prevNode.offsetLeft : selectedNode.offsetLeft,
+        behavior: "smooth",
       });
     }
   }, [selectedIdx]);
@@ -1004,12 +1006,12 @@ const useHandleScrollNavigation = ({
 
   const scrollToRight = () => {
     const wrapper = containerRef.current;
-    wrapper.scrollTo({ left: wrapper.scrollLeft + 250 });
+    wrapper.scrollTo({ left: wrapper.scrollLeft + 350, behavior: "smooth" });
   };
 
   const scrollToLeft = () => {
     const wrapper = containerRef.current;
-    wrapper.scrollTo({ left: wrapper.scrollLeft - 250 });
+    wrapper.scrollTo({ left: wrapper.scrollLeft - 350, behavior: "smooth" });
   };
 
   return { scrollToLeft, scrollToRight };
