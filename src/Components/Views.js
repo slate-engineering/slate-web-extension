@@ -8,7 +8,6 @@ import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
 
 import { css } from "@emotion/react";
-
 import { defaultViews, viewsType } from "../Core/views";
 import { Divider } from "./Divider";
 import {
@@ -25,6 +24,7 @@ import {
 } from "../Common/utilities";
 import { ShortcutsTooltip } from "../Components/Tooltip";
 import { Favicon } from "../Components/Favicon";
+import { Boundary } from "../Components/Boundary";
 import { useSlatesCombobox } from "../Components/EditSlates";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
@@ -676,32 +676,38 @@ const CreateMenu = ({ css, ...props }) => {
 
   if (scene === scenes.source) {
     return (
-      <CreateMenuSourceScene
-        css={[STYLES_CREATE_MENU_WRAPPER, css]}
-        goToInitialScene={goToInitialScene}
-        sources={sources}
-        {...props}
-      />
+      <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
+        <CreateMenuSourceScene
+          css={[STYLES_CREATE_MENU_WRAPPER, css]}
+          goToInitialScene={goToInitialScene}
+          sources={sources}
+          {...props}
+        />
+      </Boundary>
     );
   }
 
   if (scene === scenes.tag) {
     return (
-      <CreateMenuTagScene
-        css={[STYLES_CREATE_MENU_WRAPPER, css]}
-        goToInitialScene={goToInitialScene}
-        {...props}
-      />
+      <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
+        <CreateMenuTagScene
+          css={[STYLES_CREATE_MENU_WRAPPER, css]}
+          goToInitialScene={goToInitialScene}
+          {...props}
+        />
+      </Boundary>
     );
   }
 
   return (
-    <CreateMenuInitialScene
-      css={[STYLES_CREATE_MENU_WRAPPER, css]}
-      goToTagScene={goToTagScene}
-      goToSourceScene={goToSourceScene}
-      {...props}
-    />
+    <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
+      <CreateMenuInitialScene
+        css={[STYLES_CREATE_MENU_WRAPPER, css]}
+        goToTagScene={goToTagScene}
+        goToSourceScene={goToSourceScene}
+        {...props}
+      />
+    </Boundary>
   );
 };
 
