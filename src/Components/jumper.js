@@ -6,6 +6,7 @@ import { css } from "@emotion/react";
 import { useEscapeKey, useTrapFocus } from "../Common/hooks";
 import { mergeRefs, getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
+import { Boundary } from "../Components/Boundary";
 
 // NOTE(amine): used to fix stacking issues in overflowing parts
 const JumperContext = React.createContext({});
@@ -105,17 +106,19 @@ function Root({ children, onClose }) {
   const contextValue = React.useMemo(() => ({ jumperNode }), [jumperNode]);
 
   return (
-    <JumperContext.Provider value={contextValue}>
-      <div
-        css={STYLES_JUMPER_ROOT_FIXED_POSITION}
-        ref={mergeRefs([wrapperRef, setJumperNode])}
-      >
-        <div css={STYLES_JUMPER_ROOT_ANIMATION_WRAPPER}>
-          <div css={STYLES_JUMPER_ROOT_BACKGROUND} />
-          <div css={STYLES_JUMPER_ROOT}>{children}</div>
+    <Boundary enabled onOutsideRectEvent={onClose}>
+      <JumperContext.Provider value={contextValue}>
+        <div
+          css={STYLES_JUMPER_ROOT_FIXED_POSITION}
+          ref={mergeRefs([wrapperRef, setJumperNode])}
+        >
+          <div css={STYLES_JUMPER_ROOT_ANIMATION_WRAPPER}>
+            <div css={STYLES_JUMPER_ROOT_BACKGROUND} />
+            <div css={STYLES_JUMPER_ROOT}>{children}</div>
+          </div>
         </div>
-      </div>
-    </JumperContext.Provider>
+      </JumperContext.Provider>
+    </Boundary>
   );
 }
 
