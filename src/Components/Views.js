@@ -828,38 +828,48 @@ const MenuItem = ({
           <SVG.Minus height={16} width={16} />
         </button>
       )}
-      <Typography.H5
-        css={[STYLES_VIEWS_BUTTON, isViewApplied && STYLES_VIEWS_BUTTON_ACTIVE]}
-        as="button"
-        onClick={mergeEvents(onClick, () => moveSelectionOnClick(index))}
-        tabIndex="-1"
-        {...props}
+      <ShortcutsTooltip
+        horizontal="right"
+        vertical={isNewTab ? "below" : "above"}
+        label="Navigate spaces"
+        keyTrigger="⌥ Tab / ⌥ Shift Tab"
       >
-        {(isSlateView || isSourceView) && (
-          <div
-            style={{
-              marginRight: 4,
-              opacity: isViewApplied ? 1 : 0.5,
-              transition: "opacity 0.25s",
-            }}
-          >
-            {isSourceView ? (
-              <Favicon src={favicon} rootDomain={rootDomain} />
-            ) : (
-              <SVG.Hash height={16} width={16} />
-            )}
-          </div>
-        )}
-        {children}
-        <AnimatePresence>
-          {isViewApplied && (
-            <motion.div
-              css={STYLES_VIEWS_BUTTON_BACKGROUND}
-              layoutId="views-menu-actions-motion"
-            />
+        <Typography.H5
+          css={[
+            STYLES_VIEWS_BUTTON,
+            isViewApplied && STYLES_VIEWS_BUTTON_ACTIVE,
+          ]}
+          as="button"
+          onClick={mergeEvents(onClick, () => moveSelectionOnClick(index))}
+          tabIndex="-1"
+          {...props}
+        >
+          {(isSlateView || isSourceView) && (
+            <div
+              style={{
+                marginRight: 4,
+                opacity: isViewApplied ? 1 : 0.5,
+                transition: "opacity 0.25s",
+              }}
+            >
+              {isSourceView ? (
+                <Favicon src={favicon} rootDomain={rootDomain} />
+              ) : (
+                <SVG.Hash height={16} width={16} />
+              )}
+            </div>
           )}
-        </AnimatePresence>
-      </Typography.H5>
+          {children}
+          <AnimatePresence>
+            {isViewApplied && (
+              <motion.div
+                css={STYLES_VIEWS_BUTTON_BACKGROUND}
+                layoutId="views-menu-actions-motion"
+              />
+            )}
+          </AnimatePresence>
+        </Typography.H5>
+      </ShortcutsTooltip>
     </div>
   );
 };
