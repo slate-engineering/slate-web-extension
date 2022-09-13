@@ -44,17 +44,17 @@
   "commands": {
     "open-app": {
       "suggested_key": {
-        "default": "Alt+S",
-        "mac": "Alt+S"
+        "default": "Ctrl+K",
+        "mac": "Command+K"
       },
       "description": "Open the slate extension"
     },
-    "open-slate": {
+    "open-app-alternate": {
       "suggested_key": {
-        "default": "Alt+O",
-        "mac": "Alt+O"
+        "default": "Ctrl+J",
+        "mac": "Command+J"
       },
-      "description": "Open the slate web app"
+      "description": "Open the slate extension"
     },
     "open-app-on-slates": {
       "suggested_key": {

@@ -104,6 +104,7 @@ const viewerInitialState = {
 // NOTE(amine): commands are defined in manifest.json
 const constants_commands = {
   openApp: "open-app",
+  openAppAlternate: "open-app-alternate",
   openSlate: "open-slate",
   openAppOnSlates: "open-app-on-slates",
 };
@@ -4450,14 +4451,17 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == constants_commands.openApp) {
+  if (
+    command === constants_commands.openApp ||
+    command === constants_commands.openAppAlternate
+  ) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
       data: { url: "/" },
     });
   }
 
-  if (command == constants_commands.openAppOnSlates) {
+  if (command === constants_commands.openAppOnSlates) {
     const urls = [
       { url: tab.url, title: tab.title, rootDomain: getRootDomain(tab.url) },
     ];
