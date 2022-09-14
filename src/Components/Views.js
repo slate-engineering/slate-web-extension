@@ -1294,6 +1294,90 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const STYLES_SAVING_SHORTCUT_ICON = (theme) => css`
+  padding: 8px;
+  width: 32px;
+  background-color: ${theme.semantic.bgGrayLight};
+  border-radius: 8px;
+  color: ${theme.semantic.textBlack};
+`;
+function SavingKeyboardShortcut(props) {
+  return (
+    <div css={Styles.HORIZONTAL_CONTAINER_CENTERED} {...props}>
+      <div css={STYLES_SAVING_SHORTCUT_ICON}>
+        <SVG.MacCommand width={16} height={16} />
+      </div>
+    </div>
+  );
+}
+
+const STYLES_VIEWS_SLATES_EMPTY_BUTTON = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  height: 32px;
+  padding: 5px 12px 7px;
+  background-color: ${theme.semantic.bgGrayLight};
+  border-radius: 12px;
+  color: ${theme.semantic.textBlack};
+`;
+
+function ViewsSlatesEmptyState({ appliedView }) {
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
+        You don’t have any links or files tagged with
+      </Typography.H4>
+      <div style={{ marginTop: 8 }} css={STYLES_VIEWS_SLATES_EMPTY_BUTTON}>
+        <SVG.Hash height={16} width={16} />
+        <Typography.H5 as="p" color="textBlack" style={{ marginLeft: 4 }}>
+          {appliedView.name}
+        </Typography.H5>
+      </div>
+      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
+      <Typography.H4 as="p" color="textBlack">
+        Start tagging links and files with
+      </Typography.H4>
+      <SavingKeyboardShortcut style={{ marginTop: 8 }} />
+    </section>
+  );
+}
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_VIEWS_SOURCE_EMPTY_BUTTON = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  height: 32px;
+  padding: 5px 12px 7px;
+  background-color: ${theme.semantic.bgGrayLight};
+  border-radius: 12px;
+`;
+
+function ViewsSourceEmptyState({ appliedView }) {
+  const rootDomain = React.useMemo(
+    () => getRootDomain(appliedView.filterBySource),
+    []
+  );
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
+        You don’t have any links from
+      </Typography.H4>
+      <div style={{ marginTop: 8 }} css={STYLES_VIEWS_SOURCE_EMPTY_BUTTON}>
+        <Favicon src={appliedView.metadata?.favicon} rootDomain={rootDomain} />
+        <Typography.H5 as="p" color="textBlack" style={{ marginLeft: 4 }}>
+          {appliedView.name}
+        </Typography.H5>
+      </div>
+      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
+      <Typography.H4 as="p" color="textBlack">
+        Start saving links to Slate with
+      </Typography.H4>
+      <SavingKeyboardShortcut style={{ marginTop: 8 }} />
+    </section>
+  );
+}
+
+/* -----------------------------------------------------------------------------------------------*/
+
 const useManageFeedFocus = ({
   viewer,
   getViewsFeed,
@@ -1455,6 +1539,14 @@ const Feed = React.memo(
             {...props}
           />
         );
+      }
+
+      if (viewsFeedItemsData.feed.length === 0) {
+        if (loadedView.filterBySource) {
+          return <ViewsSourceEmptyState appliedView={loadedView} />;
+        } else {
+          return <ViewsSlatesEmptyState appliedView={loadedView} />;
+        }
       }
 
       return (
