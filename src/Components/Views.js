@@ -25,6 +25,7 @@ import {
 import { ShortcutsTooltip } from "../Components/Tooltip";
 import { Favicon } from "../Components/Favicon";
 import { Boundary } from "../Components/Boundary";
+import { Switch, Match } from "../Components/Switch";
 import { useSlatesCombobox } from "../Components/EditSlates";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
@@ -1297,6 +1298,8 @@ const ViewsFeedList = React.forwardRef(
 const STYLES_SAVING_SHORTCUT_ICON = (theme) => css`
   padding: 8px;
   width: 32px;
+  line-height: 16px;
+  text-align: center;
   background-color: ${theme.semantic.bgGrayLight};
   border-radius: 8px;
   color: ${theme.semantic.textBlack};
@@ -1304,9 +1307,17 @@ const STYLES_SAVING_SHORTCUT_ICON = (theme) => css`
 function SavingKeyboardShortcut(props) {
   return (
     <div css={Styles.HORIZONTAL_CONTAINER_CENTERED} {...props}>
-      <div css={STYLES_SAVING_SHORTCUT_ICON}>
-        <SVG.MacCommand width={16} height={16} />
-      </div>
+      <Typography.H4 as="p" color="textBlack" css={STYLES_SAVING_SHORTCUT_ICON}>
+        ⌥
+      </Typography.H4>
+      <Typography.H4
+        as="p"
+        color="textBlack"
+        css={STYLES_SAVING_SHORTCUT_ICON}
+        style={{ marginLeft: 4 }}
+      >
+        B
+      </Typography.H4>
     </div>
   );
 }
@@ -1354,7 +1365,7 @@ const STYLES_VIEWS_SOURCE_EMPTY_BUTTON = (theme) => css`
 function ViewsSourceEmptyState({ appliedView }) {
   const rootDomain = React.useMemo(
     () => getRootDomain(appliedView.filterBySource),
-    []
+    [appliedView]
   );
   return (
     <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
@@ -1372,6 +1383,74 @@ function ViewsSourceEmptyState({ appliedView }) {
         Start saving links to Slate with
       </Typography.H4>
       <SavingKeyboardShortcut style={{ marginTop: 8 }} />
+    </section>
+  );
+}
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const STYLES_OPEN_SLATE_WEB_APP_LINK = (theme) => css`
+  color: ${theme.system.blue};
+  text-decoration: none;
+`;
+
+function OpenSlateWebAppLink(props) {
+  return (
+    <Typography.H4
+      as="a"
+      css={STYLES_OPEN_SLATE_WEB_APP_LINK}
+      href={Constants.uri.hostname}
+      rel="noreferrer"
+      target="_blank"
+      {...props}
+    >
+      Slate web app
+      <SVG.ArrowUpRight
+        style={{ display: "inline", position: "relative", top: "2px" }}
+      />
+    </Typography.H4>
+  );
+}
+
+function ViewsSavedEmptyState() {
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
+        You don’t have anything saved to Slate yet.{" "}
+      </Typography.H4>
+      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
+      <Typography.H4 as="p" color="textBlack">
+        Start saving links to Slate with
+      </Typography.H4>
+      <SavingKeyboardShortcut style={{ marginTop: 8 }} />
+      <div css={Styles.HORIZONTAL_CONTAINER_CENTERED} style={{ marginTop: 24 }}>
+        <Typography.H4
+          as="p"
+          color="textBlack"
+          href={Constants.uri.hostname}
+          target="_blank"
+        >
+          or uploading files with
+        </Typography.H4>
+        <OpenSlateWebAppLink style={{ marginLeft: 4 }} />
+      </div>
+    </section>
+  );
+}
+
+function ViewsFilesEmptyState() {
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
+        You don’t have any file uploaded to Slate yet.
+      </Typography.H4>
+      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
+      <div css={Styles.HORIZONTAL_CONTAINER_CENTERED}>
+        <Typography.H4 as="p" color="textBlack">
+          Start uploading files with
+        </Typography.H4>
+        <OpenSlateWebAppLink style={{ marginLeft: 4 }} />
+      </div>
     </section>
   );
 }
@@ -1498,6 +1577,7 @@ const Feed = React.memo(
       }, [viewsFeed]);
 
       const handleRestoreFocus = () => {
+        if (!ref.rovingTabIndexRef) return;
         ref.rovingTabIndexRef.focus(onRestoreFocus);
       };
 
@@ -1542,11 +1622,28 @@ const Feed = React.memo(
       }
 
       if (viewsFeedItemsData.feed.length === 0) {
-        if (loadedView.filterBySource) {
-          return <ViewsSourceEmptyState appliedView={loadedView} />;
-        } else {
-          return <ViewsSlatesEmptyState appliedView={loadedView} />;
-        }
+        return (
+          <Switch>
+            <Match
+              when={loadedView.filterBySource}
+              component={ViewsSourceEmptyState}
+              appliedView={loadedView}
+            />
+            <Match
+              when={loadedView.filterBySlateId}
+              component={ViewsSlatesEmptyState}
+              appliedView={loadedView}
+            />
+            <Match
+              when={loadedView.type === viewsType.saved}
+              component={ViewsSavedEmptyState}
+            />
+            <Match
+              when={loadedView.type === viewsType.files}
+              component={ViewsFilesEmptyState}
+            />
+          </Switch>
+        );
       }
 
       return (
