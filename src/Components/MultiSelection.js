@@ -77,15 +77,13 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
     }
   }, [totalSelectableItems]);
 
-  const [isMultiSelectMode, setMultiSelectionMode] = React.useState(false);
+  const existSelectionMode = () => setCheckedIndexes({});
 
-  const existSelectionMode = () => (
-    setCheckedIndexes({}), setMultiSelectionMode(false)
-  );
-
-  React.useLayoutEffect(() => {
+  const isMultiSelectMode = React.useMemo(() => {
     if (!isObjectEmpty(checkedIndexes)) {
-      setMultiSelectionMode(true);
+      return true;
+    } else {
+      return false;
     }
   }, [checkedIndexes]);
 
