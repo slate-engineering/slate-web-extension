@@ -15,6 +15,7 @@ const STYLES_MENU_ACTIONS_WRAPPER = (theme) => css`
 
   border-radius: 12px;
   background-color: ${theme.system.black};
+  color: ${theme.semantic.textWhite};
   box-shadow: ${theme.shadow.darkSmall};
 `;
 

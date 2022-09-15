@@ -425,6 +425,7 @@ const OpenSlatesJumperAction = ({ css, onOpenSlatesJumper, ...props }) => {
 
 const STYLES_ACTIONS_MENU_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  position: relative;
   width: 100%;
   height: 48px;
   border-radius: 16px;
@@ -437,6 +438,41 @@ const STYLES_ACTIONS_WRAPPER = css`
     margin-left: 24px;
   }
 `;
+
+const STYLES_MULTI_SELECTION_DISMISS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  position: absolute;
+  top: 12px;
+  left: -9px;
+  transform: translteX(-100%);
+  border-radius: 50%;
+  padding: 4px;
+`;
+
+const STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER = (theme) => css`
+  ${STYLES_MULTI_SELECTION_DISMISS_BUTTON(theme)};
+  background-color: ${theme.semantic.bgBlurLight6P};
+  color: ${theme.semantic.textGrayDark};
+  box-shadow: ${theme.shadow.jumperLight};
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+`;
+
+const STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB = (theme) => css`
+  background-color: ${theme.semantic.bgBlurLight6P};
+  color: ${theme.semantic.textGrayDark};
+  box-shadow: ${theme.shadow.darkSmall};
+  border: 1px solid ${theme.semantic.borderGrayLight4};
+`;
+
+const ActionsMenuDismissButton = (props) => {
+  return (
+    <button {...props}>
+      <SVG.Dismiss />
+    </button>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
 
 const CloseOnEscape = ({ onClose, children }) => {
   useEscapeKey(onClose);
@@ -457,6 +493,10 @@ const NewTabActionsMenu = React.forwardRef(
     return (
       <CloseOnEscape onClose={existSelectionMode}>
         <NewTabActionsMenuPopup>
+          {/* <ActionsMenuDismissButton */}
+          {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB} */}
+          {/*   onClick={existSelectionMode} */}
+          {/* /> */}
           <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
             <div css={Styles.HORIZONTAL_CONTAINER}>
               <Checkbox
@@ -526,6 +566,10 @@ const JumperActionMenu = React.forwardRef(
     return (
       <CloseOnEscape onClose={existSelectionMode}>
         <Jumper.BottomPanel>
+          {/* <ActionsMenuDismissButton */}
+          {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER} */}
+          {/*   onClick={existSelectionMode} */}
+          {/* /> */}
           <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
             <div css={Styles.HORIZONTAL_CONTAINER}>
               <Checkbox
