@@ -525,18 +525,24 @@ const Object = React.forwardRef(
             flexShrink: 0,
           }}
         >
-          {(typeof isSelected === "undefined" || isSelected) && !isSaved && (
-            <ShortcutsTooltip vertical="above" label="Save" keyTrigger="S / ⌥S">
-              <button
-                className="object_action_button"
-                css={STYLES_OBJECT_ACTION_BUTTON}
-                onClick={handleLinkSaving}
-                onMouseDown={preventFocus}
+          {withActions &&
+            (typeof isSelected === "undefined" || isSelected) &&
+            !isSaved && (
+              <ShortcutsTooltip
+                vertical="above"
+                label="Save"
+                keyTrigger="S / ⌥S"
               >
-                <SVG.Plus width={16} height={16} />
-              </button>
-            </ShortcutsTooltip>
-          )}
+                <button
+                  className="object_action_button"
+                  css={STYLES_OBJECT_ACTION_BUTTON}
+                  onClick={handleLinkSaving}
+                  onMouseDown={preventFocus}
+                >
+                  <SVG.Plus width={16} height={16} />
+                </button>
+              </ShortcutsTooltip>
+            )}
 
           {isSaved && (
             <ShortcutsTooltip label="Saved">
@@ -577,22 +583,34 @@ const ComboboxObject = ({ onSelect, onSubmit, index, key, ...props }) => {
  * Supports for ./MultiSelection component
  * -----------------------------------------------------------------------------------------------*/
 
-const RovingTabIndexWithMultiSelectObject = ({ index, ...props }) => {
+const RovingTabIndexWithMultiSelectObject = ({
+  index,
+  withActions: withActionsProp,
+  ...props
+}) => {
   const {
+    isMultiSelectMode,
     isIndexChecked,
 
     createHandleOnIndexCheckChange,
     createHandleKeyDownNavigation,
   } = MultiSelection.useMultiSelectionContext();
 
+  const withActions = React.useMemo(() => {
+    if (isMultiSelectMode) return false;
+
+    return withActionsProp;
+  }, [isMultiSelectMode, withActionsProp]);
+
   return (
     <RovingTabIndex.Item index={index}>
       <Object
         index={index}
-        withMultiSelection
         isChecked={isIndexChecked(index)}
         onCheck={createHandleOnIndexCheckChange(index)}
         onKeyDown={createHandleKeyDownNavigation(index)}
+        withActions={withActions}
+        withMultiSelection
         {...props}
       />
     </RovingTabIndex.Item>
