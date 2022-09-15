@@ -88,6 +88,7 @@ const savingStates = {
 
 const savingSources = {
   command: "command",
+  bookmark: "bookmark",
   app: "app",
 };
 
@@ -3210,7 +3211,10 @@ class ViewerActionsHandler {
     if (areObjectsBeingSaved) return;
 
     const sendStatusUpdate = (status) => {
-      if (source === savingSources.command) {
+      if (
+        source === savingSources.command ||
+        source === savingSources.bookmark
+      ) {
         // NOTE(amine): you can only save one object via command
         const { url, title, favicon } = objects[0];
         chrome.tabs.sendMessage(parseInt(tab.id), {
@@ -4311,7 +4315,7 @@ chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
     ViewerActions.saveLink({
       objects: [{ url: bookmark.url, title: bookmark.title }],
       tab: activeTab,
-      source: savingSources.command,
+      source: savingSources.bookmark,
     });
   }
 });
