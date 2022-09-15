@@ -456,7 +456,10 @@ class ViewerActionsHandler {
     if (areObjectsBeingSaved) return;
 
     const sendStatusUpdate = (status) => {
-      if (source === savingSources.command) {
+      if (
+        source === savingSources.command ||
+        source === savingSources.bookmark
+      ) {
         // NOTE(amine): you can only save one object via command
         const { url, title, favicon } = objects[0];
         chrome.tabs.sendMessage(parseInt(tab.id), {

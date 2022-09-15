@@ -105,12 +105,13 @@ const createElement = ({ tag, innerHTML, attrs, styles }) => {
   return element;
 };
 
-const createSavingPopupSuccess = async () => {
+const createSavingPopupSuccess = async ({ withBookmarkOffset }) => {
   const wrapper = createElement({
     tag: "div",
     innerHTML: SavingPopupSuccessIcon,
     styles: {
       ...STYLES_SAVING_POPUP_POSITION_FIXED,
+      right: withBookmarkOffset ? "calc(450px + 23px)" : "23px",
       ...STYLES_SAVING_POPUP_WRAPPER,
     },
     attrs: { id: SAVING_POPUP_ID },
@@ -228,10 +229,18 @@ const removeSavingPopup = () => {
 };
 
 let timeout;
-const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
+const showSavingStatusPopup = async ({
+  status,
+  url,
+  title,
+  favicon,
+  source,
+}) => {
   if (status === savingStates.start) {
     removeSavingPopup();
-    await createSavingPopupSuccess();
+    await createSavingPopupSuccess({
+      withBookmarkOffset: source === savingSources.bookmark,
+    });
     timeout = setTimeout(removeSavingPopup, SAVING_POPUP_REMOVAL_TIMEOUT);
   }
   if (status === savingStates.failed) {
@@ -271,14 +280,16 @@ chrome.runtime.onMessage.addListener(async (request) => {
 
     // NOTE(amine): show saving popup when saving through cmd+b
     if (
-      data.url === window.location.href &&
-      data.source === savingSources.command
+      (data.url === window.location.href &&
+        data.source === savingSources.command) ||
+      data.source === savingSources.bookmark
     ) {
       await showSavingStatusPopup({
         status: request.data.savingStatus,
         url: data.url,
         title: data.title,
         favicon: data.favicon,
+        source: data.source,
       });
     }
   }
