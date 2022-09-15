@@ -1249,6 +1249,11 @@ const STYLES_VIEWS_FEED_ROW = {
 
 const ViewsFeedRow = ({ index, data, style }) => {
   const visit = data.feed[index];
+
+  if (visit.isPadding) {
+    return <div style={{ ...style, height: visit.value }} />;
+  }
+
   const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   return (
@@ -1299,13 +1304,13 @@ const ViewsFeedList = React.forwardRef(
 
     return (
       <RovingTabIndex.List>
-        <ListView.FixedSizeListRoot
+        <ListView.VariableSizeListRoot
           height={listHeight}
           ref={forwardedRef}
           {...props}
         >
           {children}
-        </ListView.FixedSizeListRoot>
+        </ListView.VariableSizeListRoot>
       </RovingTabIndex.List>
     );
   }
@@ -1566,7 +1571,7 @@ const Feed = React.memo(
 
       const viewsFeedItemsData = React.useMemo(() => {
         return {
-          feed: viewsFeed,
+          feed: [...viewsFeed, { isPadding: true, value: 8 }],
           props: {
             onOpenUrl,
             onOpenSlatesJumper,
@@ -1644,6 +1649,12 @@ const Feed = React.memo(
         );
       }
 
+      const getFeedItemHeight = (index) => {
+        const item = viewsFeedItemsData.feed[index];
+        if (item.isPadding) return item.value;
+        return Constants.sizes.jumperFeedItem;
+      };
+
       return (
         <RovingTabIndex.Provider
           key={appliedView.id}
@@ -1658,7 +1669,7 @@ const Feed = React.memo(
             <ViewsFeedList
               itemCount={viewsFeedItemsData.feed.length}
               itemData={viewsFeedItemsData}
-              itemSize={Constants.sizes.jumperFeedItem}
+              itemSize={getFeedItemHeight}
               {...props}
             >
               {ViewsFeedRow}
