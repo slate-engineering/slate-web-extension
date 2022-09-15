@@ -118,7 +118,10 @@ export const useHistorySearch = ({ inputRef, view }) => {
   }, [search.query]);
 
   return [
-    { ...search, isSearching: search.query.length > 0 && search.searchFeed },
+    {
+      ...search,
+      isSearching: !!search.query.length > 0 && !!search.searchFeed,
+    },
     { handleInputChange, clearSearch },
   ];
 };

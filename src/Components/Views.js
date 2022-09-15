@@ -26,6 +26,7 @@ import { ShortcutsTooltip } from "../Components/Tooltip";
 import { Favicon } from "../Components/Favicon";
 import { Boundary } from "../Components/Boundary";
 import { Switch, Match } from "../Components/Switch";
+import { useSearchContext } from "../Components/Search";
 import { useSlatesCombobox } from "../Components/EditSlates";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
@@ -210,22 +211,28 @@ function Provider({
     scrollMenuToLeftEdge,
   } = useHandleViewsNavigation();
 
-  const handleOpenCreateMenuOnKeyDown = (e) => {
-    if (e.key === "n") {
-      openCreateMenu();
+  // NOTE(amine): display the new feed once it's loaded
+  const prevView = React.useRef(appliedView);
+  const loadedView = React.useMemo(() => {
+    const isCustomView = [
+      viewsType.custom,
+      viewsType.saved,
+      viewsType.files,
+    ].some((type) => appliedView.type === type);
 
-      e.stopPropagation();
-      e.preventDefault();
-      return;
+    if (isCustomView && isLoadingViewFeed) {
+      return prevView.current;
+    } else {
+      prevView.current = appliedView;
+      return appliedView;
     }
-  };
-  useEventListener({ type: "keydown", handler: handleOpenCreateMenuOnKeyDown });
+  }, [appliedView, isLoadingViewFeed]);
 
   const value = React.useMemo(
     () => ({
       viewer,
       viewsFeed,
-      appliedView,
+      appliedView: loadedView,
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
@@ -251,7 +258,7 @@ function Provider({
     [
       viewer,
       viewsFeed,
-      appliedView,
+      loadedView,
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
@@ -666,7 +673,7 @@ const CreateMenu = ({ css, ...props }) => {
   const goToTagScene = () => setScene(scenes.tag);
   const goToInitialScene = () => setScene(scenes.initial);
 
-  const { closeCreateMenu, onRestoreFocus } = useViewsContext();
+  const { closeCreateMenu, openCreateMenu, onRestoreFocus } = useViewsContext();
   useEscapeKey(closeCreateMenu);
 
   React.useLayoutEffect(() => {
@@ -674,6 +681,17 @@ const CreateMenu = ({ css, ...props }) => {
   }, []);
 
   const sources = useSources();
+
+  const handleOpenCreateMenuOnKeyDown = (e) => {
+    if (e.key === "n") {
+      openCreateMenu();
+
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+  };
+  useEventListener({ type: "keydown", handler: handleOpenCreateMenuOnKeyDown });
 
   if (scene === scenes.source) {
     return (
@@ -1457,7 +1475,9 @@ function ViewsFilesEmptyState() {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const useManageFeedFocus = ({
+let isMounted = false;
+
+const useManageFeedAutoFocus = ({
   viewer,
   getViewsFeed,
   onRestoreFocus,
@@ -1506,9 +1526,10 @@ const useManageFeedFocus = ({
     prevSettingsRef.current = viewer.settings;
   }, [viewer.settings]);
 
-  // NOTE(amine): focus the feed when the applied view changes
+  // NOTE(amine): focus the feed when the applied view changes and if the search input isn't in focus
+  const searchContext = useSearchContext();
   React.useLayoutEffect(() => {
-    if (!shouldFocus.current) {
+    if (!shouldFocus.current || searchContext?.isSearchInputFocused) {
       shouldFocus.current = true;
       return;
     }
@@ -1538,33 +1559,10 @@ const Feed = React.memo(
       },
       ref
     ) => {
-      const {
-        viewsFeed,
-        viewer,
-        appliedView,
-        getViewsFeed,
-        isLoadingViewFeed,
-        onRestoreFocus,
-      } = useViewsContext();
+      const { viewer, viewsFeed, appliedView, getViewsFeed, onRestoreFocus } =
+        useViewsContext();
 
       const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
-
-      // NOTE(amine): display the new feed once it's loaded
-      const prevView = React.useRef(appliedView);
-      const loadedView = React.useMemo(() => {
-        const isCustomView = [
-          viewsType.custom,
-          viewsType.saved,
-          viewsType.files,
-        ].some((type) => appliedView.type === type);
-
-        if (isCustomView && isLoadingViewFeed) {
-          return prevView.current;
-        } else {
-          prevView.current = appliedView;
-          return appliedView;
-        }
-      }, [appliedView, isLoadingViewFeed]);
 
       const viewsFeedItemsData = React.useMemo(() => {
         return {
@@ -1581,15 +1579,15 @@ const Feed = React.memo(
         ref.rovingTabIndexRef.focus(onRestoreFocus);
       };
 
-      useManageFeedFocus({
+      useManageFeedAutoFocus({
         viewer,
         getViewsFeed,
         onRestoreFocus: handleRestoreFocus,
 
-        appliedView: loadedView,
+        appliedView,
       });
 
-      if (loadedView.type === viewsType.allOpen) {
+      if (appliedView.type === viewsType.allOpen) {
         return (
           <WindowsFeed
             ref={ref}
@@ -1605,7 +1603,7 @@ const Feed = React.memo(
         );
       }
 
-      if (loadedView.type === viewsType.recent) {
+      if (appliedView.type === viewsType.recent) {
         return (
           <HistoryFeed
             ref={ref}
@@ -1625,21 +1623,21 @@ const Feed = React.memo(
         return (
           <Switch>
             <Match
-              when={loadedView.filterBySource}
+              when={appliedView.filterBySource}
               component={ViewsSourceEmptyState}
-              appliedView={loadedView}
+              appliedView={appliedView}
             />
             <Match
-              when={loadedView.filterBySlateId}
+              when={appliedView.filterBySlateId}
               component={ViewsSlatesEmptyState}
-              appliedView={loadedView}
+              appliedView={appliedView}
             />
             <Match
-              when={loadedView.type === viewsType.saved}
+              when={appliedView.type === viewsType.saved}
               component={ViewsSavedEmptyState}
             />
             <Match
-              when={loadedView.type === viewsType.files}
+              when={appliedView.type === viewsType.files}
               component={ViewsFilesEmptyState}
             />
           </Switch>
@@ -1648,7 +1646,7 @@ const Feed = React.memo(
 
       return (
         <RovingTabIndex.Provider
-          key={loadedView.id}
+          key={appliedView.id}
           ref={(node) => (ref.rovingTabIndexRef = node)}
           isInfiniteList
           withFocusOnHover
@@ -1669,7 +1667,7 @@ const Feed = React.memo(
             <MultiSelection.ActionsMenu
               onOpenURLs={(urls) => onOpenUrl({ urls })}
               onGroupURLs={(urls) =>
-                onGroupURLs({ urls, title: loadedView.name })
+                onGroupURLs({ urls, title: appliedView.name })
               }
               onOpenSlatesJumper={onOpenSlatesJumper}
               onSaveObjects={onSaveObjects}

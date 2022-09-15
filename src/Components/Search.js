@@ -5,6 +5,7 @@ import * as ListView from "../Components/ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 import * as Constants from "../Common/constants";
+import * as Typography from "../Components/system/Typography.js";
 
 import { css } from "@emotion/react";
 import {
@@ -24,14 +25,24 @@ const SearchContext = React.createContext();
 const useSearchContext = () => React.useContext(SearchContext);
 
 function Provider({ onInputChange, clearSearch, search, feed, children }) {
+  const [isSearchInputFocused, setIsSearchInputFocused] = React.useState(false);
   const value = React.useMemo(
     () => ({
       onInputChange,
+      isSearchInputFocused,
+      setIsSearchInputFocused,
       clearSearch,
       search,
       feed,
     }),
-    [onInputChange, clearSearch, search, feed]
+    [
+      onInputChange,
+      isSearchInputFocused,
+      setIsSearchInputFocused,
+      clearSearch,
+      search,
+      feed,
+    ]
   );
 
   return (
@@ -130,7 +141,8 @@ const Input = React.forwardRef(
     { css, containerCss, containerStyle, onKeyDown, onKeyUp, ...props },
     forwardedRef
   ) => {
-    const { onInputChange, clearSearch, search } = useSearchContext();
+    const { onInputChange, setIsSearchInputFocused, clearSearch, search } =
+      useSearchContext();
 
     const inputRef = React.useRef();
     const focusInput = () => inputRef.current.focus();
@@ -166,6 +178,9 @@ const Input = React.forwardRef(
       }
     };
 
+    const handleOnFocus = () => setIsSearchInputFocused(true);
+    const handleOnBlur = () => setIsSearchInputFocused(false);
+
     return (
       <section
         css={[STYLES_SEARCH_WRAPPER, containerCss]}
@@ -180,6 +195,8 @@ const Input = React.forwardRef(
           autoComplete="off"
           onKeyDown={mergeEvents(preventPropagation, onKeyDown)}
           onKeyUp={mergeEvents(preventPropagation, onKeyUp)}
+          onFocus={handleOnFocus}
+          onBlur={handleOnBlur}
           {...props}
         />
 
@@ -316,6 +333,16 @@ const SearchFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
+function SearchFeedEmptyState() {
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
+        No results found
+      </Typography.H4>
+    </section>
+  );
+}
+
 const Feed = React.memo(
   React.forwardRef(
     (
@@ -376,6 +403,10 @@ const Feed = React.memo(
         };
       }, [slates, searchFeed, searchFeedKeys, onOpenUrl, onOpenSlatesJumper]);
 
+      if (feedItemsData.feed.length === 0) {
+        return <SearchFeedEmptyState />;
+      }
+
       const handleOnSubmitSelectedItem = (index) => {
         let currentLength = 0;
 
@@ -424,4 +455,4 @@ const Feed = React.memo(
   )
 );
 
-export { Provider, Input, Feed };
+export { useSearchContext, Provider, Input, Feed };
