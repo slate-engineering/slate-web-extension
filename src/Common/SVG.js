@@ -2350,3 +2350,23 @@ export const XCircle = (props) => {
     </svg>
   );
 };
+
+export const ArrowUpRight = (props) => {
+  return (
+    <svg
+      width={16}
+      height={16}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M4.667 11.333l6.666-6.667M4.667 4.667h6.666v6.666"
+        stroke="currentColor"
+        strokeWidth={1.25}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
