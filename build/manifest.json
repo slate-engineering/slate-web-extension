@@ -44,8 +44,8 @@
   "commands": {
     "open-app": {
       "suggested_key": {
-        "default": "Ctrl+K",
-        "mac": "Command+K"
+        "default": "Ctrl+Period",
+        "mac": "Command+Period"
       },
       "description": "Open the slate extension"
     },
