@@ -477,7 +477,7 @@ chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
     ViewerActions.saveLink({
       objects: [{ url: bookmark.url, title: bookmark.title }],
       tab: activeTab,
-      source: savingSources.bookmark,
+      source: savingSources.command,
     });
   }
 });

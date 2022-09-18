@@ -11,8 +11,8 @@ const SAVING_POPUP_REMOVAL_TIMEOUT = 2500;
 
 const STYLES_SAVING_POPUP_POSITION_FIXED = {
   position: "fixed",
-  top: "16px",
-  right: "23px",
+  right: "47px",
+  bottom: "44px",
   zIndex: Constants.zindex.extensionJumper,
 };
 
@@ -33,7 +33,7 @@ const STYLES_SAVING_POPUP_WRAPPER = {
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
-  padding: "8px 12px",
+  padding: "12px 16px",
   borderRadius: "16px",
   backgroundColor: Constants.semantic.bgLight,
   borderColor: Constants.semantic.borderGrayLight4,
@@ -105,13 +105,12 @@ const createElement = ({ tag, innerHTML, attrs, styles }) => {
   return element;
 };
 
-const createSavingPopupSuccess = async ({ withBookmarkOffset }) => {
+const createSavingPopupSuccess = async () => {
   const wrapper = createElement({
     tag: "div",
     innerHTML: SavingPopupSuccessIcon,
     styles: {
       ...STYLES_SAVING_POPUP_POSITION_FIXED,
-      right: withBookmarkOffset ? "calc(450px + 23px)" : "23px",
       ...STYLES_SAVING_POPUP_WRAPPER,
     },
     attrs: { id: SAVING_POPUP_ID },
@@ -229,18 +228,10 @@ const removeSavingPopup = () => {
 };
 
 let timeout;
-const showSavingStatusPopup = async ({
-  status,
-  url,
-  title,
-  favicon,
-  source,
-}) => {
+const showSavingStatusPopup = async ({ status, url, title, favicon }) => {
   if (status === savingStates.start) {
     removeSavingPopup();
-    await createSavingPopupSuccess({
-      withBookmarkOffset: source === savingSources.bookmark,
-    });
+    await createSavingPopupSuccess();
     timeout = setTimeout(removeSavingPopup, SAVING_POPUP_REMOVAL_TIMEOUT);
   }
   if (status === savingStates.failed) {
@@ -280,16 +271,14 @@ chrome.runtime.onMessage.addListener(async (request) => {
 
     // NOTE(amine): show saving popup when saving through cmd+b
     if (
-      (data.url === window.location.href &&
-        data.source === savingSources.command) ||
-      data.source === savingSources.bookmark
+      data.url === window.location.href &&
+      data.source === savingSources.command
     ) {
       await showSavingStatusPopup({
         status: request.data.savingStatus,
         url: data.url,
         title: data.title,
         favicon: data.favicon,
-        source: data.source,
       });
     }
   }

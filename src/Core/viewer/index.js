@@ -33,7 +33,6 @@ export const savingStates = {
 
 export const savingSources = {
   command: "command",
-  bookmark: "bookmark",
   app: "app",
 };
 
