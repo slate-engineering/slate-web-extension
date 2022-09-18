@@ -351,6 +351,7 @@ const Feed = React.memo(
         onGroupURLs,
         onOpenSlatesJumper,
         onSaveObjects,
+        onRestoreFocus,
         searchFeed,
         searchFeedKeys,
         slates,
@@ -362,17 +363,10 @@ const Feed = React.memo(
         search: { query: searchQuery },
       } = useSearchContext();
 
-      const searchFeedLength = React.useMemo(() => {
-        let length = 0;
-        searchFeedKeys.forEach((key) => {
-          length += searchFeed[key].length;
-        });
-        return length;
-      }, [searchFeed, searchFeedKeys]);
-
       const feedItemsData = React.useMemo(() => {
         let rovingTabIndex = 0;
         let virtualizedFeed = [];
+        let totalSelectableItems = 0;
 
         if (slates?.length) {
           virtualizedFeed.push({
@@ -393,17 +387,19 @@ const Feed = React.memo(
               height: Constants.sizes.jumperFeedItem,
             });
 
+            totalSelectableItems++;
             rovingTabIndex++;
           });
         }
 
         return {
           feed: virtualizedFeed,
+          totalSelectableItems,
           props: { onOpenUrl, onOpenSlatesJumper },
         };
       }, [slates, searchFeed, searchFeedKeys, onOpenUrl, onOpenSlatesJumper]);
 
-      if (feedItemsData.feed.length === 0) {
+      if (feedItemsData.totalSelectableItems === 0) {
         return <SearchFeedEmptyState />;
       }
 
@@ -430,8 +426,9 @@ const Feed = React.memo(
           withFocusOnHover
         >
           <MultiSelection.Provider
-            totalSelectableItems={searchFeedLength}
+            totalSelectableItems={feedItemsData.totalSelectableItems}
             onSubmitSelectedItem={handleOnSubmitSelectedItem}
+            onRestoreFocus={onRestoreFocus}
           >
             <SearchFeedList
               itemCount={feedItemsData.feed.length}

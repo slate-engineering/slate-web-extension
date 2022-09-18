@@ -105,6 +105,7 @@ const WindowsFeed = React.forwardRef(
       onCloseTabs,
       onOpenSlatesJumper,
       onSaveObjects,
+      onRestoreFocus,
       activeTabId,
       ...props
     },
@@ -113,13 +114,13 @@ const WindowsFeed = React.forwardRef(
     const feedItemsData = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
+      let totalSelectableItems = 0;
 
       for (let key of windowsFeedKeys) {
         windowsFeed[key].forEach((tab, index) => {
           if (index === 0) {
             virtualizedFeed.push({ title: key, height: 40 });
           }
-
           virtualizedFeed.push({
             rovingTabIndex,
             isTabActive: activeTabId === tab.id,
@@ -127,12 +128,14 @@ const WindowsFeed = React.forwardRef(
             height: Constants.sizes.jumperFeedItem,
           });
 
+          totalSelectableItems++;
           rovingTabIndex++;
         });
       }
 
       return {
         feed: virtualizedFeed,
+        totalSelectableItems,
         props: {
           onOpenUrl,
           onCloseTabs,
@@ -170,8 +173,9 @@ const WindowsFeed = React.forwardRef(
         withFocusOnHover
       >
         <MultiSelection.Provider
-          totalSelectableItems={feedItemsData.feed.length}
+          totalSelectableItems={feedItemsData.totalSelectableItems}
           onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          onRestoreFocus={onRestoreFocus}
         >
           <WindowsFeedList
             itemCount={feedItemsData.feed.length}

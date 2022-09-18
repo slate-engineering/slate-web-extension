@@ -16,7 +16,6 @@ import { getExtensionURL } from "../Common/utilities";
 import { useViewer } from "../Core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
-import { useRestoreFocus } from "../Common/hooks";
 import { ShortcutsTooltip } from "../Components/Tooltip";
 
 /* -------------------------------------------------------------------------------------------------
@@ -40,8 +39,6 @@ const useSlatesJumper = () => {
 
 function EditSlatesJumper({ objects, onClose }) {
   const viewer = useViewer();
-
-  useRestoreFocus();
 
   const checkIfSlateIsApplied = (slate) => {
     return objects.every((object) => object.url in viewer.slatesLookup[slate]);
@@ -258,6 +255,15 @@ export default function HistoryScene() {
   const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
     useSlatesJumper();
 
+  const focusFirstItemInFeedOrInputIfEmpty = () => {
+    clearSearch();
+    if (!feedRef.rovingTabIndexRef) {
+      focusSearchInput();
+      return;
+    }
+    feedRef.rovingTabIndexRef.focus(focusSearchInput);
+  };
+
   const handleOnInputKeyUp = (e) => {
     if (e.code === "ArrowDown") {
       e.preventDefault();
@@ -356,6 +362,7 @@ export default function HistoryScene() {
                     searchFeedKeys={search.searchFeedKeys}
                     slates={search.slates}
                     onGroupURLs={Navigation.createGroupFromUrls}
+                    onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
                   />
                   <Match
                     when={!search.isSearching}

@@ -1572,6 +1572,7 @@ const Feed = React.memo(
       const viewsFeedItemsData = React.useMemo(() => {
         return {
           feed: [...viewsFeed, { isPadding: true, value: 8 }],
+          totalSelectableItems: viewsFeed.length,
           props: {
             onOpenUrl,
             onOpenSlatesJumper,
@@ -1603,6 +1604,7 @@ const Feed = React.memo(
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
             onOpenUrl={onOpenUrl}
+            onRestoreFocus={handleRestoreFocus}
             {...props}
           />
         );
@@ -1619,12 +1621,13 @@ const Feed = React.memo(
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
             onGroupURLs={onGroupURLs}
+            onRestoreFocus={handleRestoreFocus}
             {...props}
           />
         );
       }
 
-      if (viewsFeedItemsData.feed.length === 0) {
+      if (viewsFeedItemsData.totalSelectableItems === 0) {
         return (
           <Switch>
             <Match
@@ -1663,8 +1666,9 @@ const Feed = React.memo(
           withFocusOnHover
         >
           <MultiSelection.Provider
-            totalSelectableItems={viewsFeedItemsData.feed.length}
+            totalSelectableItems={viewsFeedItemsData.totalSelectableItems}
             onSubmitSelectedItem={handleOnSubmitSelectedItem}
+            onRestoreFocus={handleRestoreFocus}
           >
             <ViewsFeedList
               itemCount={viewsFeedItemsData.feed.length}
