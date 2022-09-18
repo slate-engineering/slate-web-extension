@@ -228,6 +228,20 @@ function Provider({
     }
   }, [appliedView, isLoadingViewFeed]);
 
+  const handleOpenCreateMenuOnKeyDown = (e) => {
+    if (e.key === "n") {
+      openCreateMenu();
+
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+  };
+  useEventListener(
+    { type: "keydown", handler: handleOpenCreateMenuOnKeyDown },
+    []
+  );
+
   const value = React.useMemo(
     () => ({
       viewer,
@@ -681,17 +695,6 @@ const CreateMenu = ({ css, ...props }) => {
   }, []);
 
   const sources = useSources();
-
-  const handleOpenCreateMenuOnKeyDown = (e) => {
-    if (e.key === "n") {
-      openCreateMenu();
-
-      e.stopPropagation();
-      e.preventDefault();
-      return;
-    }
-  };
-  useEventListener({ type: "keydown", handler: handleOpenCreateMenuOnKeyDown });
 
   if (scene === scenes.source) {
     return (
