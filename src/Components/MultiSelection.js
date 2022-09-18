@@ -476,40 +476,51 @@ const STYLES_MULTI_SELECTION_DISMISS_BUTTON = (theme) => css`
   position: absolute;
   top: 12px;
   left: -9px;
-  transform: translteX(-100%);
+  transform: translateX(-100%);
   border-radius: 50%;
   padding: 4px;
 `;
 
 const STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER = (theme) => css`
   ${STYLES_MULTI_SELECTION_DISMISS_BUTTON(theme)};
-  background-color: ${theme.semantic.bgBlurLight6P};
   color: ${theme.semantic.textGrayDark};
   box-shadow: ${theme.shadow.jumperLight};
   border: 1px solid ${theme.semantic.borderGrayLight4};
+
+  @supports (
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
+  ) {
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
+    background-color: ${theme.semantic.bgBlurLight6OP};
+  }
+
+  &:hover,
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
 `;
 
 const STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB = (theme) => css`
-  background-color: ${theme.semantic.bgBlurLight6P};
-  color: ${theme.semantic.textGrayDark};
+  ${STYLES_MULTI_SELECTION_DISMISS_BUTTON(theme)};
+  background-color: ${theme.system.black};
+  color: ${theme.semantic.textWhite};
   box-shadow: ${theme.shadow.darkSmall};
   border: 1px solid ${theme.semantic.borderGrayLight4};
+
+  &:hover,
+  &:focus {
+    color: ${theme.semantic.textWhite};
+    background-color: ${theme.semantic.bgLightDark};
+  }
 `;
 
 const ActionsMenuDismissButton = (props) => {
   return (
     <button {...props}>
-      <SVG.Dismiss />
+      <SVG.Dismiss height={16} width={16} />
     </button>
   );
-};
-
-/* -----------------------------------------------------------------------------------------------*/
-
-const CloseOnEscape = ({ onClose, children }) => {
-  useEscapeKey(onClose);
-
-  return children;
 };
 
 /* -----------------------------------------------------------------------------------------------*/
@@ -529,68 +540,105 @@ const NewTabActionsMenu = React.forwardRef(
       onRestoreFocusFallback: onRestoreFocus,
     });
 
+    useEscapeKey(existSelectionMode);
+
+    const Actions = React.useMemo(() => {
+      const actions = [];
+      if (onOpenURLs) {
+        actions.push(
+          <OpenURLsAction
+            onOpenLinks={onOpenURLs}
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+          />
+        );
+      }
+
+      if (onCloseTabs) {
+        actions.push(
+          <CloseTabsAction
+            onCloseTabs={onCloseTabs}
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+          />
+        );
+      }
+
+      if (onOpenSlatesJumper) {
+        actions.push(
+          <OpenSlatesJumperAction
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+          />
+        );
+      }
+
+      actions.push(<CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />);
+
+      if (onGroupURLs) {
+        actions.push(
+          <GroupingAction
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+            onGroup={onGroupURLs}
+          />
+        );
+      }
+
+      if (onSaveObjects) {
+        actions.push(
+          <SavingAction
+            onSaveObjects={onSaveObjects}
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+          />
+        );
+      }
+
+      return actions;
+    }, [
+      onOpenURLs,
+      onCloseTabs,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+    ]);
+
     return (
-      <CloseOnEscape onClose={existSelectionMode}>
-        <NewTabActionsMenuPopup>
-          {/* <ActionsMenuDismissButton */}
-          {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB} */}
-          {/*   onClick={existSelectionMode} */}
-          {/* /> */}
-          <div
-            css={STYLES_ACTIONS_MENU_WRAPPER}
-            ref={mergeRefs([forwardedRef, ref])}
-          >
-            <div css={Styles.HORIZONTAL_CONTAINER}>
-              <Checkbox
-                id="select_all_checkbox"
-                checked={isAllChecked}
-                onChange={toggleCheckAll}
-              />
-              <Typography.H5
-                as="label"
-                for="select_all_checkbox"
-                style={{ marginLeft: 12 }}
-                color="textWhite"
-              >
-                Select All
-              </Typography.H5>
-            </div>
-            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-              {onOpenURLs && (
-                <OpenURLsAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onOpenLinks={onOpenURLs}
-                />
-              )}
-              {onCloseTabs && (
-                <CloseTabsAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onCloseTabs={onCloseTabs}
-                />
-              )}
-              <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
-              {onOpenSlatesJumper && (
-                <OpenSlatesJumperAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onOpenSlatesJumper={onOpenSlatesJumper}
-                />
-              )}
-              {onGroupURLs && (
-                <GroupingAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onGroup={onGroupURLs}
-                />
-              )}
-              {onSaveObjects && (
-                <SavingAction
-                  css={STYLES_ACTION_BUTTON_NEW_TAB}
-                  onSaveObjects={onSaveObjects}
-                />
-              )}
-            </div>
+      <NewTabActionsMenuPopup>
+        <div
+          css={STYLES_ACTIONS_MENU_WRAPPER}
+          ref={mergeRefs([forwardedRef, ref])}
+        >
+          <ActionsMenuDismissButton
+            css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB}
+            onClick={existSelectionMode}
+          />
+          <div css={Styles.HORIZONTAL_CONTAINER}>
+            <Checkbox
+              id="select_all_checkbox"
+              checked={isAllChecked}
+              onChange={toggleCheckAll}
+            />
+            <Typography.H5
+              as="label"
+              for="select_all_checkbox"
+              style={{ marginLeft: 12 }}
+              color="textWhite"
+            >
+              Select All
+            </Typography.H5>
           </div>
-        </NewTabActionsMenuPopup>
-      </CloseOnEscape>
+
+          <RovingTabIndex.Provider axis="horizontal">
+            <RovingTabIndex.List>
+              <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+                {Actions.map((action, i) => (
+                  <RovingTabIndex.Item index={i} key={i}>
+                    {action}
+                  </RovingTabIndex.Item>
+                ))}
+              </div>
+            </RovingTabIndex.List>
+          </RovingTabIndex.Provider>
+        </div>
+      </NewTabActionsMenuPopup>
     );
   }
 );
@@ -611,6 +659,8 @@ const JumperActionMenu = React.forwardRef(
       onRestoreFocusFallback: onRestoreFocus,
     });
 
+    useEscapeKey(existSelectionMode);
+
     const Actions = React.useMemo(() => {
       const actions = [];
       if (onOpenURLs) {
@@ -630,12 +680,7 @@ const JumperActionMenu = React.forwardRef(
       actions.push(<CopyURLsAction />);
 
       if (onGroupURLs) {
-        actions.push(
-          <GroupingAction
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-            onGroup={onGroupURLs}
-          />
-        );
+        actions.push(<GroupingAction onGroup={onGroupURLs} />);
       }
 
       if (onSaveObjects) {
@@ -652,48 +697,43 @@ const JumperActionMenu = React.forwardRef(
     ]);
 
     return (
-      <CloseOnEscape onClose={existSelectionMode}>
-        <Jumper.BottomPanel>
-          {/* <ActionsMenuDismissButton */}
-          {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER} */}
-          {/*   onClick={existSelectionMode} */}
-          {/* /> */}
-          <div
-            css={STYLES_ACTIONS_MENU_WRAPPER}
-            ref={mergeRefs([forwardedRef, ref])}
-          >
-            <div css={Styles.HORIZONTAL_CONTAINER}>
-              <Checkbox
-                id="select_all_checkbox"
-                checked={isAllChecked}
-                onChange={toggleCheckAll}
-              />
-              <Typography.H5
-                as="label"
-                for="select_all_checkbox"
-                style={{ marginLeft: 12 }}
-                color="textGrayDark"
-              >
-                Select All
-              </Typography.H5>
-            </div>
-            <RovingTabIndex.Provider axis="horizontal">
-              <RovingTabIndex.List>
-                <div
-                  css={STYLES_ACTIONS_WRAPPER}
-                  style={{ marginLeft: "auto" }}
-                >
-                  {Actions.map((action, i) => (
-                    <RovingTabIndex.Item index={i} key={i}>
-                      {action}
-                    </RovingTabIndex.Item>
-                  ))}
-                </div>
-              </RovingTabIndex.List>
-            </RovingTabIndex.Provider>
+      <Jumper.BottomPanel>
+        <div
+          css={STYLES_ACTIONS_MENU_WRAPPER}
+          ref={mergeRefs([forwardedRef, ref])}
+        >
+          <ActionsMenuDismissButton
+            css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER}
+            onClick={existSelectionMode}
+          />
+          <div css={Styles.HORIZONTAL_CONTAINER}>
+            <Checkbox
+              id="select_all_checkbox"
+              checked={isAllChecked}
+              onChange={toggleCheckAll}
+            />
+            <Typography.H5
+              as="label"
+              for="select_all_checkbox"
+              style={{ marginLeft: 12 }}
+              color="textGrayDark"
+            >
+              Select All
+            </Typography.H5>
           </div>
-        </Jumper.BottomPanel>
-      </CloseOnEscape>
+          <RovingTabIndex.Provider axis="horizontal">
+            <RovingTabIndex.List>
+              <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
+                {Actions.map((action, i) => (
+                  <RovingTabIndex.Item index={i} key={i}>
+                    {action}
+                  </RovingTabIndex.Item>
+                ))}
+              </div>
+            </RovingTabIndex.List>
+          </RovingTabIndex.Provider>
+        </div>
+      </Jumper.BottomPanel>
     );
   }
 );
