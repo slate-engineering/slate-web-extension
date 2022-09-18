@@ -119,6 +119,7 @@ const HistoryFeed = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onSaveObjects,
+      onRestoreFocus,
       css,
       ...props
     },
@@ -131,17 +132,10 @@ const HistoryFeed = React.forwardRef(
       sessionsFeed,
     });
 
-    const sessionsFeedLength = React.useMemo(() => {
-      let length = 0;
-      sessionsFeedKeys.forEach((key) => {
-        length += sessionsFeed[key].length;
-      });
-      return length;
-    }, [sessionsFeed, sessionsFeedKeys]);
-
     const feedItemsData = React.useMemo(() => {
       let rovingTabIndex = 0;
       let virtualizedFeed = [];
+      let totalSelectableItems = 0;
 
       for (let key of sessionsFeedKeys) {
         sessionsFeed[key].forEach((visit, index) => {
@@ -155,12 +149,14 @@ const HistoryFeed = React.forwardRef(
             height: Constants.sizes.jumperFeedItem,
           });
 
+          totalSelectableItems++;
           rovingTabIndex++;
         });
       }
 
       return {
         feed: virtualizedFeed,
+        totalSelectableItems,
         props: {
           onOpenUrl,
           onOpenSlatesJumper,
@@ -198,8 +194,9 @@ const HistoryFeed = React.forwardRef(
         withFocusOnHover
       >
         <MultiSelection.Provider
-          totalSelectableItems={sessionsFeedLength}
+          totalSelectableItems={feedItemsData.totalSelectableItems}
           onSubmitSelectedItem={handleOnSubmitSelectedItem}
+          onRestoreFocus={onRestoreFocus}
         >
           <InfiniteLoader
             isItemLoaded={isItemLoaded}
