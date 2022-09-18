@@ -15,14 +15,17 @@ import {
   getRootDomain,
   mergeRefs,
 } from "../Common/utilities";
-import { css } from "@emotion/react";
-import { Checkbox } from "./system";
 import {
   useEscapeKey,
   useEventListener,
   usePreviousValue,
   useRestoreFocus,
 } from "../Common/hooks";
+import { Checkbox } from "./system";
+import { ShortcutsTooltip } from "./Tooltip";
+import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
+import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
+import { css } from "@emotion/react";
 
 const multiSelectionContext = React.createContext({});
 
@@ -58,10 +61,14 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
     checkIndexesInRange(0, totalSelectableItems - 1);
   };
 
+  const totalSelectedItems = React.useMemo(
+    () => Object.keys(checkedIndexes).length,
+    [checkedIndexes]
+  );
+
   const isAllChecked = React.useMemo(() => {
-    const checkedIndexesLength = Object.keys(checkedIndexes).length;
-    return checkedIndexesLength === totalSelectableItems;
-  }, [checkedIndexes, totalSelectableItems]);
+    return totalSelectedItems === totalSelectableItems;
+  }, [totalSelectedItems, totalSelectableItems]);
 
   const toggleCheckAll = () => {
     const nextState = !isAllChecked;
@@ -95,6 +102,7 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
     isIndexChecked,
     toggleCheckIndex,
     checkIndexesInRange,
+    totalSelectedItems,
     isAllChecked,
 
     toggleCheckAll,
@@ -187,6 +195,7 @@ function Provider({
     isIndexChecked,
     toggleCheckIndex,
     checkIndexesInRange,
+    totalSelectedItems,
 
     isAllChecked,
     toggleCheckAll,
@@ -223,6 +232,7 @@ function Provider({
       isAllChecked,
       isIndexChecked,
       isMultiSelectMode,
+      totalSelectedItems,
 
       createHandleOnIndexCheckChange,
       createHandleKeyDownNavigation,
@@ -234,7 +244,13 @@ function Provider({
 
       onRestoreFocus,
     }),
-    [isAllChecked, checkedIndexes, isMultiSelectMode, onRestoreFocus]
+    [
+      isAllChecked,
+      checkedIndexes,
+      isMultiSelectMode,
+      totalSelectedItems,
+      onRestoreFocus,
+    ]
   );
 
   return (
@@ -461,7 +477,7 @@ const STYLES_ACTIONS_MENU_WRAPPER = css`
   width: 100%;
   height: 48px;
   border-radius: 16px;
-  padding: 0px 20px;
+  padding: 0px 8px;
 `;
 
 const STYLES_ACTIONS_WRAPPER = css`
@@ -525,13 +541,31 @@ const ActionsMenuDismissButton = (props) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
+  padding: 5px 12px 7px;
+  border-radius: 12px;
+
+  &:hover,
+  &:focus-within {
+    color: ${theme.semantic.textWhite};
+    background-color: ${theme.semantic.bgLightDark};
+  }
+`;
+
 const NewTabActionsMenu = React.forwardRef(
   (
     { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
     forwardedRef
   ) => {
-    const { toggleCheckAll, isAllChecked, existSelectionMode, onRestoreFocus } =
-      useMultiSelectionContext();
+    const {
+      toggleCheckAll,
+      isAllChecked,
+      totalSelectedItems,
+      constructSelectedItemsData,
+      existSelectionMode,
+      onRestoreFocus,
+    } = useMultiSelectionContext();
 
     const ref = React.useRef();
 
@@ -542,52 +576,75 @@ const NewTabActionsMenu = React.forwardRef(
 
     useEscapeKey(existSelectionMode);
 
+    const { savedObjectsLookup } = useNewTabViewer();
+
+    const areAllSelectedItemsSaved = React.useMemo(() => {
+      const { selectedItemsData } = constructSelectedItemsData();
+
+      return selectedItemsData.every(({ url }) => url in savedObjectsLookup);
+    }, [savedObjectsLookup, constructSelectedItemsData]);
+
     const Actions = React.useMemo(() => {
       const actions = [];
+
       if (onOpenURLs) {
         actions.push(
-          <OpenURLsAction
-            onOpenLinks={onOpenURLs}
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-          />
+          <ShortcutsTooltip label={`Open ${totalSelectedItems} selected`}>
+            <OpenURLsAction
+              onOpenLinks={onOpenURLs}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+            />
+          </ShortcutsTooltip>
         );
       }
 
       if (onCloseTabs) {
         actions.push(
-          <CloseTabsAction
-            onCloseTabs={onCloseTabs}
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-          />
+          <ShortcutsTooltip label={`Close ${totalSelectedItems} selected`}>
+            <CloseTabsAction
+              onCloseTabs={onCloseTabs}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+            />
+          </ShortcutsTooltip>
         );
       }
 
       if (onOpenSlatesJumper) {
         actions.push(
-          <OpenSlatesJumperAction
-            onOpenSlatesJumper={onOpenSlatesJumper}
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-          />
+          <ShortcutsTooltip label={`Tag ${totalSelectedItems} selected`}>
+            <OpenSlatesJumperAction
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+              onOpenSlatesJumper={onOpenSlatesJumper}
+            />
+          </ShortcutsTooltip>
         );
       }
 
-      actions.push(<CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />);
+      actions.push(
+        <ShortcutsTooltip label={`Copy ${totalSelectedItems} selected`}>
+          <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
+        </ShortcutsTooltip>
+      );
 
       if (onGroupURLs) {
         actions.push(
-          <GroupingAction
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-            onGroup={onGroupURLs}
-          />
+          <ShortcutsTooltip label={`Group ${totalSelectedItems} selected`}>
+            <GroupingAction
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+              onGroup={onGroupURLs}
+            />
+          </ShortcutsTooltip>
         );
       }
 
-      if (onSaveObjects) {
+      if (onSaveObjects && !areAllSelectedItemsSaved) {
         actions.push(
-          <SavingAction
-            onSaveObjects={onSaveObjects}
-            css={STYLES_ACTION_BUTTON_NEW_TAB}
-          />
+          <ShortcutsTooltip label={`Save ${totalSelectedItems} selected`}>
+            <SavingAction
+              onSaveObjects={onSaveObjects}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+            />
+          </ShortcutsTooltip>
         );
       }
 
@@ -598,6 +655,8 @@ const NewTabActionsMenu = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onSaveObjects,
+      totalSelectedItems,
+      areAllSelectedItemsSaved,
     ]);
 
     return (
@@ -610,22 +669,23 @@ const NewTabActionsMenu = React.forwardRef(
             css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB}
             onClick={existSelectionMode}
           />
-          <div css={Styles.HORIZONTAL_CONTAINER}>
-            <Checkbox
-              id="select_all_checkbox"
-              checked={isAllChecked}
-              onChange={toggleCheckAll}
-            />
-            <Typography.H5
-              as="label"
-              for="select_all_checkbox"
-              style={{ marginLeft: 12 }}
-              color="textWhite"
-            >
-              Select All
-            </Typography.H5>
-          </div>
-
+          <ShortcutsTooltip label="Multi-select" keyTrigger="Ctrl A">
+            <div css={STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB}>
+              <Checkbox
+                id="select_all_checkbox"
+                checked={isAllChecked}
+                onChange={toggleCheckAll}
+              />
+              <Typography.H5
+                as="label"
+                for="select_all_checkbox"
+                style={{ marginLeft: 12 }}
+                color="textWhite"
+              >
+                Select All
+              </Typography.H5>
+            </div>
+          </ShortcutsTooltip>
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>
               <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
@@ -645,13 +705,30 @@ const NewTabActionsMenu = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const STYLES_MULTI_SELECTION_SELECT_ALL = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER};
+  padding: 5px 12px 7px;
+  border-radius: 12px;
+
+  &:hover,
+  &:focus-within {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
+`;
+
 const JumperActionMenu = React.forwardRef(
   (
     { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
     forwardedRef
   ) => {
-    const { toggleCheckAll, isAllChecked, existSelectionMode, onRestoreFocus } =
-      useMultiSelectionContext();
+    const {
+      toggleCheckAll,
+      isAllChecked,
+      totalSelectedItems,
+      constructSelectedItemsData,
+      existSelectionMode,
+      onRestoreFocus,
+    } = useMultiSelectionContext();
 
     const ref = React.useRef();
     useRestoreFocus({
@@ -661,30 +738,60 @@ const JumperActionMenu = React.forwardRef(
 
     useEscapeKey(existSelectionMode);
 
+    const { savedObjectsLookup } = useJumperViewer();
+
+    const areAllSelectedItemsSaved = React.useMemo(() => {
+      const { selectedItemsData } = constructSelectedItemsData();
+
+      return selectedItemsData.every(({ url }) => url in savedObjectsLookup);
+    }, [savedObjectsLookup, constructSelectedItemsData]);
+
     const Actions = React.useMemo(() => {
       const actions = [];
       if (onOpenURLs) {
-        actions.push(<OpenURLsAction onOpenLinks={onOpenURLs} />);
+        actions.push(
+          <ShortcutsTooltip label={`Open ${totalSelectedItems} selected`}>
+            <OpenURLsAction onOpenLinks={onOpenURLs} />
+          </ShortcutsTooltip>
+        );
       }
 
       if (onCloseTabs) {
-        actions.push(<CloseTabsAction onCloseTabs={onCloseTabs} />);
+        actions.push(
+          <ShortcutsTooltip label={`Close ${totalSelectedItems} selected`}>
+            <CloseTabsAction onCloseTabs={onCloseTabs} />
+          </ShortcutsTooltip>
+        );
       }
 
       if (onOpenSlatesJumper) {
         actions.push(
-          <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
+          <ShortcutsTooltip label={`Tag ${totalSelectedItems} selected`}>
+            <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
+          </ShortcutsTooltip>
         );
       }
 
-      actions.push(<CopyURLsAction />);
+      actions.push(
+        <ShortcutsTooltip label={`Copy ${totalSelectedItems} selected`}>
+          <CopyURLsAction />
+        </ShortcutsTooltip>
+      );
 
       if (onGroupURLs) {
-        actions.push(<GroupingAction onGroup={onGroupURLs} />);
+        actions.push(
+          <ShortcutsTooltip label={`Group ${totalSelectedItems} selected`}>
+            <GroupingAction onGroup={onGroupURLs} />
+          </ShortcutsTooltip>
+        );
       }
 
-      if (onSaveObjects) {
-        actions.push(<SavingAction onSaveObjects={onSaveObjects} />);
+      if (onSaveObjects && !areAllSelectedItemsSaved) {
+        actions.push(
+          <ShortcutsTooltip label={`Save ${totalSelectedItems} selected`}>
+            <SavingAction onSaveObjects={onSaveObjects} />
+          </ShortcutsTooltip>
+        );
       }
 
       return actions;
@@ -694,6 +801,8 @@ const JumperActionMenu = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onSaveObjects,
+      totalSelectedItems,
+      areAllSelectedItemsSaved,
     ]);
 
     return (
@@ -706,21 +815,23 @@ const JumperActionMenu = React.forwardRef(
             css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER}
             onClick={existSelectionMode}
           />
-          <div css={Styles.HORIZONTAL_CONTAINER}>
-            <Checkbox
-              id="select_all_checkbox"
-              checked={isAllChecked}
-              onChange={toggleCheckAll}
-            />
-            <Typography.H5
-              as="label"
-              for="select_all_checkbox"
-              style={{ marginLeft: 12 }}
-              color="textGrayDark"
-            >
-              Select All
-            </Typography.H5>
-          </div>
+          <ShortcutsTooltip label="Multi-select" keyTrigger="Ctrl A">
+            <div css={STYLES_MULTI_SELECTION_SELECT_ALL}>
+              <Checkbox
+                id="select_all_checkbox"
+                checked={isAllChecked}
+                onChange={toggleCheckAll}
+              />
+              <Typography.H5
+                as="label"
+                for="select_all_checkbox"
+                style={{ marginLeft: 12 }}
+                color="textGrayDark"
+              >
+                Select All
+              </Typography.H5>
+            </div>
+          </ShortcutsTooltip>
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>
               <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>

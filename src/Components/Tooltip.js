@@ -295,6 +295,8 @@ const ShortcutsTooltip = ({
   keyTrigger,
   id,
   children,
+  yOffset = 4,
+  xOffset = 0,
   vertical = "above",
   horizontal = "center",
   ...props
@@ -304,7 +306,10 @@ const ShortcutsTooltip = ({
       <Trigger aria-labelledby={id}>{children}</Trigger>
       <Content
         css={Styles.HORIZONTAL_CONTAINER_CENTERED}
-        style={{ marginTop: vertical === "below" ? 4 : -4 }}
+        style={{
+          marginTop: vertical === "below" ? yOffset : -yOffset,
+          marginLeft: xOffset,
+        }}
       >
         <Typography.H6 id={id} as="p" color="textGrayDark">
           {label}
