@@ -502,15 +502,15 @@ const Object = React.forwardRef(
               onMouseDown={preventFocus}
               url={url}
             />
-            <ShortcutsTooltip label="Delete" keyTrigger="delete">
-              <button
-                className="object_action_button"
-                css={STYLES_OBJECT_ACTION_BUTTON}
-                onMouseDown={preventFocus}
-              >
-                <SVG.Trash width={16} height={16} />
-              </button>
-            </ShortcutsTooltip>
+            {/* <ShortcutsTooltip label="Delete" keyTrigger="delete"> */}
+            {/*   <button */}
+            {/*     className="object_action_button" */}
+            {/*     css={STYLES_OBJECT_ACTION_BUTTON} */}
+            {/*     onMouseDown={preventFocus} */}
+            {/*   > */}
+            {/*     <SVG.Trash width={16} height={16} /> */}
+            {/*   </button> */}
+            {/* </ShortcutsTooltip> */}
             {onCloseTab && (
               <ShortcutsTooltip label="Close" keyTrigger="X">
                 <button
