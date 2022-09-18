@@ -3,6 +3,7 @@ import * as Styles from "../Common/styles";
 import * as Typography from "./system/Typography";
 import * as SVG from "../Common/SVG";
 import * as Jumper from "./jumper";
+import * as RovingTabIndex from "./RovingTabIndex";
 
 import NewTabActionsMenuPopup from "./newTab/ActionsMenuPopup";
 
@@ -12,6 +13,7 @@ import {
   isNewTab,
   copyToClipboard,
   getRootDomain,
+  mergeRefs,
 } from "../Common/utilities";
 import { css } from "@emotion/react";
 import { Checkbox } from "./system";
@@ -19,6 +21,7 @@ import {
   useEscapeKey,
   useEventListener,
   usePreviousValue,
+  useRestoreFocus,
 } from "../Common/hooks";
 
 const multiSelectionContext = React.createContext({});
@@ -176,6 +179,7 @@ function Provider({
   children,
   totalSelectableItems,
   onSubmitSelectedItem,
+  onRestoreFocus,
   ...props
 }) {
   const {
@@ -227,8 +231,10 @@ function Provider({
       existSelectionMode,
 
       constructSelectedItemsData,
+
+      onRestoreFocus,
     }),
-    [isAllChecked, checkedIndexes, isMultiSelectMode]
+    [isAllChecked, checkedIndexes, isMultiSelectMode, onRestoreFocus]
   );
 
   return (
@@ -263,67 +269,80 @@ const STYLES_ACTION_BUTTON_NEW_TAB = (theme) => css`
   }
 `;
 
-const GroupingAction = ({ css, onGroup, ...props }) => {
-  const { constructSelectedItemsData } = useMultiSelectionContext();
+const GroupingAction = React.forwardRef(({ css, onGroup, ...props }, ref) => {
+  const { constructSelectedItemsData, existSelectionMode } =
+    useMultiSelectionContext();
 
   const handleOnClick = () => {
     const { selectedItemsData } = constructSelectedItemsData();
     onGroup(selectedItemsData.map(({ url }) => url));
+    existSelectionMode();
   };
 
   return (
     <button
       css={[STYLES_ACTION_BUTTON, css]}
       onClick={handleOnClick}
+      ref={ref}
       {...props}
     >
       <SVG.SmileCircle height={16} width={16} />
       <Typography.H5 style={{ marginLeft: 4 }}>Group</Typography.H5>
     </button>
   );
-};
+});
 
-const SavingAction = ({ css, onSaveObjects, ...props }) => {
-  const { constructSelectedItemsData } = useMultiSelectionContext();
+const SavingAction = React.forwardRef(
+  ({ css, onSaveObjects, ...props }, ref) => {
+    const { constructSelectedItemsData, existSelectionMode } =
+      useMultiSelectionContext();
 
-  const handleOnClick = () => {
-    const { selectedItemsData } = constructSelectedItemsData();
-    const selectedObjects = selectedItemsData.map(
-      ({ url, title, favicon }) => ({ url, title, favicon })
+    const handleOnClick = () => {
+      const { selectedItemsData } = constructSelectedItemsData();
+      const selectedObjects = selectedItemsData.map(
+        ({ url, title, favicon }) => ({ url, title, favicon })
+      );
+      onSaveObjects({ objects: selectedObjects });
+      existSelectionMode();
+    };
+
+    return (
+      <button
+        css={[STYLES_ACTION_BUTTON, css]}
+        onClick={handleOnClick}
+        ref={ref}
+        {...props}
+      >
+        <SVG.Plus height={16} width={16} />
+        <Typography.H5 style={{ marginLeft: 4 }}>Save</Typography.H5>
+      </button>
     );
-    onSaveObjects({ objects: selectedObjects });
-  };
+  }
+);
 
-  return (
-    <button
-      css={[STYLES_ACTION_BUTTON, css]}
-      onClick={handleOnClick}
-      {...props}
-    >
-      <SVG.Plus height={16} width={16} />
-      <Typography.H5 style={{ marginLeft: 4 }}>Save</Typography.H5>
-    </button>
-  );
-};
+const OpenURLsAction = React.forwardRef(
+  ({ css, onOpenLinks, ...props }, ref) => {
+    const { constructSelectedItemsData, existSelectionMode } =
+      useMultiSelectionContext();
 
-const OpenURLsAction = ({ css, onOpenLinks, ...props }) => {
-  const { constructSelectedItemsData } = useMultiSelectionContext();
-
-  const handleOnClick = () => {
-    const { selectedItemsData } = constructSelectedItemsData();
-    onOpenLinks(selectedItemsData.map(({ url }) => url));
-  };
-  return (
-    <button
-      css={[STYLES_ACTION_BUTTON, css]}
-      onClick={handleOnClick}
-      {...props}
-    >
-      <SVG.ExternalLink height={16} width={16} />
-      <Typography.H5 style={{ marginLeft: 4 }}>Open</Typography.H5>
-    </button>
-  );
-};
+    const handleOnClick = () => {
+      const { selectedItemsData } = constructSelectedItemsData();
+      onOpenLinks(selectedItemsData.map(({ url }) => url));
+      existSelectionMode();
+    };
+    return (
+      <button
+        css={[STYLES_ACTION_BUTTON, css]}
+        onClick={handleOnClick}
+        ref={ref}
+        {...props}
+      >
+        <SVG.ExternalLink height={16} width={16} />
+        <Typography.H5 style={{ marginLeft: 4 }}>Open</Typography.H5>
+      </button>
+    );
+  }
+);
 
 const useCopyState = () => {
   const [isCopied, setCopied] = React.useState(false);
@@ -344,21 +363,24 @@ const useCopyState = () => {
   return { isCopied, handleCopying };
 };
 
-const CopyURLsAction = ({ css, ...props }) => {
+const CopyURLsAction = React.forwardRef(({ css, ...props }, ref) => {
   const { isCopied, handleCopying } = useCopyState();
 
-  const { constructSelectedItemsData } = useMultiSelectionContext();
+  const { constructSelectedItemsData, existSelectionMode } =
+    useMultiSelectionContext();
 
   const handleOnClick = () => {
     const { selectedItemsData } = constructSelectedItemsData();
     const linksAsString = selectedItemsData.map(({ url }) => url).join("\n");
     handleCopying(linksAsString);
+    existSelectionMode();
   };
 
   return (
     <button
       css={[STYLES_ACTION_BUTTON, css]}
       onClick={handleOnClick}
+      ref={ref}
       {...props}
     >
       {isCopied ? (
@@ -369,55 +391,65 @@ const CopyURLsAction = ({ css, ...props }) => {
       <Typography.H5 style={{ marginLeft: 4 }}>Copy</Typography.H5>
     </button>
   );
-};
+});
 
-const CloseTabsAction = ({ css, onCloseTabs, ...props }) => {
-  const { constructSelectedItemsData } = useMultiSelectionContext();
+const CloseTabsAction = React.forwardRef(
+  ({ css, onCloseTabs, ...props }, ref) => {
+    const { constructSelectedItemsData, existSelectionMode } =
+      useMultiSelectionContext();
 
-  const handleOnClick = () => {
-    const { selectedItemsData } = constructSelectedItemsData();
+    const handleOnClick = () => {
+      const { selectedItemsData } = constructSelectedItemsData();
 
-    const tabsId = selectedItemsData.map(({ id }) => id);
-    onCloseTabs(tabsId);
-  };
+      const tabsId = selectedItemsData.map(({ id }) => id);
+      onCloseTabs(tabsId);
+      existSelectionMode();
+    };
 
-  return (
-    <button
-      css={[STYLES_ACTION_BUTTON, css]}
-      onClick={handleOnClick}
-      {...props}
-    >
-      <SVG.XCircle height={16} width={16} />
-      <Typography.H5 style={{ marginLeft: 4 }}>Close</Typography.H5>
-    </button>
-  );
-};
+    return (
+      <button
+        css={[STYLES_ACTION_BUTTON, css]}
+        onClick={handleOnClick}
+        ref={ref}
+        {...props}
+      >
+        <SVG.XCircle height={16} width={16} />
+        <Typography.H5 style={{ marginLeft: 4 }}>Close</Typography.H5>
+      </button>
+    );
+  }
+);
 
-const OpenSlatesJumperAction = ({ css, onOpenSlatesJumper, ...props }) => {
-  const { constructSelectedItemsData } = useMultiSelectionContext();
+const OpenSlatesJumperAction = React.forwardRef(
+  ({ css, onOpenSlatesJumper, ...props }, ref) => {
+    const { constructSelectedItemsData, existSelectionMode } =
+      useMultiSelectionContext();
 
-  const handleOnClick = () => {
-    const { selectedItemsData } = constructSelectedItemsData();
+    const handleOnClick = () => {
+      const { selectedItemsData } = constructSelectedItemsData();
 
-    const objects = selectedItemsData.map(({ url, title }) => ({
-      url,
-      title,
-      rootDomain: getRootDomain(url),
-    }));
-    onOpenSlatesJumper(objects);
-  };
+      const objects = selectedItemsData.map(({ url, title }) => ({
+        url,
+        title,
+        rootDomain: getRootDomain(url),
+      }));
+      onOpenSlatesJumper(objects);
+      existSelectionMode();
+    };
 
-  return (
-    <button
-      css={[STYLES_ACTION_BUTTON, css]}
-      onClick={handleOnClick}
-      {...props}
-    >
-      <SVG.Hash height={16} width={16} />
-      <Typography.H5 style={{ marginLeft: 4 }}>Tag</Typography.H5>
-    </button>
-  );
-};
+    return (
+      <button
+        css={[STYLES_ACTION_BUTTON, css]}
+        onClick={handleOnClick}
+        ref={ref}
+        {...props}
+      >
+        <SVG.Hash height={16} width={16} />
+        <Typography.H5 style={{ marginLeft: 4 }}>Tag</Typography.H5>
+      </button>
+    );
+  }
+);
 
 /* -------------------------------------------------------------------------------------------------
  *  ActionsMenu
@@ -487,8 +519,15 @@ const NewTabActionsMenu = React.forwardRef(
     { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
     forwardedRef
   ) => {
-    const { toggleCheckAll, isAllChecked, existSelectionMode } =
+    const { toggleCheckAll, isAllChecked, existSelectionMode, onRestoreFocus } =
       useMultiSelectionContext();
+
+    const ref = React.useRef();
+
+    useRestoreFocus({
+      containerRef: ref,
+      onRestoreFocusFallback: onRestoreFocus,
+    });
 
     return (
       <CloseOnEscape onClose={existSelectionMode}>
@@ -497,7 +536,10 @@ const NewTabActionsMenu = React.forwardRef(
           {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_NEW_TAB} */}
           {/*   onClick={existSelectionMode} */}
           {/* /> */}
-          <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
+          <div
+            css={STYLES_ACTIONS_MENU_WRAPPER}
+            ref={mergeRefs([forwardedRef, ref])}
+          >
             <div css={Styles.HORIZONTAL_CONTAINER}>
               <Checkbox
                 id="select_all_checkbox"
@@ -560,8 +602,54 @@ const JumperActionMenu = React.forwardRef(
     { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
     forwardedRef
   ) => {
-    const { toggleCheckAll, isAllChecked, existSelectionMode } =
+    const { toggleCheckAll, isAllChecked, existSelectionMode, onRestoreFocus } =
       useMultiSelectionContext();
+
+    const ref = React.useRef();
+    useRestoreFocus({
+      containerRef: ref,
+      onRestoreFocusFallback: onRestoreFocus,
+    });
+
+    const Actions = React.useMemo(() => {
+      const actions = [];
+      if (onOpenURLs) {
+        actions.push(<OpenURLsAction onOpenLinks={onOpenURLs} />);
+      }
+
+      if (onCloseTabs) {
+        actions.push(<CloseTabsAction onCloseTabs={onCloseTabs} />);
+      }
+
+      if (onOpenSlatesJumper) {
+        actions.push(
+          <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
+        );
+      }
+
+      actions.push(<CopyURLsAction />);
+
+      if (onGroupURLs) {
+        actions.push(
+          <GroupingAction
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+            onGroup={onGroupURLs}
+          />
+        );
+      }
+
+      if (onSaveObjects) {
+        actions.push(<SavingAction onSaveObjects={onSaveObjects} />);
+      }
+
+      return actions;
+    }, [
+      onOpenURLs,
+      onCloseTabs,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+    ]);
 
     return (
       <CloseOnEscape onClose={existSelectionMode}>
@@ -570,7 +658,10 @@ const JumperActionMenu = React.forwardRef(
           {/*   css={STYLES_MULTI_SELECTION_DISMISS_BUTTON_JUMPER} */}
           {/*   onClick={existSelectionMode} */}
           {/* /> */}
-          <div css={STYLES_ACTIONS_MENU_WRAPPER} ref={forwardedRef}>
+          <div
+            css={STYLES_ACTIONS_MENU_WRAPPER}
+            ref={mergeRefs([forwardedRef, ref])}
+          >
             <div css={Styles.HORIZONTAL_CONTAINER}>
               <Checkbox
                 id="select_all_checkbox"
@@ -586,18 +677,20 @@ const JumperActionMenu = React.forwardRef(
                 Select All
               </Typography.H5>
             </div>
-            <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-              {onOpenURLs && <OpenURLsAction onOpenLinks={onOpenURLs} />}
-              {onCloseTabs && <CloseTabsAction onCloseTabs={onCloseTabs} />}
-              {onOpenSlatesJumper && (
-                <OpenSlatesJumperAction
-                  onOpenSlatesJumper={onOpenSlatesJumper}
-                />
-              )}
-              <CopyURLsAction />
-              {onGroupURLs && <GroupingAction onGroup={onGroupURLs} />}
-              {onSaveObjects && <SavingAction onSaveObjects={onSaveObjects} />}
-            </div>
+            <RovingTabIndex.Provider axis="horizontal">
+              <RovingTabIndex.List>
+                <div
+                  css={STYLES_ACTIONS_WRAPPER}
+                  style={{ marginLeft: "auto" }}
+                >
+                  {Actions.map((action, i) => (
+                    <RovingTabIndex.Item index={i} key={i}>
+                      {action}
+                    </RovingTabIndex.Item>
+                  ))}
+                </div>
+              </RovingTabIndex.List>
+            </RovingTabIndex.Provider>
           </div>
         </Jumper.BottomPanel>
       </CloseOnEscape>
