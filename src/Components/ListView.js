@@ -433,15 +433,23 @@ const Object = React.forwardRef(
           </ShortcutsTooltip>
         )}
         {withMultiSelection && (
-          <Checkbox
-            className="object_checkbox"
-            checked={isChecked}
-            tabIndex="-1"
-            onChange={handleOnChecking}
-            style={{ display: isChecked && "block", flexShrink: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.preventDefault()}
-          />
+          <ShortcutsTooltip
+            label="Multi-select"
+            keyTrigger="Shift Space"
+            horizontal="right"
+            yOffset={12}
+            xOffset={-12}
+          >
+            <Checkbox
+              className="object_checkbox"
+              checked={isChecked}
+              tabIndex="-1"
+              onChange={handleOnChecking}
+              style={{ display: isChecked && "block", flexShrink: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.preventDefault()}
+            />
+          </ShortcutsTooltip>
         )}
         <Favicon
           className="object_favicon"
