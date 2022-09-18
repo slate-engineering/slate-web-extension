@@ -363,6 +363,8 @@ const Object = React.forwardRef(
     const preventFocus = (e) => e.preventDefault();
 
     const handleKeyboardActions = (e) => {
+      if (!withActions) return;
+
       if (e.code === "KeyS") {
         e.stopPropagation();
         handleLinkSaving(e);
@@ -434,6 +436,7 @@ const Object = React.forwardRef(
           <Checkbox
             className="object_checkbox"
             checked={isChecked}
+            tabIndex="-1"
             onChange={handleOnChecking}
             style={{ display: isChecked && "block", flexShrink: 0 }}
             onClick={(e) => e.stopPropagation()}
