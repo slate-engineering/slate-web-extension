@@ -160,24 +160,6 @@ export const useEscapeKey = (callback) => {
   useEventListener({ type: "keyup", handler: handleKeyUp }, [handleKeyUp]);
 };
 
-export const useRestoreFocus = ({ isEnabled } = { isEnabled: true }) => {
-  const activeElementRef = React.useRef();
-  React.useMemo(() => {
-    const lastActiveElement =
-      typeof document !== "undefined" ? document.activeElement : null;
-
-    activeElementRef.current = lastActiveElement;
-  }, []);
-
-  React.useLayoutEffect(() => {
-    if (!isEnabled) return;
-    return () => {
-      const lastActiveElement = activeElementRef.current;
-      lastActiveElement?.focus?.();
-    };
-  }, [isEnabled]);
-};
-
 export const useMounted = (callback, deps) => {
   const isMountedRef = React.useRef(false);
   React.useEffect(() => {
@@ -187,4 +169,33 @@ export const useMounted = (callback, deps) => {
       return callback();
     }
   }, deps);
+};
+
+export const useRestoreFocus = ({ containerRef, onRestoreFocusFallback }) => {
+  React.useLayoutEffect(() => {
+    if (!containerRef.current) return;
+    const containerNode = containerRef.current;
+    const rootNode = containerNode.getRootNode();
+    const lastActiveElement = rootNode.activeElement;
+
+    return () => {
+      const containerNode = containerRef.current;
+
+      if (!containerNode || !lastActiveElement) {
+        onRestoreFocusFallback();
+        return;
+      }
+
+      if (!lastActiveElement.isConnected) {
+        onRestoreFocusFallback();
+        return;
+      }
+
+      if (!containerNode.contains(rootNode.activeElement)) {
+        return;
+      }
+
+      lastActiveElement.focus();
+    };
+  }, []);
 };
