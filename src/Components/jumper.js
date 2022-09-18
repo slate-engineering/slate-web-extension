@@ -4,7 +4,7 @@ import * as Styles from "../Common/styles";
 
 import { css } from "@emotion/react";
 import { useEscapeKey, useTrapFocus } from "../Common/hooks";
-import { mergeRefs, getExtensionURL } from "../Common/utilities";
+import { getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
 import { Boundary } from "../Components/Boundary";
 
@@ -12,11 +12,18 @@ import { Boundary } from "../Components/Boundary";
 const JumperContext = React.createContext({});
 const useJumperContext = () => React.useContext(JumperContext);
 
-const JumperPanelsPortal = ({ children }) => {
-  const { jumperNode } = useJumperContext();
-  if (!jumperNode) return null;
+const JumperTopPanelPortal = ({ children }) => {
+  const { jumperTopPanelNode } = useJumperContext();
+  if (!jumperTopPanelNode) return null;
 
-  return ReactDom.createPortal(children, jumperNode);
+  return ReactDom.createPortal(children, jumperTopPanelNode);
+};
+
+const JumperBottomPanelPortal = ({ children }) => {
+  const { jumperBottomPanelNode } = useJumperContext();
+  if (!jumperBottomPanelNode) return null;
+
+  return ReactDom.createPortal(children, jumperBottomPanelNode);
 };
 
 const JUMPER_WIDTH = 700;
@@ -102,20 +109,24 @@ function Root({ children, onClose }) {
 
   useEscapeKey(onClose);
 
-  const [jumperNode, setJumperNode] = React.useState(null);
-  const contextValue = React.useMemo(() => ({ jumperNode }), [jumperNode]);
+  const [jumperTopPanelNode, setJumperTopPanelNode] = React.useState(null);
+  const [jumperBottomPanelNode, setJumperBottomPanelNode] =
+    React.useState(null);
+  const contextValue = React.useMemo(
+    () => ({ jumperTopPanelNode, jumperBottomPanelNode }),
+    [jumperTopPanelNode, jumperBottomPanelNode]
+  );
 
   return (
     <Boundary enabled onOutsideRectEvent={onClose}>
       <JumperContext.Provider value={contextValue}>
-        <div
-          css={STYLES_JUMPER_ROOT_FIXED_POSITION}
-          ref={mergeRefs([wrapperRef, setJumperNode])}
-        >
+        <div css={STYLES_JUMPER_ROOT_FIXED_POSITION} ref={wrapperRef}>
+          <div ref={setJumperTopPanelNode} />
           <div css={STYLES_JUMPER_ROOT_ANIMATION_WRAPPER}>
             <div css={STYLES_JUMPER_ROOT_BACKGROUND} />
             <div css={STYLES_JUMPER_ROOT}>{children}</div>
           </div>
+          <div ref={setJumperBottomPanelNode} />
         </div>
       </JumperContext.Provider>
     </Boundary>
@@ -212,7 +223,7 @@ const STYLES_JUMPER_TOP_PANEL = (theme) => css`
 
 const TopPanel = ({ children, containerStyle }) => {
   return (
-    <JumperPanelsPortal>
+    <JumperTopPanelPortal>
       <div
         style={containerStyle}
         css={STYLES_JUMPER_TOP_PANEL_ANIMATION_WRAPPER}
@@ -220,7 +231,7 @@ const TopPanel = ({ children, containerStyle }) => {
         <div css={STYLES_JUMPER_TOP_PANEL_BACKGROUND} />
         <div css={STYLES_JUMPER_TOP_PANEL}>{children}</div>
       </div>
-    </JumperPanelsPortal>
+    </JumperTopPanelPortal>
   );
 };
 
@@ -285,12 +296,12 @@ const STYLES_JUMPER_BOTTOM_PANEL = (theme) => css`
 
 const BottomPanel = ({ children }) => {
   return (
-    <JumperPanelsPortal>
+    <JumperBottomPanelPortal>
       <div css={STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER}>
         <div css={STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND} />
         <div css={STYLES_JUMPER_BOTTOM_PANEL}>{children}</div>
       </div>
-    </JumperPanelsPortal>
+    </JumperBottomPanelPortal>
   );
 };
 /* -------------------------------------------------------------------------------------------------
