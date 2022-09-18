@@ -141,8 +141,13 @@ const Input = React.forwardRef(
     { css, containerCss, containerStyle, onKeyDown, onKeyUp, ...props },
     forwardedRef
   ) => {
-    const { onInputChange, setIsSearchInputFocused, clearSearch, search } =
-      useSearchContext();
+    const {
+      onInputChange,
+      isSearchInputFocused,
+      setIsSearchInputFocused,
+      clearSearch,
+      search,
+    } = useSearchContext();
 
     const inputRef = React.useRef();
     const focusInput = () => inputRef.current.focus();
@@ -189,7 +194,11 @@ const Input = React.forwardRef(
         <input
           css={[STYLES_SEARCH_INPUT, css]}
           ref={mergeRefs([inputRef, forwardedRef])}
-          placeholder="Search by keywords, #tags"
+          placeholder={
+            isSearchInputFocused
+              ? "Search by keywords or #tags"
+              : `Press "/" to search`
+          }
           name="search"
           onChange={onInputChange}
           autoComplete="off"
