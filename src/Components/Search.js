@@ -83,7 +83,7 @@ function Dismiss({ css, ...props }) {
   useEscapeKey(clearSearch);
 
   return (
-    <ShortcutsTooltip label="Exit search" keyTrigger="Esc/←">
+    <ShortcutsTooltip label="Clear" keyTrigger="Esc">
       <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
         <SVG.Dismiss
           style={{ display: "block" }}
