@@ -24,6 +24,10 @@ export const uri = {
   upload: "https://uploads.slate.host",
 };
 
+export const links = {
+  extensionOnboarding: "https://slate.host/extension-onboarding",
+};
+
 export const popularDomainsTitles = {
   "news.ycombinator.com": "Hacker news",
   "hackernews.com": "Hacker news",

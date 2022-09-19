@@ -132,7 +132,7 @@ class ViewerHandler {
       viewsSlatesLookup: {},
       viewsIdsLookup: {},
       views: viewer.views || [],
-      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
+      settings: VIEWER_INITIAL_STATE.settings,
 
       sources: {},
     };
@@ -191,6 +191,13 @@ class ViewerHandler {
         savedObjectsSlates[objectUrl].push(slate.name);
       });
     });
+
+    serializedViewer.settings.hasCompletedExtensionOBFirstStep =
+      viewer.hasCompletedExtensionOBFirstStep;
+    serializedViewer.settings.hasCompletedExtensionOBSecondStep =
+      viewer.hasCompletedExtensionOBSecondStep;
+    serializedViewer.settings.hasCompletedExtensionOBThirdStep =
+      viewer.hasCompletedExtensionOBThirdStep;
 
     return serializedViewer;
   }
@@ -917,8 +924,17 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  Viewer.sync();
+chrome.runtime.onInstalled.addListener(async () => {
+  await Viewer.sync();
+  const viewer = await Viewer.get();
+  if (
+    viewer.isAuthenticated &&
+    viewer.settings.hasCompletedExtensionOBFirstStep
+  ) {
+    return;
+  }
+
+  chrome.tabs.create({ url: Constants.links.extensionOnboarding });
 });
 
 chrome.cookies.onChanged.addListener((e) => {
