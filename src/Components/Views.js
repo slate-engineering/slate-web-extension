@@ -550,6 +550,14 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
                 </CreateMenuTagButton>
               );
             })}
+            {filteredSources.length === 0 && (
+              <Typography.H5
+                color="textBlack"
+                style={{ padding: "5px 12px 7px" }}
+              >
+                No sources found
+              </Typography.H5>
+            )}
           </div>
         </Combobox.Menu>
       </Combobox.Provider>
@@ -588,8 +596,9 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
     createViewByTag,
     scrollMenuToRightEdge,
   } = useViewsContext();
-  const { slates, canCreateSlate, searchValue, setSearchValue } =
-    useSlatesCombobox({ slates: viewer.slates });
+  const { slates, searchValue, setSearchValue } = useSlatesCombobox({
+    slates: viewer.slates,
+  });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
   const handleSwitchToAppliedTagView = (slateName) => {
@@ -648,18 +657,13 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
                 </CreateMenuTagButton>
               );
             })}
-            {canCreateSlate && (
-              <CreateMenuTagButton
-                index={slates.length}
-                css={STYLES_COLOR_SYSTEM_BLUE}
+            {slates.length === 0 && (
+              <Typography.H5
+                color="textBlack"
+                style={{ padding: "5px 12px 7px" }}
               >
-                <div>
-                  <SVG.Plus height={16} width={16} />
-                </div>
-                <Typography.H5 color="blue" style={{ marginLeft: 8 }} as="div">
-                  create &quot;{searchValue}&quot;
-                </Typography.H5>
-              </CreateMenuTagButton>
+                No tags found
+              </Typography.H5>
             )}
           </div>
         </Combobox.Menu>
