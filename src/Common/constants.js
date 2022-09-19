@@ -93,7 +93,7 @@ export const system = {
   redDark5: "#550500",
   redDark6: "#2B0000",
 
-  twitterBlue: "1DA1F2",
+  twitterBlue: "#1DA1F2",
 };
 
 export const semantic = {

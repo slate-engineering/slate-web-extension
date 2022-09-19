@@ -10,6 +10,7 @@ import Logo from "../Components/Logo";
 import { Input } from "../Components/Input";
 import { Divider } from "../Components/jumper";
 import { css } from "@emotion/react";
+import { isNewTab } from "../Common/utilities";
 
 const STYLES_AUTH_ARROW_BUTTON = (theme) => css`
   background-color: ${theme.system.bgGrayLight4};
@@ -102,7 +103,7 @@ export default function JumperAuth() {
       authSwitchState === AuthSwitchStates.login ? "signin" : "signup";
     window.open(
       `${Constants.uri.hostname}/_/auth?tab=${slateAuthTab}&email=${inputValueRef.current}`,
-      "_blank"
+      isNewTab ? "_self" : "_blank"
     );
   };
 
@@ -122,7 +123,7 @@ export default function JumperAuth() {
           <Logo width={33} height={32} style={{ marginTop: 40 }} />
           <a
             href={`${Constants.uri.hostname}/_/auth`}
-            target="_blank"
+            target={isNewTab ? "_self" : "_blank"}
             rel="noreferrer"
             style={{ marginTop: 48 }}
             css={STYLES_TWITTER_AUTH_LINK}
