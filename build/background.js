@@ -13,48 +13,7 @@ const messages = {
   windowsUpdate: "WINDOWS_UPDATE",
 };
 
-;// CONCATENATED MODULE: ./src/Core/views/index.js
-const views_messages = {
-  searchQueryRequest: "SEARCH_QUERY_REQUEST",
-  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
-
-  viewFeedRequest: "VIEW_FEED_REQUEST",
-  viewFeedResponse: "VIEW_FEED_RESPONSE",
-
-  createViewByTag: "CREATE_VIEW_BY_TAG",
-  createViewBySource: "CREATE_VIEW_BY_SOURCE",
-
-  removeView: "REMOVE_VIEW",
-};
-
-const viewsType = {
-  allOpen: "allOpen",
-  recent: "recent",
-  saved: "saved",
-  files: "files",
-  custom: "custom",
-};
-
-const defaultViews = {
-  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
-  recent: { id: "recent", name: "Recent", type: viewsType.recent },
-  saved: {
-    id: "saved",
-    name: "Saved",
-    type: viewsType.saved,
-  },
-  files: {
-    id: "files",
-    name: "Files",
-    type: viewsType.files,
-  },
-};
-
-const initialView = defaultViews.allOpen;
-
 ;// CONCATENATED MODULE: ./src/Core/viewer/index.js
-
-
 const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
@@ -93,7 +52,6 @@ const savingSources = {
 
 const viewerInitialState = {
   isAuthenticated: false,
-  initialView: initialView,
   windows: {
     data: { currentWindow: [], allOpen: [] },
   },
@@ -454,6 +412,13 @@ const createView = async (data) => {
 
 const removeView = async (data) => {
   return await returnJSON(`${uri.hostname}/api/views/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
+
+const updateViewer = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/users/update`, {
     ...DEFAULT_OPTIONS,
     body: JSON.stringify({ data }),
   });
@@ -891,6 +856,43 @@ const createSlug = (text, base = "untitled") => {
 };
 
 const capitalize = (str = "") => str[0].toUpperCase() + str.slice(1);
+
+;// CONCATENATED MODULE: ./src/Core/views/index.js
+const views_messages = {
+  searchQueryRequest: "SEARCH_QUERY_REQUEST",
+  searchQueryResponse: "SEARCH_QUERY_RESPONSE",
+
+  viewFeedRequest: "VIEW_FEED_REQUEST",
+  viewFeedResponse: "VIEW_FEED_RESPONSE",
+
+  createViewByTag: "CREATE_VIEW_BY_TAG",
+  createViewBySource: "CREATE_VIEW_BY_SOURCE",
+
+  removeView: "REMOVE_VIEW",
+};
+
+const viewsType = {
+  allOpen: "allOpen",
+  recent: "recent",
+  saved: "saved",
+  files: "files",
+  custom: "custom",
+};
+
+const defaultViews = {
+  allOpen: { id: "allOpen", name: "All Open", type: viewsType.allOpen },
+  recent: { id: "recent", name: "Recent", type: viewsType.recent },
+  saved: {
+    id: "saved",
+    name: "Saved",
+    type: viewsType.saved,
+  },
+  files: {
+    id: "files",
+    name: "Files",
+    type: viewsType.files,
+  },
+};
 
 ;// CONCATENATED MODULE: ./node_modules/uuid/dist/esm-browser/rng.js
 // Unique ID creation requires a high quality random # generator. In the browser we therefore
@@ -2832,7 +2834,7 @@ const VIEWER_INITIAL_STATE = {
 
   sources: {},
 
-  settings: { isSavedViewActivated: false, isFilesViewActivated: false },
+  settings: { isRecentViewActivated: false, isFilesViewActivated: false },
 
   lastFetched: null,
   isAuthenticated: false,
@@ -3172,13 +3174,13 @@ class ViewerActionsHandler {
     return viewer;
   }
 
-  async updateViewerSettings({ isSavedViewActivated, isFilesViewActivated }) {
+  async updateViewerSettings({ isRecentViewActivated, isFilesViewActivated }) {
     let viewer = await Viewer.get();
 
     this._registerRunningAction();
 
-    if (typeof isSavedViewActivated === "boolean") {
-      viewer.settings.isSavedViewActivated = isSavedViewActivated;
+    if (typeof isRecentViewActivated === "boolean") {
+      viewer.settings.isRecentViewActivated = isRecentViewActivated;
     }
 
     if (typeof isFilesViewActivated === "boolean") {
@@ -3690,7 +3692,7 @@ chrome.cookies.onChanged.addListener((e) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === viewer_messages.updateViewerSettings) {
     ViewerActions.updateViewerSettings({
-      isSavedViewActivated: request.isSavedViewActivated,
+      isRecentViewActivated: request.isRecentViewActivated,
       isFilesViewActivated: request.isFilesViewActivated,
     }).then(sendResponse);
     return true;
@@ -4037,15 +4039,22 @@ class BrowserHistory {
 
   async get() {
     if (BROWSER_HISTORY_INTERNAL_STORAGE) {
+      const viewer = await Viewer.get();
+      if (!viewer.settings.isRecentViewActivated) return [];
       return BROWSER_HISTORY_INTERNAL_STORAGE;
     }
     const localHistory = await this._getFromLocalStorage();
     if (localHistory) {
+      const viewer = await Viewer.get();
+      if (!viewer.settings.isRecentViewActivated) return [];
       return this._set(localHistory);
     }
     const history = await this._buildHistory();
     this._set(history);
     await this._updateLocalStorage();
+
+    const viewer = await Viewer.get();
+    if (!viewer.settings.isRecentViewActivated) return [];
     return history;
   }
 

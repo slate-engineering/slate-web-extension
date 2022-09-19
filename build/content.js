@@ -520,8 +520,6 @@ const defaultViews = {
   },
 };
 
-const initialView = defaultViews.allOpen;
-
 ;// CONCATENATED MODULE: ./src/Core/views/content.js
 
 
@@ -588,8 +586,6 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 ;// CONCATENATED MODULE: ./src/Core/viewer/index.js
-
-
 const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
@@ -628,7 +624,6 @@ const savingSources = {
 
 const viewerInitialState = {
   isAuthenticated: false,
-  initialView: initialView,
   windows: {
     data: { currentWindow: [], allOpen: [] },
   },
