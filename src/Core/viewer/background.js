@@ -132,7 +132,7 @@ class ViewerHandler {
       viewsSlatesLookup: {},
       viewsIdsLookup: {},
       views: viewer.views || [],
-      settings: VIEWER_INITIAL_STATE.settings,
+      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
       sources: {},
     };
