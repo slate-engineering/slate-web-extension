@@ -79,3 +79,10 @@ export const removeView = async (data) => {
     body: JSON.stringify({ data }),
   });
 };
+
+export const updateViewer = async (data) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/users/update`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data }),
+  });
+};
