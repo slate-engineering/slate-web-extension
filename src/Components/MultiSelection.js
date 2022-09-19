@@ -586,66 +586,85 @@ const NewTabActionsMenu = React.forwardRef(
 
     const Actions = React.useMemo(() => {
       const actions = [];
-
       if (onOpenURLs) {
-        actions.push(
-          <ShortcutsTooltip label={`Open ${totalSelectedItems} selected`}>
+        actions.push({
+          label: `Open ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
             <OpenURLsAction
               onOpenLinks={onOpenURLs}
               css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
             />
-          </ShortcutsTooltip>
-        );
+          )),
+        });
       }
 
       if (onCloseTabs) {
-        actions.push(
-          <ShortcutsTooltip label={`Close ${totalSelectedItems} selected`}>
+        actions.push({
+          label: `Close ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
             <CloseTabsAction
               onCloseTabs={onCloseTabs}
               css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
             />
-          </ShortcutsTooltip>
-        );
+          )),
+        });
       }
 
       if (onOpenSlatesJumper) {
-        actions.push(
-          <ShortcutsTooltip label={`Tag ${totalSelectedItems} selected`}>
+        actions.push({
+          label: `Tag ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
             <OpenSlatesJumperAction
-              css={STYLES_ACTION_BUTTON_NEW_TAB}
               onOpenSlatesJumper={onOpenSlatesJumper}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
             />
-          </ShortcutsTooltip>
-        );
+          )),
+        });
       }
 
-      actions.push(
-        <ShortcutsTooltip label={`Copy ${totalSelectedItems} selected`}>
-          <CopyURLsAction css={STYLES_ACTION_BUTTON_NEW_TAB} />
-        </ShortcutsTooltip>
-      );
+      actions.push({
+        label: `Copy ${totalSelectedItems} selected`,
+        Component: React.forwardRef((props, ref) => (
+          <CopyURLsAction
+            css={STYLES_ACTION_BUTTON_NEW_TAB}
+            ref={ref}
+            {...props}
+          />
+        )),
+      });
 
       if (onGroupURLs) {
-        actions.push(
-          <ShortcutsTooltip label={`Group ${totalSelectedItems} selected`}>
+        actions.push({
+          label: `Group ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
             <GroupingAction
-              css={STYLES_ACTION_BUTTON_NEW_TAB}
               onGroup={onGroupURLs}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
             />
-          </ShortcutsTooltip>
-        );
+          )),
+        });
       }
 
       if (onSaveObjects && !areAllSelectedItemsSaved) {
-        actions.push(
-          <ShortcutsTooltip label={`Save ${totalSelectedItems} selected`}>
+        actions.push({
+          label: `Save ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
             <SavingAction
               onSaveObjects={onSaveObjects}
               css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
             />
-          </ShortcutsTooltip>
-        );
+          )),
+        });
       }
 
       return actions;
@@ -689,10 +708,12 @@ const NewTabActionsMenu = React.forwardRef(
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>
               <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-                {Actions.map((action, i) => (
-                  <RovingTabIndex.Item index={i} key={i}>
-                    {action}
-                  </RovingTabIndex.Item>
+                {Actions.map(({ Component, label }, i) => (
+                  <ShortcutsTooltip label={label} key={label}>
+                    <RovingTabIndex.Item index={i} key={i}>
+                      <Component />
+                    </RovingTabIndex.Item>
+                  </ShortcutsTooltip>
                 ))}
               </div>
             </RovingTabIndex.List>
@@ -749,49 +770,59 @@ const JumperActionMenu = React.forwardRef(
     const Actions = React.useMemo(() => {
       const actions = [];
       if (onOpenURLs) {
-        actions.push(
-          <ShortcutsTooltip label={`Open ${totalSelectedItems} selected`}>
-            <OpenURLsAction onOpenLinks={onOpenURLs} />
-          </ShortcutsTooltip>
-        );
+        actions.push({
+          label: `Open ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <OpenURLsAction onOpenLinks={onOpenURLs} ref={ref} {...props} />
+          )),
+        });
       }
 
       if (onCloseTabs) {
-        actions.push(
-          <ShortcutsTooltip label={`Close ${totalSelectedItems} selected`}>
-            <CloseTabsAction onCloseTabs={onCloseTabs} />
-          </ShortcutsTooltip>
-        );
+        actions.push({
+          label: `Close ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <CloseTabsAction onCloseTabs={onCloseTabs} ref={ref} {...props} />
+          )),
+        });
       }
 
       if (onOpenSlatesJumper) {
-        actions.push(
-          <ShortcutsTooltip label={`Tag ${totalSelectedItems} selected`}>
-            <OpenSlatesJumperAction onOpenSlatesJumper={onOpenSlatesJumper} />
-          </ShortcutsTooltip>
-        );
+        actions.push({
+          label: `Tag ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <OpenSlatesJumperAction
+              onOpenSlatesJumper={onOpenSlatesJumper}
+              ref={ref}
+              {...props}
+            />
+          )),
+        });
       }
 
-      actions.push(
-        <ShortcutsTooltip label={`Copy ${totalSelectedItems} selected`}>
-          <CopyURLsAction />
-        </ShortcutsTooltip>
-      );
+      actions.push({
+        label: `Copy ${totalSelectedItems} selected`,
+        Component: React.forwardRef((props, ref) => (
+          <CopyURLsAction ref={ref} {...props} />
+        )),
+      });
 
       if (onGroupURLs) {
-        actions.push(
-          <ShortcutsTooltip label={`Group ${totalSelectedItems} selected`}>
-            <GroupingAction onGroup={onGroupURLs} />
-          </ShortcutsTooltip>
-        );
+        actions.push({
+          label: `Group ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <GroupingAction onGroup={onGroupURLs} ref={ref} {...props} />
+          )),
+        });
       }
 
       if (onSaveObjects && !areAllSelectedItemsSaved) {
-        actions.push(
-          <ShortcutsTooltip label={`Save ${totalSelectedItems} selected`}>
-            <SavingAction onSaveObjects={onSaveObjects} />
-          </ShortcutsTooltip>
-        );
+        actions.push({
+          label: `Save ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <SavingAction onSaveObjects={onSaveObjects} ref={ref} {...props} />
+          )),
+        });
       }
 
       return actions;
@@ -835,10 +866,12 @@ const JumperActionMenu = React.forwardRef(
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>
               <div css={STYLES_ACTIONS_WRAPPER} style={{ marginLeft: "auto" }}>
-                {Actions.map((action, i) => (
-                  <RovingTabIndex.Item index={i} key={i}>
-                    {action}
-                  </RovingTabIndex.Item>
+                {Actions.map(({ label, Component }, i) => (
+                  <ShortcutsTooltip label={label} key={label}>
+                    <RovingTabIndex.Item index={i}>
+                      <Component />
+                    </RovingTabIndex.Item>
+                  </ShortcutsTooltip>
                 ))}
               </div>
             </RovingTabIndex.List>

@@ -330,11 +330,11 @@ const STYLES_JUMPER_SIDE_PANEL = (theme) => css`
 
 const SidePanel = ({ children, css, ...props }) => {
   return (
-    <JumperPanelsPortal>
+    <JumperTopPanelPortal>
       <div css={[STYLES_JUMPER_SIDE_PANEL, css]} {...props}>
         {children}
       </div>
-    </JumperPanelsPortal>
+    </JumperTopPanelPortal>
   );
 };
 
