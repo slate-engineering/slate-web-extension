@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import { CacheProvider as EmotionCacheProvider } from "@emotion/react";
-import { injectGlobalStyles } from "../Common/styles/global";
 
 import EmotionThemeProvider from "./EmotionThemeProvider";
 import EmotionGlobalStyles from "./EmotionGlobalStyles";
@@ -34,7 +33,7 @@ export default function ShadowDom({ children }) {
       {emotionCache && (
         <EmotionThemeProvider>
           <EmotionCacheProvider value={emotionCache}>
-            <EmotionGlobalStyles styles={injectGlobalStyles} />
+            <EmotionGlobalStyles />
             {children}
           </EmotionCacheProvider>
         </EmotionThemeProvider>

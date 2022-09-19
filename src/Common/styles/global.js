@@ -3,27 +3,31 @@ import * as Constants from "../../Common/constants";
 import { css } from "@emotion/react";
 import { getExtensionURL } from "../../Common/utilities";
 
-/* prettier-ignore */
-export const injectGlobalStyles = () => css`
+export const FontFaces = `
   @font-face {
     font-family: 'inter-regular';
-    src: url('${getExtensionURL('/fonts/inter-regular.ttf')}');
+    src: url('${getExtensionURL("/fonts/inter-regular.ttf")}');
   }
 
   @font-face {
     font-family: 'inter-semi-bold';
-    src: url('${getExtensionURL('/fonts/inter-semi-medium.ttf')}');
+    src: url('${getExtensionURL("/fonts/inter-semi-medium.ttf")}');
   }
 
   @font-face {
     font-family: 'inter-bold';
-    src: url('${getExtensionURL('/fonts/inter-bold.ttf')}');
+    src: url('${getExtensionURL("/fonts/inter-bold.ttf")}');
   }
 
   @font-face {
     font-family: 'inter-medium';
-    src: url('${getExtensionURL('/fonts/inter-medium.ttf')}');
+    src: url('${getExtensionURL("/fonts/inter-medium.ttf")}');
   }
+`;
+
+/* prettier-ignore */
+export const injectGlobalStyles = () => css`
+  ${FontFaces};
 
   svg {
     display: block;
@@ -65,11 +69,14 @@ export const injectGlobalStyles = () => css`
     ::-webkit-scrollbar {
       display: none;
     }
+  }
+
+  * {
     -webkit-font-feature-settings: "liga"1, "ss01"1, "zero"1, "cv11"1, 'frac'1, 'calt'1, 'tnum'1;
     -moz-font-feature-settings: "liga"1, "ss01"1, "zero"1, "cv11"1, 'frac'1, 'calt'1, 'tnum'1;
     -ms-font-feature-settings: "liga"1, "ss01"1, "zero"1, "cv11"1, 'frac'1, 'calt'1, 'tnum'1;
     font-feature-settings: "liga"1, "ss01"1, "zero"1, "cv11"1, 'frac'1, 'calt'1, 'tnum'1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-  }
+   }
 `;

@@ -76,14 +76,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": [
-        "index.html",
-        "/static/*",
-        "/fonts/*",
-        "/images/*",
-        "Inter-Regular.ttf",
-        "../fonts/*"
-      ],
+      "resources": ["index.html", "/fonts/*", "static/*", "/images/*"],
       "matches": ["<all_urls>"]
     }
   ]
