@@ -80,12 +80,12 @@ export const ViewerProvider = ({ children }) => {
   };
 
   const updateViewerSettings = ({
-    isSavedViewActivated,
+    isRecentViewActivated,
     isFilesViewActivated,
   }) => {
     chrome.runtime.sendMessage({
       type: messages.updateViewerSettings,
-      isSavedViewActivated,
+      isRecentViewActivated,
       isFilesViewActivated,
     });
   };

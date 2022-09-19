@@ -43,6 +43,10 @@ export const useViews = () => {
     chrome.runtime.sendMessage({ type: messages.removeView, id });
   };
 
+  React.useLayoutEffect(() => {
+    getViewsFeed(appliedView);
+  }, []);
+
   return {
     viewsFeed,
     isLoadingViewFeed: isLoadingFeed,

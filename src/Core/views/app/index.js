@@ -1,3 +1,4 @@
+import { isNewTab } from "Common/utilities";
 import * as React from "react";
 
 import { defaultViews, viewsType } from "../";
@@ -9,7 +10,7 @@ import { defaultViews, viewsType } from "../";
 export const useViewsState = () => {
   const [viewState, setViewState] = React.useState({
     feed: [],
-    appliedView: defaultViews.allOpen,
+    appliedView: isNewTab ? defaultViews.saved : defaultViews.allOpen,
     isLoadingFeed: true,
   });
 

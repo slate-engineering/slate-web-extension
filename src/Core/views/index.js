@@ -33,5 +33,3 @@ export const defaultViews = {
     type: viewsType.files,
   },
 };
-
-export const initialView = defaultViews.allOpen;

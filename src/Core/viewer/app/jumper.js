@@ -69,13 +69,13 @@ export const ViewerProvider = ({ children }) => {
   };
 
   const updateViewerSettings = ({
-    isSavedViewActivated,
+    isRecentViewActivated,
     isFilesViewActivated,
   }) => {
     window.postMessage(
       {
         type: messages.updateViewerSettings,
-        isSavedViewActivated,
+        isRecentViewActivated,
         isFilesViewActivated,
       },
       "*"

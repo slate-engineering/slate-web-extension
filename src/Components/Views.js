@@ -365,9 +365,9 @@ const CreateMenuInitialScene = ({
 }) => {
   const { viewer, scrollMenuToLeftEdge } = useViewsContext();
 
-  const handleToggleSavedView = () => {
+  const handleToggleRecentView = () => {
     viewer.updateViewerSettings({
-      isSavedViewActivated: !viewer.settings?.isSavedViewActivated,
+      isRecentViewActivated: !viewer.settings?.isRecentViewActivated,
     });
     scrollMenuToLeftEdge();
   };
@@ -383,9 +383,9 @@ const CreateMenuInitialScene = ({
       { label: "Source", handler: goToSourceScene },
       { label: "Tag", handler: goToTagScene },
       {
-        label: "Saved",
-        handler: handleToggleSavedView,
-        isApplied: viewer.settings?.isSavedViewActivated,
+        label: "Recent",
+        handler: handleToggleRecentView,
+        isApplied: viewer.settings?.isRecentViewActivated,
       },
       {
         label: "Files",
@@ -1085,16 +1085,16 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
       removeView(view.id);
     };
 
-  const createOnDisableSavedOrFilesView =
+  const createOnDisableRecentOrFilesView =
     ({ view, currentViewIndex }) =>
     () => {
-      if (view.type === viewsType.saved) {
+      if (view.type === viewsType.recent) {
         if (appliedView.id === view.id) {
           const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
           getViewsFeed(prevView);
         }
         viewer.updateViewerSettings({
-          isSavedViewActivated: false,
+          isRecentViewActivated: false,
         });
         return;
       }
@@ -1119,13 +1119,19 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
   });
 
   const VIEWS_ACTIONS = React.useMemo(() => {
-    const actions = [defaultViews.allOpen, defaultViews.recent];
-
-    if (viewer.settings?.isSavedViewActivated) {
-      actions.push(defaultViews.saved);
+    const actions = [];
+    if (!isNewTab) {
+      actions.push(defaultViews.allOpen);
     }
+
+    actions.push(defaultViews.saved);
+
     if (viewer.settings?.isFilesViewActivated) {
       actions.push(defaultViews.files);
+    }
+
+    if (viewer.settings?.isRecentViewActivated) {
+      actions.push(defaultViews.recent);
     }
 
     return actions;
@@ -1148,8 +1154,8 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
           {VIEWS_ACTIONS.map((view, i) => {
             const isApplied = appliedView.id === view.id;
 
-            const isSavedOrFilesView =
-              view.type === viewsType.saved || view.type === viewsType.files;
+            const isRecentOrFilesView =
+              view.type === viewsType.recent || view.type === viewsType.files;
 
             return (
               <MenuItem
@@ -1160,8 +1166,11 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
                 onRemove={
-                  isSavedOrFilesView &&
-                  createOnDisableSavedOrFilesView({ view, currentViewIndex: i })
+                  isRecentOrFilesView &&
+                  createOnDisableRecentOrFilesView({
+                    view,
+                    currentViewIndex: i,
+                  })
                 }
                 index={i}
               >
@@ -1520,11 +1529,11 @@ const useManageFeedAutoFocus = ({
     const currentSettings = viewer.settings;
 
     if (
-      currentSettings.isSavedViewActivated &&
-      !prevSettings.isSavedViewActivated
+      currentSettings.isRecentViewActivated &&
+      !prevSettings.isRecentViewActivated
     ) {
       shouldFocus.current = false;
-      getViewsFeed(defaultViews.saved);
+      getViewsFeed(defaultViews.recent);
     }
 
     if (
@@ -1571,8 +1580,14 @@ const Feed = React.memo(
       },
       ref
     ) => {
-      const { viewer, viewsFeed, appliedView, getViewsFeed, onRestoreFocus } =
-        useViewsContext();
+      const {
+        viewer,
+        viewsFeed,
+        appliedView,
+        isLoadingViewFeed,
+        getViewsFeed,
+        onRestoreFocus,
+      } = useViewsContext();
 
       const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
@@ -1635,6 +1650,8 @@ const Feed = React.memo(
       }
 
       if (viewsFeedItemsData.totalSelectableItems === 0) {
+        if (isLoadingViewFeed) return null;
+
         return (
           <Switch>
             <Match

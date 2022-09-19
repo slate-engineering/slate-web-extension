@@ -78,7 +78,7 @@ const VIEWER_INITIAL_STATE = {
 
   sources: {},
 
-  settings: { isSavedViewActivated: false, isFilesViewActivated: false },
+  settings: { isRecentViewActivated: false, isFilesViewActivated: false },
 
   lastFetched: null,
   isAuthenticated: false,
@@ -418,13 +418,13 @@ class ViewerActionsHandler {
     return viewer;
   }
 
-  async updateViewerSettings({ isSavedViewActivated, isFilesViewActivated }) {
+  async updateViewerSettings({ isRecentViewActivated, isFilesViewActivated }) {
     let viewer = await Viewer.get();
 
     this._registerRunningAction();
 
-    if (typeof isSavedViewActivated === "boolean") {
-      viewer.settings.isSavedViewActivated = isSavedViewActivated;
+    if (typeof isRecentViewActivated === "boolean") {
+      viewer.settings.isRecentViewActivated = isRecentViewActivated;
     }
 
     if (typeof isFilesViewActivated === "boolean") {
@@ -936,7 +936,7 @@ chrome.cookies.onChanged.addListener((e) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === messages.updateViewerSettings) {
     ViewerActions.updateViewerSettings({
-      isSavedViewActivated: request.isSavedViewActivated,
+      isRecentViewActivated: request.isRecentViewActivated,
       isFilesViewActivated: request.isFilesViewActivated,
     }).then(sendResponse);
     return true;
