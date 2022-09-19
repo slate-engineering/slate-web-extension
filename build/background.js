@@ -451,6 +451,10 @@ const constants_uri = {
   upload: "https://uploads.slate.host",
 };
 
+const links = {
+  extensionOnboarding: "https://slate.host/extension-onboarding",
+};
+
 const popularDomainsTitles = {
   "news.ycombinator.com": "Hacker news",
   "hackernews.com": "Hacker news",
@@ -2948,6 +2952,13 @@ class ViewerHandler {
       });
     });
 
+    serializedViewer.settings.hasCompletedExtensionOBFirstStep =
+      viewer.hasCompletedExtensionOBFirstStep;
+    serializedViewer.settings.hasCompletedExtensionOBSecondStep =
+      viewer.hasCompletedExtensionOBSecondStep;
+    serializedViewer.settings.hasCompletedExtensionOBThirdStep =
+      viewer.hasCompletedExtensionOBThirdStep;
+
     return serializedViewer;
   }
 
@@ -3673,8 +3684,17 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-chrome.runtime.onInstalled.addListener(() => {
-  Viewer.sync();
+chrome.runtime.onInstalled.addListener(async () => {
+  await Viewer.sync();
+  const viewer = await Viewer.get();
+  if (
+    viewer.isAuthenticated &&
+    viewer.settings.hasCompletedExtensionOBFirstStep
+  ) {
+    return;
+  }
+
+  chrome.tabs.create({ url: links.extensionOnboarding });
 });
 
 chrome.cookies.onChanged.addListener((e) => {
