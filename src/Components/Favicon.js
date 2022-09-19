@@ -8,7 +8,7 @@ function ImgFavicon({ alt, src, style, ...props }) {
   const handleOnError = () => setIsLoadingFailed(true);
 
   if (isLoadingFailed) {
-    return <DefaultFavicon {...props} />;
+    return <DefaultFavicon style={style} {...props} />;
   }
 
   return (
