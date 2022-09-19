@@ -12,8 +12,13 @@ export const useHistory = () => {
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
+  const viewer = useViewer();
   const loadMoreHistory = React.useCallback(() => {
-    if (!paramsRef.current.canFetchMore) return;
+    if (
+      !viewer.settings.isRecentViewActivated ||
+      !paramsRef.current.canFetchMore
+    )
+      return;
 
     window.postMessage(
       {
@@ -22,7 +27,7 @@ export const useHistory = () => {
       },
       "*"
     );
-  }, []);
+  }, [viewer.settings.isRecentViewActivated]);
 
   React.useEffect(() => {
     const handleMessage = (event) => {
@@ -42,7 +47,7 @@ export const useHistory = () => {
 
     loadMoreHistory();
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [loadMoreHistory]);
 
   return { sessionsFeed, sessionsFeedKeys, loadMoreHistory };
 };

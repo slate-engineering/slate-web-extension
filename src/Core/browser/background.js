@@ -203,15 +203,22 @@ class BrowserHistory {
 
   async get() {
     if (BROWSER_HISTORY_INTERNAL_STORAGE) {
+      const viewer = await Viewer.get();
+      if (!viewer.settings.isRecentViewActivated) return [];
       return BROWSER_HISTORY_INTERNAL_STORAGE;
     }
     const localHistory = await this._getFromLocalStorage();
     if (localHistory) {
+      const viewer = await Viewer.get();
+      if (!viewer.settings.isRecentViewActivated) return [];
       return this._set(localHistory);
     }
     const history = await this._buildHistory();
     this._set(history);
     await this._updateLocalStorage();
+
+    const viewer = await Viewer.get();
+    if (!viewer.settings.isRecentViewActivated) return [];
     return history;
   }
 

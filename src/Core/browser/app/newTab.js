@@ -51,8 +51,14 @@ export const useHistory = () => {
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
-  const loadMoreHistory = () => {
-    if (!paramsRef.current.canFetchMore) return;
+  const viewer = useViewer();
+
+  const loadMoreHistory = React.useCallback(() => {
+    if (
+      !viewer.settings.isRecentViewActivated ||
+      !paramsRef.current.canFetchMore
+    )
+      return;
 
     const handleResponse = (response) => {
       if (response.canFetchMore) {
@@ -70,9 +76,9 @@ export const useHistory = () => {
       },
       handleResponse
     );
-  };
+  }, [viewer.settings.isRecentViewActivated]);
 
-  React.useEffect(loadMoreHistory, []);
+  React.useEffect(loadMoreHistory, [loadMoreHistory]);
 
   React.useEffect(() => {
     const handleWindowsUpdate = (request) => {

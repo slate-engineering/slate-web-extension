@@ -67,6 +67,8 @@ const useMultiSelectionState = ({ totalSelectableItems }) => {
   );
 
   const isAllChecked = React.useMemo(() => {
+    if (totalSelectableItems === 0) return false;
+
     return totalSelectedItems === totalSelectableItems;
   }, [totalSelectedItems, totalSelectableItems]);
 
