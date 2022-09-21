@@ -83,7 +83,7 @@ function Dismiss({ css, ...props }) {
   useEscapeKey(clearSearch);
 
   return (
-    <ShortcutsTooltip label="Exit search" keyTrigger="Esc/←">
+    <ShortcutsTooltip label="Clear" keyTrigger="Esc">
       <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
         <SVG.Dismiss
           style={{ display: "block" }}
@@ -221,11 +221,6 @@ const Input = React.forwardRef(
  * Search Feed
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_SEARCH_FEED_ROW = {
-  width: "calc(100% - 16px)",
-  left: "8px",
-};
-
 const SearchFeedRow = ({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
@@ -246,14 +241,14 @@ const SearchFeedRow = ({ index, data, style }) => {
     return (
       <ListView.SlatesItem
         slates={slates}
-        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+        style={{ ...style }}
       />
     );
   }
 
   if (title) {
     return (
-      <ListView.Title style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}>
+      <ListView.Title style={{ ...style }}>
         {title}
       </ListView.Title>
     );
@@ -265,7 +260,7 @@ const SearchFeedRow = ({ index, data, style }) => {
         key={item.id}
         withActions
         withMultiSelection
-        style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+        style={{ ...style}}
         index={rovingTabIndex}
         title={item.title}
         url={item.url}
@@ -292,7 +287,7 @@ const SearchFeedRow = ({ index, data, style }) => {
       key={item.url}
       withActions
       withMultiSelection
-      style={{ ...style, ...STYLES_SEARCH_FEED_ROW }}
+      style={{ ...style, }}
       index={rovingTabIndex}
       title={item.title}
       url={item.url}

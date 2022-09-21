@@ -59,20 +59,11 @@ const Trigger = React.forwardRef(({ children, ...props }, forwardedRef) => {
     if (ref.current) setTriggerRef(ref);
   }, []);
 
-  const timeoutRef = React.useRef();
-  const clearTimeoutAndItsRef = () => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = null;
-  };
-  const handleMouseMove = () => {
-    clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      showTooltip();
-    }, 400);
+  const handleMouseEnter = () => {
+    showTooltip();
   };
 
   const handleMouseLeave = () => {
-    clearTimeoutAndItsRef();
     hideTooltip();
   };
 
@@ -81,7 +72,6 @@ const Trigger = React.forwardRef(({ children, ...props }, forwardedRef) => {
   };
 
   const handleOnClick = () => {
-    clearTimeoutAndItsRef();
     hideTooltip();
   };
 
@@ -95,7 +85,7 @@ const Trigger = React.forwardRef(({ children, ...props }, forwardedRef) => {
   };
 
   useEventListener({ type: "mousedown", handler: handleMouseDown, ref });
-  useEventListener({ type: "mousemove", handler: handleMouseMove, ref });
+  useEventListener({ type: "mouseenter", handler: handleMouseEnter, ref });
   useEventListener({ type: "mouseleave", handler: handleMouseLeave, ref });
   useEventListener({ type: "click", handler: handleOnClick, ref });
   useEventListener({ type: "focus", handler: handleFocus, ref });

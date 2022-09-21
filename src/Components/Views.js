@@ -864,8 +864,8 @@ const MenuItem = ({
       )}
       <ShortcutsTooltip
         horizontal="right"
-        vertical={isNewTab ? "below" : "above"}
-        label="Navigate spaces"
+        vertical="below"
+        label="Navigate Spaces"
         keyTrigger="⌥ Tab / ⌥ Shift Tab"
       >
         <Typography.H5
@@ -1233,7 +1233,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
       ) : null}
 
       <ShortcutsTooltip
-        label="Create new space"
+        label="Create New Space"
         vertical={isNewTab ? "below" : "above"}
         keyTrigger="N"
       >
