@@ -31,3 +31,11 @@ export const getRootDomain = (url) => {
   const hostnameParts = hostname.split(".");
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
+
+export const removeItemFromArrayInPlace = (array, predicate) => {
+  for (let i = 0; i < array.length; i++) {
+    if (predicate(array[i])) {
+      array.splice(i, 1);
+    }
+  }
+};
