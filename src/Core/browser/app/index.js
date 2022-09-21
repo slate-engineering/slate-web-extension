@@ -156,19 +156,40 @@ export const useWindowsState = ({ initialState }) => {
  * -----------------------------------------------------------------------------------------------*/
 
 export const useHistoryState = () => {
-  const [feed, setFeed] = React.useState({});
-  const sessionsFeedKeys = React.useMemo(() => Object.keys(feed), [feed]);
+  const [historyState, setHistoryState] = React.useState({
+    feed: {},
+    isFetchingHistoryFirstBatch: true,
+  });
+  const sessionsFeedKeys = React.useMemo(
+    () => Object.keys(historyState.feed),
+    [historyState.feed]
+  );
 
   const setSessionsFeed = (history) => {
-    setFeed((prevFeed) => {
+    setHistoryState((prevState) => {
       const newFeed = filterSessionsFeed({
-        sessionsFeed: { ...prevFeed },
+        sessionsFeed: { ...prevState.feed },
         sessionsFeedKeys,
         history: history,
       });
-      return newFeed;
+      return { ...prevState, feed: newFeed };
     });
   };
 
-  return { sessionsFeed: feed, sessionsFeedKeys, setSessionsFeed };
+  const setFetchingStateToFalse = React.useCallback(
+    () =>
+      setHistoryState((prev) => ({
+        ...prev,
+        isFetchingHistoryFirstBatch: false,
+      })),
+    []
+  );
+
+  return {
+    isFetchingHistoryFirstBatch: historyState.isFetchingHistoryFirstBatch,
+    setFetchingStateToFalse,
+    sessionsFeed: historyState.feed,
+    sessionsFeedKeys,
+    setSessionsFeed,
+  };
 };

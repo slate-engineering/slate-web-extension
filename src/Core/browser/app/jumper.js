@@ -8,7 +8,13 @@ import { useViewer } from "../../viewer/app/jumper";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useHistory = () => {
-  const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
+  const {
+    isFetchingHistoryFirstBatch,
+    setFetchingStateToFalse,
+    sessionsFeed,
+    sessionsFeedKeys,
+    setSessionsFeed,
+  } = useHistoryState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
@@ -39,6 +45,7 @@ export const useHistory = () => {
           paramsRef.current.canFetchMore = false;
         }
         setSessionsFeed(data.history);
+        setFetchingStateToFalse();
 
         return;
       }
@@ -47,9 +54,14 @@ export const useHistory = () => {
 
     loadMoreHistory();
     return () => window.removeEventListener("message", handleMessage);
-  }, [loadMoreHistory]);
+  }, [loadMoreHistory, setFetchingStateToFalse]);
 
-  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory };
+  return {
+    isFetchingHistoryFirstBatch,
+    sessionsFeed,
+    sessionsFeedKeys,
+    loadMoreHistory,
+  };
 };
 
 /* -------------------------------------------------------------------------------------------------

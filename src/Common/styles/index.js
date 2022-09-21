@@ -2,8 +2,6 @@ import * as Constants from "../../Common/constants";
 
 import { css } from "@emotion/react";
 
-import Inter from "typeface-inter";
-
 /* TYPOGRAPHY */
 
 export const OVERFLOW_ELLIPSIS = css`

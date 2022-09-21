@@ -315,7 +315,12 @@ class ViewerHandler {
     const viewer = await Actions.hydrateAuthenticatedUser();
     if (shouldSync && !shouldSync()) return;
     if (viewer.data) {
-      const serializedViewer = this._serialize(viewer.data);
+      const prevViewer = await this.get();
+      if (shouldSync && !shouldSync()) return;
+      const serializedViewer = this._serialize({
+        ...prevViewer,
+        ...viewer.data,
+      });
       if (shouldSync && !shouldSync()) return;
       this._set({
         ...serializedViewer,

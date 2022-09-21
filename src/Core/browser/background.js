@@ -82,12 +82,16 @@ const Session = {
 
 /** ----------------------------------------- */
 
-let BROWSER_HISTORY_INTERNAL_STORAGE;
+let BROWSER_HISTORY_INTERNAL_STORAGE = { isBuilt: false, history: undefined };
 const HISTORY_LOCAL_STORAGE_KEY = "history_backup";
 
 class BrowserHistory {
-  _set(history) {
-    BROWSER_HISTORY_INTERNAL_STORAGE = history;
+  _set({ isBuilt, history }) {
+    BROWSER_HISTORY_INTERNAL_STORAGE = {
+      ...BROWSER_HISTORY_INTERNAL_STORAGE,
+      isBuilt,
+      history,
+    };
     return BROWSER_HISTORY_INTERNAL_STORAGE;
   }
 
@@ -175,6 +179,9 @@ class BrowserHistory {
   }
 
   async addVisit(visit) {
+    const isBuilt = await this._getIsBuilt();
+    if (!isBuilt) return;
+
     const history = await browserHistory.get();
 
     if (visit.referringVisitId === "0") {
@@ -201,20 +208,32 @@ class BrowserHistory {
     await this._updateLocalStorage();
   }
 
+  async _getIsBuilt() {
+    if (BROWSER_HISTORY_INTERNAL_STORAGE.history) {
+      return BROWSER_HISTORY_INTERNAL_STORAGE.isBuilt;
+    }
+    const localHistory = await this._getFromLocalStorage();
+    if (localHistory) {
+      return this._set({ history: localHistory }).isBuilt;
+    }
+
+    return false;
+  }
+
   async get() {
-    if (BROWSER_HISTORY_INTERNAL_STORAGE) {
-      const viewer = await Viewer.get();
+    if (BROWSER_HISTORY_INTERNAL_STORAGE.history) {
+      let viewer = await Viewer.get();
       if (!viewer.settings.isRecentViewActivated) return [];
-      return BROWSER_HISTORY_INTERNAL_STORAGE;
+      return BROWSER_HISTORY_INTERNAL_STORAGE.history;
     }
     const localHistory = await this._getFromLocalStorage();
     if (localHistory) {
       const viewer = await Viewer.get();
       if (!viewer.settings.isRecentViewActivated) return [];
-      return this._set(localHistory);
+      return this._set({ history: localHistory }).history;
     }
     const history = await this._buildHistory();
-    this._set(history);
+    this._set({ history, isBuilt: true });
     await this._updateLocalStorage();
 
     const viewer = await Viewer.get();

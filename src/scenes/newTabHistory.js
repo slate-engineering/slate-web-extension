@@ -225,7 +225,12 @@ const STYLES_HISTORY_SCENE_FEED = css`
 // `;
 
 export default function HistoryScene() {
-  const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
+  const {
+    isFetchingHistoryFirstBatch,
+    sessionsFeed,
+    sessionsFeedKeys,
+    loadMoreHistory,
+  } = useHistory();
 
   const { windowsFeeds, activeTabId } = useWindows();
 
@@ -370,6 +375,7 @@ export default function HistoryScene() {
                     historyFeed={sessionsFeed}
                     historyFeedKeys={sessionsFeedKeys}
                     loadMoreHistory={loadMoreHistory}
+                    isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
                     windowsFeed={windowsFeeds.allOpenFeed}
                     windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
                     activeTabId={activeTabId}

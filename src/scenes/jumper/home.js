@@ -68,7 +68,12 @@ export default function Home() {
   });
   const viewer = useViewer();
 
-  const { sessionsFeed, sessionsFeedKeys, loadMoreHistory } = useHistory();
+  const {
+    isFetchingHistoryFirstBatch,
+    sessionsFeed,
+    sessionsFeedKeys,
+    loadMoreHistory,
+  } = useHistory();
 
   const { windowsFeeds, activeTabId } = useWindows();
 
@@ -159,6 +164,7 @@ export default function Home() {
               activeTabId={activeTabId}
               onCloseTabs={Navigation.closeTabs}
               onGroupURLs={Navigation.createGroupFromUrls}
+              isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
             />
           </Switch>
         </Jumper.Body>

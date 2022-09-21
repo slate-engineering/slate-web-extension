@@ -28,6 +28,7 @@ import { Boundary } from "../Components/Boundary";
 import { Switch, Match } from "../Components/Switch";
 import { useSearchContext } from "../Components/Search";
 import { useSlatesCombobox } from "../Components/EditSlates";
+import { LoadingSpinner } from "../Components/Loaders";
 import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
 const useSources = isNewTab ? useNewTabSources : useJumperSources;
@@ -396,7 +397,7 @@ const CreateMenuInitialScene = ({
     [viewer.settings]
   );
   return (
-    <section layoutId="create_menu" style={{ padding: 8 }} {...props}>
+    <section style={{ padding: 8, width: "100%" }} {...props}>
       <RovingTabIndex.Provider
         id="create_menu_tabindex"
         withRestoreFocusOnMount
@@ -499,7 +500,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
   };
 
   return (
-    <div {...props}>
+    <div style={{ width: "100%" }} {...props}>
       <Combobox.Provider>
         <div style={{ width: "100%", padding: 8 }}>
           <Combobox.Input>
@@ -579,13 +580,6 @@ const STYLES_CREATE_MENU_SLATES_WRAPPER = css`
   }
 `;
 
-const STYLES_COLOR_SYSTEM_BLUE = (theme) => css`
-  color: ${theme.system.blue};
-  &:hover {
-    color: ${theme.system.blue};
-  }
-`;
-
 const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   useEscapeKey(goToInitialScene);
 
@@ -612,7 +606,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   };
 
   return (
-    <section layoutId="create_menu" {...props}>
+    <section layoutId="create_menu" style={{ width: "100%" }} {...props}>
       <Combobox.Provider>
         <div style={{ width: "100%", padding: 8 }}>
           <Combobox.Input>
@@ -679,7 +673,7 @@ const STYLES_CREATE_MENU_WRAPPER = css`
   width: 100%;
 `;
 
-const CreateMenu = ({ css, ...props }) => {
+const CreateMenu = (props) => {
   const scenes = {
     initial: "initial",
     source: "source",
@@ -691,48 +685,37 @@ const CreateMenu = ({ css, ...props }) => {
   const goToTagScene = () => setScene(scenes.tag);
   const goToInitialScene = () => setScene(scenes.initial);
 
-  const { closeCreateMenu, openCreateMenu, onRestoreFocus } = useViewsContext();
-  useEscapeKey(closeCreateMenu);
-
-  React.useLayoutEffect(() => {
-    return () => onRestoreFocus?.();
-  }, []);
+  const { closeCreateMenu, onRestoreFocus } = useViewsContext();
 
   const sources = useSources();
 
-  if (scene === scenes.source) {
-    return (
-      <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
-        <CreateMenuSourceScene
-          css={[STYLES_CREATE_MENU_WRAPPER, css]}
-          goToInitialScene={goToInitialScene}
-          sources={sources}
-          {...props}
-        />
-      </Boundary>
-    );
-  }
+  React.useLayoutEffect(() => onRestoreFocus, []);
 
-  if (scene === scenes.tag) {
-    return (
-      <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
-        <CreateMenuTagScene
-          css={[STYLES_CREATE_MENU_WRAPPER, css]}
-          goToInitialScene={goToInitialScene}
-          {...props}
-        />
-      </Boundary>
-    );
-  }
+  useEscapeKey(closeCreateMenu);
 
   return (
     <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
-      <CreateMenuInitialScene
-        css={[STYLES_CREATE_MENU_WRAPPER, css]}
-        goToTagScene={goToTagScene}
-        goToSourceScene={goToSourceScene}
-        {...props}
-      />
+      <section css={STYLES_CREATE_MENU_WRAPPER}>
+        <Switch {...props}>
+          <Match
+            when={scene === scenes.initial}
+            component={CreateMenuInitialScene}
+            goToTagScene={goToTagScene}
+            goToSourceScene={goToSourceScene}
+          />
+          <Match
+            when={scene === scenes.tag}
+            component={CreateMenuTagScene}
+            goToInitialScene={goToInitialScene}
+          />
+          <Match
+            when={scene === scenes.source}
+            component={CreateMenuSourceScene}
+            goToInitialScene={goToInitialScene}
+            sources={sources}
+          />
+        </Switch>
+      </section>
     </Boundary>
   );
 };
@@ -1393,6 +1376,21 @@ function ViewsSlatesEmptyState({ appliedView }) {
 
 /* -----------------------------------------------------------------------------------------------*/
 
+const ViewsHistoryLoadingState = () => {
+  return (
+    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
+      <div style={{ marginTop: 162 }}>
+        <LoadingSpinner style={{ color: Constants.semantic.textBlack }} />
+      </div>
+      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 8 }}>
+        Updating your library
+      </Typography.H4>
+    </section>
+  );
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
 const STYLES_VIEWS_SOURCE_EMPTY_BUTTON = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   height: 32px;
@@ -1496,8 +1494,6 @@ function ViewsFilesEmptyState() {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-let isMounted = false;
-
 const useManageFeedAutoFocus = ({
   viewer,
   getViewsFeed,
@@ -1570,6 +1566,7 @@ const Feed = React.memo(
         historyFeed,
         historyFeedKeys,
         loadMoreHistory,
+        isFetchingHistoryFirstBatch,
 
         windowsFeed,
         windowsFeedKeys,
@@ -1633,6 +1630,10 @@ const Feed = React.memo(
       }
 
       if (appliedView.type === viewsType.recent) {
+        if (isFetchingHistoryFirstBatch) {
+          return <ViewsHistoryLoadingState />;
+        }
+
         return (
           <HistoryFeed
             ref={ref}

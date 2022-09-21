@@ -47,7 +47,13 @@ export const useWindows = () => {
  * -----------------------------------------------------------------------------------------------*/
 
 export const useHistory = () => {
-  const { sessionsFeed, sessionsFeedKeys, setSessionsFeed } = useHistoryState();
+  const {
+    isFetchingHistoryFirstBatch,
+    setFetchingStateToFalse,
+    sessionsFeed,
+    sessionsFeedKeys,
+    setSessionsFeed,
+  } = useHistoryState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
 
@@ -67,6 +73,7 @@ export const useHistory = () => {
         paramsRef.current.canFetchMore = false;
       }
       setSessionsFeed(response.history);
+      setFetchingStateToFalse();
     };
 
     chrome.runtime.sendMessage(
@@ -93,5 +100,10 @@ export const useHistory = () => {
     return () => chrome.runtime.onMessage.removeListener(handleWindowsUpdate);
   }, []);
 
-  return { sessionsFeed, sessionsFeedKeys, loadMoreHistory };
+  return {
+    isFetchingHistoryFirstBatch,
+    sessionsFeed,
+    sessionsFeedKeys,
+    loadMoreHistory,
+  };
 };
