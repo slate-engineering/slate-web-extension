@@ -495,6 +495,14 @@ const getRootDomain = (url) => {
   return hostnameParts.slice(-(hostnameParts.length === 4 ? 3 : 2)).join(".");
 };
 
+const removeItemFromArrayInPlace = (array, predicate) => {
+  for (let i = 0; i < array.length; i++) {
+    if (predicate(array[i])) {
+      array.splice(i, 1);
+    }
+  }
+};
+
 ;// CONCATENATED MODULE: ./src/Common/strings.js
 
 
@@ -2891,7 +2899,7 @@ class ViewerHandler {
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
       viewsIdsLookup: {},
-      views: viewer.views || [],
+      views: viewer.views,
       settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
       sources: {},
@@ -3004,8 +3012,8 @@ class ViewerHandler {
   }
 
   _set(viewer) {
-    this._updateStorage(viewer);
     VIEWER_INTERNAL_STORAGE = viewer;
+    this._updateStorage(viewer);
 
     this.notifyChange(viewer);
     return VIEWER_INTERNAL_STORAGE;
@@ -3068,10 +3076,12 @@ class ViewerHandler {
   async sync({ shouldSync } = {}) {
     //NOTE(amine): only sync when there are no running actions
 
+    if (shouldSync && !shouldSync()) return;
     const viewer = await hydrateAuthenticatedUser();
-
+    if (shouldSync && !shouldSync()) return;
     if (viewer.data) {
       const prevViewer = await this.get();
+      if (shouldSync && !shouldSync()) return;
       const serializedViewer = this._serialize({
         ...prevViewer,
         ...viewer.data,
@@ -3094,20 +3104,33 @@ const Viewer = new ViewerHandler();
 class ViewerActionsHandler {
   constructor() {
     this.runningActions = [];
+    this.timeoutRef = null;
+    this.syncsTracker = {};
   }
 
   _registerRunningAction() {
+    clearTimeout(this.timeoutRef);
+    this.syncsTracker = {};
     this.runningActions.push("");
   }
 
   _cleanupCleanupAction() {
-    setTimeout(() => {
-      this.runningActions.pop();
-      if (!this.runningActions.length) {
-        const shouldSync = () => !this.runningActions.length;
-        Viewer.sync({ shouldSync });
-      }
-    }, 500);
+    this.runningActions.pop();
+    if (this.runningActions.length === 0) {
+      this.timeoutRef = setTimeout(async () => {
+        const id = esm_browser_v4();
+        this.syncsTracker[id] = true;
+
+        const shouldSync = () => {
+          return this.syncsTracker[id] && this.runningActions.length === 0;
+        };
+        await Viewer.sync({ shouldSync });
+
+        if (id in this.syncsTracker) {
+          delete this.syncsTracker[id];
+        }
+      }, 200);
+    }
   }
 
   _addObjectsToViewer({ viewer, objects }) {
@@ -3130,7 +3153,7 @@ class ViewerActionsHandler {
   async _removeObjectsFromViewer({ viewer, objects }) {
     objects.forEach(({ url }) => {
       delete viewer.savedObjectsLookup[url];
-      viewer.objects = objects.filter((object) => object.url !== url);
+      removeItemFromArrayInPlace(objects, (object) => object.url === url);
     });
 
     return viewer;
@@ -3149,7 +3172,8 @@ class ViewerActionsHandler {
   _removeSlateFromViewer({ viewer, slateName }) {
     delete viewer.slatesLookup[slateName];
 
-    viewer.slates = viewer.slates.filter(
+    removeItemFromArrayInPlace(
+      viewer.slates,
       (slate) => slate.slatename !== slateName
     );
     return viewer;
@@ -3177,9 +3201,11 @@ class ViewerActionsHandler {
     });
 
     objects.forEach(({ url }) => {
-      const filterOutSlateName = (slate) => slate !== slateName;
-      viewer.savedObjectsSlates[url] =
-        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
+      const filterOutSlateName = (slate) => slate === slateName;
+      removeItemFromArrayInPlace(
+        viewer.savedObjectsSlates[url],
+        filterOutSlateName
+      );
     });
 
     return viewer;
@@ -3503,7 +3529,7 @@ class ViewerActionsHandler {
 
     delete viewer.viewsIdsLookup[customId];
 
-    viewer.views = viewer.views.filter((item) => item.id !== view.id);
+    removeItemFromArrayInPlace(viewer.views, (item) => item.id === view.id);
 
     return viewer;
   }
@@ -3516,17 +3542,14 @@ class ViewerActionsHandler {
     let filterBySlateId;
     let filterBySource;
     let metadata = {};
-    let customId;
 
     if (slateName) {
-      customId = createViewCustomId({ name, slatename: name });
       name = slateName;
       const slate = viewer.slates.find(
         (slate) => slate.slatename === slateName || slate.name === slateName
       );
       filterBySlateId = slate.id;
     } else {
-      customId = createViewCustomId({ name, source });
       const rootDomain = background_getRootDomain(source);
       name = getTitleFromRootDomain(rootDomain);
       filterBySource = source;
@@ -3555,9 +3578,7 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._removeViewFromViewer({ viewer, customId });
-      Viewer._set(viewer);
+      // TODO: handle errors
     }
 
     this._cleanupCleanupAction();
@@ -3580,15 +3601,7 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._addViewToViewer({
-        viewer,
-        name: deletedView.name,
-        filterBySource: deletedView.filterBySource,
-        filterBySlateId: deletedView.filterBySlateId,
-        favicon: deletedView.metadata.favicon,
-      });
-      Viewer._set(viewer);
+      // TODO: handle errors
     }
 
     this._cleanupCleanupAction();
@@ -3648,6 +3661,7 @@ Viewer.onChange(async (viewerData) => {
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ name }) => name);
   const views = viewerData.views.map(Viewer.serializeView);
+
   const {
     savedObjectsLookup,
     savedObjectsSlates,
@@ -3938,12 +3952,16 @@ const Session = {
 
 /** ----------------------------------------- */
 
-let BROWSER_HISTORY_INTERNAL_STORAGE;
+let BROWSER_HISTORY_INTERNAL_STORAGE = { isBuilt: false, history: undefined };
 const HISTORY_LOCAL_STORAGE_KEY = "history_backup";
 
 class BrowserHistory {
-  _set(history) {
-    BROWSER_HISTORY_INTERNAL_STORAGE = history;
+  _set({ isBuilt, history }) {
+    BROWSER_HISTORY_INTERNAL_STORAGE = {
+      ...BROWSER_HISTORY_INTERNAL_STORAGE,
+      isBuilt,
+      history,
+    };
     return BROWSER_HISTORY_INTERNAL_STORAGE;
   }
 
@@ -4031,6 +4049,9 @@ class BrowserHistory {
   }
 
   async addVisit(visit) {
+    const isBuilt = await this._getIsBuilt();
+    if (!isBuilt) return;
+
     const history = await browserHistory.get();
 
     if (visit.referringVisitId === "0") {
@@ -4057,20 +4078,32 @@ class BrowserHistory {
     await this._updateLocalStorage();
   }
 
+  async _getIsBuilt() {
+    if (BROWSER_HISTORY_INTERNAL_STORAGE.history) {
+      return BROWSER_HISTORY_INTERNAL_STORAGE.isBuilt;
+    }
+    const localHistory = await this._getFromLocalStorage();
+    if (localHistory) {
+      return this._set({ history: localHistory }).isBuilt;
+    }
+
+    return false;
+  }
+
   async get() {
-    if (BROWSER_HISTORY_INTERNAL_STORAGE) {
-      const viewer = await Viewer.get();
+    if (BROWSER_HISTORY_INTERNAL_STORAGE.history) {
+      let viewer = await Viewer.get();
       if (!viewer.settings.isRecentViewActivated) return [];
-      return BROWSER_HISTORY_INTERNAL_STORAGE;
+      return BROWSER_HISTORY_INTERNAL_STORAGE.history;
     }
     const localHistory = await this._getFromLocalStorage();
     if (localHistory) {
       const viewer = await Viewer.get();
       if (!viewer.settings.isRecentViewActivated) return [];
-      return this._set(localHistory);
+      return this._set({ history: localHistory }).history;
     }
     const history = await this._buildHistory();
-    this._set(history);
+    this._set({ history, isBuilt: true });
     await this._updateLocalStorage();
 
     const viewer = await Viewer.get();
