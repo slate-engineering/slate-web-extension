@@ -9,7 +9,10 @@ import {
   savingStates,
   savingSources,
 } from ".";
-import { constructWindowsFeed } from "../../Extension_common/utilities";
+import {
+  constructWindowsFeed,
+  removeItemFromArrayInPlace,
+} from "../../Extension_common/utilities";
 import { capitalize } from "../../Common/strings";
 import { viewsType } from "../views";
 import { v4 as uuid } from "uuid";
@@ -131,7 +134,7 @@ class ViewerHandler {
       viewsSourcesLookup: {},
       viewsSlatesLookup: {},
       viewsIdsLookup: {},
-      views: viewer.views || [],
+      views: viewer.views,
       settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
 
       sources: {},
@@ -244,8 +247,8 @@ class ViewerHandler {
   }
 
   _set(viewer) {
-    this._updateStorage(viewer);
     VIEWER_INTERNAL_STORAGE = viewer;
+    this._updateStorage(viewer);
 
     this.notifyChange(viewer);
     return VIEWER_INTERNAL_STORAGE;
@@ -308,14 +311,11 @@ class ViewerHandler {
   async sync({ shouldSync } = {}) {
     //NOTE(amine): only sync when there are no running actions
 
+    if (shouldSync && !shouldSync()) return;
     const viewer = await Actions.hydrateAuthenticatedUser();
-
+    if (shouldSync && !shouldSync()) return;
     if (viewer.data) {
-      const prevViewer = await this.get();
-      const serializedViewer = this._serialize({
-        ...prevViewer,
-        ...viewer.data,
-      });
+      const serializedViewer = this._serialize(viewer.data);
       if (shouldSync && !shouldSync()) return;
       this._set({
         ...serializedViewer,
@@ -334,20 +334,33 @@ export const Viewer = new ViewerHandler();
 class ViewerActionsHandler {
   constructor() {
     this.runningActions = [];
+    this.timeoutRef = null;
+    this.syncsTracker = {};
   }
 
   _registerRunningAction() {
+    clearTimeout(this.timeoutRef);
+    this.syncsTracker = {};
     this.runningActions.push("");
   }
 
   _cleanupCleanupAction() {
-    setTimeout(() => {
-      this.runningActions.pop();
-      if (!this.runningActions.length) {
-        const shouldSync = () => !this.runningActions.length;
-        Viewer.sync({ shouldSync });
-      }
-    }, 500);
+    this.runningActions.pop();
+    if (this.runningActions.length === 0) {
+      this.timeoutRef = setTimeout(async () => {
+        const id = uuid();
+        this.syncsTracker[id] = true;
+
+        const shouldSync = () => {
+          return this.syncsTracker[id] && this.runningActions.length === 0;
+        };
+        await Viewer.sync({ shouldSync });
+
+        if (id in this.syncsTracker) {
+          delete this.syncsTracker[id];
+        }
+      }, 200);
+    }
   }
 
   _addObjectsToViewer({ viewer, objects }) {
@@ -370,7 +383,7 @@ class ViewerActionsHandler {
   async _removeObjectsFromViewer({ viewer, objects }) {
     objects.forEach(({ url }) => {
       delete viewer.savedObjectsLookup[url];
-      viewer.objects = objects.filter((object) => object.url !== url);
+      removeItemFromArrayInPlace(objects, (object) => object.url === url);
     });
 
     return viewer;
@@ -389,7 +402,8 @@ class ViewerActionsHandler {
   _removeSlateFromViewer({ viewer, slateName }) {
     delete viewer.slatesLookup[slateName];
 
-    viewer.slates = viewer.slates.filter(
+    removeItemFromArrayInPlace(
+      viewer.slates,
       (slate) => slate.slatename !== slateName
     );
     return viewer;
@@ -417,9 +431,11 @@ class ViewerActionsHandler {
     });
 
     objects.forEach(({ url }) => {
-      const filterOutSlateName = (slate) => slate !== slateName;
-      viewer.savedObjectsSlates[url] =
-        viewer.savedObjectsSlates[url].filter(filterOutSlateName);
+      const filterOutSlateName = (slate) => slate === slateName;
+      removeItemFromArrayInPlace(
+        viewer.savedObjectsSlates[url],
+        filterOutSlateName
+      );
     });
 
     return viewer;
@@ -743,7 +759,7 @@ class ViewerActionsHandler {
 
     delete viewer.viewsIdsLookup[customId];
 
-    viewer.views = viewer.views.filter((item) => item.id !== view.id);
+    removeItemFromArrayInPlace(viewer.views, (item) => item.id === view.id);
 
     return viewer;
   }
@@ -756,17 +772,14 @@ class ViewerActionsHandler {
     let filterBySlateId;
     let filterBySource;
     let metadata = {};
-    let customId;
 
     if (slateName) {
-      customId = createViewCustomId({ name, slatename: name });
       name = slateName;
       const slate = viewer.slates.find(
         (slate) => slate.slatename === slateName || slate.name === slateName
       );
       filterBySlateId = slate.id;
     } else {
-      customId = createViewCustomId({ name, source });
       const rootDomain = getRootDomain(source);
       name = getTitleFromRootDomain(rootDomain);
       filterBySource = source;
@@ -795,9 +808,7 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._removeViewFromViewer({ viewer, customId });
-      Viewer._set(viewer);
+      // TODO: handle errors
     }
 
     this._cleanupCleanupAction();
@@ -820,15 +831,7 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._addViewToViewer({
-        viewer,
-        name: deletedView.name,
-        filterBySource: deletedView.filterBySource,
-        filterBySlateId: deletedView.filterBySlateId,
-        favicon: deletedView.metadata.favicon,
-      });
-      Viewer._set(viewer);
+      // TODO: handle errors
     }
 
     this._cleanupCleanupAction();
@@ -888,6 +891,7 @@ Viewer.onChange(async (viewerData) => {
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ name }) => name);
   const views = viewerData.views.map(Viewer.serializeView);
+
   const {
     savedObjectsLookup,
     savedObjectsSlates,
