@@ -93,11 +93,16 @@ export const NavigationProvider = ({ children }) => {
     navigate(`/slates?urls=${urlsQuery}`);
   }, []);
 
+  const navigateToSettingsJumper = React.useCallback(() => {
+    navigate(`/settings`);
+  }, []);
+
   const value = React.useMemo(
     () => ({
       navigationState,
       navigateToHomeJumper,
       navigateToSlatesJumper,
+      navigateToSettingsJumper,
       isOpen: isOpen,
       closeTheJumper: () => setIsOpen(false),
     }),

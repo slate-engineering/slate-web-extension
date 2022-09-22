@@ -5,6 +5,7 @@ import * as Navigation from "../Core/navigation/app/newTab";
 import * as Search from "../Components/Search";
 import * as Jumper from "../Components/jumper";
 import * as EditSlates from "../Components/EditSlates";
+import * as EditSettings from "../Components/EditSettings";
 
 import Logo from "../Components/Logo";
 
@@ -17,6 +18,7 @@ import { useViewer } from "../Core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "../Components/Views";
 import { css } from "@emotion/react";
 import { ShortcutsTooltip } from "../Components/Tooltip";
+import { useEscapeKey } from "Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * EditSlatesJumper
@@ -65,6 +67,43 @@ function EditSlatesJumper({ objects, onClose }) {
           <EditSlates.Body />
         </Jumper.Body>
       </EditSlates.Provider>
+    </Jumper.Root>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
+ * EditSettingsJumper
+ * -----------------------------------------------------------------------------------------------*/
+
+const useSettingsJumper = () => {
+  const [isSettingsJumperOpen, setSettingsJumperState] = React.useState(false);
+
+  const closeSettingsJumper = () => setSettingsJumperState(false);
+
+  const openSettingsJumper = () => setSettingsJumperState(true);
+
+  return { isSettingsJumperOpen, closeSettingsJumper, openSettingsJumper };
+};
+
+function EditSettingsJumper({ onClose }) {
+  const viewer = useViewer();
+
+  useEscapeKey(onClose);
+
+  return (
+    <Jumper.Root onClose={onClose}>
+      <EditSettings.Provider
+        viewer={viewer}
+        onDisableBookmark={() => console.log("yup")}
+      >
+        <Jumper.Header style={{ paddingLeft: "20px" }}>
+          <EditSettings.Input />
+        </Jumper.Header>
+        <Jumper.Divider />
+        <Jumper.Body>
+          <EditSettings.Body />
+        </Jumper.Body>
+      </EditSettings.Provider>
     </Jumper.Root>
   );
 }
@@ -191,6 +230,16 @@ const STYLES_HISTORY_SCENE_FEED = css`
   margin: 0 auto;
 `;
 
+const STYLES_SETTINGS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  border-radius: 8px;
+  padding: 8px;
+  &:hover,
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
+`;
+
 // const STYLES_FILTER_TOGGLE_BUTTON = (theme) => css`
 //   ${Styles.BUTTON_RESET};
 //   position: absolute;
@@ -260,6 +309,9 @@ export default function HistoryScene() {
   const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
     useSlatesJumper();
 
+  const { isSettingsJumperOpen, closeSettingsJumper, openSettingsJumper } =
+    useSettingsJumper();
+
   const focusFirstItemInFeedOrInputIfEmpty = () => {
     clearSearch();
     if (!feedRef.rovingTabIndexRef) {
@@ -285,6 +337,11 @@ export default function HistoryScene() {
           onClose={closeSlatesJumper}
         />
       )}
+
+      {isSettingsJumperOpen && (
+        <EditSettingsJumper onClose={closeSettingsJumper} />
+      )}
+
       <div css={STYLES_HISTORY_SCENE_WRAPPER}>
         <div css={STYLES_HISTORY_SCENE_BACKGROUND} />
 
@@ -325,14 +382,18 @@ export default function HistoryScene() {
               </div>
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
               <ShortcutsTooltip vertical="above" label="Slate Settings">
-                <Logo
-                  style={{
-                    width: "24.78px",
-                    height: "24px",
-                    marginTop: 48,
-                    marginBottom: 24,
-                  }}
-                />
+                <button
+                  css={STYLES_SETTINGS_BUTTON}
+                  style={{ marginTop: 48, marginBottom: 24 }}
+                  onClick={openSettingsJumper}
+                >
+                  <Logo
+                    style={{
+                      width: "24.78px",
+                      height: "24px",
+                    }}
+                  />
+                </button>
               </ShortcutsTooltip>
               <Search.Input
                 ref={inputRef}

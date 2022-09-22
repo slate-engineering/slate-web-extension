@@ -46,7 +46,17 @@ const CreateViewMenuSidePanel = (props) => {
 
 const STYLES_JUMPER_INPUT_WRAPPER = css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
-  padding-left: 16px;
+  padding-left: 8px;
+`;
+
+const STYLES_SETTINGS_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  border-radius: 8px;
+  padding: 8px;
+  &:hover,
+  &:focus {
+    background-color: ${theme.semantic.bgGrayLight};
+  }
 `;
 
 export default function Home() {
@@ -98,7 +108,7 @@ export default function Home() {
     }
   };
 
-  const { navigateToSlatesJumper } = useNavigation();
+  const { navigateToSlatesJumper, navigateToSettingsJumper } = useNavigation();
 
   return (
     <Views.Provider
@@ -128,7 +138,13 @@ export default function Home() {
       >
         <Jumper.Header css={STYLES_JUMPER_INPUT_WRAPPER}>
           <ShortcutsTooltip vertical="above" label="Slate Settings">
-            <Logo width={20} height={20} style={{ marginRight: 12 }} />
+            <button
+              css={STYLES_SETTINGS_BUTTON}
+              onClick={navigateToSettingsJumper}
+              style={{ marginRight: 4 }}
+            >
+              <Logo width={20} height={20} />
+            </button>
           </ShortcutsTooltip>
           <Search.Input ref={inputRef} onKeyDown={handleOnInputKeyUp} />
         </Jumper.Header>

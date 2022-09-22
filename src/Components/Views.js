@@ -35,7 +35,6 @@ const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
-import { shouldComponentUpdate } from "react-window";
 
 /* -------------------------------------------------------------------------------------------------
  * Views Provider
@@ -500,6 +499,13 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
     scrollMenuToRightEdge();
   };
 
+  // NOTE(amine): to prevent conflicts with global hotkeys
+  const preventPropagation = (e) => {
+    if (e.keyCode > 46 && !(e.shiftKey || e.altKey)) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <div style={{ width: "100%" }} {...props}>
       <Combobox.Provider>
@@ -510,6 +516,8 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
               css={STYLES_CREATE_MENU_INPUT}
               value={searchValue}
               onChange={handleOnInputChange}
+              onKeyUp={preventPropagation}
+              onKeyDown={preventPropagation}
               autoFocus
             />
           </Combobox.Input>
@@ -606,6 +614,13 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
     scrollMenuToRightEdge();
   };
 
+  // NOTE(amine): to prevent conflicts with global hotkeys
+  const preventPropagation = (e) => {
+    if (e.keyCode > 46 && !(e.shiftKey || e.altKey)) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <section layoutId="create_menu" style={{ width: "100%" }} {...props}>
       <Combobox.Provider>
@@ -616,6 +631,8 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
               css={STYLES_CREATE_MENU_INPUT}
               value={searchValue}
               onChange={handleOnInputChange}
+              onKeyDown={preventPropagation}
+              onKeyUp={preventPropagation}
               autoFocus
             />
           </Combobox.Input>

@@ -8,6 +8,7 @@ import * as Validations from "../Common/validations";
 import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
 import { getFavicon } from "../Common/favicons";
+import { useEscapeKey } from "../Common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * Provider
@@ -110,7 +111,7 @@ const STYLES_DISMISS_BUTTON = (theme) => css`
   transform: translateY(-50%);
   height: 32px;
   width: 32px;
-  padding: 8px;
+  paddingtop: 8px;
   border-radius: 8px;
   color: ${theme.semantic.textGray};
 
@@ -125,9 +126,10 @@ const STYLES_DISMISS_BUTTON = (theme) => css`
   }
 `;
 
-function Dismiss({ css, ...props }) {
+function Dismiss({ css, onDimiss, ...props }) {
+  useEscapeKey(onDimiss);
   return (
-    <button css={[STYLES_DISMISS_BUTTON, css]} {...props}>
+    <button css={[STYLES_DISMISS_BUTTON, css]} onClick={onDimiss} {...props}>
       <SVG.Dismiss
         style={{ display: "block" }}
         height={DISMISS_BUTTON_WIDTH}
@@ -221,7 +223,7 @@ const Input = ({ ...props }) => {
       </Combobox.Input>
 
       {value.length > 0 ? (
-        <Dismiss onClick={() => (focusInput(), clearInputValue())} />
+        <Dismiss onDimiss={() => (focusInput(), clearInputValue())} />
       ) : null}
     </section>
   );

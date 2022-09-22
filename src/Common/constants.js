@@ -224,6 +224,11 @@ export const uri = {
   upload: "https://uploads.slate.host",
 };
 
+export const links = {
+  extensionOnboarding: "https://slate.host/extension-onboarding",
+  slateAppSettingsPage: "https://slate.host/_/settings",
+};
+
 export const NFTDomains = ["foundation.app", "zora.co", "opensea.io"];
 
 // more important filetypes to consider:
