@@ -3187,7 +3187,7 @@ class ViewerActionsHandler {
 
     removeItemFromArrayInPlace(
       viewer.slates,
-      (slate) => slate.slatename !== slateName
+      (slate) => slate.slatename === slateName
     );
     return viewer;
   }
@@ -3232,9 +3232,9 @@ class ViewerActionsHandler {
     hasCompletedExtensionOBSecondStep,
     hasCompletedExtensionOBThirdStep,
   }) {
-    let viewer = await Viewer.get();
-
     this._registerRunningAction();
+
+    let viewer = await Viewer.get();
 
     let userRequest = {};
 
@@ -3295,6 +3295,8 @@ class ViewerActionsHandler {
    */
 
   async saveLink({ objects, slateName, tab, source = savingSources.app }) {
+    if (objects.length === 0) return;
+
     this._registerRunningAction();
 
     let viewer = await Viewer.get();
@@ -3348,19 +3350,20 @@ class ViewerActionsHandler {
 
     if (!response || response.error) {
       sendStatusUpdate(savingStates.failed);
-      let viewer = await Viewer.get();
-      if (slateName) {
-        viewer = this._removeObjectsFromViewerSlate({
-          viewer,
-          objects: objectsToBeSaved,
-          slateName,
-        });
-      }
-      viewer = this._removeObjectsFromViewer({
-        viewer: viewer,
-        objects: objectsToBeSaved,
-      });
-      Viewer._set(viewer);
+      // let viewer = await Viewer.get();
+      // if (slateName) {
+      //   viewer = this._removeObjectsFromViewerSlate({
+      //     viewer,
+      //     objects: objectsToBeSaved,
+      //     slateName,
+      //   });
+      // }
+      // viewer = this._removeObjectsFromViewer({
+      //   viewer: viewer,
+      //   objects: objectsToBeSaved,
+      // });
+      // Viewer._set(viewer);
+      // TODO: handle errors
       return;
     }
 
@@ -3370,6 +3373,7 @@ class ViewerActionsHandler {
   }
 
   async addObjectsToSlate({ slateName, objects }) {
+    this._registerRunningAction();
     let viewer = await Viewer.get();
     if (!(slateName in viewer.slatesLookup)) {
       return;
@@ -3397,16 +3401,17 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      viewer = await Viewer.get();
-      viewer = this._removeObjectsFromViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      Viewer._set(viewer);
+      // viewer = await Viewer.get();
+      // viewer = this._removeObjectsFromViewerSlate({
+      //   viewer,
+      //   objects,
+      //   slateName,
+      // });
+      // Viewer._set(viewer);
+      // TODO: handle errors
     }
 
-    return;
+    this._cleanupCleanupAction();
   }
 
   async removeObjectsFromSlate({ slateName, objects }) {
@@ -3414,6 +3419,8 @@ class ViewerActionsHandler {
     if (!(slateName in viewer.slatesLookup)) {
       return;
     }
+
+    this._registerRunningAction();
 
     const filesIdsPayload = objects.map(
       ({ url }) => viewer.objectsMetadata[url].id
@@ -3432,9 +3439,7 @@ class ViewerActionsHandler {
     const isSlateEmpty =
       Object.keys(viewer.slatesLookup[slateName]).length === 0;
     // NOTE(amine): if the request fails, we'll use oldSlate to add that slate back
-    let oldSlate;
     if (isSlateEmpty) {
-      oldSlate = viewer.slates.find((slate) => slate.slatename === slateName);
       viewer = this._removeSlateFromViewer({ viewer, slateName });
     }
 
@@ -3446,22 +3451,24 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      viewer = await this.get();
-      if (isSlateEmpty) {
-        viewer.slates.push(oldSlate);
-        oldSlate.objects.forEach((object) => {
-          const objectUrl = getFileUrl(object);
-          viewer.slatesLookup[slateName][objectUrl] = true;
-        });
-      }
-      viewer = this._addObjectsToViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      Viewer._set(viewer);
+      // viewer = await Viewer.get();
+      // if (isSlateEmpty) {
+      //   viewer.slates.push(oldSlate);
+      //   oldSlate.objects.forEach((object) => {
+      //     const objectUrl = getFileUrl(object);
+      //     viewer.slatesLookup[slateName][objectUrl] = true;
+      //   });
+      // }
+      // viewer = this._addObjectsToViewerSlate({
+      //   viewer,
+      //   objects,
+      //   slateName,
+      // });
+      // Viewer._set(viewer);
+      // TODO: handles errors;
     }
 
+    this._cleanupCleanupAction();
     return;
   }
 
@@ -3485,14 +3492,16 @@ class ViewerActionsHandler {
     });
 
     if (!response || response.error) {
-      let viewer = await Viewer.get();
-      viewer = this._removeObjectsFromViewerSlate({
-        viewer,
-        objects,
-        slateName,
-      });
-      viewer = this._removeSlateFromViewer({ viewer, slateName });
-      Viewer._set(viewer);
+      // let viewer = await Viewer.get();
+      // viewer = this._removeObjectsFromViewerSlate({
+      //   viewer,
+      //   objects,
+      //   slateName,
+      // });
+      // viewer = this._removeSlateFromViewer({ viewer, slateName });
+      // Viewer._set(viewer);
+
+      //TODO handle errors
       return;
     } else {
       const viewer = await Viewer.get();
