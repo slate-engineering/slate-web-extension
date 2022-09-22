@@ -80,13 +80,21 @@ export const ViewerProvider = ({ children }) => {
   };
 
   const updateViewerSettings = ({
+    isBookmarkSyncActivated,
     isRecentViewActivated,
     isFilesViewActivated,
+    hasCompletedExtensionOBFirstStep,
+    hasCompletedExtensionOBSecondStep,
+    hasCompletedExtensionOBThirdStep,
   }) => {
     chrome.runtime.sendMessage({
       type: messages.updateViewerSettings,
+      isBookmarkSyncActivated,
       isRecentViewActivated,
       isFilesViewActivated,
+      hasCompletedExtensionOBFirstStep,
+      hasCompletedExtensionOBSecondStep,
+      hasCompletedExtensionOBThirdStep,
     });
   };
 

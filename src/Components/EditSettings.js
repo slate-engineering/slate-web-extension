@@ -68,12 +68,7 @@ const useSettingsOptions = ({ filterValue, options }) => {
   }, [filterValue, options]);
 };
 
-const Provider = ({
-  children,
-  viewer,
-
-  onDisableBookmark,
-}) => {
+const Provider = ({ children, viewer }) => {
   const { searchValue, setSearchValue } = useSettingsInput();
 
   const onToggleHistorySync = React.useCallback(() => {
@@ -81,6 +76,12 @@ const Provider = ({
       isRecentViewActivated: !viewer.settings?.isRecentViewActivated,
     });
   }, [viewer.settings?.isRecentViewActivated]);
+
+  const onToggleBookmarkSync = React.useCallback(() => {
+    viewer.updateViewerSettings({
+      isBookmarkSyncActivated: !viewer.settings?.isBookmarkSyncActivated,
+    });
+  }, [viewer.settings?.isBookmarkSyncActivated]);
 
   const DEFAULT_PERMISSION_OPTIONS = React.useMemo(
     () => [
@@ -91,11 +92,11 @@ const Provider = ({
       },
       {
         name: "Sync browser bookmark",
-        handler: onDisableBookmark,
+        handler: onToggleBookmarkSync,
         isEnabled: viewer.settings?.isBookmarkSyncActivated,
       },
     ],
-    [onDisableBookmark, onToggleHistorySync, viewer.settings]
+    [onToggleHistorySync, onToggleBookmarkSync, viewer.settings]
   );
 
   const DEFAULT_ACCOUNT_SETTINGS = React.useMemo(

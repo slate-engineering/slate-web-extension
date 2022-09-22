@@ -69,14 +69,22 @@ export const ViewerProvider = ({ children }) => {
   };
 
   const updateViewerSettings = ({
+    isBookmarkSyncActivated,
     isRecentViewActivated,
     isFilesViewActivated,
+    hasCompletedExtensionOBFirstStep,
+    hasCompletedExtensionOBSecondStep,
+    hasCompletedExtensionOBThirdStep,
   }) => {
     window.postMessage(
       {
         type: messages.updateViewerSettings,
+        isBookmarkSyncActivated,
         isRecentViewActivated,
         isFilesViewActivated,
+        hasCompletedExtensionOBFirstStep,
+        hasCompletedExtensionOBSecondStep,
+        hasCompletedExtensionOBThirdStep,
       },
       "*"
     );

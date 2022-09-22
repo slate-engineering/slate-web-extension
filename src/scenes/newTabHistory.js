@@ -92,10 +92,7 @@ function EditSettingsJumper({ onClose }) {
 
   return (
     <Jumper.Root onClose={onClose}>
-      <EditSettings.Provider
-        viewer={viewer}
-        onDisableBookmark={() => console.log("yup")}
-      >
+      <EditSettings.Provider viewer={viewer}>
         <Jumper.Header style={{ paddingLeft: "20px" }}>
           <EditSettings.Input />
         </Jumper.Header>

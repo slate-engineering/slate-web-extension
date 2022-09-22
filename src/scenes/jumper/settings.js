@@ -24,10 +24,7 @@ export default function Settings() {
   useEscapeKey(navigateToHomeJumper);
 
   return (
-    <EditSettings.Provider
-      viewer={viewer}
-      onDisableBookmark={() => console.log("yolo")}
-    >
+    <EditSettings.Provider viewer={viewer}>
       <Jumper.Header
         css={Styles.HORIZONTAL_CONTAINER_CENTERED}
         style={{ padding: "0px 16px" }}

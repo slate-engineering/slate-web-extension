@@ -5,6 +5,7 @@ import * as Styles from "../Common/styles";
 import * as SVG from "../Common/SVG";
 
 import { useViewer } from "../Core/viewer/app/jumper";
+import { useNavigation } from "../Core/navigation/app/jumper";
 import { css } from "@emotion/react";
 
 const STYLES_PERMISSION_ONBOARDING_WRAPPER = css`
@@ -42,8 +43,21 @@ const STYLES_BUTTON_SECONDARY = (theme) => css`
 
 function PermissionsOnboarding() {
   const viewer = useViewer();
+  const { navigateToSettingsJumper } = useNavigation();
 
-  if (!viewer.settings.hasCompletedExtensionOBFirstStep) {
+  if (!viewer.settings.hasCompletedExtensionOBSecondStep) {
+    const onGotItHandler = () => {
+      viewer.updateViewerSettings({
+        hasCompletedExtensionOBSecondStep: true,
+      });
+    };
+    const onGoToSettingsHandler = () => {
+      navigateToSettingsJumper();
+      viewer.updateViewerSettings({
+        hasCompletedExtensionOBSecondStep: true,
+      });
+    };
+
     return (
       <Jumper.BottomPanel css={STYLES_PERMISSION_ONBOARDING_WRAPPER}>
         <div style={{ padding: 2 }}>
@@ -55,8 +69,14 @@ function PermissionsOnboarding() {
             organize them.
           </Typography.H5>
           <div css={Styles.HORIZONTAL_CONTAINER} style={{ marginTop: 8 }}>
-            <button css={STYLES_BUTTON_PRIMARY}>Got it</button>
-            <button css={STYLES_BUTTON_SECONDARY} style={{ marginLeft: 4 }}>
+            <button css={STYLES_BUTTON_PRIMARY} onClick={onGotItHandler}>
+              Got it
+            </button>
+            <button
+              css={STYLES_BUTTON_SECONDARY}
+              onClick={onGoToSettingsHandler}
+              style={{ marginLeft: 4 }}
+            >
               Go to settings
             </button>
           </div>
@@ -65,7 +85,19 @@ function PermissionsOnboarding() {
     );
   }
 
-  if (!viewer.settings.hasCompletedExtensionOBSecondStep) {
+  if (!viewer.settings.hasCompletedExtensionOBThirdStep) {
+    const onGotItHandler = () => {
+      viewer.updateViewerSettings({
+        hasCompletedExtensionOBThirdStep: true,
+      });
+    };
+    const onGoToSettingsHandler = () => {
+      navigateToSettingsJumper();
+      viewer.updateViewerSettings({
+        hasCompletedExtensionOBThirdStep: true,
+      });
+    };
+
     return (
       <Jumper.BottomPanel css={STYLES_PERMISSION_ONBOARDING_WRAPPER}>
         <div style={{ padding: 2 }}>
@@ -77,8 +109,14 @@ function PermissionsOnboarding() {
             collect links.
           </Typography.H5>
           <div css={Styles.HORIZONTAL_CONTAINER} style={{ marginTop: 8 }}>
-            <button css={STYLES_BUTTON_PRIMARY}>Got it</button>
-            <button css={STYLES_BUTTON_SECONDARY} style={{ marginLeft: 4 }}>
+            <button css={STYLES_BUTTON_PRIMARY} onClick={onGotItHandler}>
+              Got it
+            </button>
+            <button
+              css={STYLES_BUTTON_SECONDARY}
+              onClick={onGoToSettingsHandler}
+              style={{ marginLeft: 4 }}
+            >
               Go to settings
             </button>
           </div>
