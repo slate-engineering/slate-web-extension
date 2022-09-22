@@ -260,7 +260,8 @@ const STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER = css`
   bottom: 0px;
   transform: translateY(calc(100% + 12px));
 
-  width: 100%;
+  width: fit-content;
+  border-radius: 16px;
 
   ${STYLES_JUMPER_BOTTOM_PANEL_FADE_IN};
 `;
@@ -270,6 +271,7 @@ const STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND = css`
   top: 0%;
   left: 0%;
   width: 100%;
+  border-radius: inherit;
   height: 100%;
   background-image: url("${getExtensionURL(
     "/images/bg-jumper-top-panel.png"
@@ -280,7 +282,8 @@ const STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND = css`
 const STYLES_JUMPER_BOTTOM_PANEL = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
 
-  border-radius: 16px;
+  width: ${JUMPER_WIDTH}px;
+  border-radius: inherit;
   background-color: white;
   border: 1px solid ${theme.semantic.borderGrayLight4};
   box-shadow: ${theme.shadow.jumperLight};
@@ -294,12 +297,14 @@ const STYLES_JUMPER_BOTTOM_PANEL = (theme) => css`
   }
 `;
 
-const BottomPanel = ({ children }) => {
+const BottomPanel = ({ children, css, ...props }) => {
   return (
     <JumperBottomPanelPortal>
       <div css={STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER}>
         <div css={STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND} />
-        <div css={STYLES_JUMPER_BOTTOM_PANEL}>{children}</div>
+        <div css={[STYLES_JUMPER_BOTTOM_PANEL, css]} {...props}>
+          {children}
+        </div>
       </div>
     </JumperBottomPanelPortal>
   );
