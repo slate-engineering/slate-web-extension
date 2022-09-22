@@ -59,7 +59,10 @@ function PermissionsOnboarding() {
     };
 
     return (
-      <Jumper.BottomPanel css={STYLES_PERMISSION_ONBOARDING_WRAPPER}>
+      <Jumper.BottomPanel
+        transition={{ delay: 0.4 }}
+        css={STYLES_PERMISSION_ONBOARDING_WRAPPER}
+      >
         <div style={{ padding: 2 }}>
           <SVG.Hash width={16} height={16} />
         </div>
@@ -99,7 +102,10 @@ function PermissionsOnboarding() {
     };
 
     return (
-      <Jumper.BottomPanel css={STYLES_PERMISSION_ONBOARDING_WRAPPER}>
+      <Jumper.BottomPanel
+        transition={{ delay: 0.4 }}
+        css={STYLES_PERMISSION_ONBOARDING_WRAPPER}
+      >
         <div style={{ padding: 2 }}>
           <SVG.Hash width={16} height={16} />
         </div>

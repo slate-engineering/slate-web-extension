@@ -7,6 +7,7 @@ import { useEscapeKey, useTrapFocus } from "../Common/hooks";
 import { getExtensionURL } from "../Common/utilities";
 import { Divider } from "../Components/Divider";
 import { Boundary } from "../Components/Boundary";
+import { motion } from "framer-motion";
 
 // NOTE(amine): used to fix stacking issues in overflowing parts
 const JumperContext = React.createContext({});
@@ -239,21 +240,6 @@ const TopPanel = ({ children, containerStyle }) => {
  *  Bottom panel
  * -----------------------------------------------------------------------------------------------*/
 
-const STYLES_JUMPER_BOTTOM_PANEL_FADE_IN = css`
-  @keyframes views-menu-fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(100%);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(calc(100% + 12px));
-    }
-  }
-
-  animation: views-menu-fade-in 100ms ease;
-`;
-
 const STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER = css`
   position: absolute;
   left: 0%;
@@ -262,8 +248,6 @@ const STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER = css`
 
   width: fit-content;
   border-radius: 16px;
-
-  ${STYLES_JUMPER_BOTTOM_PANEL_FADE_IN};
 `;
 
 const STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND = css`
@@ -297,15 +281,20 @@ const STYLES_JUMPER_BOTTOM_PANEL = (theme) => css`
   }
 `;
 
-const BottomPanel = ({ children, css, ...props }) => {
+const BottomPanel = ({ children, transition, css, ...props }) => {
   return (
     <JumperBottomPanelPortal>
-      <div css={STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER}>
+      <motion.div
+        css={STYLES_JUMPER_BOTTOM_PANEL_ANIMATION_WRAPPER}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, ...transition }}
+      >
         <div css={STYLES_JUMPER_BOTTOM_PANEL_BACKGROUND} />
         <div css={[STYLES_JUMPER_BOTTOM_PANEL, css]} {...props}>
           {children}
         </div>
-      </div>
+      </motion.div>
     </JumperBottomPanelPortal>
   );
 };
