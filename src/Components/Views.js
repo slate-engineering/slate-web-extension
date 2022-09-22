@@ -35,6 +35,7 @@ const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
 import HistoryFeed from "./HistoryFeed";
 import WindowsFeed from "./WindowsFeed";
+import { shouldComponentUpdate } from "react-window";
 
 /* -------------------------------------------------------------------------------------------------
  * Views Provider
@@ -750,6 +751,29 @@ const MenuProvider = ({ children, ...props }) => {
 /* -------------------------------------------------------------------------------------------------
  * Views Menu
  * -----------------------------------------------------------------------------------------------*/
+const STYLES_VIEWS_BUTTON_WRAPPER = (theme) => css`
+  position: relative;
+
+  &:hover .views_menu_button {
+    color: ${theme.semantic.textBlack};
+    background-color: ${theme.semantic.bgGrayLight4};
+  }
+  &:hover-within .views_menu_button {
+    color: ${theme.semantic.textBlack};
+    background-color: ${theme.semantic.bgGrayLight4};
+  }
+
+  .views_menu_remove_button {
+    opacity: 0;
+  }
+  &:hover .views_menu_remove_button {
+    opacity: 1;
+  }
+
+  &:hover-within .views_menu_remove_button {
+    opacity: 1;
+  }
+`;
 
 const STYLES_VIEWS_BUTTON_ACTIVE = (theme) => css`
   color: ${theme.semantic.textBlack};
@@ -760,15 +784,10 @@ const STYLES_VIEWS_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: relative;
-  border-radius: 12px;
   padding: 5px 12px 7px;
   color: ${theme.semantic.textGray};
-
+  border-radius: 12px;
   white-space: nowrap;
-
-  &:hover {
-    color: ${theme.semantic.textBlack};
-  }
 `;
 
 const STYLES_VIEWS_BUTTON_BACKGROUND = (theme) => css`
@@ -786,15 +805,15 @@ const STYLES_VIEWS_REMOVE_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};
   position: absolute;
   top: 0px;
-  left: 0px;
-  transform: translateY(-50%);
-  z-index: 1;
-  padding: 4px;
-  background-color: ${theme.semantic.bgLight};
-  color: ${theme.semantic.textGray};
-  border: 1px solid ${theme.semantic.borderGrayLight};
-  border-radius: 50%;
-  box-shadow: ${theme.shadow.darkSmall};
+  right: 0px;
+  padding: 10px 6px;
+  background: linear-gradient(
+    270deg,
+    #d1d4d6 70.83%,
+    rgba(209, 212, 214, 0) 100%
+  );
+  color: ${theme.semantic.textGray} !important;
+  border-radius: 12px;
 `;
 
 const MenuItem = ({
@@ -808,6 +827,7 @@ const MenuItem = ({
   onClick,
   onSubmit,
   onRemove,
+  style,
   ...props
 }) => {
   const { registerMenuItem, cleanupMenuItem, moveSelectionOnClick } =
@@ -828,23 +848,12 @@ const MenuItem = ({
     }
   }, [isViewApplied]);
 
-  const [isRemoveButtonVisible, setRemoveButtonVisibility] =
-    React.useState(false);
-  const showRemoveButton = () => setRemoveButtonVisibility(true);
-  const hideRemoveButton = () => setRemoveButtonVisibility(false);
-
   return (
     <div
-      style={{ position: "relative" }}
-      onMouseEnter={showRemoveButton}
-      onMouseLeave={hideRemoveButton}
+      style={{ position: "relative", ...style }}
       ref={ref}
+      css={STYLES_VIEWS_BUTTON_WRAPPER}
     >
-      {onRemove && isRemoveButtonVisible && (
-        <button onClick={onRemove} css={STYLES_VIEWS_REMOVE_BUTTON}>
-          <SVG.Minus height={16} width={16} />
-        </button>
-      )}
       <ShortcutsTooltip
         horizontal="right"
         vertical="below"
@@ -859,6 +868,7 @@ const MenuItem = ({
           as="button"
           onClick={mergeEvents(onClick, () => moveSelectionOnClick(index))}
           tabIndex="-1"
+          className="views_menu_button"
           {...props}
         >
           {(isSlateView || isSourceView) && (
@@ -887,6 +897,16 @@ const MenuItem = ({
           </AnimatePresence>
         </Typography.H5>
       </ShortcutsTooltip>
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="views_menu_remove_button"
+          tabIndex="-1"
+          css={STYLES_VIEWS_REMOVE_BUTTON}
+        >
+          <SVG.Dismiss height={12} width={12} />
+        </button>
+      )}
     </div>
   );
 };
