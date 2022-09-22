@@ -285,6 +285,11 @@ const uri = {
   upload: "https://uploads.slate.host",
 };
 
+const links = {
+  extensionOnboarding: "https://slate.host/extension-onboarding",
+  slateAppSettingsPage: "https://slate.host/_/settings",
+};
+
 const NFTDomains = (/* unused pure expression or super */ null && (["foundation.app", "zora.co", "opensea.io"]));
 
 // more important filetypes to consider:
@@ -418,7 +423,7 @@ const removeView = async (data) => {
 };
 
 const updateViewer = async (data) => {
-  return await returnJSON(`${Constants.uri.hostname}/api/users/update`, {
+  return await returnJSON(`${uri.hostname}/api/users/update`, {
     ...DEFAULT_OPTIONS,
     body: JSON.stringify({ data }),
   });
@@ -451,7 +456,7 @@ const constants_uri = {
   upload: "https://uploads.slate.host",
 };
 
-const links = {
+const constants_links = {
   extensionOnboarding: "https://slate.host/extension-onboarding",
 };
 
@@ -2960,6 +2965,14 @@ class ViewerHandler {
       });
     });
 
+    serializedViewer.settings.isBookmarkSyncActivated =
+      viewer.isBookmarkSyncActivated;
+    serializedViewer.settings.isRecentViewActivated =
+      viewer.isRecentViewActivated;
+    serializedViewer.settings.isFilesViewActivated =
+      viewer.isFilesViewActivated;
+
+    // NOTE(amine): onboarding steps
     serializedViewer.settings.hasCompletedExtensionOBFirstStep =
       viewer.hasCompletedExtensionOBFirstStep;
     serializedViewer.settings.hasCompletedExtensionOBSecondStep =
@@ -3211,20 +3224,63 @@ class ViewerActionsHandler {
     return viewer;
   }
 
-  async updateViewerSettings({ isRecentViewActivated, isFilesViewActivated }) {
+  async updateViewerSettings({
+    isBookmarkSyncActivated,
+    isRecentViewActivated,
+    isFilesViewActivated,
+    hasCompletedExtensionOBFirstStep,
+    hasCompletedExtensionOBSecondStep,
+    hasCompletedExtensionOBThirdStep,
+  }) {
     let viewer = await Viewer.get();
 
     this._registerRunningAction();
 
+    let userRequest = {};
+
+    if (typeof isBookmarkSyncActivated === "boolean") {
+      viewer.settings.isBookmarkSyncActivated = isBookmarkSyncActivated;
+      userRequest["isBookmarkSyncActivated "] = isBookmarkSyncActivated;
+    }
+
     if (typeof isRecentViewActivated === "boolean") {
       viewer.settings.isRecentViewActivated = isRecentViewActivated;
+      userRequest["isRecentViewActivated"] = isRecentViewActivated;
     }
 
     if (typeof isFilesViewActivated === "boolean") {
       viewer.settings.isFilesViewActivated = isFilesViewActivated;
+      userRequest["isFilesViewActivated "] = isFilesViewActivated;
+    }
+
+    if (typeof hasCompletedExtensionOBFirstStep === "boolean") {
+      viewer.settings.hasCompletedExtensionOBFirstStep =
+        hasCompletedExtensionOBFirstStep;
+      userRequest["hasCompletedExtensionOBFirstStep "] =
+        hasCompletedExtensionOBFirstStep;
+    }
+
+    if (typeof hasCompletedExtensionOBSecondStep === "boolean") {
+      viewer.settings.hasCompletedExtensionOBSecondStep =
+        hasCompletedExtensionOBSecondStep;
+      userRequest["hasCompletedExtensionOBSecondStep "] =
+        hasCompletedExtensionOBSecondStep;
+    }
+
+    if (typeof hasCompletedExtensionOBThirdStep === "boolean") {
+      viewer.settings.hasCompletedExtensionOBThirdStep =
+        hasCompletedExtensionOBThirdStep;
+      userRequest["hasCompletedExtensionOBThirdStep "] =
+        hasCompletedExtensionOBThirdStep;
     }
 
     Viewer._set(viewer);
+
+    const response = await updateViewer({ user: userRequest });
+
+    if (!response || response.error) {
+      // TODO(amine): handle errors
+    }
 
     this._cleanupCleanupAction();
   }
@@ -3701,14 +3757,18 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 chrome.runtime.onInstalled.addListener(async () => {
   await Viewer.sync();
   const viewer = await Viewer.get();
-  if (
-    viewer.isAuthenticated &&
-    viewer.settings.hasCompletedExtensionOBFirstStep
-  ) {
-    return;
+  if (viewer.isAuthenticated) {
+    if (!viewer.settings.hasCompletedExtensionOBFirstStep) {
+      chrome.tabs.create({ url: constants_links.extensionOnboarding });
+      ViewerActions.updateViewerSettings({
+        hasCompletedExtensionOBFirstStep: true,
+      });
+    } else {
+      return;
+    }
+  } else {
+    chrome.tabs.create({ url: constants_links.extensionOnboarding });
   }
-
-  chrome.tabs.create({ url: links.extensionOnboarding });
 });
 
 chrome.cookies.onChanged.addListener((e) => {
@@ -3726,8 +3786,15 @@ chrome.cookies.onChanged.addListener((e) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === viewer_messages.updateViewerSettings) {
     ViewerActions.updateViewerSettings({
+      isBookmarkSyncActivated: request.isBookmarkSyncActivated,
       isRecentViewActivated: request.isRecentViewActivated,
       isFilesViewActivated: request.isFilesViewActivated,
+      hasCompletedExtensionOBFirstStep:
+        request.hasCompletedExtensionOBFirstStep,
+      hasCompletedExtensionOBSecondStep:
+        request.hasCompletedExtensionOBSecondStep,
+      hasCompletedExtensionOBThirdStep:
+        request.hasCompletedExtensionOBThirdStep,
     }).then(sendResponse);
     return true;
   }
@@ -4368,7 +4435,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 chrome.bookmarks.onCreated.addListener(async (id, bookmark) => {
   if (!bookmark.url) return;
 
-  if (await Viewer.checkIfAuthenticated()) {
+  const viewer = await Viewer.get();
+  if (viewer.isAuthenticated && viewer.settings.isBookmarkSyncActivated) {
     const activeTab = await Tabs.getActive();
     ViewerActions.saveLink({
       objects: [{ url: bookmark.url, title: bookmark.title }],

@@ -278,6 +278,11 @@ const uri = {
   upload: "https://uploads.slate.host",
 };
 
+const links = {
+  extensionOnboarding: "https://slate.host/extension-onboarding",
+  slateAppSettingsPage: "https://slate.host/_/settings",
+};
+
 const NFTDomains = (/* unused pure expression or super */ null && (["foundation.app", "zora.co", "opensea.io"]));
 
 // more important filetypes to consider:
