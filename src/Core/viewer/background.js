@@ -216,7 +216,7 @@ class ViewerHandler {
   _serializeObject(object) {
     if (object.isLink) {
       return {
-        title: object.linkName,
+        title: object.name || object.linkName,
         favicon: object.linkFavicon,
         url: object.url,
         rootDomain: getRootDomain(object.url),
@@ -229,7 +229,7 @@ class ViewerHandler {
     const fileUrl = getFileUrl(object);
 
     return {
-      title: object.name,
+      title: object.name || object.filename,
       rootDomain: Constants.uri.domain,
       url: fileUrl,
       cid: object.cid,
