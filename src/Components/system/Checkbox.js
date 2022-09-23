@@ -5,11 +5,12 @@ import { css } from "@emotion/react";
 
 const STYLES_CHECKBOX = css`
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 0px;
+  left: 0px;
   width: 16px;
   height: 16px;
   padding: 2px;
+  margin: 0px;
 
   z-index: 1;
   opacity: 0;
@@ -67,6 +68,7 @@ const Checkbox = React.forwardRef(
             css={STYLES_CHECKBOX}
             checked={checked}
             ref={ref}
+            onClick={() => console.log("clickking")}
             {...props}
           />
         </div>
