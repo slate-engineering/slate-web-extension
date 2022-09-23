@@ -303,7 +303,7 @@ const KeyboardInteractionHint = ({ children, ...props }) => {
 const STYLES_BODY_WRAPPER = css`
   height: 100%;
   flex: 1;
-  padding: 8px;
+  padding: 8px 0px;
   overflow-y: auto;
   &::-webkit-scrollbar {
     display: none;

@@ -64,7 +64,7 @@ function PermissionsOnboarding() {
         css={STYLES_PERMISSION_ONBOARDING_WRAPPER}
       >
         <div style={{ padding: 2 }}>
-          <SVG.Hash width={16} height={16} />
+          <SVG.SolidClock width={16} height={16} />
         </div>
         <div style={{ marginLeft: 8 }}>
           <Typography.H5 color="textBlack">
@@ -107,7 +107,7 @@ function PermissionsOnboarding() {
         css={STYLES_PERMISSION_ONBOARDING_WRAPPER}
       >
         <div style={{ padding: 2 }}>
-          <SVG.Hash width={16} height={16} />
+          <SVG.SolidStar width={16} height={16} />
         </div>
         <div style={{ marginLeft: 8 }}>
           <Typography.H5 color="textBlack">
