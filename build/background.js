@@ -3372,6 +3372,8 @@ class ViewerActionsHandler {
   }
 
   async addObjectsToSlate({ slateName, objects }) {
+    if (objects.length === 0) return;
+
     this._registerRunningAction();
     let viewer = await Viewer.get();
     if (!(slateName in viewer.slatesLookup)) {
