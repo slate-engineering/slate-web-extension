@@ -553,7 +553,7 @@ const Object = React.forwardRef(
                 vertical="above"
                 label="Save"
                 keyTrigger={
-                  isNewTab ? "S" : isUsingMac ? "S / ⌥S" : "S / Alt S"
+                  isNewTab ? "S" : isUsingMac() ? "S / ⌥S" : "S / Alt S"
                 }
               >
                 <button
