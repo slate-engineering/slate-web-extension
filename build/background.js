@@ -2986,7 +2986,7 @@ class ViewerHandler {
   _serializeObject(object) {
     if (object.isLink) {
       return {
-        title: object.linkName,
+        title: object.name || object.linkName,
         favicon: object.linkFavicon,
         url: object.url,
         rootDomain: background_getRootDomain(object.url),
@@ -2999,7 +2999,7 @@ class ViewerHandler {
     const fileUrl = getFileUrl(object);
 
     return {
-      title: object.name,
+      title: object.name || object.filename,
       rootDomain: constants_uri.domain,
       url: fileUrl,
       cid: object.cid,
@@ -3568,7 +3568,7 @@ class ViewerActionsHandler {
     viewer.viewsSourcesLookup[filterBySource] = Viewer.serializeView({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filterBySource: !!filterBySource,
+      filterBySource: filterBySource,
       metadata: { favicon },
     });
     viewer.views.push({
