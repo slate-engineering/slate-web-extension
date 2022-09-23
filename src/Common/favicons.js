@@ -1,6 +1,3 @@
-import { Play, Slack } from "react-feather";
-import { satisfies } from "semver";
-
 const AdobeFavicon = (props) => (
   <svg
     width={16}
@@ -313,7 +310,7 @@ const BaiduFavicon = (props) => (
 
 const BingFavicon = (props) => (
   <svg
-    width={13}
+    width={16}
     height={16}
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
