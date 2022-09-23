@@ -264,12 +264,8 @@ const TopPanel = () => {
       >
         <Typography.H5 color="textBlack" nbrOflines={1}>
           {objects[0].title}
+          {objects.length > 1 && " and" + ` ${objects.length - 1} more`}
         </Typography.H5>
-        {objects.length > 1 && (
-          <Typography.H5 color="textBlack" style={{ flexShrink: 0 }}>
-            {" and" + ` ${objects.length - 1} more`}
-          </Typography.H5>
-        )}
       </div>
     </div>
   );
