@@ -49,13 +49,6 @@
       },
       "description": "Open the slate extension"
     },
-    "open-app-alternate": {
-      "suggested_key": {
-        "default": "Ctrl+J",
-        "mac": "Command+J"
-      },
-      "description": "Open the slate extension"
-    },
     "open-app-on-slates": {
       "suggested_key": {
         "default": "Alt+T",

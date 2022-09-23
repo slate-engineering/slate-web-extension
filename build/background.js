@@ -62,7 +62,6 @@ const viewerInitialState = {
 // NOTE(amine): commands are defined in manifest.json
 const constants_commands = {
   openApp: "open-app",
-  openAppAlternate: "open-app-alternate",
   openSlate: "open-slate",
   openAppOnSlates: "open-app-on-slates",
 };
@@ -4590,10 +4589,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (
-    command === constants_commands.openApp ||
-    command === constants_commands.openAppAlternate
-  ) {
+  if (command === constants_commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: navigation_messages.openExtensionJumperRequest,
       data: { url: "/", toggle: true },

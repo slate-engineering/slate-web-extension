@@ -55,7 +55,6 @@ window.addEventListener("message", async function (event) {
 // NOTE(amine): commands are defined in manifest.json
 const commands = {
   openApp: "open-app",
-  openAppAlternate: "open-app-alternate",
   openSlate: "open-slate",
   openAppOnSlates: "open-app-on-slates",
 };
