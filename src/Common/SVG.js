@@ -42,6 +42,48 @@ export const Link = (props) => {
   );
 };
 
+export const SolidClock = (props) => {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      height={props.height}
+      style={props.style}
+    >
+      <g clip-path="url(#clip0_1645_27340)">
+      <path d="M7.99968 14.6668C11.6816 14.6668 14.6663 11.6821 14.6663 8.00016C14.6663 4.31826 11.6816 1.3335 7.99968 1.3335C4.31778 1.3335 1.33301 4.31826 1.33301 8.00016C1.33301 11.6821 4.31778 14.6668 7.99968 14.6668Z" fill="#0084FF" stroke="#0084FF" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8 4V8L10.6667 9.33333" stroke="white" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <defs>
+      <clipPath id="clip0_1645_27340">
+      <rect width="16" height="16" fill="white"/>
+      </clipPath>
+      </defs>
+    </svg>
+  );
+};
+
+export const SolidStar = (props) => {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      height={props.height}
+      style={props.style}
+    >
+      <path d="M7.99968 1.3335L10.0597 5.50683L14.6663 6.18016L11.333 9.42683L12.1197 14.0135L7.99968 11.8468L3.87967 14.0135L4.66634 9.42683L1.33301 6.18016L5.93967 5.50683L7.99968 1.3335Z" fill="#0084FF" stroke="#0084FF" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  );
+};
+
 export const ExternalLink = (props) => {
   return (
     <svg
