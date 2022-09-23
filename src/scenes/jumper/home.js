@@ -24,7 +24,7 @@ const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   transform: translateX(100%);
   border: 1px solid ${theme.semantic.borderGrayLight4};
   border-radius: 12px;
-  max-width: 240px;
+  width: 240px;
   max-height: 320px;
 `;
 

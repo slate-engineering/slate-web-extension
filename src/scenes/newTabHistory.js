@@ -128,7 +128,6 @@ const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   border: 1px solid ${theme.semantic.borderGrayLight4};
   border-radius: 12px;
   width: 240px;
-  max-width: 240px;
   max-height: 320px;
   background-color: ${theme.semantic.bgLight};
   box-shadow: ${theme.shadow.lightLarge};
