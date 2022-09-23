@@ -107,8 +107,6 @@ const STYLES_SEARCH_WRAPPER = css`
 
 const STYLES_SEARCH_INPUT = (theme) => css`
   ${Styles.H3};
-
-  font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
   height: 56px;
@@ -238,20 +236,11 @@ const SearchFeedRow = ({ index, data, style }) => {
   };
 
   if (slates) {
-    return (
-      <ListView.SlatesItem
-        slates={slates}
-        style={{ ...style }}
-      />
-    );
+    return <ListView.SlatesItem slates={slates} style={{ ...style }} />;
   }
 
   if (title) {
-    return (
-      <ListView.Title style={{ ...style }}>
-        {title}
-      </ListView.Title>
-    );
+    return <ListView.Title style={{ ...style }}>{title}</ListView.Title>;
   }
 
   if (viewType === "allOpen") {
@@ -260,7 +249,7 @@ const SearchFeedRow = ({ index, data, style }) => {
         key={item.id}
         withActions
         withMultiSelection
-        style={{ ...style}}
+        style={{ ...style }}
         index={rovingTabIndex}
         title={item.title}
         url={item.url}
@@ -287,7 +276,7 @@ const SearchFeedRow = ({ index, data, style }) => {
       key={item.url}
       withActions
       withMultiSelection
-      style={{ ...style, }}
+      style={{ ...style }}
       index={rovingTabIndex}
       title={item.title}
       url={item.url}

@@ -309,8 +309,6 @@ function Provider({
 
 const STYLES_CREATE_MENU_INPUT = (theme) => css`
   ${Styles.H4};
-
-  font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
   height: 36px;

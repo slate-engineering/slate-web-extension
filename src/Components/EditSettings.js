@@ -184,8 +184,6 @@ const STYLES_SEARCH_WRAPPER = css`
 
 const STYLES_SEARCH_INPUT = (theme) => css`
   ${Styles.H3};
-
-  font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
   height: 56px;

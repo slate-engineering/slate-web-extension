@@ -2,18 +2,18 @@ import * as React from "react";
 import * as Constants from "../Common/constants";
 import * as SVG from "../Common/svg";
 import * as Strings from "../Common/strings";
+import * as Styles from "../Common/styles";
 
 import { css } from "@emotion/react";
 import { mergeRefs } from "../Common/utilities";
 
 const INPUT_STYLES = (theme) => css`
+  ${Styles.H3};
   box-sizing: border-box;
-  font-family: ${theme.font.text};
   -webkit-appearance: none;
   width: 100%;
   height: 100%;
   background: transparent;
-  font-size: ${theme.typescale.lvl1};
   border-radius: 12px;
   outline: 0;
   border: none;
