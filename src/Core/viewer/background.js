@@ -798,7 +798,7 @@ class ViewerActionsHandler {
     viewer.viewsSourcesLookup[filterBySource] = Viewer.serializeView({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
-      filterBySource: !!filterBySource,
+      filterBySource: filterBySource,
       metadata: { favicon },
     });
     viewer.views.push({
