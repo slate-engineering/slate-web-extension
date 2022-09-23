@@ -1,7 +1,6 @@
 // NOTE(amine): commands are defined in manifest.json
 export const commands = {
   openApp: "open-app",
-  openAppAlternate: "open-app-alternate",
   openSlate: "open-slate",
   openAppOnSlates: "open-app-on-slates",
 };

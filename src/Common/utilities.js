@@ -127,3 +127,7 @@ export const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
     allOpenFeedKeys,
   };
 };
+
+export const isUsingMac = () => {
+  return window.navigator.appVersion.indexOf("Mac") != -1;
+};
