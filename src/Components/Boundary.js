@@ -1,5 +1,6 @@
-import { useEventListener } from "Common/hooks";
 import * as React from "react";
+
+import { useEventListener } from "../Common/hooks";
 
 //NOTE(martina): This component behaves unusually sometimes when there is a click on an SVG. It will count it as an out of rectangle event. Solve this issue with adding { pointerEvents: "none" } to the SVG
 
@@ -34,7 +35,7 @@ function Boundary({ children, enabled, onOutsideRectEvent, ...props }) {
     [enabled]
   );
 
-  useEventListener({ handler: handleClick, type: "click" }, [handleClick]);
+  useEventListener({ handler: handleClick, type: "mousedown" }, [handleClick]);
 
   return (
     <div ref={rootRef} {...props}>
