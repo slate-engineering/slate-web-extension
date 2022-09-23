@@ -8,7 +8,7 @@ import { css } from "@emotion/react";
 import { mergeRefs } from "../Common/utilities";
 
 const INPUT_STYLES = (theme) => css`
-  ${Styles.H3};
+  ${Styles.H4};
   box-sizing: border-box;
   -webkit-appearance: none;
   width: 100%;
