@@ -89,11 +89,6 @@ function PermissionsOnboarding() {
   }
 
   if (!viewer.settings.hasCompletedExtensionOBThirdStep) {
-    const onGotItHandler = () => {
-      viewer.updateViewerSettings({
-        hasCompletedExtensionOBThirdStep: true,
-      });
-    };
     const onGoToSettingsHandler = () => {
       navigateToSettingsJumper();
       viewer.updateViewerSettings({
@@ -115,7 +110,7 @@ function PermissionsOnboarding() {
             collect links.
           </Typography.H5>
           <div css={Styles.HORIZONTAL_CONTAINER} style={{ marginTop: 8 }}>
-            <button css={STYLES_BUTTON_PRIMARY} onClick={onGotItHandler}>
+            <button css={STYLES_BUTTON_PRIMARY} onClick={onGoToSettingsHandler}>
               Got it
             </button>
             <button
