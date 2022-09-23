@@ -7,7 +7,12 @@ import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
-import { isNewTab, copyToClipboard, mergeEvents } from "../Common/utilities";
+import {
+  isNewTab,
+  copyToClipboard,
+  mergeEvents,
+  isUsingMac,
+} from "../Common/utilities";
 import { Checkbox } from "./system";
 import { FixedSizeList, VariableSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
@@ -485,7 +490,7 @@ const Object = React.forwardRef(
           <div css={STYLES_ACTIONS_WRAPPER}>
             <ShortcutsTooltip
               label="Tag"
-              keyTrigger={isNewTab ? "T" : "T / ⌥T"}
+              keyTrigger={isNewTab ? "T" : isUsingMac() ? "T / ⌥T" : "T/ Alt T"}
             >
               <button
                 className="object_action_button"
@@ -547,7 +552,9 @@ const Object = React.forwardRef(
               <ShortcutsTooltip
                 vertical="above"
                 label="Save"
-                keyTrigger={isNewTab ? "S" : "S / ⌥S"}
+                keyTrigger={
+                  isNewTab ? "S" : isUsingMac ? "S / ⌥S" : "S / Alt S"
+                }
               >
                 <button
                   className="object_action_button"

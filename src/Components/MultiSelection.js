@@ -147,6 +147,7 @@ const useMultiSelectionHandlers = ({
 
     switch (true) {
       case e.ctrlKey && e.code === "KeyA":
+        e.preventDefault();
         e.stopPropagation();
         toggleCheckAll();
         break;

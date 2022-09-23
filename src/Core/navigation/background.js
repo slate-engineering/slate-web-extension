@@ -73,10 +73,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (
-    command === Constants.commands.openApp ||
-    command === Constants.commands.openAppAlternate
-  ) {
+  if (command === Constants.commands.openApp) {
     chrome.tabs.sendMessage(parseInt(tab.id), {
       type: messages.openExtensionJumperRequest,
       data: { url: "/", toggle: true },

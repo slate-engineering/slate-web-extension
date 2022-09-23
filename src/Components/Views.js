@@ -21,6 +21,7 @@ import {
   mergeEvents,
   isNewTab,
   getRootDomain,
+  isUsingMac,
 } from "../Common/utilities";
 import { ShortcutsTooltip } from "../Components/Tooltip";
 import { Favicon } from "../Components/Favicon";
@@ -99,7 +100,14 @@ const useHandleViewsNavigation = () => {
   };
 
   const handleOnKeyDown = (e) => {
-    if (e.altKey && e.shiftKey && e.key === "Tab") {
+    let isMoveToPrevElementShortcut;
+    if (isUsingMac()) {
+      isMoveToPrevElementShortcut = e.altKey && e.shiftKey && e.key === "Tab";
+    } else {
+      isMoveToPrevElementShortcut = e.ctrlKey && e.key === "ArrowLeft";
+    }
+
+    if (isMoveToPrevElementShortcut) {
       moveSelectionToPreviousElement();
 
       e.stopPropagation();
@@ -107,7 +115,14 @@ const useHandleViewsNavigation = () => {
       return;
     }
 
-    if (e.altKey && e.key === "Tab") {
+    let isMoveToNextElementShortcut;
+    if (isUsingMac()) {
+      isMoveToNextElementShortcut = e.altKey && e.key === "Tab";
+    } else {
+      isMoveToNextElementShortcut = e.ctrlKey && e.key === "ArrowRight";
+    }
+
+    if (isMoveToNextElementShortcut) {
       moveSelectionToNextElement();
 
       e.stopPropagation();
@@ -873,7 +888,7 @@ const MenuItem = ({
         horizontal="right"
         vertical="below"
         label="Navigate Spaces"
-        keyTrigger="⌥ Tab / ⌥ Shift Tab"
+        keyTrigger={isUsingMac() ? "⌥ Tab / ⌥ Shift Tab" : "Ctrl →/←"}
       >
         <Typography.H5
           css={[
