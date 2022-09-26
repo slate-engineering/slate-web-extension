@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Slate Web Extension",
   "description": "Easily save any link to your Slate account.",
-  "version": "3",
+  "version": "4",
   "homepage_url": "https://slate.host",
   "icons": {
     "16": "icon16.png",
