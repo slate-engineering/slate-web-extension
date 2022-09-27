@@ -1,13 +1,13 @@
 import React, { useState, useEffect, createRef } from "react";
 import { ModalContext } from "../Contexts/ModalProvider";
-import Button from "../Components/Button";
-import Metadata from "../Components/Metadata";
-import Image from "../Components/Image";
-import Search from "../Components/Search";
+import Button from "../components/Button";
+import Metadata from "../components/Metadata";
+import Image from "../components/Image";
+import Search from "../components/Search";
 import classes from "../App.module.css";
 import { useScreenshot } from "use-react-screenshot";
 
-import * as Constants from "Common/constants";
+import * as Constants from "common/constants";
 
 const fetch = require("node-fetch");
 

@@ -1,4 +1,4 @@
-import "./Core/browser/background";
-import "./Core/navigation/background";
-import "./Core/views/background";
-import "./Core/viewer/background";
+import "./core/browser/background";
+import "./core/navigation/background";
+import "./core/views/background";
+import "./core/viewer/background";

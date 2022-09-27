@@ -1,14 +1,14 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
-import * as Typography from "../Components/system/Typography";
-import * as Strings from "../Common/strings";
-import * as Validations from "../Common/validations";
+import * as Styles from "../common/styles";
+import * as SVG from "../common/SVG";
+import * as Typography from "../components/system/Typography";
+import * as Strings from "../common/strings";
+import * as Validations from "../common/validations";
 
 import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
-import { getFavicon } from "../Common/favicons";
-import { useEscapeKey } from "../Common/hooks";
+import { getFavicon } from "../common/favicons";
+import { useEscapeKey } from "../common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * Provider

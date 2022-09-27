@@ -1,20 +1,20 @@
 import * as React from "react";
-import * as Typography from "../Components/system/Typography";
-import * as Styles from "../Common/styles";
-import * as ListView from "../Components/ListView";
-import * as SVG from "../Common/SVG";
+import * as Typography from "../components/system/Typography";
+import * as Styles from "../common/styles";
+import * as ListView from "../components/ListView";
+import * as SVG from "../common/SVG";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
-import * as Constants from "../Common/constants";
+import * as Constants from "../common/constants";
 
 import { css } from "@emotion/react";
-import { defaultViews, viewsType } from "../Core/views";
+import { defaultViews, viewsType } from "../core/views";
 import { Divider } from "./Divider";
 import {
   Combobox,
   useComboboxNavigation,
-} from "../Components/ComboboxNavigation";
-import { useEscapeKey, useEventListener } from "Common/hooks";
+} from "../components/ComboboxNavigation";
+import { useEscapeKey, useEventListener } from "common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import {
   mergeRefs,
@@ -22,16 +22,16 @@ import {
   isNewTab,
   getRootDomain,
   isUsingMac,
-} from "../Common/utilities";
-import { ShortcutsTooltip } from "../Components/Tooltip";
-import { Favicon } from "../Components/Favicon";
-import { Boundary } from "../Components/Boundary";
-import { Switch, Match } from "../Components/Switch";
-import { useSearchContext } from "../Components/Search";
-import { useSlatesCombobox } from "../Components/EditSlates";
-import { LoadingSpinner } from "../Components/Loaders";
-import { useSources as useJumperSources } from "../Core/viewer/app/jumper.js";
-import { useSources as useNewTabSources } from "../Core/viewer/app/newTab";
+} from "../common/utilities";
+import { ShortcutsTooltip } from "../components/Tooltip";
+import { Favicon } from "../components/Favicon";
+import { Boundary } from "../components/Boundary";
+import { Switch, Match } from "../components/Switch";
+import { useSearchContext } from "../components/Search";
+import { useSlatesCombobox } from "../components/EditSlates";
+import { LoadingSpinner } from "../components/Loaders";
+import { useSources as useJumperSources } from "../core/viewer/app/jumper.js";
+import { useSources as useNewTabSources } from "../core/viewer/app/newTab";
 const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
 import HistoryFeed from "./HistoryFeed";

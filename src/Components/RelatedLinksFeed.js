@@ -1,11 +1,11 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
+import * as Styles from "../common/styles";
 import * as ListView from "./ListView";
-import * as Navigation from "../Core/navigation/app/jumper";
-import * as RovingTabIndex from "../Components/RovingTabIndex";
+import * as Navigation from "../core/navigation/app/jumper";
+import * as RovingTabIndex from "../components/RovingTabIndex";
 
 import { css } from "@emotion/react";
-import { getFavicon } from "../Common/favicons";
+import { getFavicon } from "../common/favicons";
 
 const STYLES_RELATED_LINKS_POPUP_HEADER = css`
   ${Styles.HORIZONTAL_CONTAINER};

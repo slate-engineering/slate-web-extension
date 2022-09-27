@@ -1,5 +1,5 @@
-import * as Actions from "../../Common/actions";
-import * as Constants from "../../Extension_common/constants";
+import * as Actions from "../../common/actions";
+import * as Constants from "../../extension_common/constants";
 
 import { Windows, Tabs } from "../browser/background";
 import {
@@ -12,8 +12,8 @@ import {
 import {
   constructWindowsFeed,
   removeItemFromArrayInPlace,
-} from "../../Extension_common/utilities";
-import { capitalize } from "../../Common/strings";
+} from "../../extension_common/utilities";
+import { capitalize } from "../../common/strings";
 import { viewsType } from "../views";
 import { v4 as uuid } from "uuid";
 

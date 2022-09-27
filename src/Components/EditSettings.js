@@ -1,12 +1,12 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
-import * as Typography from "../Components/system/Typography";
-import * as Constants from "../Common/constants";
+import * as Styles from "../common/styles";
+import * as SVG from "../common/SVG";
+import * as Typography from "../components/system/Typography";
+import * as Constants from "../common/constants";
 
 import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
-import { useEscapeKey } from "../Common/hooks";
+import { useEscapeKey } from "../common/hooks";
 import { motion } from "framer-motion";
 
 const STYLES_SWITCH_CONTAINER = css`

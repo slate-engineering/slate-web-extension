@@ -2,9 +2,9 @@ import * as React from "react";
 import * as ListView from "./ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
-import * as Constants from "../Common/constants";
+import * as Constants from "../common/constants";
 
-import { getRootDomain, isNewTab } from "../Common/utilities";
+import { getRootDomain, isNewTab } from "../common/utilities";
 
 /* -----------------------------------------------------------------------------------------------*/
 

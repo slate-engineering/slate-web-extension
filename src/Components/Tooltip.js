@@ -1,13 +1,13 @@
 import * as React from "react";
-import * as Typography from "../Components/system/Typography";
-import * as Styles from "../Common/styles";
+import * as Typography from "../components/system/Typography";
+import * as Styles from "../common/styles";
 
-import { isNewTab, mergeRefs } from "../Common/utilities";
-import { useEscapeKey, useEventListener } from "../Common/hooks";
+import { isNewTab, mergeRefs } from "../common/utilities";
+import { useEscapeKey, useEventListener } from "../common/hooks";
 import { motion } from "framer-motion";
 import { css } from "@emotion/react";
-import { ModalsPortal } from "../Components/ModalsPortal";
-import { Boundary } from "../Components/Boundary";
+import { ModalsPortal } from "../components/ModalsPortal";
+import { Boundary } from "../components/Boundary";
 
 /* -------------------------------------------------------------------------------------------------
  *  Root
@@ -319,7 +319,7 @@ export {
   Root,
   Trigger,
   Content,
-  // Prebuilt Components
+  // Prebuilt components
   ShortcutsTooltip,
   // hooks
   useTooltipContext,

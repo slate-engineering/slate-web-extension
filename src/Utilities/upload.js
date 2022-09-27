@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Constants from "../Common/constants";
+import * as Constants from "../common/constants";
 
 export const messages = {
   saveLink: "SAVE_LINK",

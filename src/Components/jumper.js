@@ -1,12 +1,12 @@
 import * as React from "react";
 import * as ReactDom from "react-dom";
-import * as Styles from "../Common/styles";
+import * as Styles from "../common/styles";
 
 import { css } from "@emotion/react";
-import { useEscapeKey, useTrapFocus } from "../Common/hooks";
-import { getExtensionURL } from "../Common/utilities";
-import { Divider } from "../Components/Divider";
-import { Boundary } from "../Components/Boundary";
+import { useEscapeKey, useTrapFocus } from "../common/hooks";
+import { getExtensionURL } from "../common/utilities";
+import { Divider } from "../components/Divider";
+import { Boundary } from "../components/Boundary";
 import { motion } from "framer-motion";
 
 // NOTE(amine): used to fix stacking issues in overflowing parts

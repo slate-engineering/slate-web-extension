@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
+import * as Styles from "../common/styles";
 import * as Typography from "./system/Typography";
-import * as SVG from "../Common/SVG";
+import * as SVG from "../common/SVG";
 import * as Jumper from "./jumper";
 import * as RovingTabIndex from "./RovingTabIndex";
 
@@ -14,17 +14,17 @@ import {
   copyToClipboard,
   getRootDomain,
   mergeRefs,
-} from "../Common/utilities";
+} from "../common/utilities";
 import {
   useEscapeKey,
   useEventListener,
   usePreviousValue,
   useRestoreFocus,
-} from "../Common/hooks";
+} from "../common/hooks";
 import { Checkbox } from "./system";
 import { ShortcutsTooltip } from "./Tooltip";
-import { useViewer as useJumperViewer } from "../Core/viewer/app/jumper";
-import { useViewer as useNewTabViewer } from "../Core/viewer/app/newTab";
+import { useViewer as useJumperViewer } from "../core/viewer/app/jumper";
+import { useViewer as useNewTabViewer } from "../core/viewer/app/newTab";
 import { css } from "@emotion/react";
 
 const multiSelectionContext = React.createContext({});

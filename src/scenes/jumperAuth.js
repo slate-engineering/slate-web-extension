@@ -1,16 +1,16 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
-import * as Jumper from "../Components/jumper";
-import * as Constants from "../Common/constants";
-import * as Navigation from "../Core/navigation/app/jumper";
+import * as Styles from "../common/styles";
+import * as SVG from "../common/SVG";
+import * as Jumper from "../components/jumper";
+import * as Constants from "../common/constants";
+import * as Navigation from "../core/navigation/app/jumper";
 
-import Logo from "../Components/Logo";
+import Logo from "../components/Logo";
 
-import { Input } from "../Components/Input";
-import { Divider } from "../Components/jumper";
+import { Input } from "../components/Input";
+import { Divider } from "../components/jumper";
 import { css } from "@emotion/react";
-import { isNewTab } from "../Common/utilities";
+import { isNewTab } from "../common/utilities";
 
 const STYLES_AUTH_ARROW_BUTTON = (theme) => css`
   background-color: ${theme.system.bgGrayLight4};

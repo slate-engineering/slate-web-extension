@@ -1,4 +1,4 @@
-import * as Constants from "../Common/constants";
+import * as Constants from "../common/constants";
 
 const REQUEST_HEADERS = {
   Accept: "application/json",

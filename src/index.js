@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 
-import { NavigationProvider } from "./Core/navigation/app/jumper";
+import { NavigationProvider } from "./core/navigation/app/jumper";
 
 ReactDOM.render(
   <>

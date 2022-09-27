@@ -1,11 +1,11 @@
 import * as React from "react";
-import * as Constants from "../Common/constants";
-import * as SVG from "../Common/svg";
-import * as Strings from "../Common/strings";
-import * as Styles from "../Common/styles";
+import * as Constants from "../common/constants";
+import * as SVG from "../common/svg";
+import * as Strings from "../common/strings";
+import * as Styles from "../common/styles";
 
 import { css } from "@emotion/react";
-import { mergeRefs } from "../Common/utilities";
+import { mergeRefs } from "../common/utilities";
 
 const INPUT_STYLES = (theme) => css`
   ${Styles.H4};

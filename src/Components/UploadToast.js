@@ -1,10 +1,10 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
-import * as Strings from "../Common/strings";
+import * as Styles from "../common/styles";
+import * as SVG from "../common/SVG";
+import * as Strings from "../common/strings";
 
 import { ToastSpinner } from "./Loaders";
-import { useUploadStatus } from "../Utilities/upload";
+import { useUploadStatus } from "../utilities/upload";
 
 const useGetFavicon = ({ image }) => {
   const [favicon, setFavicon] = React.useState(null);

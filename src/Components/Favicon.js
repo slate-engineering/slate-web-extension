@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { getFavicon, DefaultFavicon } from "../Common/favicons";
-import { isNewTab } from "../Common/utilities";
+import { getFavicon, DefaultFavicon } from "../common/favicons";
+import { isNewTab } from "../common/utilities";
 
 function ImgFavicon({ alt, src, style, ...props }) {
   const [isLoadingFailed, setIsLoadingFailed] = React.useState(false);

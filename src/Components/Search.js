@@ -1,11 +1,11 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as SVG from "../Common/SVG";
-import * as ListView from "../Components/ListView";
+import * as Styles from "../common/styles";
+import * as SVG from "../common/SVG";
+import * as ListView from "../components/ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
-import * as Constants from "../Common/constants";
-import * as Typography from "../Components/system/Typography.js";
+import * as Constants from "../common/constants";
+import * as Typography from "../components/system/Typography.js";
 
 import { css } from "@emotion/react";
 import {
@@ -13,9 +13,9 @@ import {
   isNewTab,
   mergeRefs,
   mergeEvents,
-} from "../Common/utilities";
-import { ShortcutsTooltip } from "../Components/Tooltip";
-import { useEscapeKey } from "Common/hooks";
+} from "../common/utilities";
+import { ShortcutsTooltip } from "../components/Tooltip";
+import { useEscapeKey } from "common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * Search Provider

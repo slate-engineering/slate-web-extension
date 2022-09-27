@@ -1,13 +1,13 @@
 import * as React from "react";
-import * as Jumper from "../../Components/jumper";
-import * as EditSlates from "../../Components/EditSlates";
-import * as Styles from "../../Common/styles";
-import * as SVG from "../../Common/SVG";
+import * as Jumper from "../../components/jumper";
+import * as EditSlates from "../../components/EditSlates";
+import * as Styles from "../../common/styles";
+import * as SVG from "../../common/SVG";
 
-import { useViewer } from "../../Core/viewer/app/jumper";
+import { useViewer } from "../../core/viewer/app/jumper";
 import { css } from "@emotion/react";
-import { useNavigation } from "../../Core/navigation/app/jumper";
-import { useEscapeKey } from "../../Common/hooks";
+import { useNavigation } from "../../core/navigation/app/jumper";
+import { useEscapeKey } from "../../common/hooks";
 
 const STYLES_BACK_BUTTON = (theme) => css`
   ${Styles.BUTTON_RESET};

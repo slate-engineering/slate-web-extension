@@ -1,4 +1,4 @@
-import "./Core/browser/content";
-import "./Core/navigation/content";
-import "./Core/views/content";
-import "./Core/viewer/content";
+import "./core/browser/content";
+import "./core/navigation/content";
+import "./core/views/content";
+import "./core/viewer/content";

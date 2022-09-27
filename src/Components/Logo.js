@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { getExtensionURL } from "../Common/utilities";
+import { getExtensionURL } from "../common/utilities";
 
 function Logo({ style, ...props }, ref) {
   return (

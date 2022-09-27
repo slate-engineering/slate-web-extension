@@ -1,13 +1,13 @@
 import * as React from "react";
-import * as Constants from "./Common/constants";
+import * as Constants from "./common/constants";
 
 import ReactDOM from "react-dom";
 import HistoryScene from "./scenes/newTabHistory";
-import EmotionThemeProvider from "./Components/EmotionThemeProvider";
-import EmotionGlobalStyles from "./Components/EmotionGlobalStyles";
+import EmotionThemeProvider from "./components/EmotionThemeProvider";
+import EmotionGlobalStyles from "./components/EmotionGlobalStyles";
 
-import { ViewerProvider } from "./Core/viewer/app/newTab";
-import { ModalsPortalProvider } from "Components/ModalsPortal";
+import { ViewerProvider } from "./core/viewer/app/newTab";
+import { ModalsPortalProvider } from "components/ModalsPortal";
 
 ReactDOM.render(
   <>

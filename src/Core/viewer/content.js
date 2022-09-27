@@ -1,6 +1,6 @@
 import { messages, savingStates, savingSources } from ".";
 
-import * as Constants from "../../Common/constants";
+import * as Constants from "../../common/constants";
 
 /* -------------------------------------------------------------------------------------------------
  * Saving popup

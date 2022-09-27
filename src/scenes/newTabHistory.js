@@ -1,24 +1,24 @@
 import * as React from "react";
-import * as Styles from "../Common/styles";
-import * as Views from "../Components/Views";
-import * as Navigation from "../Core/navigation/app/newTab";
-import * as Search from "../Components/Search";
-import * as Jumper from "../Components/jumper";
-import * as EditSlates from "../Components/EditSlates";
-import * as EditSettings from "../Components/EditSettings";
+import * as Styles from "../common/styles";
+import * as Views from "../components/Views";
+import * as Navigation from "../core/navigation/app/newTab";
+import * as Search from "../components/Search";
+import * as Jumper from "../components/jumper";
+import * as EditSlates from "../components/EditSlates";
+import * as EditSettings from "../components/EditSettings";
 
-import Logo from "../Components/Logo";
+import Logo from "../components/Logo";
 
-import { useHistory, useWindows } from "../Core/browser/app/newTab";
-import { useViews, useHistorySearch } from "../Core/views/app/newTab";
-import { Divider } from "../Components/Divider";
-import { Switch, Match } from "../Components/Switch";
-import { getExtensionURL } from "../Common/utilities";
-import { useViewer } from "../Core/viewer/app/newTab";
-import { useViewsContext, useViewsMenuContext } from "../Components/Views";
+import { useHistory, useWindows } from "../core/browser/app/newTab";
+import { useViews, useHistorySearch } from "../core/views/app/newTab";
+import { Divider } from "../components/Divider";
+import { Switch, Match } from "../components/Switch";
+import { getExtensionURL } from "../common/utilities";
+import { useViewer } from "../core/viewer/app/newTab";
+import { useViewsContext, useViewsMenuContext } from "../components/Views";
 import { css } from "@emotion/react";
-import { ShortcutsTooltip } from "../Components/Tooltip";
-import { useEscapeKey } from "Common/hooks";
+import { ShortcutsTooltip } from "../components/Tooltip";
+import { useEscapeKey } from "common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * EditSlatesJumper

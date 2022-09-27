@@ -1,4 +1,4 @@
-import * as Constants from "../Common/constants";
+import * as Constants from "../common/constants";
 
 const MINUTE = 60;
 const HOUR = MINUTE * 60;

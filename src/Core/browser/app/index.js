@@ -5,7 +5,7 @@ import {
   isYesterday,
   getRootDomain,
   constructWindowsFeed,
-} from "../../../Common/utilities";
+} from "../../../common/utilities";
 
 const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
