@@ -197,6 +197,11 @@ module.exports = function (webpackEnv) {
         publicPath: paths.publicUrlOrPath,
         filename: "background.js",
       },
+      resolve: {
+        alias: {
+          '~': path.resolve('src'),
+        },
+      },
       plugins: [
         // Chrome extension hot reloading.
         isEnvDevelopment &&
@@ -215,6 +220,11 @@ module.exports = function (webpackEnv) {
         path: paths.appBuild,
         publicPath: paths.publicUrlOrPath,
         filename: "content.js",
+      },
+      resolve: {
+        alias: {
+          '~': path.resolve('src'),
+        },
       },
       plugins: [
         // Chrome extension hot reloading.
@@ -358,6 +368,7 @@ module.exports = function (webpackEnv) {
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         ...(modules.webpackAliases || {}),
+        '~': path.resolve('src'),
       },
       plugins: [
         // Prevents users from importing files from outside of src/ (or node_modules/).
