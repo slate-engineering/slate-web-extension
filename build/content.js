@@ -2,7 +2,7 @@
 /******/ 	"use strict";
 var __webpack_exports__ = {};
 
-;// CONCATENATED MODULE: ./src/Core/browser/index.js
+;// CONCATENATED MODULE: ./src/core/browser/index.js
 const messages = {
   historyChunkRequest: "HISTORY_CHUNK_REQUEST",
   historyChunkResponse: "HISTORY_CHUNK_RESPONSE",
@@ -13,7 +13,7 @@ const messages = {
   windowsUpdate: "WINDOWS_UPDATE",
 };
 
-;// CONCATENATED MODULE: ./src/Core/browser/content.js
+;// CONCATENATED MODULE: ./src/core/browser/content.js
 
 
 chrome.runtime.onMessage.addListener(function (request) {
@@ -51,7 +51,7 @@ window.addEventListener("message", async function (event) {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Common/constants.js
+;// CONCATENATED MODULE: ./src/common/constants.js
 // NOTE(amine): commands are defined in manifest.json
 const commands = {
   openApp: "open-app",
@@ -331,7 +331,7 @@ const jumperSlateExtensionWrapper = "jumper-slate-extension-wrapper";
 
 const jumperSlateExtensionModalsPortal = "slate-extension-modals";
 
-;// CONCATENATED MODULE: ./src/Core/navigation/index.js
+;// CONCATENATED MODULE: ./src/core/navigation/index.js
 const navigation_messages = {
   openExtensionJumperRequest: "OPEN_EXTENSION_JUMPER_REQUEST",
   closeExtensionJumperRequest: "CLOSE_EXTENSION_JUMPER_REQUEST",
@@ -366,7 +366,7 @@ const updateAddressBarUrl = (url) => {
   element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
 };
 
-;// CONCATENATED MODULE: ./src/Core/navigation/content.js
+;// CONCATENATED MODULE: ./src/core/navigation/content.js
 
 
 
@@ -487,7 +487,7 @@ window.addEventListener("message", async function (event) {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Core/views/index.js
+;// CONCATENATED MODULE: ./src/core/views/index.js
 const views_messages = {
   searchQueryRequest: "SEARCH_QUERY_REQUEST",
   searchQueryResponse: "SEARCH_QUERY_RESPONSE",
@@ -524,7 +524,7 @@ const defaultViews = {
   },
 };
 
-;// CONCATENATED MODULE: ./src/Core/views/content.js
+;// CONCATENATED MODULE: ./src/core/views/content.js
 
 
 window.addEventListener("message", async function (event) {
@@ -589,7 +589,7 @@ chrome.runtime.onMessage.addListener(function (request) {
   }
 });
 
-;// CONCATENATED MODULE: ./src/Core/viewer/index.js
+;// CONCATENATED MODULE: ./src/core/viewer/index.js
 const viewer_messages = {
   loadViewerDataRequest: "LOAD_VIEWER_DATA_REQUEST",
   loadViewerDataResponse: "LOAD_VIEWER_DATA_RESPONSE",
@@ -634,7 +634,7 @@ const viewerInitialState = {
   // NOTE(amine):if there is one tab is open,populate the recent view
 };
 
-;// CONCATENATED MODULE: ./src/Core/viewer/content.js
+;// CONCATENATED MODULE: ./src/core/viewer/content.js
 
 
 
