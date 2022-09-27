@@ -1,7 +1,7 @@
-import * as Constants from "../../common/constants";
+import * as Constants from "~/common/constants";
 
 import { messages } from "./";
-import { getRootDomain } from "../../extension_common/utilities";
+import { getRootDomain } from "~/extension_common/utilities";
 
 export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   if (query?.newWindow) {

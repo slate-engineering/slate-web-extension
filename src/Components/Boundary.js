@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { useEventListener } from "../common/hooks";
+import { useEventListener } from "~/common/hooks";
 
 //NOTE(martina): This component behaves unusually sometimes when there is a click on an SVG. It will count it as an out of rectangle event. Solve this issue with adding { pointerEvents: "none" } to the SVG
 

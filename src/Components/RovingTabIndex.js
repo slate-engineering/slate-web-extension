@@ -1,11 +1,11 @@
 import * as React from "react";
 
-import { mergeEvents, mergeRefs } from "../common/utilities";
+import { mergeEvents, mergeRefs } from "~/common/utilities";
 import {
   useEventListener,
   useIsomorphicLayoutEffect,
   useMounted,
-} from "../common/hooks";
+} from "~/common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * RovingTabIndex Provider

@@ -1,20 +1,20 @@
 import * as React from "react";
-import * as Typography from "../components/system/Typography";
-import * as Styles from "../common/styles";
-import * as ListView from "../components/ListView";
-import * as SVG from "../common/SVG";
+import * as Typography from "~/components/system/Typography";
+import * as Styles from "~/common/styles";
+import * as ListView from "~/components/ListView";
+import * as SVG from "~/common/SVG";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
-import * as Constants from "../common/constants";
+import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
-import { defaultViews, viewsType } from "../core/views";
-import { Divider } from "./Divider";
+import { defaultViews, viewsType } from "~/core/views";
+import { Divider } from "~/components/Divider";
 import {
   Combobox,
   useComboboxNavigation,
-} from "../components/ComboboxNavigation";
-import { useEscapeKey, useEventListener } from "common/hooks";
+} from "~/components/ComboboxNavigation";
+import { useEscapeKey, useEventListener } from "~/common/hooks";
 import { motion, AnimateSharedLayout, AnimatePresence } from "framer-motion";
 import {
   mergeRefs,
@@ -22,20 +22,20 @@ import {
   isNewTab,
   getRootDomain,
   isUsingMac,
-} from "../common/utilities";
-import { ShortcutsTooltip } from "../components/Tooltip";
-import { Favicon } from "../components/Favicon";
-import { Boundary } from "../components/Boundary";
-import { Switch, Match } from "../components/Switch";
-import { useSearchContext } from "../components/Search";
-import { useSlatesCombobox } from "../components/EditSlates";
-import { LoadingSpinner } from "../components/Loaders";
-import { useSources as useJumperSources } from "../core/viewer/app/jumper.js";
-import { useSources as useNewTabSources } from "../core/viewer/app/newTab";
+} from "~/common/utilities";
+import { ShortcutsTooltip } from "~/components/Tooltip";
+import { Favicon } from "~/components/Favicon";
+import { Boundary } from "~/components/Boundary";
+import { Switch, Match } from "~/components/Switch";
+import { useSearchContext } from "~/components/Search";
+import { useSlatesCombobox } from "~/components/EditSlates";
+import { LoadingSpinner } from "~/components/Loaders";
+import { useSources as useJumperSources } from "~/core/viewer/app/jumper.js";
+import { useSources as useNewTabSources } from "~/core/viewer/app/newTab";
 const useSources = isNewTab ? useNewTabSources : useJumperSources;
 
-import HistoryFeed from "./HistoryFeed";
-import WindowsFeed from "./WindowsFeed";
+import HistoryFeed from "~/components/HistoryFeed";
+import WindowsFeed from "~/components/WindowsFeed";
 
 /* -------------------------------------------------------------------------------------------------
  * Views Provider

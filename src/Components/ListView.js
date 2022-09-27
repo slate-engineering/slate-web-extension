@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as Typography from "../components/system/Typography";
-import * as Styles from "../common/styles";
-import * as SVG from "../common/SVG";
+import * as Typography from "~/components/system/Typography";
+import * as Styles from "~/common/styles";
+import * as SVG from "~/common/SVG";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
 
@@ -12,14 +12,14 @@ import {
   copyToClipboard,
   mergeEvents,
   isUsingMac,
-} from "../common/utilities";
+} from "~/common/utilities";
 import { Checkbox } from "./system";
 import { FixedSizeList, VariableSizeList } from "react-window";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
-import { useViewer as useJumperViewer } from "../core/viewer/app/jumper";
-import { useViewer as useNewTabViewer } from "../core/viewer/app/newTab";
-import { ShortcutsTooltip } from "../components/Tooltip";
-import { Favicon } from "../components/Favicon";
+import { useViewer as useJumperViewer } from "~/core/viewer/app/jumper";
+import { useViewer as useNewTabViewer } from "~/core/viewer/app/newTab";
+import { ShortcutsTooltip } from "~/components/Tooltip";
+import { Favicon } from "~/components/Favicon";
 
 const useViewer = isNewTab ? useNewTabViewer : useJumperViewer;
 

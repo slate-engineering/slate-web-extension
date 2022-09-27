@@ -1,4 +1,4 @@
-import { isNewTab } from "common/utilities";
+import { isNewTab } from "~/common/utilities";
 import * as React from "react";
 
 import { defaultViews, viewsType } from "../";

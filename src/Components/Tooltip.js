@@ -1,13 +1,13 @@
 import * as React from "react";
-import * as Typography from "../components/system/Typography";
-import * as Styles from "../common/styles";
+import * as Typography from "~/components/system/Typography";
+import * as Styles from "~/common/styles";
 
-import { isNewTab, mergeRefs } from "../common/utilities";
-import { useEscapeKey, useEventListener } from "../common/hooks";
+import { isNewTab, mergeRefs } from "~/common/utilities";
+import { useEscapeKey, useEventListener } from "~/common/hooks";
 import { motion } from "framer-motion";
 import { css } from "@emotion/react";
-import { ModalsPortal } from "../components/ModalsPortal";
-import { Boundary } from "../components/Boundary";
+import { ModalsPortal } from "~/components/ModalsPortal";
+import { Boundary } from "~/components/Boundary";
 
 /* -------------------------------------------------------------------------------------------------
  *  Root

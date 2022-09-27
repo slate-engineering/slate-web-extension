@@ -1,4 +1,4 @@
-import * as Constants from "../common/constants";
+import * as Constants from "~/common/constants";
 
 import { jsx } from "@emotion/react";
 

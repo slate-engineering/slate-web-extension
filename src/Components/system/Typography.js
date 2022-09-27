@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as Constants from "../../common/constants";
-import * as Styles from "../../common/styles";
-import * as Strings from "../../common/strings";
+import * as Constants from "~/common/constants";
+import * as Styles from "~/common/styles";
+import * as Strings from "~/common/strings";
 
 import { css, jsx } from "@emotion/react";
 

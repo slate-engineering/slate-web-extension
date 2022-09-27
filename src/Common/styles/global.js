@@ -1,7 +1,7 @@
-import * as Constants from "../../common/constants";
+import * as Constants from "~/common/constants";
 
 import { css } from "@emotion/react";
-import { getExtensionURL } from "../../common/utilities";
+import { getExtensionURL } from "~/common/utilities";
 
 export const FontFaces = `
   @font-face {

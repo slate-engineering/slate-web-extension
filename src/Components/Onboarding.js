@@ -1,11 +1,11 @@
 import * as React from "react";
 import * as Jumper from "./jumper";
 import * as Typography from "./system/Typography";
-import * as Styles from "../common/styles";
-import * as SVG from "../common/SVG";
+import * as Styles from "~/common/styles";
+import * as SVG from "~/common/SVG";
 
-import { useViewer } from "../core/viewer/app/jumper";
-import { useNavigation } from "../core/navigation/app/jumper";
+import { useViewer } from "~/core/viewer/app/jumper";
+import { useNavigation } from "~/core/navigation/app/jumper";
 import { css } from "@emotion/react";
 
 const STYLES_PERMISSION_ONBOARDING_WRAPPER = css`

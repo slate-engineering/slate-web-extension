@@ -1,7 +1,7 @@
 import * as React from "react";
-import * as Constants from "../common/constants";
+import * as Constants from "~/common/constants";
 
-import { last } from "../common/utilities";
+import { last } from "~/common/utilities";
 import { v4 as uuid } from "uuid";
 
 export const useEventListener = (

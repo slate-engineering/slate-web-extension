@@ -1,8 +1,8 @@
 import * as React from "react";
 
 import { Global as EmotionGlobal } from "@emotion/react";
-import { injectGlobalStyles, FontFaces } from "../common/styles/global";
-import { isNewTab } from "../common/utilities";
+import { injectGlobalStyles, FontFaces } from "~/common/styles/global";
+import { isNewTab } from "~/common/utilities";
 
 // NOTE(amine): inject font faces to dom when using jumper (custom fonts don't load in the shadow dom)
 if (!isNewTab) {

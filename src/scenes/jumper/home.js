@@ -1,20 +1,20 @@
 import * as React from "react";
-import * as Styles from "../../common/styles";
-import * as Navigation from "../../core/navigation/app/jumper";
-import * as Views from "../../components/Views";
-import * as Search from "../../components/Search";
-import * as Jumper from "../../components/jumper";
+import * as Styles from "~/common/styles";
+import * as Navigation from "~/core/navigation/app/jumper";
+import * as Views from "~/components/Views";
+import * as Search from "~/components/Search";
+import * as Jumper from "~/components/jumper";
 
-import Logo from "../../components/Logo";
+import Logo from "~/components/Logo";
 
-import { useHistory, useWindows } from "../../core/browser/app/jumper";
-import { useViews, useHistorySearch } from "../../core/views/app/jumper";
-import { Switch, Match } from "../../components/Switch";
+import { useHistory, useWindows } from "~/core/browser/app/jumper";
+import { useViews, useHistorySearch } from "~/core/views/app/jumper";
+import { Switch, Match } from "~/components/Switch";
 import { css } from "@emotion/react";
-import { useNavigation } from "../../core/navigation/app/jumper";
-import { useViewer } from "../../core/viewer/app/jumper";
-import { useViewsContext } from "../../components/Views";
-import { ShortcutsTooltip } from "../../components/Tooltip";
+import { useNavigation } from "~/core/navigation/app/jumper";
+import { useViewer } from "~/core/viewer/app/jumper";
+import { useViewsContext } from "~/components/Views";
+import { ShortcutsTooltip } from "~/components/Tooltip";
 
 const STYLES_VIEWS_CREATE_MENU_WRAPPER = (theme) => css`
   position: absolute;

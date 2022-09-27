@@ -1,7 +1,7 @@
 import * as React from "react";
 
-import { mergeEvents, mergeRefs } from "../common/utilities";
-import { useEventListener } from "../common/hooks";
+import { mergeEvents, mergeRefs } from "~/common/utilities";
+import { useEventListener } from "~/common/hooks";
 
 const comboboxContext = React.createContext({});
 const useComboboxContext = () => React.useContext(comboboxContext);

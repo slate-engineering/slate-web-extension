@@ -2,11 +2,11 @@ import * as React from "react";
 import * as ListView from "./ListView";
 import * as RovingTabIndex from "./RovingTabIndex";
 import * as MultiSelection from "./MultiSelection";
-import * as Constants from "../common/constants";
+import * as Constants from "~/common/constants";
 
 import InfiniteLoader from "react-window-infinite-loader";
 
-import { getRootDomain, isNewTab } from "../common/utilities";
+import { getRootDomain, isNewTab } from "~/common/utilities";
 
 const useHistoryInfiniteScroll = ({ onLoadMore, sessionsFeed }) => {
   const shouldFetchMore = React.useRef(true);

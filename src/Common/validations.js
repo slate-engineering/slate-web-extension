@@ -1,5 +1,5 @@
-import * as Strings from "./strings";
-import * as Constants from "./constants";
+import * as Strings from "~/common/strings";
+import * as Constants from "~/common/constants";
 
 const USERNAME_REGEX = new RegExp("^[a-zA-Z0-9_]{0,}[a-zA-Z]+[0-9]*$");
 const MIN_PASSWORD_LENGTH = 8;

@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as Constants from "../common/constants";
+import * as Constants from "~/common/constants";
 
 import { ThemeProvider } from "@emotion/react";
 

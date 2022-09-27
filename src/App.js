@@ -1,20 +1,20 @@
 import * as React from "react";
-import * as Navigation from "./core/navigation/app/jumper";
-import * as Jumper from "./components/jumper";
-import * as Onboarding from "./components/Onboarding";
+import * as Navigation from "~/core/navigation/app/jumper";
+import * as Jumper from "~/components/jumper";
+import * as Onboarding from "~/components/Onboarding";
 
-import ShadowDom from "./components/ShadowDom";
-import HomeScene from "./scenes/jumper/home";
-import SlatesScene from "./scenes/jumper/slates";
-import SettingsScene from "./scenes/jumper/settings";
+import ShadowDom from "~/components/ShadowDom";
+import HomeScene from "~/scenes/jumper/home";
+import SlatesScene from "~/scenes/jumper/slates";
+import SettingsScene from "~/scenes/jumper/settings";
 
-import { Route } from "./core/navigation/app/jumper";
-import { useOnWindowBlur } from "./common/hooks";
-import { ViewerProvider } from "./core/viewer/app/jumper";
+import { Route } from "~/core/navigation/app/jumper";
+import { useOnWindowBlur } from "~/common/hooks";
+import { ViewerProvider } from "~/core/viewer/app/jumper";
 import {
   ModalsPortalProvider,
   ModalsContainer,
-} from "./components/ModalsPortal";
+} from "~/components/ModalsPortal";
 
 function App() {
   useOnWindowBlur(Navigation.closeExtensionJumper);
