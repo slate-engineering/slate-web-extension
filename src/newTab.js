@@ -2,7 +2,7 @@ import * as React from "react";
 import * as Constants from "~/common/constants";
 
 import ReactDOM from "react-dom";
-import HistoryScene from "~/scenes/newTabHistory";
+import HomeScene from "~/scenes/newTab/home";
 import EmotionThemeProvider from "~/components/EmotionThemeProvider";
 import EmotionGlobalStyles from "~/components/EmotionGlobalStyles";
 
@@ -20,7 +20,7 @@ ReactDOM.render(
               Constants.jumperSlateExtensionModalsPortal
             )}
           >
-            <HistoryScene />
+            <HomeScene />
           </ModalsPortalProvider>
         </ViewerProvider>
       </EmotionThemeProvider>
