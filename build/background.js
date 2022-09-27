@@ -4799,7 +4799,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-;// CONCATENATED MODULE: ./src/background.js
+;// CONCATENATED MODULE: ./src/extension_scripts/background.js
 
 
 

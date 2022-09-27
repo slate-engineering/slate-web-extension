@@ -991,7 +991,7 @@ window.addEventListener("message", async function (event) {
   }
 });
 
-;// CONCATENATED MODULE: ./src/content.js
+;// CONCATENATED MODULE: ./src/extension_scripts/content.js
 
 
 
