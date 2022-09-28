@@ -2927,7 +2927,7 @@ class ViewerHandler {
       if (slate) {
         const viewCustomId = createViewCustomId({
           name: view.name,
-          slatename: slate.slatename || slate.name,
+          slatename: slate.slatename,
         });
         serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
         serializedViewer.viewsSlatesLookup[slate.slatename] =
@@ -2953,14 +2953,14 @@ class ViewerHandler {
 
     viewer.slates.forEach((slate) => {
       const { savedObjectsSlates, slatesLookup } = serializedViewer;
-      if (!slatesLookup[slate.name]) slatesLookup[slate.name] = {};
+      if (!slatesLookup[slate.slatename]) slatesLookup[slate.slatename] = {};
 
       slate.objects.forEach((object) => {
         const objectUrl = getFileUrl(object);
-        slatesLookup[slate.name][objectUrl] = true;
+        slatesLookup[slate.slatename][objectUrl] = true;
 
         if (!savedObjectsSlates[objectUrl]) savedObjectsSlates[objectUrl] = [];
-        savedObjectsSlates[objectUrl].push(slate.name);
+        savedObjectsSlates[objectUrl].push(slate.slatename);
       });
     });
 
@@ -3340,7 +3340,7 @@ class ViewerActionsHandler {
     payload.urls = objectsToBeSaved.map(({ url }) => url);
     if (slateName) {
       const slatePayload = viewer.slates.find(
-        (slate) => slate.name === slateName
+        (slate) => slate.slatename === slateName
       );
       payload.slate = slatePayload;
     }
@@ -3393,7 +3393,7 @@ class ViewerActionsHandler {
     }));
 
     const slatePayload = viewer.slates.find(
-      (slate) => slate.name === slateName
+      (slate) => slate.slatename === slateName
     );
 
     const response = await saveCopy({
@@ -3428,7 +3428,7 @@ class ViewerActionsHandler {
     );
 
     const slatePayload = viewer.slates.find(
-      (slate) => slate.name === slateName
+      (slate) => slate.slatename === slateName
     );
 
     viewer = await this._removeObjectsFromViewerSlate({
@@ -3612,7 +3612,7 @@ class ViewerActionsHandler {
     if (slateName) {
       name = slateName;
       const slate = viewer.slates.find(
-        (slate) => slate.slatename === slateName || slate.name === slateName
+        (slate) => slate.slatename === slateName
       );
       filterBySlateId = slate.id;
     } else {
@@ -3714,7 +3714,7 @@ class ViewerActionsHandler {
     const fuse = new Fuse(viewer.slates, options);
     const results = fuse.search(query);
 
-    return results.map(({ item: { slatename, name } }) => name || slatename);
+    return results.map(({ item: { slatename } }) => slatename);
   }
 }
 
@@ -3725,7 +3725,7 @@ const ViewerActions = new ViewerActionsHandler();
 Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
-  const slates = viewerData.slates.map(({ name }) => name);
+  const slates = viewerData.slates.map(({ slatename }) => slatename);
   const views = viewerData.views.map(Viewer.serializeView);
 
   const {
@@ -3889,7 +3889,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const viewerData = await Viewer.get();
 
-      const slates = viewerData.slates.map(({ name }) => name);
+      const slates = viewerData.slates.map(({ slatename }) => slatename);
 
       const views = viewerData.views.map(Viewer.serializeView);
 
