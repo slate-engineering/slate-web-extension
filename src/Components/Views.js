@@ -375,8 +375,11 @@ const STYLES_CREATE_MENU_BUTTON = (theme) => css`
 const CreateMenuInitialScene = ({
   goToSourceScene,
   goToTagScene,
+  closeCreateMenu,
   ...props
 }) => {
+  useEscapeKey(closeCreateMenu);
+
   const { viewer, scrollMenuToLeftEdge } = useViewsContext();
 
   const handleToggleRecentView = () => {
@@ -721,8 +724,6 @@ const CreateMenu = (props) => {
 
   React.useLayoutEffect(() => onRestoreFocus, []);
 
-  useEscapeKey(closeCreateMenu);
-
   return (
     <Boundary enabled onOutsideRectEvent={closeCreateMenu}>
       <section css={STYLES_CREATE_MENU_WRAPPER}>
@@ -732,6 +733,7 @@ const CreateMenu = (props) => {
             component={CreateMenuInitialScene}
             goToTagScene={goToTagScene}
             goToSourceScene={goToSourceScene}
+            closeCreateMenu={closeCreateMenu}
           />
           <Match
             when={scene === scenes.tag}
