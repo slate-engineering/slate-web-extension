@@ -1033,18 +1033,18 @@ const STYLES_VIEWS_ADD_BUTTON = (theme) => css`
   }
 `;
 
-const useHandleScrollNavigation = ({
-  isMenuOverflowingFrom,
-  setMenuOverflowFrom,
-  containerRef,
-}) => {
+const useHandleScrollNavigation = ({ containerRef }) => {
+  const { isMenuOverflowingFrom, setMenuOverflowFrom } = useViewsMenuContext();
+
+  const { viewer } = useViewsContext();
+
   const handleActionWrapperScroll = () => {
     const wrapper = containerRef.current;
     if (!wrapper) return;
 
     setMenuOverflowFrom((prev) => {
       const newState = {
-        right: wrapper.scrollLeft < wrapper.scrollWidth - wrapper.offsetWidth,
+        right: wrapper.scrollLeft + wrapper.offsetWidth < wrapper.scrollWidth,
         left: wrapper.scrollLeft > 0,
       };
 
@@ -1060,7 +1060,8 @@ const useHandleScrollNavigation = ({
     });
   };
 
-  React.useEffect(handleActionWrapperScroll, []);
+  React.useEffect(handleActionWrapperScroll, [viewer.views.length]);
+
   useEventListener(
     {
       type: "scroll",
@@ -1147,8 +1148,6 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
 
   const actionWrapperRef = React.useRef();
   const { scrollToLeft, scrollToRight } = useHandleScrollNavigation({
-    isMenuOverflowingFrom,
-    setMenuOverflowFrom,
     containerRef: actionWrapperRef,
   });
 
