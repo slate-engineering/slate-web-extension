@@ -410,7 +410,7 @@ const CreateMenuInitialScene = ({
     [viewer.settings]
   );
   return (
-    <section style={{ padding: 8, width: "100%" }} {...props}>
+    <section style={{ padding: 8 }} {...props}>
       <RovingTabIndex.Provider
         id="create_menu_tabindex"
         withRestoreFocusOnMount
@@ -520,7 +520,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
   };
 
   return (
-    <div style={{ width: "100%" }} {...props}>
+    <div {...props}>
       <Combobox.Provider>
         <div style={{ width: "100%", padding: 8 }}>
           <Combobox.Input>
@@ -635,7 +635,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
   };
 
   return (
-    <section layoutId="create_menu" style={{ width: "100%" }} {...props}>
+    <section layoutId="create_menu" {...props}>
       <Combobox.Provider>
         <div style={{ width: "100%", padding: 8 }}>
           <Combobox.Input>
@@ -700,7 +700,6 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_CREATE_MENU_WRAPPER = css`
-  ${Styles.VERTICAL_CONTAINER_CENTERED};
   width: 100%;
 `;
 
