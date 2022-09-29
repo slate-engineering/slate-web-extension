@@ -2909,7 +2909,7 @@ class ViewerHandler {
       sources: {},
     };
 
-    serializedViewer.views.forEach((view) => {
+    serializedViewer.views = serializedViewer.views.map((view) => {
       const { filterBySource, filterBySlateId } = view;
 
       if (filterBySource) {
@@ -2920,19 +2920,22 @@ class ViewerHandler {
         serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
         serializedViewer.viewsSourcesLookup[filterBySource] =
           this.serializeView(view);
-        return;
+      } else {
+        const slate = viewer.slates.find(
+          (slate) => slate.id === filterBySlateId
+        );
+        if (slate) {
+          const viewCustomId = createViewCustomId({
+            name: view.name,
+            slatename: slate.slatename,
+          });
+          serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
+          serializedViewer.viewsSlatesLookup[slate.slatename] =
+            this.serializeView(view);
+        }
       }
 
-      const slate = viewer.slates.find((slate) => slate.id === filterBySlateId);
-      if (slate) {
-        const viewCustomId = createViewCustomId({
-          name: view.name,
-          slatename: slate.slatename,
-        });
-        serializedViewer.viewsIdsLookup[viewCustomId] = view.id;
-        serializedViewer.viewsSlatesLookup[slate.slatename] =
-          this.serializeView(view);
-      }
+      return this.serializeView(view);
     });
 
     serializedViewer.objects = viewer.library.map((object) => {
@@ -3539,7 +3542,7 @@ class ViewerActionsHandler {
 
   _addViewToViewer({ viewer, name, filterBySource, filterBySlateId, favicon }) {
     const newView = {
-      id: esm_browser_v4(),
+      id: esm_browser_v4() + "custom",
       createdAt: "",
       updatedAt: "",
       metadata: {},
@@ -3548,17 +3551,14 @@ class ViewerActionsHandler {
     if (filterBySlateId) {
       const customId = createViewCustomId({ name, slatename: name });
       viewer.viewsIdsLookup[customId] = newView.id;
-
-      viewer.viewsSlatesLookup[name] = Viewer.serializeView({
+      const serializedView = Viewer.serializeView({
         ...newView,
         name,
         filterBySlateId: !!filterBySlateId,
       });
-      viewer.views.push({
-        ...newView,
-        name,
-        filterBySlateId,
-      });
+
+      viewer.viewsSlatesLookup[name] = serializedView;
+      viewer.views.push(serializedView);
       return viewer;
     }
 
@@ -3566,26 +3566,21 @@ class ViewerActionsHandler {
     viewer.viewsIdsLookup[customId] = newView.id;
 
     const rootDomain = background_getRootDomain(filterBySource);
-    viewer.viewsSourcesLookup[filterBySource] = Viewer.serializeView({
+    const serializedView = Viewer.serializeView({
       ...newView,
       name: getTitleFromRootDomain(rootDomain),
       filterBySource: filterBySource,
       metadata: { favicon },
     });
-    viewer.views.push({
-      ...newView,
-      name: getTitleFromRootDomain(rootDomain),
-      filterBySource,
-      metadata: { favicon },
-    });
+    viewer.viewsSourcesLookup[filterBySource] = serializedView;
+    viewer.views.push(serializedView);
 
     return viewer;
   }
 
   _removeViewFromViewer({ viewer, customId }) {
-    let id = getViewId({ viewer, customId });
-    const view = viewer.views.find((view) => view.id === id);
-    if (!view) return;
+    const view = viewer.views.find((view) => view.id === customId);
+    if (!view) return viewer;
 
     if (view.filterBySource) {
       delete viewer.viewsSourcesLookup[view.filterBySource];
@@ -3608,17 +3603,24 @@ class ViewerActionsHandler {
     let filterBySlateId;
     let filterBySource;
     let metadata = {};
+    let customId;
 
     if (slateName) {
       name = slateName;
       const slate = viewer.slates.find(
         (slate) => slate.slatename === slateName
       );
+      customId = createViewCustomId({
+        name,
+        source: filterBySource,
+        slatename: slate.slatename,
+      });
       filterBySlateId = slate.id;
     } else {
       const rootDomain = background_getRootDomain(source);
       name = getTitleFromRootDomain(rootDomain);
       filterBySource = source;
+      customId = createViewCustomId({ name, source: filterBySource });
 
       const sources = await Viewer.getSavedLinksSources();
       const favicon =
@@ -3647,6 +3649,10 @@ class ViewerActionsHandler {
       // TODO: handle errors
     }
 
+    viewer = await Viewer.get();
+    viewer.viewsIdsLookup[customId] = response.data.id;
+    Viewer._set(viewer);
+
     this._cleanupCleanupAction();
   }
 
@@ -3656,8 +3662,12 @@ class ViewerActionsHandler {
     let viewer = await Viewer.get();
 
     const viewId = getViewId({ viewer, customId });
-    const deletedView = viewer.views.find((view) => view.id === viewId);
-    if (!deletedView) return;
+
+    const deletedView = viewer.views.find((view) => view.id === customId);
+    if (!deletedView) {
+      this._cleanupCleanupAction();
+      return;
+    }
 
     viewer = this._removeViewFromViewer({ viewer, customId });
     Viewer._set(viewer);
@@ -3726,7 +3736,6 @@ Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
   const slates = viewerData.slates.map(({ slatename }) => slatename);
-  const views = viewerData.views.map(Viewer.serializeView);
 
   const {
     savedObjectsLookup,
@@ -3745,7 +3754,7 @@ Viewer.onChange(async (viewerData) => {
       savedObjectsLookup,
       savedObjectsSlates,
       slatesLookup,
-      views,
+      views: viewerData.views,
       viewsSlatesLookup,
       viewsSourcesLookup,
     },
@@ -3891,8 +3900,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const slates = viewerData.slates.map(({ slatename }) => slatename);
 
-      const views = viewerData.views.map(Viewer.serializeView);
-
       const {
         savedObjectsLookup,
         savedObjectsSlates,
@@ -3914,7 +3921,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         savedObjectsSlates,
         slatesLookup,
 
-        views,
+        views: viewerData.views,
         viewsSourcesLookup,
         viewsSlatesLookup,
 
@@ -4636,8 +4643,7 @@ class ViewsHandler {
     if (view.type === viewsType.custom) {
       const handleFetchCustomFeed = async (viewCustomId) => {
         const viewer = await Viewer.get();
-        const viewId = getViewId({ viewer, customId: viewCustomId });
-        const view = viewer.views.find((view) => view.id === viewId);
+        const view = viewer.views.find((view) => view.id === viewCustomId);
 
         if (!view) return [];
 
@@ -4685,8 +4691,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     const handleFetchCustomFeed = async (viewCustomId) => {
       const viewer = await Viewer.get();
-      const viewId = getViewId({ viewer, customId: viewCustomId });
-      const view = viewer.views.find((view) => view.id === viewId);
+      const view = viewer.views.find((view) => view.id === viewCustomId);
 
       if (!view) return [];
 
