@@ -252,7 +252,7 @@ class ViewerHandler {
       name,
       type: viewsType.custom,
       filterBySource: filterBySource,
-      filterBySlateId: !!filterBySlateId,
+      filterBySlateId: filterBySlateId,
       metadata,
     };
   }
@@ -785,7 +785,7 @@ class ViewerActionsHandler {
       const serializedView = Viewer.serializeView({
         ...newView,
         name,
-        filterBySlateId: !!filterBySlateId,
+        filterBySlateId: filterBySlateId,
       });
 
       viewer.viewsSlatesLookup[name] = serializedView;
