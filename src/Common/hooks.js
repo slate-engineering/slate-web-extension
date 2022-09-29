@@ -157,7 +157,7 @@ export const useEscapeKey = (callback) => {
     },
     [callback]
   );
-  useEventListener({ type: "keyup", handler: handleKeyUp }, [handleKeyUp]);
+  useEventListener({ type: "keydown", handler: handleKeyUp }, [handleKeyUp]);
 };
 
 export const useMounted = (callback, deps) => {
