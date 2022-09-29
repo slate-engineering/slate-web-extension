@@ -1,5 +1,5 @@
 import { messages, viewsType } from "./";
-import { Viewer, ViewerActions, getViewId } from "../viewer/background";
+import { Viewer, ViewerActions } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
 
 import Fuse from "fuse.js";
@@ -17,8 +17,7 @@ class ViewsHandler {
     if (view.type === viewsType.custom) {
       const handleFetchCustomFeed = async (viewCustomId) => {
         const viewer = await Viewer.get();
-        const viewId = getViewId({ viewer, customId: viewCustomId });
-        const view = viewer.views.find((view) => view.id === viewId);
+        const view = viewer.views.find((view) => view.id === viewCustomId);
 
         if (!view) return [];
 
@@ -66,8 +65,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     const handleFetchCustomFeed = async (viewCustomId) => {
       const viewer = await Viewer.get();
-      const viewId = getViewId({ viewer, customId: viewCustomId });
-      const view = viewer.views.find((view) => view.id === viewId);
+      const view = viewer.views.find((view) => view.id === viewCustomId);
 
       if (!view) return [];
 
