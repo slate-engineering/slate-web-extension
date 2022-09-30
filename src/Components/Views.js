@@ -794,15 +794,31 @@ const STYLES_VIEWS_BUTTON_WRAPPER = (theme) => css`
     background-color: ${theme.semantic.bgGrayLight4};
   }
 
+  @keyframes active_remove_button {
+    from {
+      opacity: 0;
+      pointer-events: none;
+    }
+    to {
+      opacity: 1;
+      pointer-events: unset;
+    }
+  }
+
   .views_menu_remove_button {
     opacity: 0;
+    pointer-events: none;
   }
   &:hover .views_menu_remove_button {
-    opacity: 1;
+    animation: active_remove_button 0.2s;
+    animation-delay: 200ms;
+    animation-fill-mode: forwards;
   }
 
   &:hover-within .views_menu_remove_button {
-    opacity: 1;
+    animation: active_remove_button 0.2s;
+    animation-delay: 200ms;
+    animation-fill-mode: forwards;
   }
 `;
 
