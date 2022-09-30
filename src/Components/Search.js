@@ -222,7 +222,13 @@ const Input = React.forwardRef(
 const SearchFeedRow = ({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
-  const { rovingTabIndex, title, slates, viewType, item } = data.feed[index];
+  const {
+    rovingTabIndex,
+    title,
+    // slates,
+    isTab,
+    item,
+  } = data.feed[index];
   const { onOpenUrl, onOpenSlatesJumper } = data.props;
 
   const createOnOpenSlatesHandler = (object) => () => {
@@ -235,15 +241,15 @@ const SearchFeedRow = ({ index, data, style }) => {
     ]);
   };
 
-  if (slates) {
-    return <ListView.SlatesItem slates={slates} style={{ ...style }} />;
-  }
+  // if (slates) {
+  //   return <ListView.SlatesItem slates={slates} style={{ ...style }} />;
+  // }
 
   if (title) {
     return <ListView.Title style={{ ...style }}>{title}</ListView.Title>;
   }
 
-  if (viewType === "allOpen") {
+  if (isTab) {
     return (
       <ListView.RovingTabIndexWithMultiSelectObject
         key={item.id}
@@ -347,7 +353,7 @@ const Feed = React.memo(
         onRestoreFocus,
         searchFeed,
         searchFeedKeys,
-        slates,
+        // slates,
         ...props
       },
       ref
@@ -361,12 +367,12 @@ const Feed = React.memo(
         let virtualizedFeed = [];
         let totalSelectableItems = 0;
 
-        if (slates?.length) {
-          virtualizedFeed.push({
-            slates,
-            height: Constants.sizes.jumperFeedItem,
-          });
-        }
+        // if (slates?.length) {
+        //   virtualizedFeed.push({
+        //     slates,
+        //     height: Constants.sizes.jumperFeedItem,
+        //   });
+        // }
 
         for (let key of searchFeedKeys) {
           searchFeed[key].forEach((item, index) => {
@@ -378,6 +384,7 @@ const Feed = React.memo(
               rovingTabIndex,
               item,
               height: Constants.sizes.jumperFeedItem,
+              isTab: !!item.windowId,
             });
 
             totalSelectableItems++;
@@ -390,7 +397,13 @@ const Feed = React.memo(
           totalSelectableItems,
           props: { onOpenUrl, onOpenSlatesJumper },
         };
-      }, [slates, searchFeed, searchFeedKeys, onOpenUrl, onOpenSlatesJumper]);
+      }, [
+        // slates,
+        searchFeed,
+        searchFeedKeys,
+        onOpenUrl,
+        onOpenSlatesJumper,
+      ]);
 
       if (feedItemsData.totalSelectableItems === 0) {
         return <SearchFeedEmptyState />;
