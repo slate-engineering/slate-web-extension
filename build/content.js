@@ -991,7 +991,26 @@ window.addEventListener("message", async function (event) {
   }
 });
 
+;// CONCATENATED MODULE: ./src/core/webapp/content.js
+
+
+const notifyTheAppThatExtensionIsDownloaded = () => {
+  const currentPageUrl = document.URL;
+  try {
+    const { host } = new URL(currentPageUrl);
+    if (host === uri.domain) {
+      const extensionElement = document.getElementById("browser_extension");
+      extensionElement.className = "isDownloaded";
+    }
+  } catch (e) {
+    return;
+  }
+};
+
+notifyTheAppThatExtensionIsDownloaded();
+
 ;// CONCATENATED MODULE: ./src/extension_scripts/content.js
+
 
 
 
