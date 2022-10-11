@@ -1,3 +1,5 @@
+import * as Strings from "~/common/strings";
+import * as Validations from "~/common/validations";
 import * as Constants from "~/common/constants";
 
 import { jsx } from "@emotion/react";
@@ -130,4 +132,26 @@ export const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
 
 export const isUsingMac = () => {
   return window.navigator.appVersion.indexOf("Mac") != -1;
+};
+
+export const getFileExtension = (filename) => filename?.split(".").pop();
+
+export const getImageUrlIfExists = (file, sizeLimit = null) => {
+  if (!file) return;
+  if (Validations.isPreviewableImage(file.type)) {
+    if (sizeLimit && file.size && file.size > sizeLimit) {
+      return;
+    }
+    return Strings.getURLfromCID(file.cid);
+  }
+  let { coverImage } = file;
+  if (coverImage) {
+    if (sizeLimit && coverImage.size && coverImage.size > sizeLimit) {
+      return;
+    }
+    return Strings.getURLfromCID(coverImage.cid);
+  }
+  if (file.linkImage) {
+    return file.linkImage;
+  }
 };
