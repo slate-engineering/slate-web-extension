@@ -199,3 +199,41 @@ export const useRestoreFocus = ({ containerRef, onRestoreFocusFallback }) => {
     };
   }, []);
 };
+
+export const useImage = ({ src, maxWidth }) => {
+  const [imgState, setImgState] = React.useState({
+    loaded: false,
+    error: true,
+    overflow: false,
+  });
+
+  React.useEffect(() => {
+    if (!src) setImgState({ error: true, loaded: true });
+
+    const img = new Image();
+    // NOTE(amine): setting img.src to null will redirect the app to /_/null
+    img.src = src || "";
+
+    img.onload = () => {
+      if (maxWidth && img.naturalWidth < maxWidth) {
+        setImgState((prev) => ({
+          ...prev,
+          loaded: true,
+          error: false,
+          overflow: true,
+        }));
+      } else {
+        setImgState({ loaded: true, error: false });
+      }
+    };
+    img.onerror = () => setImgState({ loaded: true, error: true });
+  }, []);
+
+  return imgState;
+};
+
+let cache = {};
+export const useCache = () => {
+  const setCache = ({ key, value }) => (cache[key] = value);
+  return [cache, setCache];
+};
