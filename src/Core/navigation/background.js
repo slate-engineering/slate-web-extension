@@ -2,6 +2,7 @@ import * as Constants from "~/common/constants";
 
 import { messages } from "./";
 import { getRootDomain } from "~/extension_common/utilities";
+import { Viewer } from "~/core/viewer/background";
 
 export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   if (query?.newWindow) {
@@ -12,6 +13,22 @@ export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
   if (query?.tabId) {
     await chrome.windows.update(query.windowId, { focused: true });
     await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
+  if (urls?.length === 1) {
+    let url = urls[0];
+    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
+    // NOTE(amine): when given a file url, change it to slate.host url;
+    if (objectMetada && !objectMetada.isLink) {
+      url = await Viewer.getObjectAppLink(url);
+    }
+
+    if (query?.target === "_blank") {
+      await chrome.tabs.create({ windowId: sender.tab.windowId, url });
+    } else {
+      await chrome.tabs.update(sender.tab.id, { active: true, url });
+    }
     return;
   }
 

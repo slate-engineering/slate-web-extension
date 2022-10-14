@@ -12,7 +12,14 @@ export const createGroupFromUrls = ({ urls, title }) =>
   window.postMessage({ type: messages.createGroup, urls, title }, "*");
 
 export const openUrls = ({ urls, query }) =>
-  window.postMessage({ type: messages.openURLsRequest, urls, query }, "*");
+  window.postMessage(
+    {
+      type: messages.openURLsRequest,
+      urls,
+      query: { target: "_blank", ...query },
+    },
+    "*"
+  );
 
 export const closeExtensionJumper = () => {
   window.postMessage({ type: messages.closeExtensionJumperRequest }, "*");
