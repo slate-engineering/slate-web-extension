@@ -7,20 +7,15 @@ import * as MultiSelection from "./MultiSelection";
 
 import { css } from "@emotion/react";
 import { Combobox, useComboboxNavigation } from "./ComboboxNavigation";
-import {
-  isNewTab,
-  copyToClipboard,
-  mergeEvents,
-  isUsingMac,
-} from "~/common/utilities";
+import { isNewTab, mergeEvents, isUsingMac } from "~/common/utilities";
 import { Checkbox } from "./system";
 import { FixedSizeList, VariableSizeList } from "react-window";
+import { ShortcutsTooltip } from "~/components/Tooltip";
+import { Favicon } from "~/components/Favicon";
+import { useCopyState } from "~/common/hooks";
 // NOTE(amine): hacky way to resolve shared hook between jumper and new tab
 import { useViewer as useJumperViewer } from "~/core/viewer/app/jumper";
 import { useViewer as useNewTabViewer } from "~/core/viewer/app/newTab";
-import { ShortcutsTooltip } from "~/components/Tooltip";
-import { Favicon } from "~/components/Favicon";
-
 const useViewer = isNewTab ? useNewTabViewer : useJumperViewer;
 
 /* -------------------------------------------------------------------------------------------------
@@ -250,25 +245,6 @@ const STYLES_OBJECT_ACTION_BUTTON = (theme) => css`
   border-radius: 6px;
   color: ${theme.semantic.textBlack};
 `;
-
-const useCopyState = (url) => {
-  const [isCopied, setCopied] = React.useState(false);
-  React.useEffect(() => {
-    let timeout;
-    if (isCopied) {
-      timeout = setTimeout(() => setCopied(false), 2000);
-    }
-
-    return () => clearTimeout(timeout);
-  }, [isCopied]);
-
-  const handleCopying = () => {
-    setCopied(true);
-    copyToClipboard(url);
-  };
-
-  return { isCopied, handleCopying };
-};
 
 const CopyAction = ({ isCopied, ...props }) => {
   return (

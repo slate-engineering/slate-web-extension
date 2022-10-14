@@ -5,14 +5,20 @@ import { css } from "@emotion/react";
 import { H5, P2, P3 } from "~/components/system/Typography";
 import { AspectRatio } from "~/components/system";
 import { motion, useAnimation } from "framer-motion";
-import { useMounted } from "~/common/hooks";
-import { SlatesButton } from "~/components/ObjectPreview/components";
+import { useMounted, useCopyState } from "~/common/hooks";
+import {
+  SlatesButton,
+  CopyButton,
+} from "~/components/ObjectPreview/components";
+import { getRootDomain } from "~/common/utilities";
 
 import ImageObjectPreview from "~/components/ObjectPreview/ImageObjectPreview";
+import { handleOpenUrlsRequests } from "~/core/navigation/background";
 
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_CONTROLS_DESKTOP = css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   position: absolute;
   right: 16px;
   top: 16px;
@@ -21,12 +27,18 @@ const STYLES_CONTROLS_DESKTOP = css`
   transition: opacity 0.2s;
 `;
 
-function DesktopControls({ onShowSlates }) {
+function Actions({ onOpenSlatesJumper, url }) {
+  const { isCopied, handleCopying } = useCopyState(url);
   return (
     <>
       {/**  NOTE(amine): controls visibility handled by STYLES_WRAPPER*/}
       <motion.div id="object_preview_controls" css={STYLES_CONTROLS_DESKTOP}>
-        <SlatesButton onClick={onShowSlates} />
+        <SlatesButton onClick={onOpenSlatesJumper} />
+        <CopyButton
+          style={{ marginLeft: 6 }}
+          isCopied={isCopied}
+          onClick={handleCopying}
+        />
       </motion.div>
     </>
   );
@@ -35,6 +47,7 @@ function DesktopControls({ onShowSlates }) {
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_WRAPPER = (theme) => css`
+  ${Styles.BUTTON_RESET};
   position: relative;
   background-color: ${theme.semantic.bgLight};
   transition: box-shadow 0.2s;
@@ -90,12 +103,12 @@ export default function ObjectPreviewPrimitive({
   children,
   tag = "FILE",
   file,
+  onOpenSlatesJumper,
+  onOpenUrl,
   isSelected,
-  viewer,
   owner,
   // NOTE(amine): internal prop used to display
   isImage,
-  onAction,
 }) {
   const description = file?.body;
   const { isDescriptionVisible, showDescription, hideDescription } =
@@ -114,25 +127,31 @@ export default function ObjectPreviewPrimitive({
 
   const { isLink } = file;
 
-  const title = file.name || file.filename;
+  const title = file.title || file.name || file.filename;
 
   if (file?.coverImage && !isImage && !isLink) {
-    return (
-      <ImageObjectPreview
-        file={file}
-        owner={owner}
-        tag={tag}
-        isSelected={isSelected}
-        onAction={onAction}
-      />
-    );
+    return <ImageObjectPreview file={file} owner={owner} tag={tag} />;
   }
 
+  const handleOpenSlatesJumper = () => {
+    onOpenSlatesJumper([
+      {
+        url: file.url,
+        title: file.title,
+        rootDomain: getRootDomain(file.url),
+      },
+    ]);
+  };
+
+  const handleOpenUrl = () => onOpenUrl({ urls: [file.url] });
   return (
-    <div css={[STYLES_WRAPPER, isSelected && STYLES_SELECTED_RING]}>
+    <button
+      onClick={handleOpenUrl}
+      css={[STYLES_WRAPPER, isSelected && STYLES_SELECTED_RING]}
+    >
       <AspectRatio ratio={248 / 248}>
         <div css={Styles.VERTICAL_CONTAINER}>
-          <DesktopControls file={file} viewer={viewer} />
+          <Actions onOpenSlatesJumper={handleOpenSlatesJumper} url={file.url} />
 
           <div css={STYLES_PREVIEW}>{children}</div>
 
@@ -195,7 +214,7 @@ export default function ObjectPreviewPrimitive({
           </motion.article>
         </div>
       </AspectRatio>
-    </div>
+    </button>
   );
 }
 

@@ -54,7 +54,6 @@ export default function ImageObjectPreview({
   file,
   //NOTE(amine): ImageObjectPreview is used to display cover image for other objects, so we need to pass the tag down
   tag,
-  isInView,
   ...props
 }) {
   /** NOTE(amine):  To minimize the network load, we only load images when they're in view.
@@ -83,14 +82,12 @@ export default function ImageObjectPreview({
   return (
     <ObjectPreviewPrimitive file={file} tag={tag || imgTag} isImage {...props}>
       <div css={STYLES_FLUID_CONTAINER}>
-        {(isCached || isInView) && (
-          <img
-            css={STYLES_IMAGE}
-            src={imageUrl}
-            alt={`${file?.name || file.filename} preview`}
-            onLoad={handleOnLoaded}
-          />
-        )}
+        <img
+          css={STYLES_IMAGE}
+          src={imageUrl}
+          alt={`${file?.name || file.filename} preview`}
+          onLoad={handleOnLoaded}
+        />
         <AnimatePresence>
           {shouldShowPlaceholder && (
             <ImagePlaceholder

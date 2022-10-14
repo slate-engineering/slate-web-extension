@@ -1,5 +1,3 @@
-import "isomorphic-fetch";
-
 import * as React from "react";
 import * as Styles from "~/common/styles";
 import * as Utilities from "~/common/utilities";
