@@ -4,7 +4,23 @@ import { messages } from "./";
 import { getRootDomain } from "~/extension_common/utilities";
 import { Viewer } from "~/core/viewer/background";
 
-export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
+export const handleOpenUrlsRequests = async ({
+  urls: passedUrls,
+  query,
+  sender,
+}) => {
+  let urls = [];
+  for (const url of passedUrls) {
+    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
+    // NOTE(amine): when given a file url, change it to slate.host url;
+    if (objectMetada && !objectMetada.isLink) {
+      const newUrl = await Viewer.getObjectAppLink(url);
+      urls.push(newUrl);
+    } else {
+      urls.push(url);
+    }
+  }
+
   if (query?.newWindow) {
     await chrome.windows.create({ focused: true, url: urls });
     return;
@@ -18,11 +34,6 @@ export const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
 
   if (urls?.length === 1) {
     let url = urls[0];
-    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
-    // NOTE(amine): when given a file url, change it to slate.host url;
-    if (objectMetada && !objectMetada.isLink) {
-      url = await Viewer.getObjectAppLink(url);
-    }
 
     if (query?.target === "_blank") {
       await chrome.tabs.create({ windowId: sender.tab.windowId, url });
