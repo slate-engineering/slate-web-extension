@@ -3,6 +3,7 @@ import * as Constants from "~/common/constants";
 
 import { last } from "~/common/utilities";
 import { v4 as uuid } from "uuid";
+import { copyToClipboard } from "~/common/utilities";
 
 export const useEventListener = (
   { type, handler, ref, options, enabled = true },
@@ -236,4 +237,23 @@ let cache = {};
 export const useCache = () => {
   const setCache = ({ key, value }) => (cache[key] = value);
   return [cache, setCache];
+};
+
+export const useCopyState = (text) => {
+  const [isCopied, setCopied] = React.useState(false);
+  React.useEffect(() => {
+    let timeout;
+    if (isCopied) {
+      timeout = setTimeout(() => setCopied(false), 2000);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [isCopied]);
+
+  const handleCopying = () => {
+    setCopied(true);
+    copyToClipboard(text);
+  };
+
+  return { isCopied, handleCopying };
 };
