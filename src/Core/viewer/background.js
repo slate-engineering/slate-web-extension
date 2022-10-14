@@ -119,6 +119,11 @@ class ViewerHandler {
     return viewer.savedObjectsLookup[url];
   }
 
+  async getObjectMetadataByUrl(url) {
+    const viewer = await this.get();
+    return viewer.objectsMetadata[url];
+  }
+
   _serialize(viewer) {
     const serializedViewer = {
       objects: [],
@@ -173,14 +178,15 @@ class ViewerHandler {
       serializedViewer.objectsMetadata[getFileUrl(object)] = {
         id: object.id,
         cid: object.cid,
+        isLink: object.isLink,
       };
 
       if (object.isLink) {
-        serializedViewer.savedObjectsLookup[object.url] = true;
+        serializedViewer.savedObjectsLookup[object.url] = object.id;
       }
 
       const fileUrl = getFileUrl(object);
-      serializedViewer.savedObjectsLookup[fileUrl] = true;
+      serializedViewer.savedObjectsLookup[fileUrl] = object.id;
 
       return this._serializeObject(object);
     });
@@ -217,13 +223,25 @@ class ViewerHandler {
   }
 
   _serializeObject(object) {
+    const primitiveProperties = {
+      filename: object.filename,
+      body: object.body,
+      cid: object.cid,
+      type: object.type,
+      coverImage: object.coverImage,
+      blurhash: object.blurhash,
+    };
+
     if (object.isLink) {
       return {
+        ...primitiveProperties,
         title: object.name || object.linkName,
         favicon: object.linkFavicon,
         url: object.url,
         rootDomain: getRootDomain(object.url),
-        cid: object.cid,
+        linkImage: object.linkImage,
+        linkFavicon: object.linkFavicon,
+        linkSource: object.linkSource,
         isLink: true,
         isSaved: true,
       };
@@ -232,10 +250,10 @@ class ViewerHandler {
     const fileUrl = getFileUrl(object);
 
     return {
+      ...primitiveProperties,
       title: object.name || object.filename,
       rootDomain: Constants.uri.domain,
       url: fileUrl,
-      cid: object.cid,
       isLink: false,
       isSaved: true,
     };
@@ -276,6 +294,11 @@ class ViewerHandler {
 
     VIEWER_INTERNAL_STORAGE = VIEWER_INITIAL_STATE;
     return VIEWER_INTERNAL_STORAGE;
+  }
+
+  async getObjectAppLink(url) {
+    const objectId = await this._getObjectIdFromUrl(url);
+    return `${Constants.uri.hostname}/_/data?id=${objectId}`;
   }
 
   async getSavedLinksSources() {
