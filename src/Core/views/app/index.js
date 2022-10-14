@@ -14,20 +14,26 @@ export const useViewsState = () => {
     isLoadingFeed: true,
   });
 
-  const setAppliedView = (view) => {
-    setViewState((prev) => ({ ...prev, appliedView: view }));
-  };
+  const setViewsStateSafely = React.useCallback(
+    ({ feed, isLoadingFeed, appliedView }) => {
+      const newState = {};
+      if (appliedView) {
+        newState["appliedView"] = appliedView;
+      }
+      if (typeof isLoadingFeed === "boolean") {
+        newState["isLoadingFeed"] = isLoadingFeed;
+      }
+      if (feed) {
+        newState["feed"] = feed;
+      }
 
-  const setViewsFeed = (result) => {
-    setViewState((prev) => ({
-      ...prev,
-      feed: result,
-    }));
-  };
-
-  const setLoadingState = (isLoading) => {
-    setViewState((prev) => ({ ...prev, isLoadingFeed: isLoading }));
-  };
+      setViewState((prev) => ({
+        ...prev,
+        ...newState,
+      }));
+    },
+    []
+  );
 
   React.useEffect(() => {
     const { appliedView } = viewState;
@@ -36,9 +42,9 @@ export const useViewsState = () => {
       appliedView.type !== viewsType.saved &&
       appliedView.type !== viewsType.files
     ) {
-      setViewsFeed([]);
+      setViewsStateSafely({ feed: [] });
     }
-  }, [viewState.appliedView]);
+  }, [setViewsStateSafely, viewState]);
 
   return [
     {
@@ -47,7 +53,7 @@ export const useViewsState = () => {
       isLoadingFeed: viewState.isLoadingFeed,
       viewsType,
     },
-    { setViewsFeed, setAppliedView, setLoadingState },
+    setViewsStateSafely,
   ];
 };
 

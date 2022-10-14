@@ -8,10 +8,8 @@ import { messages, viewsType } from "../";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [
-    { viewsFeed, appliedView, isLoadingFeed },
-    { setViewsFeed, setAppliedView, setLoadingState },
-  ] = useViewsState();
+  const [{ viewsFeed, appliedView, isLoadingFeed }, setViewsState] =
+    useViewsState();
 
   const getViewsFeed = (view) => {
     if (
@@ -19,16 +17,15 @@ export const useViews = () => {
       view.type === viewsType.saved ||
       view.type === viewsType.files
     ) {
-      setLoadingState(true);
+      setViewsState({ isLoadingFeed: true });
       chrome.runtime.sendMessage(
         { type: messages.viewFeedRequest, view },
         (response) => {
-          setViewsFeed(response.result);
-          setLoadingState(false);
+          setViewsState({ feed: response.result, isLoadingFeed: false });
         }
       );
     }
-    setAppliedView(view);
+    setViewsState({ appliedView: view });
   };
 
   const createViewByTag = (slateName) => {

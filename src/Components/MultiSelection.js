@@ -215,7 +215,7 @@ function Provider({
       toggleCheckIndex,
     });
 
-  const constructSelectedItemsData = () => {
+  const constructSelectedItemsData = React.useCallback(() => {
     // if (isAllChecked) {
     //   return { isAllChecked };
     // }
@@ -227,7 +227,7 @@ function Provider({
     }
 
     return { isAllChecked, selectedItemsData };
-  };
+  }, [checkedIndexes, isAllChecked]);
 
   const value = React.useMemo(
     () => ({
