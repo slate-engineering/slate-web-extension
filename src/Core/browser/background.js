@@ -16,8 +16,6 @@ const getRootDomain = (url) => {
 };
 
 const removeDuplicatesFromSearchResults = (result) => {
-  const isAlreadyAdded = {};
-
   const visitWithSameTitle = {};
   const doesVisitExistWithSameTitle = (visit) =>
     `${getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
@@ -32,26 +30,19 @@ const removeDuplicatesFromSearchResults = (result) => {
 
   const MAX_SEARCH_RESULT = 300;
   const cleanedResult = [];
-  for (let { item } of result) {
-    for (let visit of item.visits) {
-      if (cleanedResult.length > MAX_SEARCH_RESULT) {
-        return cleanedResult;
-      }
-
-      if (visit.url in isAlreadyAdded) continue;
-
-      isAlreadyAdded[visit.url] = true;
-
-      if (doesVisitExistWithSameTitle(visit)) {
-        addVisitToDuplicateList(visit);
-        continue;
-      }
-
-      cleanedResult.push({
-        ...visit,
-        relatedVisits: createVisitDuplicate(visit),
-      });
+  for (let visit of result) {
+    if (cleanedResult.length > MAX_SEARCH_RESULT) {
+      return cleanedResult;
     }
+    if (doesVisitExistWithSameTitle(visit)) {
+      addVisitToDuplicateList(visit);
+      continue;
+    }
+
+    cleanedResult.push({
+      ...visit,
+      relatedVisits: createVisitDuplicate(visit),
+    });
   }
   return cleanedResult;
 };
@@ -270,24 +261,31 @@ class BrowserHistory {
   }
 
   async search(query) {
-    const options = {
-      findAllMatches: true,
-      includeMatches: true,
-      minMatchCharLength: query.length,
-      keys: ["visits.url", "visits.title"],
-    };
+    const microsecondsPerMonth = 1000 * 60 * 60 * 24 * 31;
+    const twoMonthsAgo = new Date().getTime() - microsecondsPerMonth * 2;
+    const chromeHistorySearch = await chrome.history.search({
+      text: query,
+      startTime: twoMonthsAgo,
+      maxResults: 2_147_483_647,
+    });
 
-    const history = await this.get();
-    const fuse = new Fuse(history, options);
+    let result = [];
+    for (let historyItem of chromeHistorySearch) {
+      const sessionItem = Session.createVisit(historyItem);
 
-    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
+      if (sessionItem.title && sessionItem.title.length > 0) {
+        result.push({
+          title: sessionItem.title,
+          favicon: sessionItem.favicon,
+          url: sessionItem.url,
+          rootDomain: sessionItem.rootDomain,
+        });
+      }
+    }
 
-    return cleanedResult.map((item) => ({
-      title: item.title,
-      favicon: item.favIconUrl,
-      url: item.url,
-      rootDomain: item.rootDomain,
-    }));
+    const cleanedResult = removeDuplicatesFromSearchResults(result);
+
+    return cleanedResult;
   }
 
   async getRelatedLinks(url) {
