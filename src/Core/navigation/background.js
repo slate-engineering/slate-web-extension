@@ -48,7 +48,19 @@ export const handleOpenUrlsRequests = async ({
   }
 };
 
-const createGroupFromUrls = async ({ urls, windowId, title }) => {
+const createGroupFromUrls = async ({ urls: passedUrls, windowId, title }) => {
+  let urls = [];
+  for (const url of passedUrls) {
+    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
+    // NOTE(amine): when given a file url, change it to slate.host url;
+    if (objectMetada && !objectMetada.isLink) {
+      const newUrl = await Viewer.getObjectAppLink(url);
+      urls.push(newUrl);
+    } else {
+      urls.push(url);
+    }
+  }
+
   const createdTabs = await Promise.all(
     urls.map(async (url) =>
       chrome.tabs.create({ url, windowId, active: false })
