@@ -262,6 +262,7 @@ function Provider({
     () => ({
       viewer,
       viewsFeed,
+      preloadedView: appliedView,
       appliedView: loadedView,
       isLoadingViewFeed,
       viewsType,
@@ -1104,7 +1105,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
   const {
     viewer,
 
-    appliedView,
+    preloadedView,
     getViewsFeed,
     removeView,
 
@@ -1126,7 +1127,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
   const createOnRemoveHandler =
     ({ view, currentViewIndex }) =>
     () => {
-      if (view.id === appliedView.id) {
+      if (view.id === preloadedView.id) {
         let prevView = viewer.views[currentViewIndex - 1];
         if (!prevView) {
           prevView = VIEWS_ACTIONS[VIEWS_ACTIONS.length - 1];
@@ -1140,7 +1141,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
     ({ view, currentViewIndex }) =>
     () => {
       if (view.type === viewsType.recent) {
-        if (appliedView.id === view.id) {
+        if (preloadedView.id === view.id) {
           const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
           getViewsFeed(prevView);
         }
@@ -1150,7 +1151,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
         return;
       }
       if (view.type === viewsType.files) {
-        if (appliedView.id === view.id) {
+        if (preloadedView.id === view.id) {
           const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
           getViewsFeed(prevView);
         }
@@ -1201,7 +1202,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
       >
         <AnimateSharedLayout>
           {VIEWS_ACTIONS.map((view, i) => {
-            const isApplied = appliedView.id === view.id;
+            const isApplied = preloadedView.id === view.id;
 
             const isRecentOrFilesView =
               view.type === viewsType.recent || view.type === viewsType.files;
@@ -1237,7 +1238,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
           )}
 
           {viewer.views.map((view, i) => {
-            const isApplied = appliedView.id === view.id;
+            const isApplied = preloadedView.id === view.id;
             const isSlateFilter = view.filterBySlateId;
             return (
               <MenuItem
