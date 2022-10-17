@@ -5,10 +5,19 @@ import { last } from "~/common/utilities";
 import { v4 as uuid } from "uuid";
 import { copyToClipboard } from "~/common/utilities";
 
-export const useEventListener = (
-  { type, handler, ref, options, enabled = true },
-  dependencies
-) => {
+export const useEventListener = ({
+  type,
+  handler,
+  ref,
+  options,
+  enabled = true,
+}) => {
+  const savedHandler = React.useRef();
+
+  React.useEffect(() => {
+    savedHandler.current = handler;
+  }, [handler]);
+
   React.useEffect(() => {
     if (!enabled) return;
 
@@ -17,9 +26,11 @@ export const useEventListener = (
 
     if (!element) return;
 
-    element.addEventListener(type, handler, options);
-    return () => element.removeEventListener(type, handler, options);
-  }, dependencies);
+    const eventListener = (event) => savedHandler.current(event);
+
+    element.addEventListener(type, eventListener, options);
+    return () => element.removeEventListener(type, eventListener, options);
+  }, [type]);
 };
 
 export const useIsomorphicLayoutEffect =
