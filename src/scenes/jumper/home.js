@@ -91,14 +91,14 @@ export default function Home() {
 
   const focusSearchInput = () => inputRef.current?.focus?.();
 
-  const focusFirstItemInFeedOrInputIfEmpty = () => {
+  const focusFirstItemInFeedOrInputIfEmpty = React.useCallback(() => {
     clearSearch();
     if (!feedRef.rovingTabIndexRef) {
       focusSearchInput();
       return;
     }
     feedRef.rovingTabIndexRef.focus(focusSearchInput);
-  };
+  }, [clearSearch]);
 
   const handleOnInputKeyUp = (e) => {
     if (e.code === "ArrowDown") {
@@ -165,7 +165,6 @@ export default function Home() {
               component={Search.Feed}
               searchFeed={search.searchFeed}
               searchFeedKeys={search.searchFeedKeys}
-              slates={search.slates}
               onGroupURLs={Navigation.createGroupFromUrls}
               onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
             />
