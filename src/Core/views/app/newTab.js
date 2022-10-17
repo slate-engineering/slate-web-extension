@@ -11,37 +11,40 @@ export const useViews = () => {
   const [{ viewsFeed, appliedView, isLoadingFeed }, setViewsState] =
     useViewsState();
 
-  const getViewsFeed = (view) => {
-    if (
-      view.type === viewsType.custom ||
-      view.type === viewsType.saved ||
-      view.type === viewsType.files
-    ) {
-      setViewsState({ isLoadingFeed: true });
-      chrome.runtime.sendMessage(
-        { type: messages.viewFeedRequest, view },
-        (response) => {
-          setViewsState({ feed: response.result, isLoadingFeed: false });
-        }
-      );
-    }
-    setViewsState({ appliedView: view });
-  };
-
-  const createViewByTag = (slateName) => {
-    chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
-  };
-
-  const createViewBySource = (source) => {
-    chrome.runtime.sendMessage({ type: messages.createViewBySource, source });
-  };
-
-  const removeView = (id) => {
-    chrome.runtime.sendMessage({ type: messages.removeView, id });
-  };
+  const getViewsFeed = React.useCallback(
+    (view) => {
+      if (
+        view.type === viewsType.custom ||
+        view.type === viewsType.saved ||
+        view.type === viewsType.files
+      ) {
+        setViewsState({ isLoadingFeed: true });
+        chrome.runtime.sendMessage(
+          { type: messages.viewFeedRequest, view },
+          (response) => {
+            setViewsState({ feed: response.result, isLoadingFeed: false });
+          }
+        );
+      }
+      setViewsState({ appliedView: view });
+    },
+    [setViewsState]
+  );
 
   React.useLayoutEffect(() => {
     getViewsFeed(appliedView);
+  }, []);
+
+  const createViewByTag = React.useCallback((slateName) => {
+    chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
+  }, []);
+
+  const createViewBySource = React.useCallback((source) => {
+    chrome.runtime.sendMessage({ type: messages.createViewBySource, source });
+  }, []);
+
+  const removeView = React.useCallback((id) => {
+    chrome.runtime.sendMessage({ type: messages.removeView, id });
   }, []);
 
   return {

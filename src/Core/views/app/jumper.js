@@ -10,17 +10,20 @@ export const useViews = () => {
   const [{ viewsFeed, appliedView, isLoadingFeed }, setViewsState] =
     useViewsState();
 
-  const getViewsFeed = (view) => {
-    if (
-      view.type === viewsType.custom ||
-      view.type === viewsType.saved ||
-      view.type === viewsType.files
-    ) {
-      window.postMessage({ type: messages.viewFeedRequest, view }, "*");
-      setViewsState({ isLoadingFeed: true });
-    }
-    setViewsState({ appliedView: view });
-  };
+  const getViewsFeed = React.useCallback(
+    (view) => {
+      if (
+        view.type === viewsType.custom ||
+        view.type === viewsType.saved ||
+        view.type === viewsType.files
+      ) {
+        window.postMessage({ type: messages.viewFeedRequest, view }, "*");
+        setViewsState({ isLoadingFeed: true });
+      }
+      setViewsState({ appliedView: view });
+    },
+    [setViewsState]
+  );
 
   const appliedViewRef = React.useRef();
   appliedViewRef.current = appliedView;
@@ -45,17 +48,17 @@ export const useViews = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const createViewByTag = (slateName) => {
+  const createViewByTag = React.useCallback((slateName) => {
     window.postMessage({ type: messages.createViewByTag, slateName });
-  };
+  }, []);
 
-  const createViewBySource = (source) => {
+  const createViewBySource = React.useCallback((source) => {
     window.postMessage({ type: messages.createViewBySource, source });
-  };
+  }, []);
 
-  const removeView = (id) => {
+  const removeView = React.useCallback((id) => {
     window.postMessage({ type: messages.removeView, id });
-  };
+  }, []);
 
   return {
     viewsFeed,

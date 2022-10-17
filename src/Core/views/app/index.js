@@ -44,7 +44,7 @@ export const useViewsState = () => {
     ) {
       setViewsStateSafely({ feed: [] });
     }
-  }, [setViewsStateSafely, viewState]);
+  }, [setViewsStateSafely, viewState.appliedView.type]);
 
   return [
     {
@@ -74,16 +74,20 @@ const useDebouncedOnChange = ({ setQuery, handleSearch }) => {
   return handleChange;
 };
 
+const SEARCH_INITIAL_STATE = {
+  query: "",
+  slates: [],
+  searchFeedKeys: [],
+  searchFeed: null,
+};
+
 export const useHistorySearchState = ({ inputRef, onSearch }) => {
-  const SEARCH_INITIAL_STATE = {
-    query: "",
-    slates: [],
-    searchFeedKeys: [],
-    searchFeed: null,
-  };
   const [search, setSearch] = React.useState(SEARCH_INITIAL_STATE);
 
-  const clearSearch = () => setSearch(SEARCH_INITIAL_STATE);
+  const clearSearch = React.useCallback(
+    () => setSearch(SEARCH_INITIAL_STATE),
+    []
+  );
 
   const handleInputChange = useDebouncedOnChange({
     setQuery: (query) => setSearch((prev) => ({ ...prev, query })),
