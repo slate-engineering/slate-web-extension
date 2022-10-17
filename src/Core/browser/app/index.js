@@ -7,7 +7,11 @@ import {
   constructWindowsFeed,
 } from "../../../common/utilities";
 
-const filterSessionsFeed = ({ sessionsFeed, sessionsFeedKeys, history }) => {
+const filterAndAppendSessionsFeed = ({
+  sessionsFeed,
+  sessionsFeedKeys,
+  history,
+}) => {
   const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
     key in object ? object[key].push(value) : (object[key] = [value]);
 
@@ -160,36 +164,37 @@ export const useHistoryState = () => {
     feed: {},
     isFetchingHistoryFirstBatch: true,
   });
+
   const sessionsFeedKeys = React.useMemo(
     () => Object.keys(historyState.feed),
     [historyState.feed]
   );
 
-  const setSessionsFeed = (history) => {
-    setHistoryState((prevState) => {
-      const newFeed = filterSessionsFeed({
-        sessionsFeed: { ...prevState.feed },
-        sessionsFeedKeys,
-        history: history,
-      });
-      return { ...prevState, feed: newFeed };
-    });
-  };
+  const setHistoryStateSafely = React.useCallback(
+    ({ history, isFetchingHistoryFirstBatch }) => {
+      setHistoryState((prevState) => {
+        let newState = { ...prevState };
+        if (history) {
+          newState.feed = filterAndAppendSessionsFeed({
+            sessionsFeed: { ...prevState.feed },
+            sessionsFeedKeys,
+            history: history,
+          });
+        }
+        if (typeof isFetchingHistoryFirstBatch === "boolean") {
+          newState.isFetchingHistoryFirstBatch = isFetchingHistoryFirstBatch;
+        }
 
-  const setFetchingStateToFalse = React.useCallback(
-    () =>
-      setHistoryState((prev) => ({
-        ...prev,
-        isFetchingHistoryFirstBatch: false,
-      })),
-    []
+        return newState;
+      });
+    },
+    [sessionsFeedKeys]
   );
 
   return {
     isFetchingHistoryFirstBatch: historyState.isFetchingHistoryFirstBatch,
-    setFetchingStateToFalse,
+    setHistoryState: setHistoryStateSafely,
     sessionsFeed: historyState.feed,
     sessionsFeedKeys,
-    setSessionsFeed,
   };
 };

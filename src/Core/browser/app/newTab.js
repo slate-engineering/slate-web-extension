@@ -49,10 +49,9 @@ export const useWindows = () => {
 export const useHistory = () => {
   const {
     isFetchingHistoryFirstBatch,
-    setFetchingStateToFalse,
     sessionsFeed,
     sessionsFeedKeys,
-    setSessionsFeed,
+    setHistoryState,
   } = useHistoryState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
@@ -72,8 +71,10 @@ export const useHistory = () => {
       } else {
         paramsRef.current.canFetchMore = false;
       }
-      setSessionsFeed(response.history);
-      setFetchingStateToFalse();
+      setHistoryState({
+        history: response.history,
+        isFetchingHistoryFirstBatch: false,
+      });
     };
 
     chrome.runtime.sendMessage(

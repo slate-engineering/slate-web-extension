@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEventListener } from "~/common/hooks";
 import { useHistoryState, useWindowsState } from ".";
 import { messages } from "..";
 import { useViewer } from "../../viewer/app/jumper";
@@ -10,10 +11,9 @@ import { useViewer } from "../../viewer/app/jumper";
 export const useHistory = () => {
   const {
     isFetchingHistoryFirstBatch,
-    setFetchingStateToFalse,
     sessionsFeed,
     sessionsFeedKeys,
-    setSessionsFeed,
+    setHistoryState,
   } = useHistoryState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
@@ -36,25 +36,27 @@ export const useHistory = () => {
   }, [viewer.settings.isRecentViewActivated]);
 
   React.useEffect(() => {
-    const handleMessage = (event) => {
-      let { data, type } = event.data;
-      if (type === messages.historyChunkResponse) {
-        if (data.canFetchMore) {
-          paramsRef.current.startIndex += data.history.length;
-        } else {
-          paramsRef.current.canFetchMore = false;
-        }
-        setSessionsFeed(data.history);
-        setFetchingStateToFalse();
-
-        return;
-      }
-    };
-    window.addEventListener("message", handleMessage);
-
     loadMoreHistory();
-    return () => window.removeEventListener("message", handleMessage);
-  }, [loadMoreHistory, setFetchingStateToFalse]);
+  }, [loadMoreHistory]);
+
+  const handleMessage = (event) => {
+    let { data, type } = event.data;
+    if (type === messages.historyChunkResponse) {
+      if (data.canFetchMore) {
+        paramsRef.current.startIndex += data.history.length;
+      } else {
+        paramsRef.current.canFetchMore = false;
+      }
+
+      setHistoryState({
+        history: data.history,
+        isFetchingHistoryFirstBatch: false,
+      });
+
+      return;
+    }
+  };
+  useEventListener({ type: "message", handler: handleMessage });
 
   return {
     isFetchingHistoryFirstBatch,
