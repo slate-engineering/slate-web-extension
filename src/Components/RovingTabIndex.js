@@ -357,7 +357,7 @@ const Item = React.forwardRef(({ children, index, ...props }, forwardedRef) => {
 
   return React.cloneElement(React.Children.only(children), {
     ...props,
-    onMouseEnter: mergeEvents(handleFocusOnMouseEnter, children.onClick),
+    onMouseEnter: mergeEvents(handleFocusOnMouseEnter, children.onMouseEnter),
     tabIndex: focusedIndex === index ? 0 : -1,
     ref: mergeRefs([ref, forwardedRef, children.ref]),
   });
