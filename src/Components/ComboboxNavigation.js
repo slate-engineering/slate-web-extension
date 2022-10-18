@@ -241,14 +241,16 @@ function ComboboxMenuButton({
     }
   }, [selectedIdx === index]);
 
-  const onMouseMoveHandler = () => {
-    if (menuSelectionDisabled || selectedIdx !== index)
+  const handleOnMouseMove = () => {
+    if (menuSelectionDisabled || selectedIdx !== index) {
       moveSelectionOnHover(index);
+    }
   };
+
   useEventListener(
     {
       type: "mousemove",
-      handler: onMouseMoveHandler,
+      handler: handleOnMouseMove,
       ref,
       options: { once: true },
     },
@@ -258,6 +260,7 @@ function ComboboxMenuButton({
   return React.cloneElement(React.Children.only(children), {
     tabIndex: -1,
     onMouseDown: mergeEvents(handleMouseDown, onMouseDown),
+    onMouseEnter: mergeEvents(handleOnMouseMove, children.onMouseEnter),
     onClick: mergeEvents(handleClick, onClick),
     ref: ref,
     ...props,
