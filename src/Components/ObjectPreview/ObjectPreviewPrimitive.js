@@ -13,7 +13,6 @@ import {
 import { getRootDomain } from "~/common/utilities";
 
 import ImageObjectPreview from "~/components/ObjectPreview/ImageObjectPreview";
-import { handleOpenUrlsRequests } from "~/core/navigation/background";
 
 /* -----------------------------------------------------------------------------------------------*/
 
