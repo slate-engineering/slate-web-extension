@@ -62,6 +62,7 @@ const STYLES_SETTINGS_BUTTON = (theme) => css`
 export default function Home() {
   const {
     viewsFeed,
+    viewsFeedKeys,
     appliedView,
     isLoadingViewFeed,
     viewsType,
@@ -114,6 +115,7 @@ export default function Home() {
     <Views.Provider
       viewer={viewer}
       viewsFeed={viewsFeed}
+      viewsFeedKeys={viewsFeedKeys}
       appliedView={appliedView}
       viewsType={viewsType}
       getViewsFeed={getViewsFeed}
