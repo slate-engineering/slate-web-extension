@@ -1,3 +1,18 @@
+export const isToday = (date) => {
+  const today = new Date();
+  return (
+    today.getDate() == date.getDate() && today.getMonth() == date.getMonth()
+  );
+};
+
+export const isYesterday = (date) => {
+  const yesterday = new Date(new Date().valueOf() - 1000 * 60 * 60 * 24);
+  return (
+    yesterday.getDate() === date.getDate() &&
+    yesterday.getMonth() === date.getMonth()
+  );
+};
+
 export const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Other Windows"];
   let allOpenFeed = { ["Current Window"]: [], ["Other Windows"]: [] };
@@ -19,6 +34,49 @@ export const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
     allOpenFeed,
     allOpenFeedKeys,
   };
+};
+
+export const constructSavedFeed = (objects) => {
+  const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
+    key in object ? object[key].push(value) : (object[key] = [value]);
+
+  let feed = {};
+  objects.forEach((object) => {
+    if (isToday(new Date(object.createdAt))) {
+      ifKeyExistAppendValueElseCreate({
+        object: feed,
+        key: "Today",
+        value: object,
+      });
+      return;
+    }
+
+    if (isYesterday(new Date(object.createdAt))) {
+      ifKeyExistAppendValueElseCreate({
+        object: feed,
+        key: "Yesterday",
+        value: object,
+      });
+      return;
+    }
+
+    const objectCreationDate = new Date(object.createdAt);
+    const formattedDate = `${objectCreationDate.toLocaleDateString("en-EN", {
+      weekday: "long",
+    })}, ${objectCreationDate.toLocaleDateString("en-EN", {
+      month: "short",
+    })} ${objectCreationDate.getDate()} `;
+
+    ifKeyExistAppendValueElseCreate({
+      object: feed,
+      key: formattedDate,
+      value: object,
+    });
+  });
+
+  const feedKeys = Object.keys(feed);
+
+  return { feed, feedKeys };
 };
 
 export const getRootDomain = (url) => {
