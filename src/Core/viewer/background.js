@@ -225,6 +225,7 @@ class ViewerHandler {
   _serializeObject(object) {
     const primitiveProperties = {
       filename: object.filename,
+      createdAt: object.createdAt,
       body: object.body,
       cid: object.cid,
       type: object.type,
@@ -413,6 +414,7 @@ class ViewerActionsHandler {
         url: object.title,
         favicon: object.favicon,
         rootDomain: getRootDomain(object.url),
+        createdAt: new Date().toString(),
         isSaved: true,
       });
     });
