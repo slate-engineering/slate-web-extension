@@ -68,7 +68,6 @@ const Checkbox = React.forwardRef(
             css={STYLES_CHECKBOX}
             checked={checked}
             ref={ref}
-            onClick={() => console.log("clickking")}
             {...props}
           />
         </div>
