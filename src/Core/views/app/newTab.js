@@ -8,8 +8,10 @@ import { messages, viewsType } from "../";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [{ viewsFeed, appliedView, isLoadingFeed }, setViewsState] =
-    useViewsState();
+  const [
+    { viewsFeed, viewsFeedKeys, appliedView, isLoadingFeed },
+    setViewsState,
+  ] = useViewsState();
 
   const getViewsFeed = React.useCallback(
     (view) => {
@@ -22,7 +24,11 @@ export const useViews = () => {
         chrome.runtime.sendMessage(
           { type: messages.viewFeedRequest, view },
           (response) => {
-            setViewsState({ feed: response.result, isLoadingFeed: false });
+            setViewsState({
+              feed: response.feed,
+              feedKeys: response.feedKeys,
+              isLoadingFeed: false,
+            });
           }
         );
       }
@@ -49,6 +55,7 @@ export const useViews = () => {
 
   return {
     viewsFeed,
+    viewsFeedKeys,
     isLoadingViewFeed: isLoadingFeed,
     appliedView,
     viewsType,

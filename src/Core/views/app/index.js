@@ -10,12 +10,13 @@ import { defaultViews, viewsType } from "../";
 export const useViewsState = () => {
   const [viewState, setViewState] = React.useState({
     feed: [],
+    feedKeys: null,
     appliedView: isNewTab ? defaultViews.saved : defaultViews.allOpen,
     isLoadingFeed: true,
   });
 
   const setViewsStateSafely = React.useCallback(
-    ({ feed, isLoadingFeed, appliedView }) => {
+    ({ feed, feedKeys, isLoadingFeed, appliedView }) => {
       const newState = {};
       if (appliedView) {
         newState["appliedView"] = appliedView;
@@ -25,6 +26,10 @@ export const useViewsState = () => {
       }
       if (feed) {
         newState["feed"] = feed;
+      }
+
+      if (typeof feedKeys !== "undefined") {
+        newState["feedKeys"] = feedKeys;
       }
 
       setViewState((prev) => ({
@@ -42,13 +47,14 @@ export const useViewsState = () => {
       appliedView.type !== viewsType.saved &&
       appliedView.type !== viewsType.files
     ) {
-      setViewsStateSafely({ feed: [] });
+      setViewsStateSafely({ feed: [], feedKeys: null });
     }
   }, [setViewsStateSafely, viewState.appliedView.type]);
 
   return [
     {
       viewsFeed: viewState.feed,
+      viewsFeedKeys: viewState.feedKeys,
       appliedView: viewState.appliedView,
       isLoadingFeed: viewState.isLoadingFeed,
       viewsType,

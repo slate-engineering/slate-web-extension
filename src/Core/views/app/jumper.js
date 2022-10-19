@@ -7,8 +7,10 @@ import { messages, viewsType } from "../";
  * -----------------------------------------------------------------------------------------------*/
 
 export const useViews = () => {
-  const [{ viewsFeed, appliedView, isLoadingFeed }, setViewsState] =
-    useViewsState();
+  const [
+    { viewsFeed, viewsFeedKeys, appliedView, isLoadingFeed },
+    setViewsState,
+  ] = useViewsState();
 
   const getViewsFeed = React.useCallback(
     (view) => {
@@ -35,11 +37,19 @@ export const useViews = () => {
           data.view.type === viewsType.saved ||
           data.view.type === viewsType.files
         ) {
-          setViewsState({ isLoadingFeed: false, feed: data.result });
+          setViewsState({
+            isLoadingFeed: false,
+            feed: data.feed,
+            feedKeys: data.feedKeys,
+          });
           return;
         }
         if (data.view.id === appliedViewRef.current.id) {
-          setViewsState({ isLoadingFeed: false, feed: data.result });
+          setViewsState({
+            isLoadingFeed: false,
+            feed: data.feed,
+            feedKeys: data.feedKeys,
+          });
         }
       }
     };
@@ -62,6 +72,7 @@ export const useViews = () => {
 
   return {
     viewsFeed,
+    viewsFeedKeys,
     appliedView,
     isLoadingViewFeed: isLoadingFeed,
     viewsType,

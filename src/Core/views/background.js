@@ -3,6 +3,7 @@ import { Viewer, ViewerActions } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
 
 import Fuse from "fuse.js";
+import { constructSavedFeed } from "~/extension_common/utilities";
 
 class ViewsHandler {
   async search({ query, view }) {
@@ -89,7 +90,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.view.type === viewsType.custom) {
       handleFetchCustomFeed(request.view.id).then((res) =>
         sendResponse({
-          result: res,
+          feed: res,
+          feedKeys: null,
           view: request.view,
         })
       );
@@ -97,22 +99,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     if (request.view.type === viewsType.saved) {
-      Viewer.get().then((res) =>
+      Viewer.get().then((res) => {
+        const links = res.objects.filter((object) => object.isLink);
+        const { feed, feedKeys } = constructSavedFeed(links);
+
         sendResponse({
-          result: res.objects.filter((object) => object.isLink),
+          feed,
+          feedKeys,
           view: request.view,
-        })
-      );
+        });
+      });
       return true;
     }
 
     if (request.view.type === viewsType.files) {
-      Viewer.get().then((res) =>
+      Viewer.get().then((res) => {
+        const files = res.objects.filter((object) => !object.isLink);
+        const { feed, feedKeys } = constructSavedFeed(files);
         sendResponse({
-          result: res.objects.filter((object) => !object.isLink),
+          feed,
+          feedKeys,
           view: request.view,
-        })
-      );
+        });
+      });
       return true;
     }
   }
