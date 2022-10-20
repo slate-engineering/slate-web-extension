@@ -25,7 +25,7 @@ const STYLES_BUTTON = (theme) => css`
   }
 `;
 
-export default function CopyButton({ isCopied, onClick, ...props }) {
+const CopyButton = React.forwardRef(({ isCopied, onClick, ...props }, ref) => {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -33,7 +33,7 @@ export default function CopyButton({ isCopied, onClick, ...props }) {
   };
 
   return (
-    <button css={STYLES_BUTTON} onClick={handleClick} {...props}>
+    <button css={STYLES_BUTTON} onClick={handleClick} ref={ref} {...props}>
       {isCopied ? (
         <SVG.Check width={16} height={16} />
       ) : (
@@ -41,4 +41,6 @@ export default function CopyButton({ isCopied, onClick, ...props }) {
       )}
     </button>
   );
-}
+});
+
+export default CopyButton;

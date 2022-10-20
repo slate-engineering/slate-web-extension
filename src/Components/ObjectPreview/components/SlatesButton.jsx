@@ -32,7 +32,7 @@ const STYLES_BUTTON = (theme) => css`
   }
 `;
 
-export default function SlatesButton({ onClick, ...props }) {
+const SlatesButton = React.forwardRef(({ onClick, ...props }, ref) => {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,8 +40,10 @@ export default function SlatesButton({ onClick, ...props }) {
   };
 
   return (
-    <button css={STYLES_BUTTON} onClick={handleClick} {...props}>
+    <button css={STYLES_BUTTON} onClick={handleClick} ref={ref} {...props}>
       <SVG.Hash width={16} />
     </button>
   );
-}
+});
+
+export default SlatesButton;
