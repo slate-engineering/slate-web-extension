@@ -21,26 +21,21 @@ const GET_ASPECT_STYLES = ({ minWidth, maxWith, ratio }) => css`
   max-width: ${maxWith};
 `;
 
-const AspectRatio = ({
-  children,
-  minWidth,
-  maxWith,
-  ratio = 4 / 3,
-  css,
-  ...props
-}) => {
-  const aspectStyles = React.useMemo(() => {
-    return GET_ASPECT_STYLES({ minWidth, maxWith, ratio });
-  }, [minWidth, maxWith, ratio]);
+const AspectRatio = React.forwardRef(
+  ({ children, minWidth, maxWith, ratio = 4 / 3, css, ...props }, ref) => {
+    const aspectStyles = React.useMemo(() => {
+      return GET_ASPECT_STYLES({ minWidth, maxWith, ratio });
+    }, [minWidth, maxWith, ratio]);
 
-  //NOTE(amine): enforce single child
-  const child = React.Children.only(children);
+    //NOTE(amine): enforce single child
+    const child = React.Children.only(children);
 
-  return (
-    <div css={[STYLES_WRAPPER, aspectStyles, css]} {...props}>
-      {child}
-    </div>
-  );
-};
+    return (
+      <div ref={ref} css={[STYLES_WRAPPER, aspectStyles, css]} {...props}>
+        {child}
+      </div>
+    );
+  }
+);
 
 export default AspectRatio;
