@@ -8,16 +8,17 @@ import * as Typography from "~/components/system/Typography";
 import * as SVG from "~/common/SVG";
 
 import { css } from "@emotion/react";
-import { getRootDomain, isNewTab } from "~/common/utilities";
+import { getRootDomain, isNewTab, mergeRefs } from "~/common/utilities";
 import { useViewsContext } from "~/components/Views";
 import { Divider } from "~/components/Divider";
 import { SavingKeyboardShortcut } from "~/components/SavingKeyboardShortcut";
 
 import ObjectPreview from "~/components/ObjectPreview";
+import { AspectRatio } from "./system";
 
 const STYLES_SAVED_OBJECTS_FEED = (theme) => css`
   ${Styles.OBJECTS_PREVIEW_GRID(theme)};
-  padding: 40px 0px;
+  padding: 16px 0px;
 `;
 
 /* -------------------------------------------------------------------------------------------------
@@ -202,6 +203,158 @@ const FeedListView = React.forwardRef(
  * FeedGridView
  * -----------------------------------------------------------------------------------------------*/
 
+const STYLES_FEED_GRID_VIEW_ROW = {
+  width: "100%",
+};
+
+const FeedGridViewRow = React.memo(({ index, data, style }) => {
+  if (!data.feed[index]) return null;
+
+  const { startingIndex, title, objects } = data.feed[index];
+  const { onOpenUrl, onOpenSlatesJumper } = data.props;
+
+  if (title) {
+    return (
+      <ListView.Title style={{ ...style, ...STYLES_FEED_LIST_VIEW_ROW }}>
+        {title}
+      </ListView.Title>
+    );
+  }
+
+  return (
+    <section
+      style={{ ...style, ...STYLES_FEED_GRID_VIEW_ROW }}
+      css={STYLES_SAVED_OBJECTS_FEED}
+    >
+      {objects.map((object) => (
+        <ObjectPreview
+          key={object.cid}
+          onOpenUrl={onOpenUrl}
+          onOpenSlatesJumper={onOpenSlatesJumper}
+          file={object}
+        />
+      ))}
+    </section>
+  );
+});
+
+const STYLES_FEED_GRID_VIEV_CONTAINER = css`
+  @keyframes grid_view_fade_in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  animation: grid_view_fade_in 150ms ease;
+`;
+
+const FeedGridViewContainer = React.forwardRef(
+  (
+    {
+      feed,
+      feedKeys,
+      onOpenUrl,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onRestoreFocus,
+      listHeight,
+      listWidth,
+      cardElementHeight,
+      cardElementWidth,
+      ...props
+    },
+    ref
+  ) => {
+    const { appliedView } = useViewsContext();
+
+    const feedItemsData = React.useMemo(() => {
+      let startingIndex = 0;
+      let virtualizedFeed = [];
+      let totalSelectableItems = 0;
+
+      for (let key of feedKeys) {
+        virtualizedFeed.push({ title: key, height: 40 });
+
+        const numberOfCards = feed[key].length;
+        const numberOfCardsThatFitList = Math.floor(
+          listWidth / cardElementWidth
+        );
+        const numberOfColumns = Math.ceil(
+          Math.max(1, numberOfCards / numberOfCardsThatFitList)
+        );
+        const listGridColumnMargin = (numberOfColumns - 1) * 24;
+        const listGridYPadding = 16 * 2;
+
+        virtualizedFeed.push({
+          startIndex: startingIndex,
+          objects: feed[key],
+          height:
+            cardElementHeight * numberOfColumns +
+            listGridColumnMargin +
+            listGridYPadding,
+        });
+
+        totalSelectableItems += feed[key].length;
+        startingIndex += feed[key].length;
+      }
+
+      return {
+        feed: virtualizedFeed,
+        totalSelectableItems,
+        props: {
+          onOpenUrl,
+          onOpenSlatesJumper,
+        },
+      };
+    }, [feed, feedKeys, onOpenUrl, onOpenSlatesJumper]);
+
+    const handleOnSubmitSelectedItem = (index) => {
+      let currentLength = 0;
+
+      for (let feedKey of feedKeys) {
+        const objects = feed[feedKey];
+        const nextLength = currentLength + objects.length;
+        if (index < nextLength) {
+          return objects[index - currentLength];
+        }
+        currentLength = nextLength;
+      }
+    };
+
+    const getFeedItemHeight = (index) => feedItemsData.feed[index].height;
+
+    return (
+      <MultiSelection.Provider
+        totalSelectableItems={feedItemsData.totalSelectableItems}
+        onSubmitSelectedItem={handleOnSubmitSelectedItem}
+        onRestoreFocus={onRestoreFocus}
+      >
+        <ListView.VariableSizeListRoot
+          height={listHeight}
+          itemCount={feedItemsData.feed.length}
+          itemData={feedItemsData}
+          itemSize={getFeedItemHeight}
+          css={STYLES_FEED_GRID_VIEV_CONTAINER}
+          ref={ref}
+          {...props}
+        >
+          {FeedGridViewRow}
+        </ListView.VariableSizeListRoot>
+        <MultiSelection.ActionsMenu
+          onOpenSlatesJumper={onOpenSlatesJumper}
+          onOpenURLs={(urls) => onOpenUrl({ urls })}
+          onGroupURLs={(urls) => onGroupURLs({ urls, title: appliedView.name })}
+        />
+      </MultiSelection.Provider>
+    );
+  }
+);
+
+/* -----------------------------------------------------------------------------------------------*/
+
 const FeedGridView = (
   {
     onOpenUrl,
@@ -209,10 +362,58 @@ const FeedGridView = (
     onGroupURLs,
     onRestoreFocus,
     feed,
+    feedKeys,
     ...props
   },
   ref
 ) => {
+  const [
+    { listHeight, listWidth, cardElementHeight, cardElementWidth },
+    setElementsHeight,
+  ] = React.useState({
+    listHeight: null,
+    listWidth: null,
+    cardElementHeight: null,
+    cardElementWidth: null,
+  });
+
+  const listRef = React.useRef();
+  const cardElementRef = React.useRef();
+
+  React.useEffect(() => {
+    if (listRef.current) {
+      setElementsHeight((prev) => ({
+        ...prev,
+        listHeight: listRef.current.offsetHeight,
+        listWidth: listRef.current.offsetWidth,
+      }));
+      if (cardElementRef.current) {
+        setElementsHeight((prev) => ({
+          ...prev,
+          cardElementHeight: cardElementRef.current.offsetHeight,
+          cardElementWidth: cardElementRef.current.offsetWidth,
+        }));
+      }
+    }
+  }, []);
+
+  if (!listHeight && !cardElementHeight) {
+    return (
+      <div
+        style={{ height: "100%" }}
+        css={css}
+        ref={mergeRefs([ref, listRef])}
+        {...props}
+      >
+        <div css={STYLES_SAVED_OBJECTS_FEED}>
+          <AspectRatio ratio={1} ref={cardElementRef}>
+            <div />
+          </AspectRatio>
+        </div>
+      </div>
+    );
+  }
+
   const handleOnSubmitSelectedItem = (index) => feed[index];
 
   return (
@@ -221,16 +422,18 @@ const FeedGridView = (
       onSubmitSelectedItem={handleOnSubmitSelectedItem}
       onRestoreFocus={onRestoreFocus}
     >
-      <section ref={ref} css={[css, STYLES_SAVED_OBJECTS_FEED]} {...props}>
-        {feed.map((object) => (
-          <ObjectPreview
-            key={object.cid}
-            onOpenUrl={onOpenUrl}
-            onOpenSlatesJumper={onOpenSlatesJumper}
-            file={object}
-          />
-        ))}
-      </section>
+      <FeedGridViewContainer
+        feed={feed}
+        feedKeys={feedKeys}
+        onOpenSlatesJumper={onOpenSlatesJumper}
+        onOpenUrl={onOpenUrl}
+        onRestoreFocus={onRestoreFocus}
+        listHeight={listHeight}
+        listWidth={listWidth}
+        cardElementHeight={cardElementHeight}
+        cardElementWidth={cardElementWidth}
+        {...props}
+      />
       <MultiSelection.ActionsMenu
         onOpenURLs={(urls) => onOpenUrl({ urls })}
         onGroupURLs={(urls) => onGroupURLs({ urls, title: "Saved" })}
@@ -243,6 +446,7 @@ const FeedGridView = (
 /* -------------------------------------------------------------------------------------------------
  * SavedObjectsFeed
  * -----------------------------------------------------------------------------------------------*/
+
 const STYLES_OPEN_SLATE_WEB_APP_LINK = (theme) => css`
   color: ${theme.system.blue};
   text-decoration: none;
@@ -323,7 +527,10 @@ const SavedObjectsFeed = React.memo(
       },
       ref
     ) => {
-      const { appliedView, viewsType } = useViewsContext();
+      const { appliedView, viewsType, isLoadingViewFeed } = useViewsContext();
+
+      // NOTE(amine): Don't display anything when the app loads for the first time on this feed
+      if (feed.length === 0 && isLoadingViewFeed) return null;
 
       if (feed.length === 0) {
         if (appliedView.type === viewsType.saved) {
@@ -333,8 +540,25 @@ const SavedObjectsFeed = React.memo(
         }
       }
 
+      if (isNewTab) {
+        return (
+          <FeedGridView
+            key={appliedView.id}
+            feed={feed}
+            feedKeys={feedKeys}
+            onOpenUrl={onOpenUrl}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onGroupURLs={onGroupURLs}
+            onRestoreFocus={onRestoreFocus}
+            ref={ref}
+            {...props}
+          />
+        );
+      }
+
       return (
         <FeedListView
+          key={appliedView.id}
           feed={feed}
           feedKeys={feedKeys}
           onOpenUrl={onOpenUrl}
