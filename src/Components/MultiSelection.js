@@ -40,7 +40,10 @@ const useMultiSelectionContext = () => {
 const useMultiSelectionState = ({ totalSelectableItems }) => {
   const [checkedIndexes, setCheckedIndexes] = React.useState({});
 
-  const isIndexChecked = (index) => index in checkedIndexes;
+  const isIndexChecked = React.useCallback(
+    (index) => index in checkedIndexes,
+    [checkedIndexes]
+  );
 
   const toggleCheckIndex = (index) => {
     setCheckedIndexes((prev) => {

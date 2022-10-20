@@ -75,6 +75,7 @@ export default function LinkObjectPreview({ file, ratio, ...props }) {
       href={file.url}
       target="_blank"
       rel="noreferrer"
+      tabIndex="-1"
       style={{ position: "relative" }}
       onClick={(e) => e.stopPropagation()}
     >

@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as Styles from "~/common/styles";
+import * as MultiSelection from "~/components/MultiSelection";
 
 import { css } from "@emotion/react";
 import { H5, P2, P3 } from "~/components/system/Typography";
@@ -10,34 +11,83 @@ import {
   SlatesButton,
   CopyButton,
 } from "~/components/ObjectPreview/components";
-import { getRootDomain } from "~/common/utilities";
+import {
+  getRootDomain,
+  mergeEvents,
+  isNewTab,
+  isUsingMac,
+} from "~/common/utilities";
+import { ShortcutsTooltip } from "~/components/Tooltip";
+import { Checkbox } from "~/components/system";
 
 import ImageObjectPreview from "~/components/ObjectPreview/ImageObjectPreview";
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const STYLES_CONTROLS_DESKTOP = css`
-  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+const STYLES_CONTROLS = css`
+  ${Styles.HORIZONTAL_CONTAINER};
   position: absolute;
-  right: 16px;
   top: 16px;
+  width: 100%;
+  padding: 0px 16px;
   z-index: 1;
   opacity: 0;
   transition: opacity 0.2s;
 `;
 
-function Actions({ onOpenSlatesJumper, url }) {
-  const { isCopied, handleCopying } = useCopyState(url);
+function Controls({
+  onOpenSlatesJumper,
+  isChecked,
+  onCheck,
+  isCopied,
+  onCopy,
+  withActions,
+}) {
+  const handleOnChecking = (e) => onCheck(e.target.checked);
+
   return (
     <>
       {/**  NOTE(amine): controls visibility handled by STYLES_WRAPPER*/}
-      <motion.div id="object_preview_controls" css={STYLES_CONTROLS_DESKTOP}>
-        <SlatesButton onClick={onOpenSlatesJumper} />
-        <CopyButton
-          style={{ marginLeft: 6 }}
-          isCopied={isCopied}
-          onClick={handleCopying}
-        />
+      <motion.div id="object_preview_controls" css={STYLES_CONTROLS}>
+        <ShortcutsTooltip
+          label="Multi-select"
+          keyTrigger="Shift Space"
+          horizontal="right"
+          yOffset={12}
+          xOffset={-12}
+        >
+          <div style={{ marginRight: "auto" }}>
+            <Checkbox
+              className="object_checkbox"
+              checked={isChecked}
+              tabIndex="-1"
+              onChange={handleOnChecking}
+              style={{ display: isChecked && "block", flexShrink: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.preventDefault()}
+            />
+          </div>
+        </ShortcutsTooltip>
+
+        {withActions && (
+          <div css={Styles.VERTICAL_CONTAINER}>
+            <ShortcutsTooltip
+              label="Tag"
+              keyTrigger={isNewTab ? "T" : isUsingMac() ? "T / ⌥T" : "T/ Alt T"}
+            >
+              <SlatesButton tabIndex="-1" onClick={onOpenSlatesJumper} />
+            </ShortcutsTooltip>
+
+            <ShortcutsTooltip label="Copy" keyTrigger="C">
+              <CopyButton
+                tabIndex="-1"
+                style={{ marginTop: 6 }}
+                isCopied={isCopied}
+                onClick={onCopy}
+              />
+            </ShortcutsTooltip>
+          </div>
+        )}
       </motion.div>
     </>
   );
@@ -57,6 +107,13 @@ const STYLES_WRAPPER = (theme) => css`
 
   :hover #object_preview_controls {
     opacity: 1;
+  }
+  :focus #object_preview_controls {
+    opacity: 1;
+  }
+
+  :focus {
+    box-shadow: 0 0 0 2px ${theme.system.teal};
   }
 `;
 
@@ -91,7 +148,7 @@ const STYLES_PREVIEW = css`
 `;
 
 const STYLES_SELECTED_RING = (theme) => css`
-  box-shadow: 0 0 0 2px ${theme.system.blue};
+  box-shadow: 0 0 0 2px ${theme.system.blue} !important;
 `;
 
 const STYLES_UPPERCASE = css`
@@ -104,11 +161,61 @@ export default function ObjectPreviewPrimitive({
   file,
   onOpenSlatesJumper,
   onOpenUrl,
-  isSelected,
   owner,
+  index,
   // NOTE(amine): internal prop used to display
   isImage,
+  onKeyDown,
+  onKeyUp,
 }) {
+  const {
+    isMultiSelectMode,
+    isIndexChecked,
+
+    createHandleOnIndexCheckChange,
+    createHandleKeyDownNavigation,
+  } = MultiSelection.useMultiSelectionContext();
+
+  const isChecked = React.useMemo(
+    () => isIndexChecked(index),
+    [index, isIndexChecked]
+  );
+
+  const { isCopied, handleCopying } = useCopyState(file.url);
+
+  const handleOpenSlatesJumper = () => {
+    onOpenSlatesJumper([
+      {
+        url: file.url,
+        title: file.title,
+        rootDomain: getRootDomain(file.url),
+      },
+    ]);
+  };
+
+  const handleOpenUrl = () => onOpenUrl({ urls: [file.url] });
+
+  const handleKeyboardActions = (e) => {
+    if (!withActions) return;
+
+    if (e.code === "KeyT") {
+      e.stopPropagation();
+      handleOpenSlatesJumper();
+      return;
+    }
+
+    if (e.code === "KeyC") {
+      e.stopPropagation();
+      handleCopying();
+      return;
+    }
+  };
+
+  const withActions = React.useMemo(() => {
+    if (isMultiSelectMode) return false;
+    return true;
+  }, [isMultiSelectMode]);
+
   const description = file?.body;
   const { isDescriptionVisible, showDescription, hideDescription } =
     useShowDescription({
@@ -132,25 +239,24 @@ export default function ObjectPreviewPrimitive({
     return <ImageObjectPreview file={file} owner={owner} tag={tag} />;
   }
 
-  const handleOpenSlatesJumper = () => {
-    onOpenSlatesJumper([
-      {
-        url: file.url,
-        title: file.title,
-        rootDomain: getRootDomain(file.url),
-      },
-    ]);
-  };
-
-  const handleOpenUrl = () => onOpenUrl({ urls: [file.url] });
   return (
     <button
       onClick={handleOpenUrl}
-      css={[STYLES_WRAPPER, isSelected && STYLES_SELECTED_RING]}
+      css={[STYLES_WRAPPER, isChecked && STYLES_SELECTED_RING]}
+      onKeyUp={mergeEvents(handleKeyboardActions, onKeyUp)}
+      onKeyDown={mergeEvents(createHandleKeyDownNavigation(index), onKeyDown)}
     >
       <AspectRatio ratio={248 / 248}>
         <div css={Styles.VERTICAL_CONTAINER}>
-          <Actions onOpenSlatesJumper={handleOpenSlatesJumper} url={file.url} />
+          <Controls
+            onOpenSlatesJumper={handleOpenSlatesJumper}
+            url={file.url}
+            isChecked={isChecked}
+            onCheck={createHandleOnIndexCheckChange(index)}
+            isCopied={isCopied}
+            onCopy={handleCopying}
+            withActions={withActions}
+          />
 
           <div css={STYLES_PREVIEW}>{children}</div>
 

@@ -226,9 +226,10 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
       style={{ ...style, ...STYLES_FEED_GRID_VIEW_ROW }}
       css={STYLES_SAVED_OBJECTS_FEED}
     >
-      {objects.map((object) => (
+      {objects.map((object, i) => (
         <ObjectPreview
           key={object.cid}
+          index={startingIndex + i}
           onOpenUrl={onOpenUrl}
           onOpenSlatesJumper={onOpenSlatesJumper}
           file={object}
@@ -237,6 +238,8 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
     </section>
   );
 });
+
+/* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_FEED_GRID_VIEV_CONTAINER = css`
   @keyframes grid_view_fade_in {
@@ -289,7 +292,7 @@ const FeedGridViewContainer = React.forwardRef(
         const listGridYPadding = 16 * 2;
 
         virtualizedFeed.push({
-          startIndex: startingIndex,
+          startingIndex: startingIndex,
           objects: feed[key],
           height:
             cardElementHeight * numberOfColumns +
@@ -417,29 +420,19 @@ const FeedGridView = (
   const handleOnSubmitSelectedItem = (index) => feed[index];
 
   return (
-    <MultiSelection.Provider
-      totalSelectableItems={feed.length}
-      onSubmitSelectedItem={handleOnSubmitSelectedItem}
+    <FeedGridViewContainer
+      feed={feed}
+      feedKeys={feedKeys}
+      onOpenSlatesJumper={onOpenSlatesJumper}
+      onOpenUrl={onOpenUrl}
+      onGroupURLs={onGroupURLs}
       onRestoreFocus={onRestoreFocus}
-    >
-      <FeedGridViewContainer
-        feed={feed}
-        feedKeys={feedKeys}
-        onOpenSlatesJumper={onOpenSlatesJumper}
-        onOpenUrl={onOpenUrl}
-        onRestoreFocus={onRestoreFocus}
-        listHeight={listHeight}
-        listWidth={listWidth}
-        cardElementHeight={cardElementHeight}
-        cardElementWidth={cardElementWidth}
-        {...props}
-      />
-      <MultiSelection.ActionsMenu
-        onOpenURLs={(urls) => onOpenUrl({ urls })}
-        onGroupURLs={(urls) => onGroupURLs({ urls, title: "Saved" })}
-        onOpenSlatesJumper={onOpenSlatesJumper}
-      />
-    </MultiSelection.Provider>
+      listHeight={listHeight}
+      listWidth={listWidth}
+      cardElementHeight={cardElementHeight}
+      cardElementWidth={cardElementWidth}
+      {...props}
+    />
   );
 };
 
