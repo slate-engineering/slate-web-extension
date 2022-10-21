@@ -399,7 +399,7 @@ class ViewerActionsHandler {
         if (id in this.syncsTracker) {
           delete this.syncsTracker[id];
         }
-      }, 200);
+      }, 150);
     }
   }
 
@@ -408,13 +408,20 @@ class ViewerActionsHandler {
       if (object.url in viewer.savedObjectsLookup) {
         return;
       }
-      viewer.savedObjectsLookup[object.url] = savingStates.start;
-      viewer.objects.push({
+      const temporaryId = uuid();
+      viewer.savedObjectsLookup[object.url] = temporaryId;
+      viewer.objectsMetadata[object.url] = {
+        id: temporaryId,
+        isLink: true,
+      };
+      viewer.objects.unshift({
+        filename: object.title,
         title: object.title,
-        url: object.title,
+        url: object.url,
         favicon: object.favicon,
         rootDomain: getRootDomain(object.url),
-        createdAt: new Date().toString(),
+        createdAt: new Date().toISOString(),
+        isLink: true,
         isSaved: true,
       });
     });
@@ -558,8 +565,10 @@ class ViewerActionsHandler {
     this._registerRunningAction();
 
     let viewer = await Viewer.get();
+
+    if (!viewer.isAuthenticated) return;
     const areObjectsBeingSaved = objects.every(
-      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
+      ({ url }) => url in viewer.savedObjectsLookup
     );
 
     if (areObjectsBeingSaved) return;
@@ -622,7 +631,6 @@ class ViewerActionsHandler {
       // });
       // Viewer._set(viewer);
       // TODO: handle errors
-      return;
     }
 
     sendStatusUpdate(savingStates.done);
@@ -982,6 +990,64 @@ class ViewerActionsHandler {
 
     return results.map(({ item: { slatename } }) => slatename);
   }
+
+  async getInitialData({ sender }) {
+    const viewer = await Viewer.get();
+
+    if (!viewer.isAuthenticated) {
+      return { isAuthenticated: false };
+    }
+
+    this._registerRunningAction();
+
+    const openTabs = await Windows.getAllTabs();
+
+    const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
+      tabs: openTabs,
+      activeTabId: sender.tab.id,
+      activeWindowId: sender.tab.windowId,
+    });
+
+    const slates = viewer.slates.map(({ slatename }) => slatename);
+
+    const {
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+      viewsSourcesLookup,
+      viewsSlatesLookup,
+      settings,
+    } = viewer;
+
+    const response = {
+      ...viewerInitialState,
+      isAuthenticated: true,
+      settings,
+
+      slates,
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+
+      views: viewer.views,
+      viewsSourcesLookup,
+      viewsSlatesLookup,
+
+      windows: {
+        data: {
+          allOpenFeedKeys,
+          allOpenFeed,
+        },
+        params: {
+          activeWindowId: sender.tab.windowId,
+          activeTabId: sender.tab.id,
+        },
+      },
+    };
+
+    this._cleanupCleanupAction();
+    return response;
+  }
 }
 
 export const ViewerActions = new ViewerActionsHandler();
@@ -991,6 +1057,7 @@ export const ViewerActions = new ViewerActionsHandler();
 Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
+
   const slates = viewerData.slates.map(({ slatename }) => slatename);
 
   const {
@@ -1018,14 +1085,12 @@ Viewer.onChange(async (viewerData) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == commands.directSave) {
-    if (await Viewer.checkIfAuthenticated()) {
-      ViewerActions.saveLink({
-        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
-        tab,
-        source: savingSources.command,
-      });
-    }
+  if (command === commands.directSave) {
+    ViewerActions.saveLink({
+      objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
+      tab,
+      source: savingSources.command,
+    });
   }
 });
 
@@ -1137,72 +1202,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === messages.loadViewerDataRequest) {
-    const getInitialData = async () => {
-      const isAuthenticated = await Viewer.checkIfAuthenticated();
-
-      if (!isAuthenticated) {
-        return { isAuthenticated };
-      }
-
-      const openTabs = await Windows.getAllTabs();
-
-      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
-        tabs: openTabs,
-        activeTabId: sender.tab.id,
-        activeWindowId: sender.tab.windowId,
-      });
-
-      const viewerData = await Viewer.get();
-
-      const slates = viewerData.slates.map(({ slatename }) => slatename);
-
-      const {
-        savedObjectsLookup,
-        savedObjectsSlates,
-        slatesLookup,
-        viewsSourcesLookup,
-        viewsSlatesLookup,
-        settings,
-      } = viewerData;
-
-      Viewer.sync();
-
-      const response = {
-        ...viewerInitialState,
-        isAuthenticated,
-        settings,
-
-        slates,
-        savedObjectsLookup,
-        savedObjectsSlates,
-        slatesLookup,
-
-        views: viewerData.views,
-        viewsSourcesLookup,
-        viewsSlatesLookup,
-
-        windows: {
-          data: {
-            allOpenFeedKeys,
-            allOpenFeed,
-          },
-          params: {
-            activeWindowId: sender.tab.windowId,
-            activeTabId: sender.tab.id,
-          },
-        },
-      };
-
-      // NOTE(amine): if there is only one tab open, preload recent view
-      // if (response.windows.data.allOpen.length === 1) {
-      //   response.recent = await browserHistory.getChunk();
-      //   response.initialView = viewsType.recent;
-      // }
-
-      return response;
-    };
-
-    getInitialData().then(sendResponse);
+    ViewerActions.getInitialData({ sender }).then(sendResponse);
     return true;
   }
 });
