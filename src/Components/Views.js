@@ -30,6 +30,8 @@ import { Switch, Match } from "~/components/Switch";
 import { useSearchContext } from "~/components/Search";
 import { useSlatesCombobox } from "~/components/EditSlates";
 import { LoadingSpinner } from "~/components/Loaders";
+import { SavingKeyboardShortcut } from "~/components/SavingKeyboardShortcut";
+import { SavedObjectsFeed } from "./SavedObjectsFeed";
 import { useSources as useJumperSources } from "~/core/viewer/app/jumper.js";
 import { useSources as useNewTabSources } from "~/core/viewer/app/newTab";
 const useSources = isNewTab ? useNewTabSources : useJumperSources;
@@ -40,9 +42,6 @@ import WindowsFeed from "~/components/WindowsFeed";
 /* -------------------------------------------------------------------------------------------------
  * Views Provider
  * -----------------------------------------------------------------------------------------------*/
-
-const ViewsContext = React.createContext();
-export const useViewsContext = () => React.useContext(ViewsContext);
 
 const useHandleViewsNavigation = () => {
   const initialIndex = 0;
@@ -197,11 +196,71 @@ const useHandleViewsNavigation = () => {
   };
 };
 
+/* -----------------------------------------------------------------------------------------------*/
+
+const useCreateMenuVisibility = () => {
+  const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
+  const openCreateMenu = () => setCreateMenuVisibility(true);
+  const closeCreateMenu = () => setCreateMenuVisibility(false);
+  const toggleCreateMenu = () => setCreateMenuVisibility((prev) => !prev);
+
+  const handleOpenCreateMenuOnKeyDown = (e) => {
+    if (e.key === "n") {
+      openCreateMenu();
+
+      e.stopPropagation();
+      e.preventDefault();
+      return;
+    }
+  };
+
+  useEventListener(
+    { type: "keydown", handler: handleOpenCreateMenuOnKeyDown },
+    []
+  );
+
+  return [
+    isCreateMenuOpen,
+    { openCreateMenu, closeCreateMenu, toggleCreateMenu },
+  ];
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const useSetAppliedFeedOnceFeedIsLoaded = ({
+  preloadedView,
+  isLoadingViewFeed,
+}) => {
+  const prevView = React.useRef(preloadedView);
+  const appliedView = React.useMemo(() => {
+    const isCustomView = [
+      viewsType.custom,
+      viewsType.saved,
+      viewsType.files,
+    ].some((type) => preloadedView.type === type);
+
+    if (isCustomView && isLoadingViewFeed) {
+      return prevView.current;
+    } else {
+      prevView.current = preloadedView;
+      return preloadedView;
+    }
+  }, [preloadedView, isLoadingViewFeed]);
+
+  return appliedView;
+};
+
+/* -----------------------------------------------------------------------------------------------*/
+
+const ViewsContext = React.createContext();
+export const useViewsContext = () => React.useContext(ViewsContext);
+
 function Provider({
   children,
   viewer,
   viewsFeed,
-  appliedView,
+  viewsFeedKeys,
+  appliedView: preloadedView,
   viewsType,
   getViewsFeed,
   createViewByTag,
@@ -210,11 +269,6 @@ function Provider({
   isLoadingViewFeed,
   onRestoreFocus,
 }) {
-  const [isCreateMenuOpen, setCreateMenuVisibility] = React.useState(false);
-  const openCreateMenu = () => setCreateMenuVisibility(true);
-  const closeCreateMenu = () => setCreateMenuVisibility(false);
-  const toggleCreateMenu = () => setCreateMenuVisibility((prev) => !prev);
-
   const {
     registerMenuItem,
     cleanupMenuItem,
@@ -227,49 +281,96 @@ function Provider({
     scrollMenuToLeftEdge,
   } = useHandleViewsNavigation();
 
+  const [
+    isCreateMenuOpen,
+    { openCreateMenu, closeCreateMenu, toggleCreateMenu },
+  ] = useCreateMenuVisibility();
+
   // NOTE(amine): display the new feed once it's loaded
-  const prevView = React.useRef(appliedView);
-  const loadedView = React.useMemo(() => {
-    const isCustomView = [
-      viewsType.custom,
-      viewsType.saved,
-      viewsType.files,
-    ].some((type) => appliedView.type === type);
+  const appliedView = useSetAppliedFeedOnceFeedIsLoaded({
+    preloadedView,
+    isLoadingViewFeed,
+  });
 
-    if (isCustomView && isLoadingViewFeed) {
-      return prevView.current;
-    } else {
-      prevView.current = appliedView;
-      return appliedView;
+  const VIEWS_ACTIONS = React.useMemo(() => {
+    const actions = [];
+    if (!isNewTab) {
+      actions.push(defaultViews.allOpen);
     }
-  }, [appliedView, isLoadingViewFeed]);
 
-  const handleOpenCreateMenuOnKeyDown = (e) => {
-    if (e.key === "n") {
-      openCreateMenu();
+    actions.push(defaultViews.saved);
 
-      e.stopPropagation();
-      e.preventDefault();
-      return;
+    if (viewer.settings?.isFilesViewActivated) {
+      actions.push(defaultViews.files);
     }
-  };
-  useEventListener(
-    { type: "keydown", handler: handleOpenCreateMenuOnKeyDown },
-    []
+
+    if (viewer.settings?.isRecentViewActivated) {
+      actions.push(defaultViews.recent);
+    }
+
+    return actions;
+  }, [viewer.settings]);
+
+  const removeViewAndFocusPrevView = React.useCallback(
+    (view) => {
+      let viewIndex = viewer.views.findIndex((item) => item.id === view.id);
+
+      if (view.id === preloadedView.id) {
+        let prevView = viewer.views[viewIndex - 1];
+        if (!prevView) {
+          prevView = VIEWS_ACTIONS[VIEWS_ACTIONS.length - 1];
+        }
+        getViewsFeed(prevView);
+      }
+
+      removeView(view.id);
+    },
+    [VIEWS_ACTIONS, getViewsFeed, preloadedView, removeView, viewer.views]
+  );
+
+  const disableRecentOrFilesViewAndFocusPrevView = React.useCallback(
+    (view) => {
+      const viewIndex = VIEWS_ACTIONS.findIndex((item) => item.id === view.id);
+      if (view.type === viewsType.recent) {
+        if (preloadedView.id === view.id) {
+          const prevView = VIEWS_ACTIONS[viewIndex - 1];
+          getViewsFeed(prevView);
+        }
+        viewer.updateViewerSettings({
+          isRecentViewActivated: false,
+        });
+        return;
+      }
+
+      if (view.type === viewsType.files) {
+        if (preloadedView.id === view.id) {
+          const prevView = VIEWS_ACTIONS[viewIndex - 1];
+          getViewsFeed(prevView);
+        }
+        viewer.updateViewerSettings({
+          isFilesViewActivated: false,
+        });
+      }
+    },
+    [VIEWS_ACTIONS, viewer, getViewsFeed, preloadedView, viewsType]
   );
 
   const value = React.useMemo(
     () => ({
+      VIEWS_ACTIONS,
+
       viewer,
       viewsFeed,
-      preloadedView: appliedView,
-      appliedView: loadedView,
+      viewsFeedKeys,
+      preloadedView,
+      appliedView,
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
       createViewByTag,
       createViewBySource,
-      removeView,
+      removeViewAndFocusPrevView,
+      disableRecentOrFilesViewAndFocusPrevView,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -287,15 +388,19 @@ function Provider({
       onRestoreFocus,
     }),
     [
+      VIEWS_ACTIONS,
       viewer,
+      appliedView,
+      preloadedView,
       viewsFeed,
-      loadedView,
+      viewsFeedKeys,
       isLoadingViewFeed,
       viewsType,
       getViewsFeed,
       createViewByTag,
       createViewBySource,
-      removeView,
+      removeViewAndFocusPrevView,
+      disableRecentOrFilesViewAndFocusPrevView,
 
       registerMenuItem,
       cleanupMenuItem,
@@ -381,18 +486,29 @@ const CreateMenuInitialScene = ({
 }) => {
   useEscapeKey(closeCreateMenu);
 
-  const { viewer, scrollMenuToLeftEdge } = useViewsContext();
+  const {
+    viewer,
+    disableRecentOrFilesViewAndFocusPrevView,
+    scrollMenuToLeftEdge,
+  } = useViewsContext();
 
   const handleToggleRecentView = () => {
-    viewer.updateViewerSettings({
-      isRecentViewActivated: !viewer.settings?.isRecentViewActivated,
-    });
+    if (viewer.settings.isRecentViewActivated) {
+      disableRecentOrFilesViewAndFocusPrevView(defaultViews.recent);
+      return;
+    }
+
+    viewer.updateViewerSettings({ isRecentViewActivated: true });
     scrollMenuToLeftEdge();
   };
+
   const handleToggleFilesView = () => {
-    viewer.updateViewerSettings({
-      isFilesViewActivated: !viewer.settings?.isFilesViewActivated,
-    });
+    if (viewer.settings.isFilesViewActivated) {
+      disableRecentOrFilesViewAndFocusPrevView(defaultViews.files);
+      return;
+    }
+
+    viewer.updateViewerSettings({ isFilesViewActivated: true });
     scrollMenuToLeftEdge();
   };
 
@@ -413,6 +529,7 @@ const CreateMenuInitialScene = ({
     ],
     [viewer.settings]
   );
+
   return (
     <section style={{ padding: 8 }} {...props}>
       <RovingTabIndex.Provider
@@ -492,10 +609,9 @@ export const useSourcesCombobox = ({ sources }) => {
 const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
   const {
     viewer,
-    getViewsFeed,
     createViewBySource,
     scrollMenuToRightEdge,
-    closeCreateMenu,
+    removeViewAndFocusPrevView,
   } = useViewsContext();
 
   const { filteredSources, searchValue, setSearchValue } = useSourcesCombobox({
@@ -506,11 +622,11 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
 
   useEscapeKey(goToInitialScene);
 
-  const handleSwitchToAppliedSourceView = (source) => {
+  const handleRemoveView = (source) => {
     const view = viewer.viewsSourcesLookup[source];
-    getViewsFeed(view);
-    closeCreateMenu();
+    removeViewAndFocusPrevView(view);
   };
+
   const handleCreateView = (source) => {
     createViewBySource(source);
     scrollMenuToRightEdge();
@@ -545,7 +661,7 @@ const CreateMenuSourceScene = ({ goToInitialScene, sources, ...props }) => {
             {filteredSources.map((sourceData, index) => {
               const isApplied = sourceData.source in viewer.viewsSourcesLookup;
               const handleOnClick = isApplied
-                ? handleSwitchToAppliedSourceView
+                ? handleRemoveView
                 : handleCreateView;
 
               return (
@@ -611,21 +727,21 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
 
   const {
     viewer,
-    closeCreateMenu,
-    getViewsFeed,
     createViewByTag,
     scrollMenuToRightEdge,
+    removeViewAndFocusPrevView,
   } = useViewsContext();
+
   const { slates, searchValue, setSearchValue } = useSlatesCombobox({
     slates: viewer.slates,
   });
   const handleOnInputChange = (e) => setSearchValue(e.target.value);
 
-  const handleSwitchToAppliedTagView = (slateName) => {
+  const handleRemoveView = (slateName) => {
     const view = viewer.viewsSlatesLookup[slateName];
-    getViewsFeed(view);
-    closeCreateMenu();
+    removeViewAndFocusPrevView(view);
   };
+
   const handleCreateView = (slateName) => {
     createViewByTag(slateName);
     scrollMenuToRightEdge();
@@ -660,7 +776,7 @@ const CreateMenuTagScene = ({ goToInitialScene, ...props }) => {
             {slates.map((slate, index) => {
               const isApplied = slate in viewer.viewsSlatesLookup;
               const handleOnClick = isApplied
-                ? handleSwitchToAppliedTagView
+                ? handleRemoveView
                 : handleCreateView;
               return (
                 <CreateMenuTagButton
@@ -1103,11 +1219,14 @@ const useHandleScrollNavigation = ({ containerRef }) => {
 
 function Menu({ css, actionsWrapperStyle, ...props }) {
   const {
+    VIEWS_ACTIONS,
+
     viewer,
 
     preloadedView,
     getViewsFeed,
-    removeView,
+    removeViewAndFocusPrevView,
+    disableRecentOrFilesViewAndFocusPrevView,
 
     scrollButtonCss,
 
@@ -1118,48 +1237,11 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
     toggleCreateMenu,
   } = useViewsContext();
 
-  const { isMenuOverflowingFrom, setMenuOverflowFrom } = useViewsMenuContext();
+  const { isMenuOverflowingFrom } = useViewsMenuContext();
 
   React.useLayoutEffect(() => cleanupMenu, []);
 
   const createOnClickHandler = (view) => () => getViewsFeed(view);
-
-  const createOnRemoveHandler =
-    ({ view, currentViewIndex }) =>
-    () => {
-      if (view.id === preloadedView.id) {
-        let prevView = viewer.views[currentViewIndex - 1];
-        if (!prevView) {
-          prevView = VIEWS_ACTIONS[VIEWS_ACTIONS.length - 1];
-        }
-        getViewsFeed(prevView);
-      }
-      removeView(view.id);
-    };
-
-  const createOnDisableRecentOrFilesView =
-    ({ view, currentViewIndex }) =>
-    () => {
-      if (view.type === viewsType.recent) {
-        if (preloadedView.id === view.id) {
-          const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
-          getViewsFeed(prevView);
-        }
-        viewer.updateViewerSettings({
-          isRecentViewActivated: false,
-        });
-        return;
-      }
-      if (view.type === viewsType.files) {
-        if (preloadedView.id === view.id) {
-          const prevView = VIEWS_ACTIONS[currentViewIndex - 1];
-          getViewsFeed(prevView);
-        }
-        viewer.updateViewerSettings({
-          isFilesViewActivated: false,
-        });
-      }
-    };
 
   const preventActionButtonFocus = (e) => e.preventDefault();
 
@@ -1167,25 +1249,6 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
   const { scrollToLeft, scrollToRight } = useHandleScrollNavigation({
     containerRef: actionWrapperRef,
   });
-
-  const VIEWS_ACTIONS = React.useMemo(() => {
-    const actions = [];
-    if (!isNewTab) {
-      actions.push(defaultViews.allOpen);
-    }
-
-    actions.push(defaultViews.saved);
-
-    if (viewer.settings?.isFilesViewActivated) {
-      actions.push(defaultViews.files);
-    }
-
-    if (viewer.settings?.isRecentViewActivated) {
-      actions.push(defaultViews.recent);
-    }
-
-    return actions;
-  }, [viewer.settings]);
 
   return (
     <section css={[STYLES_VIEWS_MENU_WRAPPER, css]} {...props}>
@@ -1207,6 +1270,10 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
             const isRecentOrFilesView =
               view.type === viewsType.recent || view.type === viewsType.files;
 
+            const handleOnRemove = () => {
+              disableRecentOrFilesViewAndFocusPrevView(view);
+            };
+
             return (
               <MenuItem
                 isViewApplied={isApplied}
@@ -1215,13 +1282,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 onMouseDown={preventActionButtonFocus}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
-                onRemove={
-                  isRecentOrFilesView &&
-                  createOnDisableRecentOrFilesView({
-                    view,
-                    currentViewIndex: i,
-                  })
-                }
+                onRemove={isRecentOrFilesView && handleOnRemove}
                 index={i}
               >
                 {view.name}
@@ -1253,7 +1314,7 @@ function Menu({ css, actionsWrapperStyle, ...props }) {
                 index={VIEWS_ACTIONS.length + i}
                 onClick={createOnClickHandler(view)}
                 onSubmit={createOnClickHandler(view)}
-                onRemove={createOnRemoveHandler({ view, currentViewIndex: i })}
+                onRemove={() => removeViewAndFocusPrevView(view)}
               >
                 {view.name}
               </MenuItem>
@@ -1384,33 +1445,6 @@ const ViewsFeedList = React.forwardRef(
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const STYLES_SAVING_SHORTCUT_ICON = (theme) => css`
-  padding: 8px;
-  width: 32px;
-  line-height: 16px;
-  text-align: center;
-  background-color: ${theme.semantic.bgGrayLight};
-  border-radius: 8px;
-  color: ${theme.semantic.textBlack};
-`;
-function SavingKeyboardShortcut(props) {
-  return (
-    <div css={Styles.HORIZONTAL_CONTAINER_CENTERED} {...props}>
-      <Typography.H4 as="p" color="textBlack" css={STYLES_SAVING_SHORTCUT_ICON}>
-        ⌥
-      </Typography.H4>
-      <Typography.H4
-        as="p"
-        color="textBlack"
-        css={STYLES_SAVING_SHORTCUT_ICON}
-        style={{ marginLeft: 4 }}
-      >
-        B
-      </Typography.H4>
-    </div>
-  );
-}
-
 const STYLES_VIEWS_SLATES_EMPTY_BUTTON = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   height: 32px;
@@ -1487,74 +1521,6 @@ function ViewsSourceEmptyState({ appliedView }) {
         Start saving links to Slate with
       </Typography.H4>
       <SavingKeyboardShortcut style={{ marginTop: 8 }} />
-    </section>
-  );
-}
-
-/* -----------------------------------------------------------------------------------------------*/
-
-const STYLES_OPEN_SLATE_WEB_APP_LINK = (theme) => css`
-  color: ${theme.system.blue};
-  text-decoration: none;
-`;
-
-function OpenSlateWebAppLink(props) {
-  return (
-    <Typography.H4
-      as="a"
-      css={STYLES_OPEN_SLATE_WEB_APP_LINK}
-      href={Constants.uri.hostname}
-      rel="noreferrer"
-      target="_blank"
-      {...props}
-    >
-      Slate web app
-      <SVG.ArrowUpRight
-        style={{ display: "inline", position: "relative", top: "2px" }}
-      />
-    </Typography.H4>
-  );
-}
-
-function ViewsSavedEmptyState() {
-  return (
-    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
-      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
-        You don’t have anything saved to Slate yet.{" "}
-      </Typography.H4>
-      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
-      <Typography.H4 as="p" color="textBlack">
-        Start saving links to Slate with
-      </Typography.H4>
-      <SavingKeyboardShortcut style={{ marginTop: 8 }} />
-      <div css={Styles.HORIZONTAL_CONTAINER_CENTERED} style={{ marginTop: 24 }}>
-        <Typography.H4
-          as="p"
-          color="textBlack"
-          href={Constants.uri.hostname}
-          target="_blank"
-        >
-          or uploading files with
-        </Typography.H4>
-        <OpenSlateWebAppLink style={{ marginLeft: 4 }} />
-      </div>
-    </section>
-  );
-}
-
-function ViewsFilesEmptyState() {
-  return (
-    <section css={Styles.VERTICAL_CONTAINER_CENTERED} style={{ width: "100%" }}>
-      <Typography.H4 as="p" color="textBlack" style={{ marginTop: 80 }}>
-        You don’t have any file uploaded to Slate yet.
-      </Typography.H4>
-      <Divider style={{ marginTop: 24, marginBottom: 24 }} width={80} />
-      <div css={Styles.HORIZONTAL_CONTAINER_CENTERED}>
-        <Typography.H4 as="p" color="textBlack">
-          Start uploading files with
-        </Typography.H4>
-        <OpenSlateWebAppLink style={{ marginLeft: 4 }} />
-      </div>
     </section>
   );
 }
@@ -1647,6 +1613,7 @@ const Feed = React.memo(
       const {
         viewer,
         viewsFeed,
+        viewsFeedKeys,
         appliedView,
         isLoadingViewFeed,
         getViewsFeed,
@@ -1656,6 +1623,16 @@ const Feed = React.memo(
       const handleOnSubmitSelectedItem = (index) => viewsFeed[index];
 
       const viewsFeedItemsData = React.useMemo(() => {
+        if (viewsFeedKeys) {
+          return {
+            feed: [],
+            totalSelectableItems: 0,
+            props: {
+              onOpenUrl,
+              onOpenSlatesJumper,
+            },
+          };
+        }
         return {
           feed: [...viewsFeed, { isPadding: true, value: 8 }],
           totalSelectableItems: viewsFeed.length,
@@ -1678,6 +1655,24 @@ const Feed = React.memo(
 
         appliedView,
       });
+
+      if (
+        appliedView.type === viewsType.saved ||
+        appliedView.type === viewsType.files
+      ) {
+        return (
+          <SavedObjectsFeed
+            ref={ref}
+            onOpenUrl={onOpenUrl}
+            onOpenSlatesJumper={onOpenSlatesJumper}
+            onGroupURLs={onGroupURLs}
+            onRestoreFocus={onRestoreFocus}
+            feed={viewsFeed}
+            feedKeys={viewsFeedKeys}
+            {...props}
+          />
+        );
+      }
 
       if (appliedView.type === viewsType.allOpen) {
         return (
@@ -1731,14 +1726,6 @@ const Feed = React.memo(
               when={appliedView.filterBySlateId}
               component={ViewsSlatesEmptyState}
               appliedView={appliedView}
-            />
-            <Match
-              when={appliedView.type === viewsType.saved}
-              component={ViewsSavedEmptyState}
-            />
-            <Match
-              when={appliedView.type === viewsType.files}
-              component={ViewsFilesEmptyState}
             />
           </Switch>
         );
