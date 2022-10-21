@@ -31,3 +31,7 @@ export const updateAddressBarUrl = (url) => {
   const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
   element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
 };
+export const removeAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  if (element) element.remove();
+};

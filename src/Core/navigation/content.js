@@ -1,6 +1,11 @@
 import * as Constants from "~/common/constants";
 
-import { messages, updateAddressBarUrl, createAddressBarElement } from "./";
+import {
+  messages,
+  updateAddressBarUrl,
+  createAddressBarElement,
+  removeAddressBarUrl,
+} from "./";
 
 // SOURCE(amine): https://stackoverflow.com/questions/2592092/executing-script-elements-inserted-with-innerhtml
 const setInnerHTML = (element, html) => {
@@ -62,8 +67,9 @@ export const openApp = (url) => {
 };
 
 export const closeApp = () => {
+  removeAddressBarUrl();
   const extensionJumperWrapper = getExtensionJumperWrapper();
-  extensionJumperWrapper.innerHTML = "";
+  extensionJumperWrapper.remove();
 };
 
 /** ------------ Event Listeners ------------- */
