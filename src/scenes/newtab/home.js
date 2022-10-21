@@ -152,6 +152,57 @@ const CreateViewMenuSidePanel = (props) => {
   );
 };
 
+const Feeds = React.forwardRef(
+  (
+    {
+      openSlatesJumper,
+      sessionsFeed,
+      sessionsFeedKeys,
+      loadMoreHistory,
+      isFetchingHistoryFirstBatch,
+      windowsFeeds,
+      activeTabId,
+      viewer,
+      search,
+      focusFirstItemInFeedOrInputIfEmpty,
+    },
+    feedRef
+  ) => {
+    return (
+      <Switch
+        onOpenSlatesJumper={openSlatesJumper}
+        onOpenUrl={Navigation.openUrls}
+        onSaveObjects={viewer.saveLink}
+        ref={feedRef}
+        css={STYLES_HISTORY_SCENE_FEED}
+      >
+        <Match
+          when={search.isSearching}
+          component={Search.Feed}
+          searchFeed={search.searchFeed}
+          searchFeedKeys={search.searchFeedKeys}
+          slates={search.slates}
+          onGroupURLs={Navigation.createGroupFromUrls}
+          onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
+        />
+        <Match
+          when={!search.isSearching}
+          component={Views.Feed}
+          historyFeed={sessionsFeed}
+          historyFeedKeys={sessionsFeedKeys}
+          loadMoreHistory={loadMoreHistory}
+          isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
+          windowsFeed={windowsFeeds.allOpenFeed}
+          windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
+          activeTabId={activeTabId}
+          onCloseTabs={Navigation.closeTabs}
+          onGroupURLs={Navigation.createGroupFromUrls}
+        />
+      </Switch>
+    );
+  }
+);
+
 /* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
@@ -211,6 +262,11 @@ const STYLES_HISTORY_SCENE_INPUT = (theme) => css`
 
 const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
   ${Styles.HORIZONTAL_CONTAINER};
+  overflow-y: auto;
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
   @supports (
     (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
   ) {
@@ -220,10 +276,14 @@ const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
   }
 `;
 
+//NOTE(amine): used as fix for overflow hidden caused by setting overflow-y to auto in the feed's styles
 const STYLES_HISTORY_SCENE_FEED = css`
-  ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
-  position: relative;
-  margin: 0 auto;
+  padding-left: calc((100vw - 1080px) / 2);
+  padding-right: calc((100vw - 1080px) / 2);
+
+  & > div {
+    position: relative;
+  }
 `;
 
 const STYLES_SETTINGS_BUTTON = (theme) => css`
@@ -281,6 +341,7 @@ export default function HistoryScene() {
 
   const {
     viewsFeed,
+    viewsFeedKeys,
     appliedView,
     isLoadingViewFeed,
     viewsType,
@@ -296,7 +357,7 @@ export default function HistoryScene() {
     view: appliedView,
   });
 
-  const focusSearchInput = () => inputRef.current.focus();
+  const focusSearchInput = () => inputRef.current?.focus?.();
 
   const feedRef = React.useRef();
 
@@ -308,14 +369,14 @@ export default function HistoryScene() {
   const { isSettingsJumperOpen, closeSettingsJumper, openSettingsJumper } =
     useSettingsJumper();
 
-  const focusFirstItemInFeedOrInputIfEmpty = () => {
+  const focusFirstItemInFeedOrInputIfEmpty = React.useCallback(() => {
     clearSearch();
     if (!feedRef.rovingTabIndexRef) {
       focusSearchInput();
       return;
     }
     feedRef.rovingTabIndexRef.focus(focusSearchInput);
-  };
+  }, [clearTimeout]);
 
   const handleOnInputKeyUp = (e) => {
     if (e.code === "ArrowDown") {
@@ -349,6 +410,7 @@ export default function HistoryScene() {
           <Views.Provider
             viewer={viewer}
             viewsFeed={viewsFeed}
+            viewsFeedKeys={viewsFeedKeys}
             appliedView={appliedView}
             viewsType={viewsType}
             getViewsFeed={getViewsFeed}
@@ -400,46 +462,24 @@ export default function HistoryScene() {
 
             <section
               css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
-              style={{ height: "100%", flex: 1, overflow: "hidden" }}
+              style={{ height: "100%", flex: 1 }}
             >
               <div style={{ flexGrow: 1 }}>
-                {/* <section css={STYLES_FILTERS_MENU}>
-                  <button css={STYLES_FILTER_BUTTON}>
-                    <SVG.Plus width={16} height={16} />
-                    <Typography.H5 as="span">Filter</Typography.H5>
-                  </button>
-
-              </section> */}
-                <Switch
-                  onOpenSlatesJumper={openSlatesJumper}
-                  onOpenUrl={Navigation.openUrls}
-                  onSaveObjects={viewer.saveLink}
+                <Feeds
                   ref={feedRef}
-                  css={STYLES_HISTORY_SCENE_FEED}
-                >
-                  <Match
-                    when={search.isSearching}
-                    component={Search.Feed}
-                    searchFeed={search.searchFeed}
-                    searchFeedKeys={search.searchFeedKeys}
-                    slates={search.slates}
-                    onGroupURLs={Navigation.createGroupFromUrls}
-                    onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
-                  />
-                  <Match
-                    when={!search.isSearching}
-                    component={Views.Feed}
-                    historyFeed={sessionsFeed}
-                    historyFeedKeys={sessionsFeedKeys}
-                    loadMoreHistory={loadMoreHistory}
-                    isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
-                    windowsFeed={windowsFeeds.allOpenFeed}
-                    windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
-                    activeTabId={activeTabId}
-                    onCloseTabs={Navigation.closeTabs}
-                    onGroupURLs={Navigation.createGroupFromUrls}
-                  />
-                </Switch>
+                  openSlatesJumper={openSlatesJumper}
+                  sessionsFeed={sessionsFeed}
+                  sessionsFeedKeys={sessionsFeedKeys}
+                  loadMoreHistory={loadMoreHistory}
+                  isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
+                  windowsFeeds={windowsFeeds}
+                  activeTabId={activeTabId}
+                  viewer={viewer}
+                  search={search}
+                  focusFirstItemInFeedOrInputIfEmpty={
+                    focusFirstItemInFeedOrInputIfEmpty
+                  }
+                />
               </div>
             </section>
           </Views.Provider>
