@@ -58,7 +58,7 @@
     },
     "direct-save": {
       "suggested_key": {
-        "default": "Alt+S",
+        "default": "Alt+B",
         "mac": "Alt+S"
       },
       "description": "Direct save"

@@ -465,6 +465,21 @@ const popularDomainsTitles = {
 };
 
 ;// CONCATENATED MODULE: ./src/extension_common/utilities.js
+const isToday = (date) => {
+  const today = new Date();
+  return (
+    today.getDate() == date.getDate() && today.getMonth() == date.getMonth()
+  );
+};
+
+const isYesterday = (date) => {
+  const yesterday = new Date(new Date().valueOf() - 1000 * 60 * 60 * 24);
+  return (
+    yesterday.getDate() === date.getDate() &&
+    yesterday.getMonth() === date.getMonth()
+  );
+};
+
 const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
   const allOpenFeedKeys = ["Current Window", "Other Windows"];
   let allOpenFeed = { ["Current Window"]: [], ["Other Windows"]: [] };
@@ -486,6 +501,49 @@ const constructWindowsFeed = ({ tabs, activeTabId, activeWindowId }) => {
     allOpenFeed,
     allOpenFeedKeys,
   };
+};
+
+const constructSavedFeed = (objects) => {
+  const ifKeyExistAppendValueElseCreate = ({ object, key, value }) =>
+    key in object ? object[key].push(value) : (object[key] = [value]);
+
+  let feed = {};
+  objects.forEach((object) => {
+    if (isToday(new Date(object.createdAt))) {
+      ifKeyExistAppendValueElseCreate({
+        object: feed,
+        key: "Today",
+        value: object,
+      });
+      return;
+    }
+
+    if (isYesterday(new Date(object.createdAt))) {
+      ifKeyExistAppendValueElseCreate({
+        object: feed,
+        key: "Yesterday",
+        value: object,
+      });
+      return;
+    }
+
+    const objectCreationDate = new Date(object.createdAt);
+    const formattedDate = `${objectCreationDate.toLocaleDateString("en-EN", {
+      weekday: "long",
+    })}, ${objectCreationDate.toLocaleDateString("en-EN", {
+      month: "short",
+    })} ${objectCreationDate.getDate()} `;
+
+    ifKeyExistAppendValueElseCreate({
+      object: feed,
+      key: formattedDate,
+      value: object,
+    });
+  });
+
+  const feedKeys = Object.keys(feed);
+
+  return { feed, feedKeys };
 };
 
 const getRootDomain = (url) => {
@@ -998,9 +1056,9 @@ function v4(options, buf, offset) {
 /* harmony default export */ var esm_browser_v4 = (v4);
 ;// CONCATENATED MODULE: ./node_modules/fuse.js/dist/fuse.esm.js
 /**
- * Fuse.js v6.5.3 - Lightweight fuzzy-search (http://fusejs.io)
+ * Fuse.js v6.6.2 - Lightweight fuzzy-search (http://fusejs.io)
  *
- * Copyright (c) 2021 Kiro Risk (http://kiro.me)
+ * Copyright (c) 2022 Kiro Risk (http://kiro.me)
  * All Rights Reserved. Apache Software License 2.0
  *
  * http://www.apache.org/licenses/LICENSE-2.0
@@ -1127,6 +1185,7 @@ function createKey(key) {
   let id = null;
   let src = null;
   let weight = 1;
+  let getFn = null;
 
   if (isString(key) || isArray(key)) {
     src = key;
@@ -1150,9 +1209,10 @@ function createKey(key) {
 
     path = createKeyPath(name);
     id = createKeyId(name);
+    getFn = key.getFn;
   }
 
-  return { path, id, weight, src }
+  return { path, id, weight, src, getFn }
 }
 
 function createKeyPath(key) {
@@ -1395,8 +1455,7 @@ class FuseIndex {
 
     // Iterate over every key (i.e, path), and fetch the value at that key
     this.keys.forEach((key, keyIndex) => {
-      // console.log(key)
-      let value = this.getFn(doc, key.path);
+      let value = key.getFn ? key.getFn(doc) : this.getFn(doc, key.path);
 
       if (!isDefined(value)) {
         return
@@ -1431,7 +1490,7 @@ class FuseIndex {
           } else ;
         }
         record.$[keyIndex] = subRecords;
-      } else if (!isBlank(value)) {
+      } else if (isString(value) && !isBlank(value)) {
         let subRecord = {
           v: value,
           n: this.norm.get(value)
@@ -2126,7 +2185,7 @@ const searchers = [
 const searchersLen = searchers.length;
 
 // Regex to split by spaces, but keep anything in quotes together
-const SPACE_RE = / +(?=([^\"]*\"[^\"]*\")*[^\"]*$)/;
+const SPACE_RE = / +(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)/;
 const OR_TOKEN = '|';
 
 // Return a 2D array representation of the query, for simpler parsing.
@@ -2760,7 +2819,7 @@ class Fuse {
   }
 }
 
-Fuse.version = '6.5.3';
+Fuse.version = '6.6.2';
 Fuse.createIndex = createIndex;
 Fuse.parseIndex = parseIndex;
 Fuse.config = Config;
@@ -2888,6 +2947,11 @@ class ViewerHandler {
     return viewer.savedObjectsLookup[url];
   }
 
+  async getObjectMetadataByUrl(url) {
+    const viewer = await this.get();
+    return viewer.objectsMetadata[url];
+  }
+
   _serialize(viewer) {
     const serializedViewer = {
       objects: [],
@@ -2942,14 +3006,15 @@ class ViewerHandler {
       serializedViewer.objectsMetadata[getFileUrl(object)] = {
         id: object.id,
         cid: object.cid,
+        isLink: object.isLink,
       };
 
       if (object.isLink) {
-        serializedViewer.savedObjectsLookup[object.url] = true;
+        serializedViewer.savedObjectsLookup[object.url] = object.id;
       }
 
       const fileUrl = getFileUrl(object);
-      serializedViewer.savedObjectsLookup[fileUrl] = true;
+      serializedViewer.savedObjectsLookup[fileUrl] = object.id;
 
       return this._serializeObject(object);
     });
@@ -2986,13 +3051,26 @@ class ViewerHandler {
   }
 
   _serializeObject(object) {
+    const primitiveProperties = {
+      filename: object.filename,
+      createdAt: object.createdAt,
+      body: object.body,
+      cid: object.cid,
+      type: object.type,
+      coverImage: object.coverImage,
+      blurhash: object.blurhash,
+    };
+
     if (object.isLink) {
       return {
+        ...primitiveProperties,
         title: object.name || object.linkName,
         favicon: object.linkFavicon,
         url: object.url,
         rootDomain: background_getRootDomain(object.url),
-        cid: object.cid,
+        linkImage: object.linkImage,
+        linkFavicon: object.linkFavicon,
+        linkSource: object.linkSource,
         isLink: true,
         isSaved: true,
       };
@@ -3001,10 +3079,10 @@ class ViewerHandler {
     const fileUrl = getFileUrl(object);
 
     return {
+      ...primitiveProperties,
       title: object.name || object.filename,
       rootDomain: constants_uri.domain,
       url: fileUrl,
-      cid: object.cid,
       isLink: false,
       isSaved: true,
     };
@@ -3045,6 +3123,11 @@ class ViewerHandler {
 
     VIEWER_INTERNAL_STORAGE = VIEWER_INITIAL_STATE;
     return VIEWER_INTERNAL_STORAGE;
+  }
+
+  async getObjectAppLink(url) {
+    const objectId = await this._getObjectIdFromUrl(url);
+    return `${constants_uri.hostname}/_/data?id=${objectId}`;
   }
 
   async getSavedLinksSources() {
@@ -3144,7 +3227,7 @@ class ViewerActionsHandler {
         if (id in this.syncsTracker) {
           delete this.syncsTracker[id];
         }
-      }, 200);
+      }, 150);
     }
   }
 
@@ -3153,12 +3236,20 @@ class ViewerActionsHandler {
       if (object.url in viewer.savedObjectsLookup) {
         return;
       }
-      viewer.savedObjectsLookup[object.url] = savingStates.start;
-      viewer.objects.push({
+      const temporaryId = esm_browser_v4();
+      viewer.savedObjectsLookup[object.url] = temporaryId;
+      viewer.objectsMetadata[object.url] = {
+        id: temporaryId,
+        isLink: true,
+      };
+      viewer.objects.unshift({
+        filename: object.title,
         title: object.title,
-        url: object.title,
+        url: object.url,
         favicon: object.favicon,
         rootDomain: background_getRootDomain(object.url),
+        createdAt: new Date().toISOString(),
+        isLink: true,
         isSaved: true,
       });
     });
@@ -3302,8 +3393,10 @@ class ViewerActionsHandler {
     this._registerRunningAction();
 
     let viewer = await Viewer.get();
+
+    if (!viewer.isAuthenticated) return;
     const areObjectsBeingSaved = objects.every(
-      ({ url }) => viewer.savedObjectsLookup[url] === savingStates.start
+      ({ url }) => url in viewer.savedObjectsLookup
     );
 
     if (areObjectsBeingSaved) return;
@@ -3366,7 +3459,6 @@ class ViewerActionsHandler {
       // });
       // Viewer._set(viewer);
       // TODO: handle errors
-      return;
     }
 
     sendStatusUpdate(savingStates.done);
@@ -3726,6 +3818,64 @@ class ViewerActionsHandler {
 
     return results.map(({ item: { slatename } }) => slatename);
   }
+
+  async getInitialData({ sender }) {
+    const viewer = await Viewer.get();
+
+    if (!viewer.isAuthenticated) {
+      return { isAuthenticated: false };
+    }
+
+    this._registerRunningAction();
+
+    const openTabs = await Windows.getAllTabs();
+
+    const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
+      tabs: openTabs,
+      activeTabId: sender.tab.id,
+      activeWindowId: sender.tab.windowId,
+    });
+
+    const slates = viewer.slates.map(({ slatename }) => slatename);
+
+    const {
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+      viewsSourcesLookup,
+      viewsSlatesLookup,
+      settings,
+    } = viewer;
+
+    const response = {
+      ...viewerInitialState,
+      isAuthenticated: true,
+      settings,
+
+      slates,
+      savedObjectsLookup,
+      savedObjectsSlates,
+      slatesLookup,
+
+      views: viewer.views,
+      viewsSourcesLookup,
+      viewsSlatesLookup,
+
+      windows: {
+        data: {
+          allOpenFeedKeys,
+          allOpenFeed,
+        },
+        params: {
+          activeWindowId: sender.tab.windowId,
+          activeTabId: sender.tab.id,
+        },
+      },
+    };
+
+    this._cleanupCleanupAction();
+    return response;
+  }
 }
 
 const ViewerActions = new ViewerActionsHandler();
@@ -3735,6 +3885,7 @@ const ViewerActions = new ViewerActionsHandler();
 Viewer.onChange(async (viewerData) => {
   const activeTab = await Tabs.getActive();
   if (!activeTab) return;
+
   const slates = viewerData.slates.map(({ slatename }) => slatename);
 
   const {
@@ -3762,14 +3913,12 @@ Viewer.onChange(async (viewerData) => {
 });
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (command == commands.directSave) {
-    if (await Viewer.checkIfAuthenticated()) {
-      ViewerActions.saveLink({
-        objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
-        tab,
-        source: savingSources.command,
-      });
-    }
+  if (command === commands.directSave) {
+    ViewerActions.saveLink({
+      objects: [{ url: tab.url, title: tab.title, favicon: tab.favIconUrl }],
+      tab,
+      source: savingSources.command,
+    });
   }
 });
 
@@ -3881,72 +4030,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === viewer_messages.loadViewerDataRequest) {
-    const getInitialData = async () => {
-      const isAuthenticated = await Viewer.checkIfAuthenticated();
-
-      if (!isAuthenticated) {
-        return { isAuthenticated };
-      }
-
-      const openTabs = await Windows.getAllTabs();
-
-      const { allOpenFeedKeys, allOpenFeed } = constructWindowsFeed({
-        tabs: openTabs,
-        activeTabId: sender.tab.id,
-        activeWindowId: sender.tab.windowId,
-      });
-
-      const viewerData = await Viewer.get();
-
-      const slates = viewerData.slates.map(({ slatename }) => slatename);
-
-      const {
-        savedObjectsLookup,
-        savedObjectsSlates,
-        slatesLookup,
-        viewsSourcesLookup,
-        viewsSlatesLookup,
-        settings,
-      } = viewerData;
-
-      Viewer.sync();
-
-      const response = {
-        ...viewerInitialState,
-        isAuthenticated,
-        settings,
-
-        slates,
-        savedObjectsLookup,
-        savedObjectsSlates,
-        slatesLookup,
-
-        views: viewerData.views,
-        viewsSourcesLookup,
-        viewsSlatesLookup,
-
-        windows: {
-          data: {
-            allOpenFeedKeys,
-            allOpenFeed,
-          },
-          params: {
-            activeWindowId: sender.tab.windowId,
-            activeTabId: sender.tab.id,
-          },
-        },
-      };
-
-      // NOTE(amine): if there is only one tab open, preload recent view
-      // if (response.windows.data.allOpen.length === 1) {
-      //   response.recent = await browserHistory.getChunk();
-      //   response.initialView = viewsType.recent;
-      // }
-
-      return response;
-    };
-
-    getInitialData().then(sendResponse);
+    ViewerActions.getInitialData({ sender }).then(sendResponse);
     return true;
   }
 });
@@ -3970,8 +4054,6 @@ const browser_background_getRootDomain = (url) => {
 };
 
 const removeDuplicatesFromSearchResults = (result) => {
-  const isAlreadyAdded = {};
-
   const visitWithSameTitle = {};
   const doesVisitExistWithSameTitle = (visit) =>
     `${browser_background_getRootDomain(visit.url)}-${visit.title}` in visitWithSameTitle;
@@ -3986,26 +4068,19 @@ const removeDuplicatesFromSearchResults = (result) => {
 
   const MAX_SEARCH_RESULT = 300;
   const cleanedResult = [];
-  for (let { item } of result) {
-    for (let visit of item.visits) {
-      if (cleanedResult.length > MAX_SEARCH_RESULT) {
-        return cleanedResult;
-      }
-
-      if (visit.url in isAlreadyAdded) continue;
-
-      isAlreadyAdded[visit.url] = true;
-
-      if (doesVisitExistWithSameTitle(visit)) {
-        addVisitToDuplicateList(visit);
-        continue;
-      }
-
-      cleanedResult.push({
-        ...visit,
-        relatedVisits: createVisitDuplicate(visit),
-      });
+  for (let visit of result) {
+    if (cleanedResult.length > MAX_SEARCH_RESULT) {
+      return cleanedResult;
     }
+    if (doesVisitExistWithSameTitle(visit)) {
+      addVisitToDuplicateList(visit);
+      continue;
+    }
+
+    cleanedResult.push({
+      ...visit,
+      relatedVisits: createVisitDuplicate(visit),
+    });
   }
   return cleanedResult;
 };
@@ -4224,24 +4299,31 @@ class BrowserHistory {
   }
 
   async search(query) {
-    const options = {
-      findAllMatches: true,
-      includeMatches: true,
-      minMatchCharLength: query.length,
-      keys: ["visits.url", "visits.title"],
-    };
+    const microsecondsPerMonth = 1000 * 60 * 60 * 24 * 31;
+    const twoMonthsAgo = new Date().getTime() - microsecondsPerMonth * 2;
+    const chromeHistorySearch = await chrome.history.search({
+      text: query,
+      startTime: twoMonthsAgo,
+      maxResults: 2_147_483_647,
+    });
 
-    const history = await this.get();
-    const fuse = new Fuse(history, options);
+    let result = [];
+    for (let historyItem of chromeHistorySearch) {
+      const sessionItem = Session.createVisit(historyItem);
 
-    const cleanedResult = removeDuplicatesFromSearchResults(fuse.search(query));
+      if (sessionItem.title && sessionItem.title.length > 0) {
+        result.push({
+          title: sessionItem.title,
+          favicon: sessionItem.favicon,
+          url: sessionItem.url,
+          rootDomain: sessionItem.rootDomain,
+        });
+      }
+    }
 
-    return cleanedResult.map((item) => ({
-      title: item.title,
-      favicon: item.favIconUrl,
-      url: item.url,
-      rootDomain: item.rootDomain,
-    }));
+    const cleanedResult = removeDuplicatesFromSearchResults(result);
+
+    return cleanedResult;
   }
 
   async getRelatedLinks(url) {
@@ -4521,6 +4603,10 @@ const updateAddressBarUrl = (url) => {
   const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
   element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
 };
+const removeAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  if (element) element.remove();
+};
 
 ;// CONCATENATED MODULE: ./src/core/navigation/background.js
 
@@ -4528,7 +4614,24 @@ const updateAddressBarUrl = (url) => {
 
 
 
-const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
+
+const handleOpenUrlsRequests = async ({
+  urls: passedUrls,
+  query,
+  sender,
+}) => {
+  let urls = [];
+  for (const url of passedUrls) {
+    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
+    // NOTE(amine): when given a file url, change it to slate.host url;
+    if (objectMetada && !objectMetada.isLink) {
+      const newUrl = await Viewer.getObjectAppLink(url);
+      urls.push(newUrl);
+    } else {
+      urls.push(url);
+    }
+  }
+
   if (query?.newWindow) {
     await chrome.windows.create({ focused: true, url: urls });
     return;
@@ -4540,12 +4643,35 @@ const handleOpenUrlsRequests = async ({ urls, query, sender }) => {
     return;
   }
 
+  if (urls?.length === 1) {
+    let url = urls[0];
+
+    if (query?.target === "_blank") {
+      await chrome.tabs.create({ windowId: sender.tab.windowId, url });
+    } else {
+      await chrome.tabs.update(sender.tab.id, { active: true, url });
+    }
+    return;
+  }
+
   for (let url of urls) {
     await chrome.tabs.create({ windowId: sender.tab.windowId, url });
   }
 };
 
-const createGroupFromUrls = async ({ urls, windowId, title }) => {
+const createGroupFromUrls = async ({ urls: passedUrls, windowId, title }) => {
+  let urls = [];
+  for (const url of passedUrls) {
+    const objectMetada = await Viewer.getObjectMetadataByUrl(url);
+    // NOTE(amine): when given a file url, change it to slate.host url;
+    if (objectMetada && !objectMetada.isLink) {
+      const newUrl = await Viewer.getObjectAppLink(url);
+      urls.push(newUrl);
+    } else {
+      urls.push(url);
+    }
+  }
+
   const createdTabs = await Promise.all(
     urls.map(async (url) =>
       chrome.tabs.create({ url, windowId, active: false })
@@ -4624,6 +4750,7 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
 });
 
 ;// CONCATENATED MODULE: ./src/core/views/background.js
+
 
 
 
@@ -4715,7 +4842,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.view.type === viewsType.custom) {
       handleFetchCustomFeed(request.view.id).then((res) =>
         sendResponse({
-          result: res,
+          feed: res,
+          feedKeys: null,
           view: request.view,
         })
       );
@@ -4723,22 +4851,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     if (request.view.type === viewsType.saved) {
-      Viewer.get().then((res) =>
+      Viewer.get().then((res) => {
+        const links = res.objects.filter((object) => object.isLink);
+        const { feed, feedKeys } = constructSavedFeed(links);
+
         sendResponse({
-          result: res.objects.filter((object) => object.isLink),
+          feed,
+          feedKeys,
           view: request.view,
-        })
-      );
+        });
+      });
       return true;
     }
 
     if (request.view.type === viewsType.files) {
-      Viewer.get().then((res) =>
+      Viewer.get().then((res) => {
+        const files = res.objects.filter((object) => !object.isLink);
+        const { feed, feedKeys } = constructSavedFeed(files);
         sendResponse({
-          result: res.objects.filter((object) => !object.isLink),
+          feed,
+          feedKeys,
           view: request.view,
-        })
-      );
+        });
+      });
       return true;
     }
   }

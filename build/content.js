@@ -365,6 +365,10 @@ const updateAddressBarUrl = (url) => {
   const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
   element.setAttribute(ADDRESS_BAR_CURRENT_URL_ATTRIBUTE, url);
 };
+const removeAddressBarUrl = () => {
+  const element = document.getElementById(ADDRESS_BAR_ELEMENT_ID);
+  if (element) element.remove();
+};
 
 ;// CONCATENATED MODULE: ./src/core/navigation/content.js
 
@@ -431,8 +435,9 @@ const openApp = (url) => {
 };
 
 const closeApp = () => {
+  removeAddressBarUrl();
   const extensionJumperWrapper = getExtensionJumperWrapper();
-  extensionJumperWrapper.innerHTML = "";
+  extensionJumperWrapper.remove();
 };
 
 /** ------------ Event Listeners ------------- */
