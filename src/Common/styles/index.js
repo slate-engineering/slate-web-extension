@@ -33,7 +33,7 @@ const TEXT = css`
 
 export const H1 = css`
   font-family: ${Constants.font.medium};
-  font-size: 2rem;
+  font-size: 32px;
   line-height: 1.5;
   letter-spacing: -0.021px;
 
@@ -42,7 +42,7 @@ export const H1 = css`
 
 export const H2 = css`
   font-family: ${Constants.font.medium};
-  font-size: 1.5rem;
+  font-size: 24px;
   line-height: 1.5;
   letter-spacing: -0.019px;
 
@@ -150,7 +150,7 @@ export const C3 = css`
 
 export const B1 = css`
   font-family: ${Constants.font.medium};
-  font-size: 0.875rem;
+  font-size: 14px;
   line-height: 20px;
   letter-spacing: -0.006px;
 
