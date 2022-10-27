@@ -12,6 +12,7 @@ import {
 import {
   constructWindowsFeed,
   removeItemFromArrayInPlace,
+  isTabNewTab,
 } from "~/extension_common/utilities";
 import { capitalize } from "~/common/strings";
 import { viewsType } from "../views";
@@ -1055,9 +1056,6 @@ export const ViewerActions = new ViewerActionsHandler();
 /** ------------ Event listeners ------------- */
 
 Viewer.onChange(async (viewerData) => {
-  const activeTab = await Tabs.getActive();
-  if (!activeTab) return;
-
   const slates = viewerData.slates.map(({ slatename }) => slatename);
 
   const {
@@ -1069,7 +1067,7 @@ Viewer.onChange(async (viewerData) => {
     settings,
   } = viewerData;
 
-  chrome.tabs.sendMessage(parseInt(activeTab.id), {
+  const response = {
     type: messages.updateViewer,
     data: {
       slates,
@@ -1081,6 +1079,19 @@ Viewer.onChange(async (viewerData) => {
       viewsSlatesLookup,
       viewsSourcesLookup,
     },
+  };
+
+  //NOTE(amine): notify active tab and all open new tabs
+  const activeTab = await Tabs.getActive();
+  const newTabTabs = await Tabs.getNewTabTabs();
+
+  const tabsToBeUpdated = newTabTabs;
+  if (!isTabNewTab(activeTab)) {
+    tabsToBeUpdated.push(activeTab);
+  }
+
+  tabsToBeUpdated.forEach((tab) => {
+    chrome.tabs.sendMessage(parseInt(tab.id), response);
   });
 });
 

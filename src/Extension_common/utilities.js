@@ -97,3 +97,5 @@ export const removeItemFromArrayInPlace = (array, predicate) => {
     }
   }
 };
+
+export const isTabNewTab = (tab) => tab.url === "chrome://newtab/";
