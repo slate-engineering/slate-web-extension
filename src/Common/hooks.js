@@ -36,7 +36,7 @@ export const useEventListener = ({
 export const useIsomorphicLayoutEffect =
   typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
 
-export const useOnWindowBlur = (callback) => {
+export const useOnWindowVisibility = (callback) => {
   React.useEffect(() => {
     var hidden, visibilityChange;
     if (typeof document.hidden !== "undefined") {
@@ -52,12 +52,20 @@ export const useOnWindowBlur = (callback) => {
     }
 
     const handleVisibilityChange = () => {
-      if (document[hidden]) callback();
+      callback(!document[hidden]);
     };
     window.addEventListener(visibilityChange, handleVisibilityChange, false);
     return () =>
       window.removeEventListener(visibilityChange, handleVisibilityChange);
   }, []);
+};
+
+export const useOnWindowBlur = (callback) => {
+  useOnWindowVisibility((isVisible) => {
+    if (!isVisible) {
+      callback();
+    }
+  });
 };
 
 export const useMediaQuery = (getMediaQuery) => {
