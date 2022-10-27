@@ -408,6 +408,11 @@ export const Tabs = {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     return tabs[0];
   },
+  getNewTabTabs: async () => {
+    const NEW_TAB_URL = "chrome://newtab/";
+    const tabs = await chrome.tabs.query({ url: NEW_TAB_URL });
+    return tabs;
+  },
 };
 
 export const Windows = {
