@@ -18,7 +18,7 @@ import { useViewer } from "~/core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "~/components/Views";
 import { css } from "@emotion/react";
 import { ShortcutsTooltip } from "~/components/Tooltip";
-import { useEscapeKey } from "~/common/hooks";
+import { useEscapeKey, useOnWindowVisibility } from "~/common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * EditSlatesJumper
@@ -330,6 +330,8 @@ const STYLES_SETTINGS_BUTTON = (theme) => css`
 // `;
 
 export default function HistoryScene() {
+  const viewer = useViewer();
+
   const {
     isFetchingHistoryFirstBatch,
     sessionsFeed,
@@ -346,10 +348,22 @@ export default function HistoryScene() {
     isLoadingViewFeed,
     viewsType,
     getViewsFeed,
+    updateAppliedViewFeed,
     createViewByTag,
     createViewBySource,
     removeView,
   } = useViews();
+
+  const visibilityRef = React.useRef(true);
+  useOnWindowVisibility((isVisible) => {
+    visibilityRef.current = isVisible;
+  });
+
+  React.useEffect(() => {
+    if (!visibilityRef.current) {
+      updateAppliedViewFeed();
+    }
+  }, [viewer]);
 
   const inputRef = React.useRef();
   const [search, { handleInputChange, clearSearch }] = useHistorySearch({
@@ -360,8 +374,6 @@ export default function HistoryScene() {
   const focusSearchInput = () => inputRef.current?.focus?.();
 
   const feedRef = React.useRef();
-
-  const viewer = useViewer();
 
   const { slatesJumperState, closeSlatesJumper, openSlatesJumper } =
     useSlatesJumper();
