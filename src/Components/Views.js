@@ -1634,7 +1634,7 @@ const Feed = React.memo(
           };
         }
         return {
-          feed: [...viewsFeed, { isPadding: true, value: 8 }],
+          feed: viewsFeed,
           totalSelectableItems: viewsFeed.length,
           props: {
             onOpenUrl,
@@ -1731,11 +1731,7 @@ const Feed = React.memo(
         );
       }
 
-      const getFeedItemHeight = (index) => {
-        const item = viewsFeedItemsData.feed[index];
-        if (item.isPadding) return item.value;
-        return Constants.sizes.jumperFeedItem;
-      };
+      const getFeedItemHeight = () => Constants.sizes.jumperFeedItem;
 
       return (
         <RovingTabIndex.Provider

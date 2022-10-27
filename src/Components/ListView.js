@@ -52,6 +52,11 @@ const STYLES_LIST_VIEW_FIXED_SIZE_ROOT = css`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  /* NOTE(amine): a workaround to set padding-bottom on react-window's lists */
+  & > div {
+    margin-bottom: 32px;
+  }
 `;
 
 const FixedSizeListRoot = React.forwardRef(
@@ -79,6 +84,11 @@ const STYLES_LIST_VIEW_VARIABLE_SIZE_ROOT = css`
   overflow-y: auto;
   &::-webkit-scrollbar {
     display: none;
+  }
+
+  /* NOTE(amine): a workaround to set padding-bottom on react-window's lists */
+  & > div {
+    margin-bottom: 32px;
   }
 `;
 
