@@ -45,6 +45,13 @@ export const saveCopy = async (data, options) => {
   });
 };
 
+export const removeFiles = async ({ ids }) => {
+  return await returnJSON(`${Constants.uri.hostname}/api/data/delete`, {
+    ...DEFAULT_OPTIONS,
+    body: JSON.stringify({ data: { ids } }),
+  });
+};
+
 export const createSlate = async (data) => {
   return await returnJSON(`${Constants.uri.hostname}/api/slates/create`, {
     ...DEFAULT_OPTIONS,
