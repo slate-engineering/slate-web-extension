@@ -319,6 +319,14 @@ window.addEventListener("message", async function (event) {
     return;
   }
 
+  if (event.data.type === messages.removeObjects) {
+    chrome.runtime.sendMessage({
+      type: messages.removeObjects,
+      objects: event.data.objects,
+    });
+    return;
+  }
+
   if (event.data.type === messages.createSlate) {
     chrome.runtime.sendMessage({
       type: messages.createSlate,

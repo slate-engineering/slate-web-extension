@@ -63,6 +63,61 @@ const createViewCustomId = ({ name, source, slatename }) => {
 const getViewId = ({ viewer, customId }) => {
   return viewer.viewsIdsLookup[customId];
 };
+
+/** ----------------------------------------- */
+
+export const SlateObject = {
+  serialize: (object) => {
+    const primitiveProperties = {
+      filename: object.filename,
+      createdAt: object.createdAt,
+      body: object.body,
+      cid: object.cid,
+      type: object.type,
+      coverImage: object.coverImage,
+      blurhash: object.blurhash,
+    };
+
+    if (object.isLink) {
+      return {
+        ...primitiveProperties,
+        title: object.name || object.title || object.linkName,
+        favicon: object.favicon || object.linkFavicon,
+        url: object.url,
+        rootDomain: object.rootDomain || getRootDomain(object.url),
+        linkImage: object.linkImage,
+        linkFavicon: object.linkFavicon,
+        linkSource: object.linkSource,
+        isLink: true,
+        isSaved: true,
+      };
+    }
+
+    const fileUrl = getFileUrl(object);
+
+    return {
+      ...primitiveProperties,
+      title: object.name || object.filename,
+      rootDomain: Constants.uri.domain,
+      url: fileUrl,
+      isLink: false,
+      isSaved: true,
+    };
+  },
+  create: ({ url, title, favicon }) => {
+    return {
+      filename: title,
+      createdAt: new Date().toISOString(),
+      title,
+      url,
+      // NOTE(amine): for now all the created objects are links
+      isLink: true,
+      linkSource: url,
+      linkFavicon: favicon,
+    };
+  },
+};
+
 /** ----------------------------------------- */
 
 const VIEWER_INITIAL_STATE = {
@@ -79,8 +134,6 @@ const VIEWER_INITIAL_STATE = {
   viewsSlatesLookup: {},
   viewsIdsLookup: {},
   views: [],
-
-  sources: {},
 
   settings: { isRecentViewActivated: false, isFilesViewActivated: false },
 
@@ -142,8 +195,6 @@ class ViewerHandler {
       viewsIdsLookup: {},
       views: viewer.views,
       settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
-
-      sources: {},
     };
 
     serializedViewer.views = serializedViewer.views.map((view) => {
@@ -189,7 +240,7 @@ class ViewerHandler {
       const fileUrl = getFileUrl(object);
       serializedViewer.savedObjectsLookup[fileUrl] = object.id;
 
-      return this._serializeObject(object);
+      return SlateObject.serialize(object);
     });
 
     viewer.slates.forEach((slate) => {
@@ -221,44 +272,6 @@ class ViewerHandler {
       viewer.hasCompletedExtensionOBThirdStep;
 
     return serializedViewer;
-  }
-
-  _serializeObject(object) {
-    const primitiveProperties = {
-      filename: object.filename,
-      createdAt: object.createdAt,
-      body: object.body,
-      cid: object.cid,
-      type: object.type,
-      coverImage: object.coverImage,
-      blurhash: object.blurhash,
-    };
-
-    if (object.isLink) {
-      return {
-        ...primitiveProperties,
-        title: object.name || object.linkName,
-        favicon: object.linkFavicon,
-        url: object.url,
-        rootDomain: getRootDomain(object.url),
-        linkImage: object.linkImage,
-        linkFavicon: object.linkFavicon,
-        linkSource: object.linkSource,
-        isLink: true,
-        isSaved: true,
-      };
-    }
-
-    const fileUrl = getFileUrl(object);
-
-    return {
-      ...primitiveProperties,
-      title: object.name || object.filename,
-      rootDomain: Constants.uri.domain,
-      url: fileUrl,
-      isLink: false,
-      isSaved: true,
-    };
   }
 
   serializeView({ name, filterBySource, filterBySlateId, metadata }) {
@@ -406,33 +419,73 @@ class ViewerActionsHandler {
 
   _addObjectsToViewer({ viewer, objects }) {
     objects.forEach((object) => {
-      if (object.url in viewer.savedObjectsLookup) {
+      const isObjectAlreadySaved = object.url in viewer.savedObjectsLookup;
+      if (isObjectAlreadySaved) {
         return;
       }
+
       const temporaryId = uuid();
+
       viewer.savedObjectsLookup[object.url] = temporaryId;
       viewer.objectsMetadata[object.url] = {
         id: temporaryId,
         isLink: true,
       };
-      viewer.objects.unshift({
-        filename: object.title,
-        title: object.title,
-        url: object.url,
-        favicon: object.favicon,
-        rootDomain: getRootDomain(object.url),
-        createdAt: new Date().toISOString(),
-        isLink: true,
-        isSaved: true,
-      });
+      viewer.objects.unshift(SlateObject.serialize(object));
     });
     return viewer;
   }
 
-  async _removeObjectsFromViewer({ viewer, objects }) {
+  _removeObjectsFromViewer({ viewer, objects }) {
+    //NOTE(amine): used to efficiently remove objects from viewer.slates
+    let appliedSlates = {};
+    const storeAppliedSlate = ({ url, slatename }) => {
+      const objectId = viewer.objectsMetadata[url].id;
+      if (slatename in appliedSlates) {
+        appliedSlates[slatename].push(objectId);
+      } else {
+        appliedSlates[slatename] = [objectId];
+      }
+    };
+
     objects.forEach(({ url }) => {
+      const isObjectInASlate = url in viewer.savedObjectsSlates;
+      if (isObjectInASlate) {
+        viewer.savedObjectsSlates[url].forEach((slatename) => {
+          storeAppliedSlate({ url, slatename });
+
+          //NOTE(amine): cleanup viewer.slatesLookup
+          delete viewer.slatesLookup[slatename][url];
+        });
+
+        //NOTE(amine): cleanup viewer.savedObjectsSlates
+        delete viewer.savedObjectsSlates[url];
+      }
+
       delete viewer.savedObjectsLookup[url];
-      removeItemFromArrayInPlace(objects, (object) => object.url === url);
+      delete viewer.objectsMetadata[url];
+      removeItemFromArrayInPlace(
+        viewer.objects,
+        (object) => object.url === url
+      );
+    });
+
+    //NOTE(amine): cleanup viewer.slates
+    viewer.slates.forEach((slate, index) => {
+      if (!appliedSlates[slate.slatename]) return;
+
+      const objectIds = appliedSlates[slate.slatename];
+      removeItemFromArrayInPlace(viewer.slates[index].objects, (object) =>
+        objectIds.includes(object.id)
+      );
+
+      const isSlateEmpty = slate.objects.length === 0;
+      if (isSlateEmpty) {
+        viewer = this._removeSlateFromViewer({
+          viewer,
+          slateName: slate.slatename,
+        });
+      }
     });
 
     return viewer;
@@ -449,42 +502,92 @@ class ViewerActionsHandler {
   }
 
   _removeSlateFromViewer({ viewer, slateName }) {
+    //NOTE(amine): cleanup viewer.slatesLookup
     delete viewer.slatesLookup[slateName];
 
+    //NOTE(amine): cleanup viewer.savedObjectsSlates
+    for (let url in viewer.savedObjectsSlates) {
+      removeItemFromArrayInPlace(
+        viewer.savedObjectsSlates[url],
+        (name) => name === slateName
+      );
+    }
+
+    //NOTE(amine): cleanup viewer.slates
     removeItemFromArrayInPlace(
       viewer.slates,
       (slate) => slate.slatename === slateName
     );
+
     return viewer;
   }
 
   _addObjectsToViewerSlate({ viewer, objects, slateName }) {
-    objects.forEach(({ url }) => {
-      viewer.slatesLookup[slateName][url] = true;
-    });
+    const slate = viewer.slates.find((slate) => slate.slatename === slateName);
+    if (!slate) return viewer;
 
-    objects.forEach(({ url }) => {
-      if (!(url in viewer.savedObjectsSlates))
-        viewer.savedObjectsSlates[url] = [];
-      viewer.savedObjectsSlates[url].push(slateName);
+    objects.forEach((object) => {
+      const slateAppliedToThisObject =
+        object.url in viewer.slatesLookup[slateName];
+      if (!slateAppliedToThisObject) {
+        viewer.slatesLookup[slateName][object.url] = true;
+        slate.objects.push(object);
+      }
+
+      const isObjectInASlate = object.url in viewer.savedObjectsSlates;
+      if (!isObjectInASlate) {
+        viewer.savedObjectsSlates[object.url] = [];
+      }
+      viewer.savedObjectsSlates[object.url].push(slateName);
     });
 
     return viewer;
   }
 
   _removeObjectsFromViewerSlate({ viewer, objects, slateName }) {
-    objects.forEach(({ url }) => {
-      if (slateName in viewer.slatesLookup) {
-        delete viewer.slatesLookup[slateName][url];
+    //NOTE(amine): used to efficiently remove objects from viewer.slates
+    let appliedSlates = {};
+    const storeAppliedSlate = ({ url }) => {
+      const objectId = viewer.objectsMetadata[url].id;
+      if (slateName in appliedSlates) {
+        appliedSlates[slateName].push(objectId);
+      } else {
+        appliedSlates[slateName] = [objectId];
       }
-    });
+    };
 
     objects.forEach(({ url }) => {
+      storeAppliedSlate({ url });
+
+      if (slateName in viewer.slatesLookup) {
+        //NOTE(amine):cleanup viewer.slatesLookup
+        delete viewer.slatesLookup[slateName][url];
+      }
+
+      //NOTE(amine):cleanup viewer.savedObjectsSlates
       const filterOutSlateName = (slate) => slate === slateName;
       removeItemFromArrayInPlace(
         viewer.savedObjectsSlates[url],
         filterOutSlateName
       );
+    });
+
+    //NOTE(amine): cleanup viewer.slates
+    viewer.slates.forEach((slate, index) => {
+      if (!appliedSlates[slate.slatename]) return;
+
+      const objectIds = appliedSlates[slate.slatename];
+      removeItemFromArrayInPlace(viewer.slates[index].objects, (object) =>
+        objectIds.includes(object.id)
+      );
+
+      const isSlateEmpty = slate.objects.length === 0;
+      if (isSlateEmpty) {
+        viewer = this._removeSlateFromViewer({
+          viewer,
+          slateName: slate.slatename,
+        });
+      }
     });
 
     return viewer;
@@ -568,11 +671,12 @@ class ViewerActionsHandler {
     let viewer = await Viewer.get();
 
     if (!viewer.isAuthenticated) return;
-    const areObjectsBeingSaved = objects.every(
-      ({ url }) => url in viewer.savedObjectsLookup
-    );
 
-    if (areObjectsBeingSaved) return;
+    const objectsToBeSaved = objects
+      .filter(({ url }) => !(url in viewer.savedObjectsLookup))
+      .map(SlateObject.create);
+
+    if (objectsToBeSaved.length === 0) return;
 
     const sendStatusUpdate = (status) => {
       if (source === savingSources.command) {
@@ -586,10 +690,6 @@ class ViewerActionsHandler {
     };
 
     sendStatusUpdate(savingStates.start);
-
-    const objectsToBeSaved = objects.filter(
-      ({ url }) => !(url in viewer.savedObjectsLookup)
-    );
 
     viewer = this._addObjectsToViewer({
       viewer,
@@ -635,6 +735,24 @@ class ViewerActionsHandler {
     }
 
     sendStatusUpdate(savingStates.done);
+
+    this._cleanupCleanupAction();
+  }
+
+  async removeObjects({ objects }) {
+    this._registerRunningAction();
+
+    let viewer = await Viewer.get();
+
+    const filesIds = objects.map(({ url }) => viewer.objectsMetadata[url].id);
+
+    viewer = this._removeObjectsFromViewer({ viewer, objects });
+    Viewer._set(viewer);
+
+    const response = await Actions.removeFiles({ ids: filesIds });
+    if (!response || response.error) {
+      // TODO(amine): handle errors
+    }
 
     this._cleanupCleanupAction();
   }
@@ -972,7 +1090,7 @@ class ViewerActionsHandler {
         continue;
       }
       duplicates[object.url] = true;
-      serializedObjects.push(Viewer._serializeObject(object));
+      serializedObjects.push(SlateObject.serialize(object));
     }
     return { slates: slates || [], files: serializedObjects };
   }
@@ -1082,11 +1200,11 @@ Viewer.onChange(async (viewerData) => {
   };
 
   //NOTE(amine): notify active tab and all open new tabs
-  const activeTab = await Tabs.getActive();
   const newTabTabs = await Tabs.getNewTabTabs();
-
   const tabsToBeUpdated = newTabTabs;
-  if (!isTabNewTab(activeTab)) {
+
+  const activeTab = await Tabs.getActive();
+  if (activeTab && !isTabNewTab(activeTab)) {
     tabsToBeUpdated.push(activeTab);
   }
 
@@ -1152,6 +1270,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.type === messages.getSavedLinksSourcesRequest) {
     Viewer.getSavedLinksSources().then(sendResponse);
+    return true;
+  }
+
+  if (request.type === messages.removeObjects) {
+    ViewerActions.removeObjects({ objects: request.objects }).then(
+      sendResponse
+    );
     return true;
   }
 

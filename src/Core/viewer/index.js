@@ -6,6 +6,7 @@ export const messages = {
 
   saveLink: "SAVE_LINK",
   savingStatus: "SAVING_STATUS",
+  removeObjects: "REMOVE_OBJECTS",
 
   addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
   removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
