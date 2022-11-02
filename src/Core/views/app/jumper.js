@@ -105,6 +105,41 @@ export const useHistorySearch = ({ inputRef, view }) => {
     { handleInputChange, setSearch, clearSearch },
   ] = useHistorySearchState({ inputRef, onSearch: searchByQuery });
 
+  const removeObjectsFromSearchFeed = React.useCallback(
+    ({ objects }) => {
+      const filterObjectByUrl = (object) => {
+        return objects.every(({ url }) => url !== object.url);
+      };
+
+      const newFeed = {};
+      const newFeedKeys = [];
+
+      search.searchFeedKeys.forEach((key) => {
+        const newSubFeed = search.searchFeed[key].filter(filterObjectByUrl);
+        if (newSubFeed.length) {
+          newFeed[key] = newSubFeed;
+          newFeedKeys.push(key);
+        }
+      });
+
+      if (newFeedKeys.length === 0) {
+        setSearch((prev) => ({
+          ...prev,
+          searchFeed: [],
+          searchFeedKeys: [],
+        }));
+      } else {
+        setSearch((prev) => ({
+          ...prev,
+          searchFeed: newFeed,
+          searchFeedKeys: newFeed,
+        }));
+      }
+      return;
+    },
+    [search, setSearch]
+  );
+
   React.useEffect(() => {
     let handleMessage = (event) => {
       let { data, type } = event.data;
@@ -132,6 +167,6 @@ export const useHistorySearch = ({ inputRef, view }) => {
       ...search,
       isSearching: !!search.query.length > 0 && !!search.searchFeed,
     },
-    { handleInputChange, clearSearch },
+    { handleInputChange, clearSearch, removeObjectsFromSearchFeed },
   ];
 };
