@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useViewsState, useHistorySearchState } from "./";
 import { messages, viewsType } from "../";
+import { useEventListener } from "~/common/hooks";
 
 /* -------------------------------------------------------------------------------------------------
  * useViews
@@ -9,7 +10,7 @@ import { messages, viewsType } from "../";
 export const useViews = () => {
   const [
     { viewsFeed, viewsFeedKeys, appliedView, isLoadingFeed },
-    setViewsState,
+    { setViewsState, removeObjectsFromViewsFeed },
   ] = useViewsState();
 
   const getViewsFeed = React.useCallback(
@@ -27,10 +28,8 @@ export const useViews = () => {
     [setViewsState]
   );
 
-  const appliedViewRef = React.useRef();
-  appliedViewRef.current = appliedView;
-  React.useEffect(() => {
-    let handleMessage = (event) => {
+  let handleMessage = React.useCallback(
+    (event) => {
       let { data, type } = event.data;
       if (type === messages.viewFeedResponse) {
         if (
@@ -44,7 +43,7 @@ export const useViews = () => {
           });
           return;
         }
-        if (data.view.id === appliedViewRef.current.id) {
+        if (data.view.id === appliedView.id) {
           setViewsState({
             isLoadingFeed: false,
             feed: data.feed,
@@ -52,11 +51,11 @@ export const useViews = () => {
           });
         }
       }
-    };
-    window.addEventListener("message", handleMessage);
+    },
+    [appliedView, setViewsState]
+  );
 
-    return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  useEventListener({ handler: handleMessage, type: "message" });
 
   const createViewByTag = React.useCallback((slateName) => {
     window.postMessage({ type: messages.createViewByTag, slateName });
@@ -80,6 +79,7 @@ export const useViews = () => {
     createViewByTag,
     createViewBySource,
     removeView,
+    removeObjectsFromViewsFeed,
   };
 };
 

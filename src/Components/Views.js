@@ -1595,6 +1595,7 @@ const Feed = React.memo(
         onOpenSlatesJumper,
         onGroupURLs,
         onSaveObjects,
+        onRemoveObjects,
 
         historyFeed,
         historyFeedKeys,
@@ -1761,6 +1762,7 @@ const Feed = React.memo(
               }
               onOpenSlatesJumper={onOpenSlatesJumper}
               onSaveObjects={onSaveObjects}
+              onRemoveObjects={onRemoveObjects}
             />
           </MultiSelection.Provider>
         </RovingTabIndex.Provider>

@@ -10,7 +10,7 @@ import { messages, viewsType } from "../";
 export const useViews = () => {
   const [
     { viewsFeed, viewsFeedKeys, appliedView, isLoadingFeed },
-    setViewsState,
+    { setViewsState, removeObjectsFromViewsFeed },
   ] = useViewsState();
 
   const getViewsFeed = React.useCallback(
@@ -41,6 +41,11 @@ export const useViews = () => {
     getViewsFeed(appliedView);
   }, []);
 
+  const updateAppliedViewFeed = React.useCallback(
+    () => getViewsFeed(appliedView),
+    [appliedView, getViewsFeed]
+  );
+
   const createViewByTag = React.useCallback((slateName) => {
     chrome.runtime.sendMessage({ type: messages.createViewByTag, slateName });
   }, []);
@@ -58,10 +63,12 @@ export const useViews = () => {
     viewsFeedKeys,
     isLoadingViewFeed: isLoadingFeed,
     appliedView,
+    updateAppliedViewFeed,
     viewsType,
     getViewsFeed,
     createViewByTag,
     createViewBySource,
+    removeObjectsFromViewsFeed,
     removeView,
   };
 };

@@ -40,6 +40,41 @@ export const useViewsState = () => {
     []
   );
 
+  const removeObjectsFromViewsFeed = React.useCallback(
+    ({ objects }) => {
+      const filterObjectByUrl = (object) => {
+        return objects.every(({ url }) => url !== object.url);
+      };
+
+      if (viewState.feedKeys) {
+        const newFeed = {};
+        const newFeedKeys = [];
+        viewState.feedKeys.forEach((key) => {
+          const newSubFeed = viewState.feed[key].filter(filterObjectByUrl);
+          if (newSubFeed.length) {
+            newFeed[key] = newSubFeed;
+            newFeedKeys.push(key);
+          }
+        });
+
+        if (newFeedKeys.length === 0) {
+          setViewState((prev) => ({ ...prev, feed: [], feedKeys: null }));
+        } else {
+          setViewState((prev) => ({
+            ...prev,
+            feed: newFeed,
+            feedKeys: newFeed,
+          }));
+        }
+        return;
+      }
+
+      const newFeed = viewState.feed.filter(filterObjectByUrl);
+      setViewState((prev) => ({ ...prev, feed: newFeed }));
+    },
+    [viewState]
+  );
+
   React.useEffect(() => {
     const { appliedView } = viewState;
     if (
@@ -59,7 +94,7 @@ export const useViewsState = () => {
       isLoadingFeed: viewState.isLoadingFeed,
       viewsType,
     },
-    setViewsStateSafely,
+    { setViewsState: setViewsStateSafely, removeObjectsFromViewsFeed },
   ];
 };
 
