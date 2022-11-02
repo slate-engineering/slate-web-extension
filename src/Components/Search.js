@@ -351,6 +351,7 @@ const Feed = React.memo(
         onOpenSlatesJumper,
         onSaveObjects,
         onRestoreFocus,
+        onRemoveObjects,
         searchFeed,
         searchFeedKeys,
         // slates,
@@ -450,6 +451,7 @@ const Feed = React.memo(
               onGroupURLs={(urls) => onGroupURLs({ urls, title: searchQuery })}
               onSaveObjects={onSaveObjects}
               onOpenSlatesJumper={onOpenSlatesJumper}
+              onRemoveObjects={onRemoveObjects}
             />
           </MultiSelection.Provider>
         </RovingTabIndex.Provider>

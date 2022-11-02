@@ -316,7 +316,10 @@ export default function HistoryScene() {
   }, [viewer]);
 
   const inputRef = React.useRef();
-  const [search, { handleInputChange, clearSearch }] = useHistorySearch({
+  const [
+    search,
+    { handleInputChange, clearSearch, removeObjectsFromSearchFeed },
+  ] = useHistorySearch({
     inputRef,
     view: appliedView,
   });
@@ -354,6 +357,14 @@ export default function HistoryScene() {
       viewer.removeObjects({ objects });
     },
     [removeObjectsFromViewsFeed, viewer]
+  );
+
+  const handleRemoveObjectsFromSearchFeed = React.useCallback(
+    ({ objects }) => {
+      removeObjectsFromSearchFeed({ objects });
+      viewer.removeObjects({ objects });
+    },
+    [removeObjectsFromSearchFeed, viewer]
   );
 
   return (
@@ -450,6 +461,7 @@ export default function HistoryScene() {
                     slates={search.slates}
                     onGroupURLs={Navigation.createGroupFromUrls}
                     onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
+                    onRemoveObjects={handleRemoveObjectsFromSearchFeed}
                   />
                   <Match
                     when={!search.isSearching}
