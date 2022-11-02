@@ -308,7 +308,7 @@ const GroupingAction = React.forwardRef(({ css, onGroup, ...props }, ref) => {
       ref={ref}
       {...props}
     >
-      <SVG.SmileCircle height={16} width={16} />
+      <SVG.Layers height={16} width={16} />
       <Typography.H5 style={{ marginLeft: 4 }}>Group</Typography.H5>
     </button>
   );
@@ -337,6 +337,31 @@ const SavingAction = React.forwardRef(
       >
         <SVG.Plus height={16} width={16} />
         <Typography.H5 style={{ marginLeft: 4 }}>Save</Typography.H5>
+      </button>
+    );
+  }
+);
+
+const RemoveAction = React.forwardRef(
+  ({ css, onRemoveObjects, ...props }, ref) => {
+    const { constructSelectedItemsData, existSelectionMode } =
+      useMultiSelectionContext();
+
+    const handleOnClick = () => {
+      const { selectedItemsData } = constructSelectedItemsData();
+      onRemoveObjects({ objects: selectedItemsData });
+      existSelectionMode();
+    };
+
+    return (
+      <button
+        css={[STYLES_ACTION_BUTTON, css]}
+        onClick={handleOnClick}
+        ref={ref}
+        {...props}
+      >
+        <SVG.Trash height={16} width={16} />
+        <Typography.H5 style={{ marginLeft: 4 }}>Delete</Typography.H5>
       </button>
     );
   }
@@ -561,7 +586,14 @@ const STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB = (theme) => css`
 
 const NewTabActionsMenu = React.forwardRef(
   (
-    { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
+    {
+      onOpenURLs,
+      onCloseTabs,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+      onRemoveObjects,
+    },
     forwardedRef
   ) => {
     const {
@@ -659,6 +691,20 @@ const NewTabActionsMenu = React.forwardRef(
         });
       }
 
+      if (onRemoveObjects) {
+        actions.push({
+          label: `Delete ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <RemoveAction
+              onRemoveObjects={onRemoveObjects}
+              css={STYLES_ACTION_BUTTON_NEW_TAB}
+              ref={ref}
+              {...props}
+            />
+          )),
+        });
+      }
+
       if (onSaveObjects && !areAllSelectedItemsSaved) {
         actions.push({
           label: `Save ${totalSelectedItems} selected`,
@@ -680,6 +726,7 @@ const NewTabActionsMenu = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onSaveObjects,
+      onRemoveObjects,
       totalSelectedItems,
       areAllSelectedItemsSaved,
     ]);
@@ -745,7 +792,14 @@ const STYLES_MULTI_SELECTION_SELECT_ALL = (theme) => css`
 
 const JumperActionMenu = React.forwardRef(
   (
-    { onOpenURLs, onCloseTabs, onOpenSlatesJumper, onGroupURLs, onSaveObjects },
+    {
+      onOpenURLs,
+      onCloseTabs,
+      onOpenSlatesJumper,
+      onGroupURLs,
+      onSaveObjects,
+      onRemoveObjects,
+    },
     forwardedRef
   ) => {
     const {
@@ -822,6 +876,19 @@ const JumperActionMenu = React.forwardRef(
         });
       }
 
+      if (onRemoveObjects) {
+        actions.push({
+          label: `Delete ${totalSelectedItems} selected`,
+          Component: React.forwardRef((props, ref) => (
+            <RemoveAction
+              onRemoveObjects={onRemoveObjects}
+              ref={ref}
+              {...props}
+            />
+          )),
+        });
+      }
+
       if (onSaveObjects && !areAllSelectedItemsSaved) {
         actions.push({
           label: `Save ${totalSelectedItems} selected`,
@@ -838,6 +905,7 @@ const JumperActionMenu = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onSaveObjects,
+      onRemoveObjects,
       totalSelectedItems,
       areAllSelectedItemsSaved,
     ]);
@@ -896,6 +964,7 @@ function ActionsMenu({
   onCloseTabs,
   onOpenURLs,
   onSaveObjects,
+  onRemoveObjects,
 }) {
   const { isMultiSelectMode } = useMultiSelectionContext();
 
@@ -909,6 +978,7 @@ function ActionsMenu({
         onOpenSlatesJumper={onOpenSlatesJumper}
         onGroupURLs={onGroupURLs}
         onSaveObjects={onSaveObjects}
+        onRemoveObjects={onRemoveObjects}
       />
     );
   }
@@ -920,6 +990,7 @@ function ActionsMenu({
       onOpenSlatesJumper={onOpenSlatesJumper}
       onGroupURLs={onGroupURLs}
       onSaveObjects={onSaveObjects}
+      onRemoveObjects={onRemoveObjects}
     />
   );
 }
