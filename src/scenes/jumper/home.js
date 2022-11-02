@@ -89,6 +89,7 @@ export default function Home() {
     sessionsFeed,
     sessionsFeedKeys,
     loadMoreHistory,
+    removeObjectsFromRecentFeed,
   } = useHistory();
 
   const { windowsFeeds, activeTabId } = useWindows();
@@ -130,6 +131,14 @@ export default function Home() {
       viewer.removeObjects({ objects });
     },
     [removeObjectsFromSearchFeed, viewer]
+  );
+
+  const handleRemoveObjectsFromRecentFeed = React.useCallback(
+    ({ objects }) => {
+      removeObjectsFromRecentFeed({ objects });
+      viewer.removeObjects({ objects });
+    },
+    [removeObjectsFromRecentFeed, viewer]
   );
 
   return (
@@ -205,6 +214,7 @@ export default function Home() {
               onGroupURLs={Navigation.createGroupFromUrls}
               isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
               onRemoveObjects={handleRemoveObjectsFromViewsFeed}
+              onRemoveObjectsFromRecentFeed={handleRemoveObjectsFromRecentFeed}
             />
           </Switch>
         </Jumper.Body>

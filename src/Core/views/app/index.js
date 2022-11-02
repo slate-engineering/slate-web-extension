@@ -63,7 +63,7 @@ export const useViewsState = () => {
           setViewState((prev) => ({
             ...prev,
             feed: newFeed,
-            feedKeys: newFeed,
+            feedKeys: newFeedKeys,
           }));
         }
         return;

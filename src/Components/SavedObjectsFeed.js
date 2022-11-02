@@ -113,6 +113,7 @@ const FeedListView = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onRestoreFocus,
+      onRemoveObjects,
       ...props
     },
     ref
@@ -187,11 +188,12 @@ const FeedListView = React.forwardRef(
           </FeedListViewContainer>
 
           <MultiSelection.ActionsMenu
-            onOpenSlatesJumper={onOpenSlatesJumper}
             onOpenURLs={(urls) => onOpenUrl({ urls })}
             onGroupURLs={(urls) =>
               onGroupURLs({ urls, title: appliedView.name })
             }
+              onOpenSlatesJumper={onOpenSlatesJumper}
+            onRemoveObjects={onRemoveObjects}
           />
         </MultiSelection.Provider>
       </RovingTabIndex.Provider>
@@ -263,6 +265,7 @@ const FeedGridViewContainer = React.forwardRef(
       onOpenSlatesJumper,
       onGroupURLs,
       onRestoreFocus,
+      onRemoveObjects,
       listHeight,
       listWidth,
       cardElementHeight,
@@ -347,9 +350,10 @@ const FeedGridViewContainer = React.forwardRef(
           {FeedGridViewRow}
         </ListView.VariableSizeListRoot>
         <MultiSelection.ActionsMenu
-          onOpenSlatesJumper={onOpenSlatesJumper}
           onOpenURLs={(urls) => onOpenUrl({ urls })}
           onGroupURLs={(urls) => onGroupURLs({ urls, title: appliedView.name })}
+          onOpenSlatesJumper={onOpenSlatesJumper}
+          onRemoveObjects={onRemoveObjects}
         />
       </MultiSelection.Provider>
     );
@@ -364,6 +368,7 @@ const FeedGridView = (
     onOpenSlatesJumper,
     onGroupURLs,
     onRestoreFocus,
+    onRemoveObjects,
     feed,
     feedKeys,
     ...props
@@ -427,6 +432,7 @@ const FeedGridView = (
       onOpenUrl={onOpenUrl}
       onGroupURLs={onGroupURLs}
       onRestoreFocus={onRestoreFocus}
+      onRemoveObjects={onRemoveObjects}
       listHeight={listHeight}
       listWidth={listWidth}
       cardElementHeight={cardElementHeight}
@@ -514,6 +520,7 @@ const SavedObjectsFeed = React.memo(
         onOpenSlatesJumper,
         onGroupURLs,
         onRestoreFocus,
+        onRemoveObjects,
         feed,
         feedKeys,
         ...props
@@ -543,6 +550,7 @@ const SavedObjectsFeed = React.memo(
             onOpenSlatesJumper={onOpenSlatesJumper}
             onGroupURLs={onGroupURLs}
             onRestoreFocus={onRestoreFocus}
+            onRemoveObjects={onRemoveObjects}
             ref={ref}
             {...props}
           />
@@ -558,6 +566,7 @@ const SavedObjectsFeed = React.memo(
           onOpenSlatesJumper={onOpenSlatesJumper}
           onGroupURLs={onGroupURLs}
           onRestoreFocus={onRestoreFocus}
+          onRemoveObjects={onRemoveObjects}
           ref={ref}
           {...props}
         />

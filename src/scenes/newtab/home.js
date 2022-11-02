@@ -300,6 +300,7 @@ export default function HistoryScene() {
     sessionsFeed,
     sessionsFeedKeys,
     loadMoreHistory,
+    removeObjectsFromRecentFeed,
   } = useHistory();
 
   const { windowsFeeds, activeTabId } = useWindows();
@@ -365,6 +366,14 @@ export default function HistoryScene() {
       viewer.removeObjects({ objects });
     },
     [removeObjectsFromSearchFeed, viewer]
+  );
+
+  const handleRemoveObjectsFromRecentFeed = React.useCallback(
+    ({ objects }) => {
+      removeObjectsFromRecentFeed({ objects });
+      viewer.removeObjects({ objects });
+    },
+    [removeObjectsFromRecentFeed, viewer]
   );
 
   return (
@@ -476,6 +485,9 @@ export default function HistoryScene() {
                     onCloseTabs={Navigation.closeTabs}
                     onGroupURLs={Navigation.createGroupFromUrls}
                     onRemoveObjects={handleRemoveObjectsFromViewsFeed}
+                    onRemoveObjectsFromRecentFeed={
+                      handleRemoveObjectsFromRecentFeed
+                    }
                   />
                 </Switch>
               </div>

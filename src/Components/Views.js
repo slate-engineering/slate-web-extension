@@ -1596,6 +1596,7 @@ const Feed = React.memo(
         onGroupURLs,
         onSaveObjects,
         onRemoveObjects,
+        onRemoveObjectsFromRecentFeed,
 
         historyFeed,
         historyFeedKeys,
@@ -1668,6 +1669,7 @@ const Feed = React.memo(
             onOpenSlatesJumper={onOpenSlatesJumper}
             onGroupURLs={onGroupURLs}
             onRestoreFocus={onRestoreFocus}
+            onRemoveObjects={onRemoveObjects}
             feed={viewsFeed}
             feedKeys={viewsFeedKeys}
             {...props}
@@ -1708,6 +1710,7 @@ const Feed = React.memo(
             onSaveObjects={onSaveObjects}
             onGroupURLs={onGroupURLs}
             onRestoreFocus={handleRestoreFocus}
+            onRemoveObjects={onRemoveObjectsFromRecentFeed}
             {...props}
           />
         );
