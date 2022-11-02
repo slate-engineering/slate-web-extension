@@ -1,5 +1,5 @@
 import { messages, viewsType } from "./";
-import { Viewer, ViewerActions } from "../viewer/background";
+import { Viewer, ViewerActions, SlateObject } from "../viewer/background";
 import { browserHistory, Windows } from "../browser/background";
 
 import Fuse from "fuse.js";
@@ -36,7 +36,7 @@ class ViewsHandler {
 
           if (!slate) return [];
 
-          return slate.objects.map(Viewer._serializeObject);
+          return slate.objects.map(SlateObject.serialize);
         }
       };
 
@@ -83,7 +83,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         if (!slate) return [];
 
-        return slate.objects.map(Viewer._serializeObject);
+        return slate.objects.map(SlateObject.serialize);
       }
     };
 
