@@ -120,6 +120,7 @@ const HistoryFeed = React.forwardRef(
       onGroupURLs,
       onSaveObjects,
       onRestoreFocus,
+      onRemoveObjects,
       css,
       ...props
     },
@@ -222,6 +223,7 @@ const HistoryFeed = React.forwardRef(
             onGroupURLs={(urls) => onGroupURLs({ urls, title: "recent" })}
             onSaveObjects={onSaveObjects}
             onOpenSlatesJumper={onOpenSlatesJumper}
+            onRemoveObjects={onRemoveObjects}
           />
         </MultiSelection.Provider>
       </RovingTabIndex.Provider>

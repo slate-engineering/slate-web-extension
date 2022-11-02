@@ -14,6 +14,7 @@ export const useHistory = () => {
     sessionsFeed,
     sessionsFeedKeys,
     setHistoryState,
+    removeObjectsFromRecentFeed,
   } = useHistoryState();
 
   const paramsRef = React.useRef({ startIndex: 0, canFetchMore: true });
@@ -63,6 +64,7 @@ export const useHistory = () => {
     sessionsFeed,
     sessionsFeedKeys,
     loadMoreHistory,
+    removeObjectsFromRecentFeed,
   };
 };
 

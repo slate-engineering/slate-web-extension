@@ -170,6 +170,29 @@ export const useHistoryState = () => {
     [historyState.feed]
   );
 
+  const removeObjectsFromRecentFeed = React.useCallback(
+    ({ objects }) => {
+      const filterObjectByUrl = (object) => {
+        return objects.every(({ url }) => url !== object.url);
+      };
+
+      const newFeed = {};
+
+      sessionsFeedKeys.forEach((key) => {
+        const newSubFeed = historyState.feed[key].filter(filterObjectByUrl);
+        if (newSubFeed.length) {
+          newFeed[key] = newSubFeed;
+        }
+      });
+
+      setHistoryState((prev) => ({
+        ...prev,
+        feed: newFeed,
+      }));
+    },
+    [historyState, sessionsFeedKeys, setHistoryState]
+  );
+
   const setHistoryStateSafely = React.useCallback(
     ({ history, isFetchingHistoryFirstBatch }) => {
       setHistoryState((prevState) => {
@@ -196,5 +219,6 @@ export const useHistoryState = () => {
     setHistoryState: setHistoryStateSafely,
     sessionsFeed: historyState.feed,
     sessionsFeedKeys,
+    removeObjectsFromRecentFeed,
   };
 };
