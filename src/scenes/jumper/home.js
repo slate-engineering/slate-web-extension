@@ -60,6 +60,8 @@ const STYLES_SETTINGS_BUTTON = (theme) => css`
 `;
 
 export default function Home() {
+  const viewer = useViewer();
+
   const {
     viewsFeed,
     viewsFeedKeys,
@@ -70,6 +72,7 @@ export default function Home() {
     createViewByTag,
     createViewBySource,
     removeView,
+    removeObjectsFromViewsFeed,
   } = useViews();
 
   const inputRef = React.useRef();
@@ -77,7 +80,6 @@ export default function Home() {
     inputRef,
     view: appliedView,
   });
-  const viewer = useViewer();
 
   const {
     isFetchingHistoryFirstBatch,
@@ -110,6 +112,14 @@ export default function Home() {
   };
 
   const { navigateToSlatesJumper, navigateToSettingsJumper } = useNavigation();
+
+  const handleRemoveObjectsFromViewsFeed = React.useCallback(
+    ({ objects }) => {
+      removeObjectsFromViewsFeed({ objects });
+      viewer.removeObjects({ objects });
+    },
+    [removeObjectsFromViewsFeed, viewer]
+  );
 
   return (
     <Views.Provider
@@ -182,6 +192,7 @@ export default function Home() {
               onCloseTabs={Navigation.closeTabs}
               onGroupURLs={Navigation.createGroupFromUrls}
               isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
+              onRemoveObjects={handleRemoveObjectsFromViewsFeed}
             />
           </Switch>
         </Jumper.Body>

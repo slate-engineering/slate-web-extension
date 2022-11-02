@@ -152,57 +152,6 @@ const CreateViewMenuSidePanel = (props) => {
   );
 };
 
-const Feeds = React.forwardRef(
-  (
-    {
-      openSlatesJumper,
-      sessionsFeed,
-      sessionsFeedKeys,
-      loadMoreHistory,
-      isFetchingHistoryFirstBatch,
-      windowsFeeds,
-      activeTabId,
-      viewer,
-      search,
-      focusFirstItemInFeedOrInputIfEmpty,
-    },
-    feedRef
-  ) => {
-    return (
-      <Switch
-        onOpenSlatesJumper={openSlatesJumper}
-        onOpenUrl={Navigation.openUrls}
-        onSaveObjects={viewer.saveLink}
-        ref={feedRef}
-        css={STYLES_HISTORY_SCENE_FEED}
-      >
-        <Match
-          when={search.isSearching}
-          component={Search.Feed}
-          searchFeed={search.searchFeed}
-          searchFeedKeys={search.searchFeedKeys}
-          slates={search.slates}
-          onGroupURLs={Navigation.createGroupFromUrls}
-          onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
-        />
-        <Match
-          when={!search.isSearching}
-          component={Views.Feed}
-          historyFeed={sessionsFeed}
-          historyFeedKeys={sessionsFeedKeys}
-          loadMoreHistory={loadMoreHistory}
-          isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
-          windowsFeed={windowsFeeds.allOpenFeed}
-          windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
-          activeTabId={activeTabId}
-          onCloseTabs={Navigation.closeTabs}
-          onGroupURLs={Navigation.createGroupFromUrls}
-        />
-      </Switch>
-    );
-  }
-);
-
 /* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
@@ -333,15 +282,6 @@ export default function HistoryScene() {
   const viewer = useViewer();
 
   const {
-    isFetchingHistoryFirstBatch,
-    sessionsFeed,
-    sessionsFeedKeys,
-    loadMoreHistory,
-  } = useHistory();
-
-  const { windowsFeeds, activeTabId } = useWindows();
-
-  const {
     viewsFeed,
     viewsFeedKeys,
     appliedView,
@@ -352,7 +292,17 @@ export default function HistoryScene() {
     createViewByTag,
     createViewBySource,
     removeView,
+    removeObjectsFromViewsFeed,
   } = useViews();
+
+  const {
+    isFetchingHistoryFirstBatch,
+    sessionsFeed,
+    sessionsFeedKeys,
+    loadMoreHistory,
+  } = useHistory();
+
+  const { windowsFeeds, activeTabId } = useWindows();
 
   const visibilityRef = React.useRef(true);
   useOnWindowVisibility((isVisible) => {
@@ -397,6 +347,14 @@ export default function HistoryScene() {
       feedRef.rovingTabIndexRef.focus();
     }
   };
+
+  const handleRemoveObjectsFromViewsFeed = React.useCallback(
+    ({ objects }) => {
+      removeObjectsFromViewsFeed({ objects });
+      viewer.removeObjects({ objects });
+    },
+    [removeObjectsFromViewsFeed, viewer]
+  );
 
   return (
     <>
@@ -477,21 +435,37 @@ export default function HistoryScene() {
               style={{ height: "100%", flex: 1 }}
             >
               <div style={{ flexGrow: 1 }}>
-                <Feeds
+                <Switch
+                  onOpenSlatesJumper={openSlatesJumper}
+                  onOpenUrl={Navigation.openUrls}
+                  onSaveObjects={viewer.saveLink}
                   ref={feedRef}
-                  openSlatesJumper={openSlatesJumper}
-                  sessionsFeed={sessionsFeed}
-                  sessionsFeedKeys={sessionsFeedKeys}
-                  loadMoreHistory={loadMoreHistory}
-                  isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
-                  windowsFeeds={windowsFeeds}
-                  activeTabId={activeTabId}
-                  viewer={viewer}
-                  search={search}
-                  focusFirstItemInFeedOrInputIfEmpty={
-                    focusFirstItemInFeedOrInputIfEmpty
-                  }
-                />
+                  css={STYLES_HISTORY_SCENE_FEED}
+                >
+                  <Match
+                    when={search.isSearching}
+                    component={Search.Feed}
+                    searchFeed={search.searchFeed}
+                    searchFeedKeys={search.searchFeedKeys}
+                    slates={search.slates}
+                    onGroupURLs={Navigation.createGroupFromUrls}
+                    onRestoreFocus={focusFirstItemInFeedOrInputIfEmpty}
+                  />
+                  <Match
+                    when={!search.isSearching}
+                    component={Views.Feed}
+                    historyFeed={sessionsFeed}
+                    historyFeedKeys={sessionsFeedKeys}
+                    loadMoreHistory={loadMoreHistory}
+                    isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
+                    windowsFeed={windowsFeeds.allOpenFeed}
+                    windowsFeedKeys={windowsFeeds.allOpenFeedKeys}
+                    activeTabId={activeTabId}
+                    onCloseTabs={Navigation.closeTabs}
+                    onGroupURLs={Navigation.createGroupFromUrls}
+                    onRemoveObjects={handleRemoveObjectsFromViewsFeed}
+                  />
+                </Switch>
               </div>
             </section>
           </Views.Provider>
