@@ -79,6 +79,13 @@ export const ViewerProvider = ({ children }) => {
     });
   };
 
+  const removeObjects = ({ objects }) => {
+    chrome.runtime.sendMessage({
+      type: messages.removeObjects,
+      objects,
+    });
+  };
+
   const updateViewerSettings = ({
     isBookmarkSyncActivated,
     isRecentViewActivated,
@@ -102,6 +109,7 @@ export const ViewerProvider = ({ children }) => {
     () => ({
       ...state,
       saveLink,
+      removeObjects,
       createSlate,
       addObjectsToSlate,
       removeObjectsFromSlate,

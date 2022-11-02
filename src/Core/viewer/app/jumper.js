@@ -68,6 +68,10 @@ export const ViewerProvider = ({ children }) => {
     window.postMessage({ type: messages.saveLink, objects }, "*");
   };
 
+  const removeObjects = ({ objects }) => {
+    window.postMessage({ type: messages.removeObjects, objects }, "*");
+  };
+
   const updateViewerSettings = ({
     isBookmarkSyncActivated,
     isRecentViewActivated,
@@ -94,6 +98,7 @@ export const ViewerProvider = ({ children }) => {
     () => ({
       ...state,
       saveLink,
+      removeObjects,
       createSlate,
       addObjectsToSlate,
       removeObjectsFromSlate,
