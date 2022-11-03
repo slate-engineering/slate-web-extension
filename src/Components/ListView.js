@@ -321,8 +321,8 @@ const Object = React.forwardRef(
       favicon,
 
       onCloseTab,
-
       onOpenSlatesJumper,
+      onRemoveObject,
 
       withMultiSelection,
       isChecked,
@@ -341,7 +341,15 @@ const Object = React.forwardRef(
     const { savedObjectsLookup, saveLink, savedObjectsSlates } = useViewer();
     const isSaved = url in savedObjectsLookup;
 
-    const handleLinkSaving = (e) => (
+    const { isCopied, handleCopying } = useCopyState(url);
+
+    const handleOnCopying = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleCopying();
+    };
+
+    const handleOnLinkSaving = (e) => (
       e.stopPropagation(),
       e.preventDefault(),
       saveLink({ objects: [{ url, title, favicon }] })
@@ -349,34 +357,51 @@ const Object = React.forwardRef(
 
     const handleOnChecking = (e) => onCheck(e.target.checked);
 
-    const { isCopied, handleCopying } = useCopyState(url);
+    const handleOnRemoveObjects = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onRemoveObject();
+    };
+
+    const handleOnOpenSlatesJumper = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onOpenSlatesJumper();
+    };
+
+    const handleOnCloseTab = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onCloseTab(e);
+    };
 
     const preventFocus = (e) => e.preventDefault();
 
     const handleKeyboardActions = (e) => {
       if (!withActions) return;
 
+      if (e.code === "Backspace") {
+        handleOnRemoveObjects(e);
+        return;
+      }
+
       if (e.code === "KeyS") {
-        e.stopPropagation();
-        handleLinkSaving(e);
+        handleOnLinkSaving(e);
         return;
       }
 
       if (e.code === "KeyT") {
-        e.stopPropagation();
-        onOpenSlatesJumper();
+        handleOnOpenSlatesJumper(e);
         return;
       }
 
       if (e.code === "KeyC") {
-        e.stopPropagation();
-        handleCopying();
+        handleOnCopying(e);
         return;
       }
 
       if (onCloseTab && e.code === "KeyX") {
-        e.stopPropagation();
-        onCloseTab();
+        handleOnCloseTab(e);
         return;
       }
     };
@@ -386,6 +411,7 @@ const Object = React.forwardRef(
         e.code === "KeyS" ||
         e.code === "KeyT" ||
         e.code === "KeyC" ||
+        e.code === "Backspace" ||
         (onCloseTab && e.code === "KeyX")
       ) {
         e.stopPropagation();
@@ -412,6 +438,7 @@ const Object = React.forwardRef(
           onKeyUp
         )}
         onKeyDown={mergeEvents(preventKeyboardActionsPropagation, onKeyDown)}
+        onKeyPress={preventKeyboardActionsPropagation}
         {...props}
       >
         {isTab && (
@@ -481,10 +508,8 @@ const Object = React.forwardRef(
               <button
                 className="object_action_button"
                 css={STYLES_OBJECT_ACTION_BUTTON}
+                onClick={handleOnOpenSlatesJumper}
                 onMouseDown={preventFocus}
-                onClick={(e) => (
-                  e.stopPropagation(), e.preventDefault(), onOpenSlatesJumper()
-                )}
               >
                 <SVG.Hash width={16} height={16} />
               </button>
@@ -492,29 +517,26 @@ const Object = React.forwardRef(
             <CopyAction
               className="object_action_button"
               isCopied={isCopied}
-              onClick={(e) => (
-                e.stopPropagation(), e.preventDefault(), handleCopying()
-              )}
+              onClick={handleOnCopying}
               onMouseDown={preventFocus}
               url={url}
             />
-            {/* <ShortcutsTooltip label="Delete" keyTrigger="delete"> */}
-            {/*   <button */}
-            {/*     className="object_action_button" */}
-            {/*     css={STYLES_OBJECT_ACTION_BUTTON} */}
-            {/*     onMouseDown={preventFocus} */}
-            {/*   > */}
-            {/*     <SVG.Trash width={16} height={16} /> */}
-            {/*   </button> */}
-            {/* </ShortcutsTooltip> */}
+            <ShortcutsTooltip label="Delete" keyTrigger="delete">
+              <button
+                className="object_action_button"
+                css={STYLES_OBJECT_ACTION_BUTTON}
+                onClick={handleOnRemoveObjects}
+                onMouseDown={preventFocus}
+              >
+                <SVG.Trash width={16} height={16} />
+              </button>
+            </ShortcutsTooltip>
             {onCloseTab && (
               <ShortcutsTooltip label="Close Tab" keyTrigger="X">
                 <button
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}
-                  onClick={(e) => (
-                    e.stopPropagation(), e.preventDefault(), onCloseTab()
-                  )}
+                  onClick={handleOnCloseTab}
                   onMouseDown={preventFocus}
                 >
                   <SVG.XCircle width={16} height={16} />
@@ -545,7 +567,7 @@ const Object = React.forwardRef(
                 <button
                   className="object_action_button"
                   css={STYLES_OBJECT_ACTION_BUTTON}
-                  onClick={handleLinkSaving}
+                  onClick={handleOnLinkSaving}
                   onMouseDown={preventFocus}
                 >
                   <SVG.Plus width={16} height={16} />
