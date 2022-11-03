@@ -10,6 +10,7 @@ import { useMounted, useCopyState } from "~/common/hooks";
 import {
   SlatesButton,
   CopyButton,
+  DeleteButton,
 } from "~/components/ObjectPreview/components";
 import {
   getRootDomain,
@@ -37,6 +38,7 @@ const STYLES_CONTROLS = css`
 
 function Controls({
   onOpenSlatesJumper,
+  onRemoveObject,
   isChecked,
   onCheck,
   isCopied,
@@ -71,11 +73,19 @@ function Controls({
 
         {withActions && (
           <div css={Styles.VERTICAL_CONTAINER}>
+            <ShortcutsTooltip label="Delete" keyTrigger="delete">
+              <DeleteButton tabIndex="-1" onClick={onRemoveObject} />
+            </ShortcutsTooltip>
+
             <ShortcutsTooltip
               label="Tag"
               keyTrigger={isNewTab ? "T" : isUsingMac() ? "T / ⌥T" : "T/ Alt T"}
             >
-              <SlatesButton tabIndex="-1" onClick={onOpenSlatesJumper} />
+              <SlatesButton
+                tabIndex="-1"
+                style={{ marginTop: 6 }}
+                onClick={onOpenSlatesJumper}
+              />
             </ShortcutsTooltip>
 
             <ShortcutsTooltip label="Copy" keyTrigger="C">
@@ -161,6 +171,7 @@ export default function ObjectPreviewPrimitive({
   file,
   onOpenSlatesJumper,
   onOpenUrl,
+  onRemoveObject,
   owner,
   index,
   // NOTE(amine): internal prop used to display
@@ -250,6 +261,7 @@ export default function ObjectPreviewPrimitive({
         <div css={Styles.VERTICAL_CONTAINER}>
           <Controls
             onOpenSlatesJumper={handleOpenSlatesJumper}
+            onRemoveObject={onRemoveObject}
             url={file.url}
             isChecked={isChecked}
             onCheck={createHandleOnIndexCheckChange(index)}
