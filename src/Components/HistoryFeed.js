@@ -35,7 +35,7 @@ const HistoryFeedRow = React.memo(({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
   const { rovingTabIndex, title, visit } = data.feed[index];
-  const { onOpenUrl, onOpenSlatesJumper } = data.props;
+  const { onOpenUrl, onOpenSlatesJumper, onRemoveObjects } = data.props;
 
   if (title) {
     return (
@@ -68,6 +68,7 @@ const HistoryFeedRow = React.memo(({ index, data, style }) => {
           },
         ])
       }
+      onRemoveObject={() => onRemoveObjects({ objects: [visit] })}
     />
   );
 });
@@ -161,6 +162,7 @@ const HistoryFeed = React.forwardRef(
         props: {
           onOpenUrl,
           onOpenSlatesJumper,
+          onRemoveObjects,
         },
       };
     }, [sessionsFeed, sessionsFeedKeys, onOpenUrl, onOpenSlatesJumper]);

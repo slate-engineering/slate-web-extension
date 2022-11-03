@@ -141,6 +141,13 @@ export default function Home() {
     [removeObjectsFromRecentFeed, viewer]
   );
 
+  const handleRemoveObjectsFromWindowsFeed = React.useCallback(
+    ({ objects }) => {
+      viewer.removeObjects({ objects });
+    },
+    [viewer]
+  );
+
   return (
     <Views.Provider
       viewer={viewer}
@@ -215,6 +222,9 @@ export default function Home() {
               isFetchingHistoryFirstBatch={isFetchingHistoryFirstBatch}
               onRemoveObjects={handleRemoveObjectsFromViewsFeed}
               onRemoveObjectsFromRecentFeed={handleRemoveObjectsFromRecentFeed}
+              onRemoveObjectsFromWindowsFeed={
+                handleRemoveObjectsFromWindowsFeed
+              }
             />
           </Switch>
         </Jumper.Body>

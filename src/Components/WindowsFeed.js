@@ -16,7 +16,8 @@ const WindowsFeedRow = React.memo(({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
   const { rovingTabIndex, title, tab, isTabActive } = data.feed[index];
-  const { onOpenUrl, onCloseTabs, onOpenSlatesJumper } = data.props;
+  const { onOpenUrl, onCloseTabs, onOpenSlatesJumper, onRemoveObjects } =
+    data.props;
 
   if (title) {
     return (
@@ -55,6 +56,7 @@ const WindowsFeedRow = React.memo(({ index, data, style }) => {
           },
         ])
       }
+      onRemoveObject={() => onRemoveObjects({ objects: [tab] })}
     />
   );
 });
@@ -106,6 +108,7 @@ const WindowsFeed = React.forwardRef(
       onOpenSlatesJumper,
       onSaveObjects,
       onRestoreFocus,
+      onRemoveObjects,
       activeTabId,
       ...props
     },
@@ -140,6 +143,7 @@ const WindowsFeed = React.forwardRef(
           onOpenUrl,
           onCloseTabs,
           onOpenSlatesJumper,
+          onRemoveObjects,
         },
       };
     }, [
@@ -148,6 +152,7 @@ const WindowsFeed = React.forwardRef(
       activeTabId,
       onOpenUrl,
       onCloseTabs,
+      onRemoveObjects,
       onOpenSlatesJumper,
     ]);
 
@@ -191,6 +196,12 @@ const WindowsFeed = React.forwardRef(
             onCloseTabs={onCloseTabs}
             onOpenSlatesJumper={onOpenSlatesJumper}
             onSaveObjects={onSaveObjects}
+            onRemoveObjects={({ objects }) => {
+              onRemoveObjects({ objects });
+
+              const tabsId = objects.map(({ id }) => id);
+              onCloseTabs(tabsId);
+            }}
           />
         </MultiSelection.Provider>
       </RovingTabIndex.Provider>

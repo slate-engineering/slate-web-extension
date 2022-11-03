@@ -361,6 +361,9 @@ const Object = React.forwardRef(
       e.stopPropagation();
       e.preventDefault();
       onRemoveObject();
+      if (isTab) {
+        onCloseTab();
+      }
     };
 
     const handleOnOpenSlatesJumper = (e) => {

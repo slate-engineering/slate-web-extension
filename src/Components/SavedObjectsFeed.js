@@ -33,7 +33,7 @@ const FeedListViewRow = React.memo(({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
   const { rovingTabIndex, title, object } = data.feed[index];
-  const { onOpenUrl, onOpenSlatesJumper } = data.props;
+  const { onOpenUrl, onOpenSlatesJumper, onRemoveObjects } = data.props;
 
   if (title) {
     return (
@@ -65,6 +65,7 @@ const FeedListViewRow = React.memo(({ index, data, style }) => {
           },
         ])
       }
+      onRemoveObject={() => onRemoveObjects({ objects: [object] })}
     />
   );
 });
@@ -147,6 +148,7 @@ const FeedListView = React.forwardRef(
         props: {
           onOpenUrl,
           onOpenSlatesJumper,
+          onRemoveObjects,
         },
       };
     }, [feed, feedKeys, onOpenUrl, onOpenSlatesJumper]);
@@ -192,7 +194,7 @@ const FeedListView = React.forwardRef(
             onGroupURLs={(urls) =>
               onGroupURLs({ urls, title: appliedView.name })
             }
-              onOpenSlatesJumper={onOpenSlatesJumper}
+            onOpenSlatesJumper={onOpenSlatesJumper}
             onRemoveObjects={onRemoveObjects}
           />
         </MultiSelection.Provider>
@@ -213,7 +215,7 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
   if (!data.feed[index]) return null;
 
   const { startingIndex, title, objects } = data.feed[index];
-  const { onOpenUrl, onOpenSlatesJumper } = data.props;
+  const { onOpenUrl, onOpenSlatesJumper, onRemoveObjects } = data.props;
 
   if (title) {
     return (
@@ -234,6 +236,7 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
           index={startingIndex + i}
           onOpenUrl={onOpenUrl}
           onOpenSlatesJumper={onOpenSlatesJumper}
+          onRemoveObject={() => onRemoveObjects({ objects: [object] })}
           file={object}
         />
       ))}
@@ -313,6 +316,7 @@ const FeedGridViewContainer = React.forwardRef(
         props: {
           onOpenUrl,
           onOpenSlatesJumper,
+          onRemoveObjects,
         },
       };
     }, [feed, feedKeys, onOpenUrl, onOpenSlatesJumper]);
@@ -421,8 +425,6 @@ const FeedGridView = (
       </div>
     );
   }
-
-  const handleOnSubmitSelectedItem = (index) => feed[index];
 
   return (
     <FeedGridViewContainer

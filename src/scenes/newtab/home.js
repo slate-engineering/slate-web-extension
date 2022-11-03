@@ -376,6 +376,13 @@ export default function HistoryScene() {
     [removeObjectsFromRecentFeed, viewer]
   );
 
+  const handleRemoveObjectsFromWindowsFeed = React.useCallback(
+    ({ objects }) => {
+      viewer.removeObjects({ objects });
+    },
+    [viewer]
+  );
+
   return (
     <>
       {slatesJumperState.isOpen && (
@@ -487,6 +494,9 @@ export default function HistoryScene() {
                     onRemoveObjects={handleRemoveObjectsFromViewsFeed}
                     onRemoveObjectsFromRecentFeed={
                       handleRemoveObjectsFromRecentFeed
+                    }
+                    onRemoveObjectsFromWindowsFeed={
+                      handleRemoveObjectsFromWindowsFeed
                     }
                   />
                 </Switch>

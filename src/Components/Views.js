@@ -1381,7 +1381,7 @@ const ViewsFeedRow = ({ index, data, style }) => {
     return <div style={{ ...style, height: visit.value }} />;
   }
 
-  const { onOpenUrl, onOpenSlatesJumper } = data.props;
+  const { onOpenUrl, onOpenSlatesJumper, onRemoveObjects } = data.props;
 
   return (
     <ListView.RovingTabIndexWithMultiSelectObject
@@ -1406,6 +1406,7 @@ const ViewsFeedRow = ({ index, data, style }) => {
           },
         ])
       }
+      onRemoveObject={() => onRemoveObjects({ objects: [visit] })}
     />
   );
 };
@@ -1597,6 +1598,7 @@ const Feed = React.memo(
         onSaveObjects,
         onRemoveObjects,
         onRemoveObjectsFromRecentFeed,
+        onRemoveObjectsFromWindowsFeed,
 
         historyFeed,
         historyFeedKeys,
@@ -1632,6 +1634,7 @@ const Feed = React.memo(
             props: {
               onOpenUrl,
               onOpenSlatesJumper,
+              onRemoveObjects,
             },
           };
         }
@@ -1641,6 +1644,7 @@ const Feed = React.memo(
           props: {
             onOpenUrl,
             onOpenSlatesJumper,
+            onRemoveObjects,
           },
         };
       }, [viewsFeed]);
@@ -1689,6 +1693,7 @@ const Feed = React.memo(
             onSaveObjects={onSaveObjects}
             onOpenUrl={onOpenUrl}
             onRestoreFocus={handleRestoreFocus}
+            onRemoveObjects={onRemoveObjectsFromWindowsFeed}
             {...props}
           />
         );
