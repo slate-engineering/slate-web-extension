@@ -892,8 +892,9 @@ class ViewerActionsHandler {
       return;
     } else {
       const viewer = await Viewer.get();
-      viewer.slates = viewer.slates.filter(
-        (slate) => slate.slatename !== slateName
+      removeItemFromArrayInPlace(
+        viewer.slates,
+        (slate) => slate.slatename === slateName
       );
       viewer.slates.unshift(response.slate);
       Viewer._set(viewer);
