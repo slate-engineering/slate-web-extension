@@ -603,6 +603,7 @@ const viewer_messages = {
 
   saveLink: "SAVE_LINK",
   savingStatus: "SAVING_STATUS",
+  removeObjects: "REMOVE_OBJECTS",
 
   addObjectsToSlate: "ADD_OBJECTS_TO_SLATE",
   removeObjectsFromSlate: "REMOVE_OBJECTS_FROM_SLATE",
@@ -958,6 +959,14 @@ window.addEventListener("message", async function (event) {
         );
       }
     );
+    return;
+  }
+
+  if (event.data.type === viewer_messages.removeObjects) {
+    chrome.runtime.sendMessage({
+      type: viewer_messages.removeObjects,
+      objects: event.data.objects,
+    });
     return;
   }
 
