@@ -497,6 +497,7 @@ class ViewerActionsHandler {
       slatename: slateName,
       name: slateName,
       createAt: new Date().toDateString(),
+      objects: [],
     });
     return viewer;
   }
@@ -672,12 +673,6 @@ class ViewerActionsHandler {
 
     if (!viewer.isAuthenticated) return;
 
-    const objectsToBeSaved = objects
-      .filter(({ url }) => !(url in viewer.savedObjectsLookup))
-      .map(SlateObject.create);
-
-    if (objectsToBeSaved.length === 0) return;
-
     const sendStatusUpdate = (status) => {
       if (source === savingSources.command) {
         // NOTE(amine): you can only save one object via command
@@ -690,6 +685,14 @@ class ViewerActionsHandler {
     };
 
     sendStatusUpdate(savingStates.start);
+
+    const objectsToBeSaved = objects
+      .filter(({ url }) => !(url in viewer.savedObjectsLookup))
+      .map(SlateObject.create);
+
+    if (objectsToBeSaved.length === 0) {
+      return;
+    }
 
     viewer = this._addObjectsToViewer({
       viewer,
@@ -732,6 +735,31 @@ class ViewerActionsHandler {
       // });
       // Viewer._set(viewer);
       // TODO: handle errors
+    } else {
+      if (response.data.added > 0) {
+        viewer = await Viewer.get();
+        const addedLinks = response.data.links;
+        const linksLookup = {};
+
+        addedLinks.forEach((linkObject) => {
+          linksLookup[linkObject.url] = linkObject;
+          viewer.objectsMetadata[linkObject.url] = {
+            id: linkObject.id,
+            isLink: true,
+          };
+        });
+
+        for (let i = 0; i < viewer.objects.length; i++) {
+          const currentObject = viewer.objects[i];
+          if (currentObject.url in linksLookup) {
+            viewer.objects[i] = SlateObject.serialize(
+              linksLookup[currentObject.url]
+            );
+          }
+        }
+      }
+
+      Viewer._set(viewer);
     }
 
     sendStatusUpdate(savingStates.done);
@@ -887,9 +915,7 @@ class ViewerActionsHandler {
       // });
       // viewer = this._removeSlateFromViewer({ viewer, slateName });
       // Viewer._set(viewer);
-
       //TODO handle errors
-      return;
     } else {
       const viewer = await Viewer.get();
       removeItemFromArrayInPlace(
@@ -1031,11 +1057,14 @@ class ViewerActionsHandler {
 
     if (!response || response.error) {
       // TODO: handle errors
+    } else {
+      const newView = response.data;
+      if (newView) {
+        viewer = await Viewer.get();
+        viewer.viewsIdsLookup[customId] = newView.id;
+        Viewer._set(viewer);
+      }
     }
-
-    viewer = await Viewer.get();
-    viewer.viewsIdsLookup[customId] = response.data.id;
-    Viewer._set(viewer);
 
     this._cleanupCleanupAction();
   }
