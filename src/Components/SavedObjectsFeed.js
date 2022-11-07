@@ -287,10 +287,29 @@ const FeedGridViewContainer = React.forwardRef(
       for (let key of feedKeys) {
         virtualizedFeed.push({ title: key, height: 40 });
 
+        const findNumberOfCardsThatFitInColumn = ({
+          containerWidth,
+          cardWidth,
+          gap,
+        }) => {
+          let i = 2;
+          let isOverflow = false;
+          while (!isOverflow) {
+            isOverflow = containerWidth < cardWidth * i + (gap * i - 1);
+            if (isOverflow) {
+              return i;
+            } else {
+              i++;
+            }
+          }
+        };
+
         const numberOfCards = feed[key].length;
-        const numberOfCardsThatFitList = Math.floor(
-          listWidth / cardElementWidth
-        );
+        const numberOfCardsThatFitList = findNumberOfCardsThatFitInColumn({
+          containerWidth: listWidth,
+          cardWidth: cardElementWidth,
+          gap: Constants.grids.object.desktop.rowGap,
+        });
         const numberOfColumns = Math.ceil(
           Math.max(1, numberOfCards / numberOfCardsThatFitList)
         );
@@ -309,7 +328,6 @@ const FeedGridViewContainer = React.forwardRef(
         totalSelectableItems += feed[key].length;
         startingIndex += feed[key].length;
       }
-
       return {
         feed: virtualizedFeed,
         totalSelectableItems,
@@ -411,13 +429,12 @@ const FeedGridView = (
 
   if (!listHeight && !cardElementHeight) {
     return (
-      <div
-        style={{ height: "100%" }}
-        css={css}
-        ref={mergeRefs([ref, listRef])}
-        {...props}
-      >
-        <div css={STYLES_SAVED_OBJECTS_FEED}>
+      <div style={{ height: "100%" }} css={css} {...props}>
+        <div
+          style={{ height: "100%" }}
+          ref={mergeRefs([ref, listRef])}
+          css={STYLES_SAVED_OBJECTS_FEED}
+        >
           <AspectRatio ratio={1} ref={cardElementRef}>
             <div />
           </AspectRatio>
