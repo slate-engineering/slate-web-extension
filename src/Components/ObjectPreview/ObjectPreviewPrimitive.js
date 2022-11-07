@@ -206,8 +206,19 @@ export default function ObjectPreviewPrimitive({
 
   const handleOpenUrl = () => onOpenUrl({ urls: [file.url] });
 
+  const handleOnRemoveObjects = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onRemoveObject();
+  };
+
   const handleKeyboardActions = (e) => {
     if (!withActions) return;
+
+    if (e.code === "Backspace") {
+      handleOnRemoveObjects(e);
+      return;
+    }
 
     if (e.code === "KeyT") {
       e.stopPropagation();
