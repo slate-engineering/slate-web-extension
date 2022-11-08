@@ -9,6 +9,12 @@ export const handleOpenUrlsRequests = async ({
   query,
   sender,
 }) => {
+  if (query?.tabId) {
+    await chrome.windows.update(query.windowId, { focused: true });
+    await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
   let urls = [];
   for (const url of passedUrls) {
     const objectMetada = await Viewer.getObjectMetadataByUrl(url);
@@ -23,12 +29,6 @@ export const handleOpenUrlsRequests = async ({
 
   if (query?.newWindow) {
     await chrome.windows.create({ focused: true, url: urls });
-    return;
-  }
-
-  if (query?.tabId) {
-    await chrome.windows.update(query.windowId, { focused: true });
-    await chrome.tabs.update(query.tabId, { active: true });
     return;
   }
 
