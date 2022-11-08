@@ -4141,7 +4141,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === viewer_messages.removeObjects) {
-    ViewerActions.removeObjects({ objects: request.objects }).then(
+    const handleRemoveObjectsFromHistoryAndViewer = async ({ objects }) => {
+      const viewer = await Viewer.get();
+      const savedObjects = objects.filter(
+        ({ url }) => url in viewer.savedObjectsLookup
+      );
+      browserHistory.removeObjects({ objects });
+      ViewerActions.removeObjects({ objects: savedObjects });
+    };
+
+    handleRemoveObjectsFromHistoryAndViewer({ objects: request.objects }).then(
       sendResponse
     );
     return true;
@@ -4211,6 +4220,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 ;// CONCATENATED MODULE: ./src/core/browser/background.js
+
 
 
 
@@ -4443,6 +4453,24 @@ class BrowserHistory {
     const viewer = await Viewer.get();
     if (!viewer.settings.isRecentViewActivated) return [];
     return history;
+  }
+
+  async removeObjects({ objects }) {
+    const history = await this.get();
+    if (!history) return;
+    const objectsLookup = {};
+    objects.forEach(({ url }) => {
+      objectsLookup[url] = true;
+    });
+
+    for (let i = 0; i < history.length; i++) {
+      removeItemFromArrayInPlace(
+        history[i].visits,
+        (visit) => objectsLookup[visit.url]
+      );
+    }
+
+    removeItemFromArrayInPlace(history, (item) => item.visits.length === 0);
   }
 
   async removeSessionsOlderThanOneMonth() {
@@ -4800,6 +4828,12 @@ const handleOpenUrlsRequests = async ({
   query,
   sender,
 }) => {
+  if (query?.tabId) {
+    await chrome.windows.update(query.windowId, { focused: true });
+    await chrome.tabs.update(query.tabId, { active: true });
+    return;
+  }
+
   let urls = [];
   for (const url of passedUrls) {
     const objectMetada = await Viewer.getObjectMetadataByUrl(url);
@@ -4814,12 +4848,6 @@ const handleOpenUrlsRequests = async ({
 
   if (query?.newWindow) {
     await chrome.windows.create({ focused: true, url: urls });
-    return;
-  }
-
-  if (query?.tabId) {
-    await chrome.windows.update(query.windowId, { focused: true });
-    await chrome.tabs.update(query.tabId, { active: true });
     return;
   }
 
