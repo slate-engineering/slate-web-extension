@@ -3,6 +3,7 @@ import { savingSources } from "../viewer";
 import { Viewer, ViewerActions } from "../viewer/background";
 
 import Fuse from "fuse.js";
+import { removeItemFromArrayInPlace } from "~/extension_common/utilities";
 
 const getRootDomain = (url) => {
   let hostname;
@@ -230,6 +231,24 @@ class BrowserHistory {
     const viewer = await Viewer.get();
     if (!viewer.settings.isRecentViewActivated) return [];
     return history;
+  }
+
+  async removeObjects({ objects }) {
+    const history = await this.get();
+    if (!history) return;
+    const objectsLookup = {};
+    objects.forEach(({ url }) => {
+      objectsLookup[url] = true;
+    });
+
+    for (let i = 0; i < history.length; i++) {
+      removeItemFromArrayInPlace(
+        history[i].visits,
+        (visit) => objectsLookup[visit.url]
+      );
+    }
+
+    removeItemFromArrayInPlace(history, (item) => item.visits.length === 0);
   }
 
   async removeSessionsOlderThanOneMonth() {

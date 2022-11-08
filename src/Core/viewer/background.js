@@ -1,7 +1,7 @@
 import * as Actions from "~/common/actions";
 import * as Constants from "~/extension_common/constants";
 
-import { Windows, Tabs } from "../browser/background";
+import { Windows, Tabs, browserHistory } from "../browser/background";
 import {
   messages,
   commands,
@@ -1304,7 +1304,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.type === messages.removeObjects) {
-    ViewerActions.removeObjects({ objects: request.objects }).then(
+    const handleRemoveObjectsFromHistoryAndViewer = async ({ objects }) => {
+      const viewer = await Viewer.get();
+      const savedObjects = objects.filter(
+        ({ url }) => url in viewer.savedObjectsLookup
+      );
+      browserHistory.removeObjects({ objects });
+      ViewerActions.removeObjects({ objects: savedObjects });
+    };
+
+    handleRemoveObjectsFromHistoryAndViewer({ objects: request.objects }).then(
       sendResponse
     );
     return true;
