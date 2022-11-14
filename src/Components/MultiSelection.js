@@ -573,9 +573,10 @@ const ActionsMenuDismissButton = (props) => {
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB = (theme) => css`
-  ${Styles.HORIZONTAL_CONTAINER};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   padding: 5px 12px 7px;
   border-radius: 12px;
+  cursor: pointer;
 
   &:hover,
   &:focus-within {
@@ -742,21 +743,23 @@ const NewTabActionsMenu = React.forwardRef(
             onClick={existSelectionMode}
           />
           <ShortcutsTooltip label="Multi-select" keyTrigger="Ctrl A">
-            <div css={STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB}>
+            <label
+              css={STYLES_MULTI_SELECTION_SELECT_ALL_NEW_TAB}
+              for="select_all_checkbox"
+            >
               <Checkbox
                 id="select_all_checkbox"
                 checked={isAllChecked}
                 onChange={toggleCheckAll}
               />
               <Typography.H5
-                as="label"
-                for="select_all_checkbox"
+                as="span"
                 style={{ marginLeft: 12 }}
                 color="textWhite"
               >
                 Select All
               </Typography.H5>
-            </div>
+            </label>
           </ShortcutsTooltip>
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>
@@ -780,9 +783,10 @@ const NewTabActionsMenu = React.forwardRef(
 /* -----------------------------------------------------------------------------------------------*/
 
 const STYLES_MULTI_SELECTION_SELECT_ALL = (theme) => css`
-  ${Styles.HORIZONTAL_CONTAINER};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
   padding: 5px 12px 7px;
   border-radius: 12px;
+  cursor: pointer;
 
   &:hover,
   &:focus-within {
@@ -921,21 +925,23 @@ const JumperActionMenu = React.forwardRef(
             onClick={existSelectionMode}
           />
           <ShortcutsTooltip label="Multi-select" keyTrigger="Ctrl A">
-            <div css={STYLES_MULTI_SELECTION_SELECT_ALL}>
+            <label
+              css={STYLES_MULTI_SELECTION_SELECT_ALL}
+              for="select_all_checkbox"
+            >
               <Checkbox
                 id="select_all_checkbox"
                 checked={isAllChecked}
                 onChange={toggleCheckAll}
               />
               <Typography.H5
-                as="label"
-                for="select_all_checkbox"
+                as="span"
                 style={{ marginLeft: 12 }}
                 color="textGrayDark"
               >
                 Select All
               </Typography.H5>
-            </div>
+            </label>
           </ShortcutsTooltip>
           <RovingTabIndex.Provider axis="horizontal">
             <RovingTabIndex.List>

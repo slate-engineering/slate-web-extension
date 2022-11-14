@@ -464,10 +464,14 @@ const Object = React.forwardRef(
             <div>
               <Checkbox
                 className="object_checkbox"
+                style={{
+                  display: isChecked && "block",
+                  flexShrink: 0,
+                  margin: 2,
+                }}
                 checked={isChecked}
                 tabIndex="-1"
                 onChange={handleOnChecking}
-                style={{ display: isChecked && "block", flexShrink: 0 }}
                 onClick={(e) => e.stopPropagation()}
                 onMouseDown={(e) => e.preventDefault()}
               />

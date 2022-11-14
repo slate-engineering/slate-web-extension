@@ -32,8 +32,22 @@ const STYLES_CONTROLS = css`
   width: 100%;
   padding: 0px 16px;
   z-index: 1;
-  opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity 1.2s;
+`;
+
+const STYLES_CHECKBOX = (theme) => css`
+  height: 24px;
+  width: 24px;
+  border-radius: 8px;
+  border: 1px solid ${theme.semantic.bgGrayLight4};
+
+  @supports (
+    (-webkit-backdrop-filter: blur(45px)) or (backdrop-filter: blur(45px))
+  ) {
+    -webkit-backdrop-filter: blur(45px);
+    backdrop-filter: blur(45px);
+    background-color: ${theme.semantic.bgBlurLight6TRN};
+  }
 `;
 
 function Controls({
@@ -50,7 +64,7 @@ function Controls({
   return (
     <>
       {/**  NOTE(amine): controls visibility handled by STYLES_WRAPPER*/}
-      <motion.div id="object_preview_controls" css={STYLES_CONTROLS}>
+      <div css={STYLES_CONTROLS}>
         <ShortcutsTooltip
           label="Multi-select"
           keyTrigger="Shift Space"
@@ -58,7 +72,13 @@ function Controls({
           yOffset={12}
           xOffset={-12}
         >
-          <div style={{ marginRight: "auto" }}>
+          <div
+            className="object_preview_controls"
+            style={{
+              marginRight: "auto",
+              opacity: isChecked && 1,
+            }}
+          >
             <Checkbox
               className="object_checkbox"
               checked={isChecked}
@@ -67,12 +87,16 @@ function Controls({
               style={{ display: isChecked && "block", flexShrink: 0 }}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.preventDefault()}
+              css={STYLES_CHECKBOX}
             />
           </div>
         </ShortcutsTooltip>
 
         {withActions && (
-          <div css={Styles.VERTICAL_CONTAINER}>
+          <div
+            className="object_preview_controls"
+            css={Styles.VERTICAL_CONTAINER}
+          >
             <ShortcutsTooltip label="Delete" keyTrigger="delete">
               <DeleteButton tabIndex="-1" onClick={onRemoveObject} />
             </ShortcutsTooltip>
@@ -98,7 +122,7 @@ function Controls({
             </ShortcutsTooltip>
           </div>
         )}
-      </motion.div>
+      </div>
     </>
   );
 }
@@ -115,10 +139,13 @@ const STYLES_WRAPPER = (theme) => css`
   overflow: hidden;
   cursor: pointer;
 
-  :hover #object_preview_controls {
+  .object_preview_controls {
+    opacity: 0;
+  }
+  :hover .object_preview_controls {
     opacity: 1;
   }
-  :focus #object_preview_controls {
+  :focus .object_preview_controls {
     opacity: 1;
   }
 
