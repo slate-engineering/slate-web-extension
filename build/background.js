@@ -3031,7 +3031,7 @@ class ViewerHandler {
       viewsSlatesLookup: {},
       viewsIdsLookup: {},
       views: viewer.views,
-      settings: viewer.settings || VIEWER_INITIAL_STATE.settings,
+      settings: { ...VIEWER_INITIAL_STATE.settings, ...viewer.settings },
     };
 
     serializedViewer.views = serializedViewer.views.map((view) => {
@@ -3210,6 +3210,8 @@ class ViewerHandler {
       if (shouldSync && !shouldSync()) return;
       this._set({
         ...serializedViewer,
+        // NOTE(Amine): sync local settings with the viewer object
+        settings: { ...prevViewer.settings, ...serializedViewer.settings },
         lastFetched: new Date().toString(),
         isAuthenticated: true,
       });
@@ -3438,6 +3440,7 @@ class ViewerActionsHandler {
     hasCompletedExtensionOBFirstStep,
     hasCompletedExtensionOBSecondStep,
     hasCompletedExtensionOBThirdStep,
+    shouldUseGridView,
   }) {
     this._registerRunningAction();
 
@@ -3479,6 +3482,10 @@ class ViewerActionsHandler {
         hasCompletedExtensionOBThirdStep;
       userRequest["hasCompletedExtensionOBThirdStep "] =
         hasCompletedExtensionOBThirdStep;
+    }
+
+    if (typeof shouldUseGridView === "boolean") {
+      viewer.settings.shouldUseGridView = shouldUseGridView;
     }
 
     Viewer._set(viewer);
@@ -4131,6 +4138,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         request.hasCompletedExtensionOBSecondStep,
       hasCompletedExtensionOBThirdStep:
         request.hasCompletedExtensionOBThirdStep,
+      shouldUseGridView: request.shouldUseGridView,
     }).then(sendResponse);
     return true;
   }
