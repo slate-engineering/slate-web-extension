@@ -123,7 +123,7 @@ const STYLES_WRAPPER = (theme) => css`
   }
 
   :focus {
-    box-shadow: 0 0 0 2px ${theme.system.teal};
+    box-shadow: 0 0 0 2px ${theme.semantic.borderGray};
   }
 `;
 
