@@ -542,6 +542,7 @@ const SavedObjectsFeed = React.memo(
         onRemoveObjects,
         feed,
         feedKeys,
+        withDisplayGridView,
         ...props
       },
       ref
@@ -559,7 +560,7 @@ const SavedObjectsFeed = React.memo(
         }
       }
 
-      if (isNewTab) {
+      if (withDisplayGridView) {
         return (
           <FeedGridView
             key={appliedView.id}

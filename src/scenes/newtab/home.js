@@ -6,6 +6,7 @@ import * as Search from "~/components/Search";
 import * as Jumper from "~/components/jumper";
 import * as EditSlates from "~/components/EditSlates";
 import * as EditSettings from "~/components/EditSettings";
+import * as SVG from "~/common/SVG";
 
 import Logo from "~/components/Logo";
 
@@ -13,7 +14,7 @@ import { useHistory, useWindows } from "~/core/browser/app/newTab";
 import { useViews, useHistorySearch } from "~/core/views/app/newTab";
 import { Divider } from "~/components/Divider";
 import { Switch, Match } from "~/components/Switch";
-import { getExtensionURL } from "~/common/utilities";
+import { getExtensionURL, isNewTab } from "~/common/utilities";
 import { useViewer } from "~/core/viewer/app/newTab";
 import { useViewsContext, useViewsMenuContext } from "~/components/Views";
 import { css } from "@emotion/react";
@@ -153,6 +154,68 @@ const CreateViewMenuSidePanel = (props) => {
 };
 
 /* -------------------------------------------------------------------------------------------------
+ * GridViewSwitcher
+ * -----------------------------------------------------------------------------------------------*/
+
+const STYLES_GRID_VIEW_SWITCHER_CONTAINER = (theme) => css`
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid ${theme.semantic.borderGrayLight};
+`;
+const STYLES_GRID_VIEW_SWITCHER_BUTTON = (theme) => css`
+  ${Styles.BUTTON_RESET};
+  color: ${theme.semantic.textGrayDark};
+  height: 32px;
+  width: 32px;
+  padding: 8px;
+  &:focus {
+    outline: 1px solid ${theme.system.blue};
+  }
+`;
+
+const STYLES_GRID_VIEW_SELECTED = (theme) => css`
+  background-color: ${theme.semantic.bgGrayLight};
+`;
+
+function GridViewSwitcher({ css, ...props }) {
+  const viewer = useViewer();
+  const isGridView = viewer.settings.shouldUseGridView;
+
+  const selectGridView = () =>
+    viewer.updateViewerSettings({
+      shouldUseGridView: true,
+    });
+  const selectListView = () =>
+    viewer.updateViewerSettings({
+      shouldUseGridView: false,
+    });
+
+  return (
+    <div css={[STYLES_GRID_VIEW_SWITCHER_CONTAINER, css]} {...props}>
+      <button
+        css={[
+          STYLES_GRID_VIEW_SWITCHER_BUTTON,
+          isGridView && STYLES_GRID_VIEW_SELECTED,
+        ]}
+        onClick={selectGridView}
+      >
+        <SVG.GridView width={16} />
+      </button>
+      <button
+        css={[
+          STYLES_GRID_VIEW_SWITCHER_BUTTON,
+          !isGridView && STYLES_GRID_VIEW_SELECTED,
+        ]}
+        onClick={selectListView}
+      >
+        <SVG.List width={16} />
+      </button>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------------------------------
  * History Scene
  * -----------------------------------------------------------------------------------------------*/
 
@@ -209,7 +272,7 @@ const STYLES_HISTORY_SCENE_INPUT_CONTAINER = (theme) => css`
 `;
 
 const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
-  ${Styles.HORIZONTAL_CONTAINER};
+  ${Styles.VERTICAL_CONTAINER};
   overflow-y: auto;
   ::-webkit-scrollbar {
     display: none;
@@ -461,6 +524,13 @@ export default function HistoryScene() {
               css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
               style={{ height: "100%", flex: 1 }}
             >
+              {(appliedView.type === viewsType.files ||
+                appliedView.type === viewsType.saved) && (
+                <GridViewSwitcher
+                  style={{ margin: "20px auto 0px", height: 32 }}
+                />
+              )}
+
               <div style={{ flexGrow: 1 }}>
                 <Switch
                   onOpenSlatesJumper={openSlatesJumper}
@@ -497,6 +567,9 @@ export default function HistoryScene() {
                     }
                     onRemoveObjectsFromWindowsFeed={
                       handleRemoveObjectsFromWindowsFeed
+                    }
+                    withDisplayGridView={
+                      isNewTab && viewer.settings.shouldUseGridView
                     }
                   />
                 </Switch>

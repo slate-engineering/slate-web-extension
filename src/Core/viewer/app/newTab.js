@@ -93,6 +93,7 @@ export const ViewerProvider = ({ children }) => {
     hasCompletedExtensionOBFirstStep,
     hasCompletedExtensionOBSecondStep,
     hasCompletedExtensionOBThirdStep,
+    shouldUseGridView,
   }) => {
     chrome.runtime.sendMessage({
       type: messages.updateViewerSettings,
@@ -102,6 +103,7 @@ export const ViewerProvider = ({ children }) => {
       hasCompletedExtensionOBFirstStep,
       hasCompletedExtensionOBSecondStep,
       hasCompletedExtensionOBThirdStep,
+      shouldUseGridView,
     });
   };
 
