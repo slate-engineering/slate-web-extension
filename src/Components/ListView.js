@@ -125,7 +125,7 @@ const Section = React.forwardRef(({ children, css, ...props }, ref) => (
  * -----------------------------------------------------------------------------------------------*/
 
 const STYLES_SESSION_TITLE = css`
-  padding: 13px 8px 7px;
+  padding: ${isNewTab ? "9px 8px 11px 0px" : "9px 8px 12px"};
 `;
 
 const Title = ({ children, count, css, ...props }) => {

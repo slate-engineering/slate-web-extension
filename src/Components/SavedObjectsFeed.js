@@ -16,11 +16,6 @@ import { SavingKeyboardShortcut } from "~/components/SavingKeyboardShortcut";
 import ObjectPreview from "~/components/ObjectPreview";
 import { AspectRatio } from "./system";
 
-const STYLES_SAVED_OBJECTS_FEED = (theme) => css`
-  ${Styles.OBJECTS_PREVIEW_GRID(theme)};
-  padding: 16px 0px;
-`;
-
 /* -------------------------------------------------------------------------------------------------
  * FeedListView
  * -----------------------------------------------------------------------------------------------*/
@@ -206,6 +201,11 @@ const FeedListView = React.forwardRef(
 /* -------------------------------------------------------------------------------------------------
  * FeedGridView
  * -----------------------------------------------------------------------------------------------*/
+const FEED_GRID_VIEW_PADDING_BOTTOM = 12;
+const STYLES_FEED_GRID_VIEW = (theme) => css`
+  ${Styles.OBJECTS_PREVIEW_GRID(theme)};
+  padding-bottom: ${FEED_GRID_VIEW_PADDING_BOTTOM}px;
+`;
 
 const STYLES_FEED_GRID_VIEW_ROW = {
   width: "100%",
@@ -228,7 +228,7 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
   return (
     <section
       style={{ ...style, ...STYLES_FEED_GRID_VIEW_ROW }}
-      css={STYLES_SAVED_OBJECTS_FEED}
+      css={STYLES_FEED_GRID_VIEW}
     >
       {objects.map((object, i) => (
         <ObjectPreview
@@ -246,7 +246,7 @@ const FeedGridViewRow = React.memo(({ index, data, style }) => {
 
 /* -----------------------------------------------------------------------------------------------*/
 
-const STYLES_FEED_GRID_VIEV_CONTAINER = css`
+const STYLES_FEED_GRID_VIEW_CONTAINER = css`
   @keyframes grid_view_fade_in {
     0% {
       opacity: 0;
@@ -314,7 +314,7 @@ const FeedGridViewContainer = React.forwardRef(
           Math.max(1, numberOfCards / numberOfCardsThatFitList)
         );
         const listGridColumnMargin = (numberOfColumns - 1) * 24;
-        const listGridYPadding = 16 * 2;
+        const listPaddingBottom = FEED_GRID_VIEW_PADDING_BOTTOM;
 
         virtualizedFeed.push({
           startingIndex: startingIndex,
@@ -322,7 +322,7 @@ const FeedGridViewContainer = React.forwardRef(
           height:
             cardElementHeight * numberOfColumns +
             listGridColumnMargin +
-            listGridYPadding,
+            listPaddingBottom,
         });
 
         totalSelectableItems += feed[key].length;
@@ -365,7 +365,7 @@ const FeedGridViewContainer = React.forwardRef(
           itemCount={feedItemsData.feed.length}
           itemData={feedItemsData}
           itemSize={getFeedItemHeight}
-          css={STYLES_FEED_GRID_VIEV_CONTAINER}
+          css={STYLES_FEED_GRID_VIEW_CONTAINER}
           ref={ref}
           {...props}
         >
@@ -433,7 +433,7 @@ const FeedGridView = (
         <div
           style={{ height: "100%" }}
           ref={mergeRefs([ref, listRef])}
-          css={STYLES_SAVED_OBJECTS_FEED}
+          css={STYLES_FEED_GRID_VIEW}
         >
           <AspectRatio ratio={1} ref={cardElementRef}>
             <div />

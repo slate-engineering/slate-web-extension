@@ -184,7 +184,6 @@ const STYLES_HISTORY_TOP_POPUP = (theme) => css`
   ${Styles.VERTICAL_CONTAINER_CENTERED};
   position: relative;
   z-index: 1;
-  padding-bottom: 48px;
   @supports (
     (-webkit-backdrop-filter: blur(75px)) or (backdrop-filter: blur(35px))
   ) {
@@ -198,15 +197,15 @@ const STYLES_HISTORY_SCENE_VIEWS_MENU = css`
   ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
   width: 100%;
   position: relative;
-  padding: 8px;
+  padding: 8px 0px;
   padding-left: 0px;
   margin-left: 16px;
   margin-right: 16px;
 `;
 
-const STYLES_HISTORY_SCENE_INPUT = (theme) => css`
+const STYLES_HISTORY_SCENE_INPUT_CONTAINER = (theme) => css`
   ${STYLES_HISTORY_SCENE_ITEM_MAX_WIDTH};
-  border-bottom: 1px solid ${theme.semantic.borderGrayLight};
+  ${Styles.HORIZONTAL_CONTAINER_CENTERED};
 `;
 
 const STYLES_HISTORY_SCENE_FEED_WRAPPER = (theme) => css`
@@ -428,6 +427,7 @@ export default function HistoryScene() {
                 >
                   <Views.MenuProvider>
                     <Views.Menu
+                      style={{ padding: "8px 0px" }}
                       actionsWrapperStyle={{ width: "auto", paddingRight: 0 }}
                     />
 
@@ -436,27 +436,27 @@ export default function HistoryScene() {
                 </div>
               </div>
               <Divider style={{ width: "100%" }} color="borderGrayLight" />
-              <ShortcutsTooltip vertical="above" label="Slate Settings">
-                <button
-                  css={STYLES_SETTINGS_BUTTON}
-                  style={{ marginTop: 48, marginBottom: 24 }}
-                  onClick={openSettingsJumper}
-                >
-                  <Logo
-                    style={{
-                      width: "24.78px",
-                      height: "24px",
-                    }}
-                  />
-                </button>
-              </ShortcutsTooltip>
-              <Search.Input
-                ref={inputRef}
-                containerCss={STYLES_HISTORY_SCENE_INPUT}
-                onKeyDown={handleOnInputKeyUp}
-              />
+              <section
+                style={{ width: "100%" }}
+                css={STYLES_HISTORY_SCENE_INPUT_CONTAINER}
+              >
+                <ShortcutsTooltip vertical="above" label="Slate Settings">
+                  <button
+                    css={STYLES_SETTINGS_BUTTON}
+                    onClick={openSettingsJumper}
+                  >
+                    <Logo
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                      }}
+                    />
+                  </button>
+                </ShortcutsTooltip>
+                <Search.Input ref={inputRef} onKeyDown={handleOnInputKeyUp} />
+              </section>
+              <Divider style={{ width: "100%" }} color="borderGrayLight" />
             </section>
-
             <section
               css={STYLES_HISTORY_SCENE_FEED_WRAPPER}
               style={{ height: "100%", flex: 1 }}
